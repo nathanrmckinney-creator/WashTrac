@@ -1,48 +1,353 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>WashTrac</title>
-<style>
-body{
-font-family: Arial;
-background:#0b0f1a;
-color:white;
-text-align:center;
-padding:50px;
-}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WashTrac | Modern Carwash Control</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-h1{
-font-size:60px;
-margin-bottom:10px;
-}
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #07111f;
+      color: #ffffff;
+      line-height: 1.5;
+    }
 
-p{
-font-size:22px;
-color:#cfd6ff;
-}
+    a {
+      text-decoration: none;
+    }
 
-.button{
-display:inline-block;
-margin-top:30px;
-padding:15px 30px;
-background:#2b6cff;
-color:white;
-text-decoration:none;
-border-radius:8px;
-font-size:18px;
-}
-</style>
+    .container {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .nav {
+      padding: 22px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(7,17,31,0.9);
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(8px);
+      z-index: 10;
+    }
+
+    .nav-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: #c9d6f3;
+      font-size: 15px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 14px 24px;
+      border-radius: 12px;
+      font-weight: 700;
+      transition: 0.2s ease;
+    }
+
+    .btn-primary {
+      background: #2f6bff;
+      color: white;
+      box-shadow: 0 10px 30px rgba(47,107,255,0.35);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      border: 1px solid rgba(255,255,255,0.18);
+      color: white;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .hero {
+      padding: 90px 0 70px;
+      background:
+        radial-gradient(circle at top left, rgba(47,107,255,0.18), transparent 30%),
+        radial-gradient(circle at top right, rgba(0,209,255,0.12), transparent 28%),
+        linear-gradient(180deg, #07111f 0%, #0b1730 100%);
+    }
+
+    .eyebrow {
+      display: inline-block;
+      color: #8fb2ff;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+
+    .hero h1 {
+      font-size: 52px;
+      line-height: 1.05;
+      margin-bottom: 18px;
+      max-width: 760px;
+    }
+
+    .hero p {
+      color: #c7d2ea;
+      font-size: 20px;
+      max-width: 760px;
+      margin-bottom: 30px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+
+    .hero-note {
+      color: #91a3c7;
+      font-size: 15px;
+    }
+
+    .hero-card {
+      margin-top: 50px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 22px;
+      padding: 26px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+      overflow: hidden;
+    }
+
+    .dashboard-preview {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+    }
+
+    .panel {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 20px;
+    }
+
+    .panel h3 {
+      font-size: 18px;
+      margin-bottom: 16px;
+      color: #dce7ff;
+    }
+
+    .status-row, .activity-row, .stat-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      color: #d2dcf4;
+    }
+
+    .status-row:last-child,
+    .activity-row:last-child,
+    .stat-row:last-child {
+      border-bottom: none;
+    }
+
+    .status-pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .running {
+      background: rgba(38, 203, 124, 0.18);
+      color: #75f0b0;
+    }
+
+    .idle {
+      background: rgba(255, 255, 255, 0.08);
+      color: #dce7ff;
+    }
+
+    .section {
+      padding: 72px 0;
+    }
+
+    .section-title {
+      font-size: 36px;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+
+    .section-subtitle {
+      color: #b8c7e6;
+      font-size: 18px;
+      text-align: center;
+      max-width: 760px;
+      margin: 0 auto 40px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+    }
+
+    .card h3 {
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+
+    .card p {
+      color: #b8c7e6;
+      font-size: 16px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .stat-box {
+      background: linear-gradient(180deg, rgba(47,107,255,0.12), rgba(255,255,255,0.03));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 26px;
+      text-align: center;
+    }
+
+    .stat-box h3 {
+      font-size: 36px;
+      margin-bottom: 8px;
+    }
+
+    .stat-box p {
+      color: #b8c7e6;
+    }
+
+    .cta {
+      text-align: center;
+      padding: 80px 0;
+    }
+
+    .cta-box {
+      background: linear-gradient(180deg, rgba(47,107,255,0.14), rgba(255,255,255,0.04));
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 24px;
+      padding: 40px 24px;
+    }
+
+    .cta h2 {
+      font-size: 38px;
+      margin-bottom: 14px;
+    }
+
+    .cta p {
+      color: #c7d2ea;
+      max-width: 700px;
+      margin: 0 auto 24px;
+      font-size: 18px;
+    }
+
+    .footer {
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding: 28px 0;
+      color: #90a2c6;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    @media (max-width: 900px) {
+      .dashboard-preview,
+      .cards,
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .hero h1 {
+        font-size: 40px;
+      }
+
+      .hero p {
+        font-size: 18px;
+      }
+
+      .nav-links {
+        display: none;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .hero {
+        padding-top: 70px;
+      }
+
+      .hero h1 {
+        font-size: 34px;
+      }
+
+      .section-title,
+      .cta h2 {
+        font-size: 30px;
+      }
+
+      .btn {
+        width: 100%;
+        text-align: center;
+      }
+
+      .hero-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
 </head>
-
 <body>
+  <nav class="nav">
+    <div class="container nav-inner">
+      <div class="brand">WashTrac</div>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#visibility">Visibility</a>
+        <a href="#dashboard">Dashboard</a>
+        <a class="btn btn-secondary" href="dashboard.html">Operator Login</a>
+      </div>
+    </div>
+  </nav>
 
-<h1>WashTrac</h1>
-
-<p>Modern Carwash Control</p>
-
-<p>Monitor wash activity, manage access codes, and track usage from anywhere.</p>
-
-<a class="button" href="#">Open Dashboard</a>
-
-</body>
-</html>
+  <section class="hero">
+    <div class="container">
+      <div class="eyebrow">Modern Carwash Control</div>
+      <h1>One clean dashboard for wash activity, codes, and operator visibility.</h
