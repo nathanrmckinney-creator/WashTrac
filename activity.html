@@ -1,7 +1,12 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>WashTrac Activity</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>
+<title>WashTrac Activity</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
 body{
 margin:0;
 font-family:Arial;
@@ -45,25 +50,11 @@ padding:30px;
 margin-bottom:24px;
 }
 
-.filters{
-display:grid;
-grid-template-columns:repeat(5,1fr);
-gap:12px;
-margin-bottom:20px;
-}
-
-.filters input{
-padding:12px;
-border-radius:6px;
-border:1px solid #334155;
-background:#111827;
-color:white;
-}
-
 .card{
 background:#111827;
 padding:20px;
 border-radius:8px;
+margin-bottom:20px;
 }
 
 .summary{
@@ -90,6 +81,48 @@ color:#94a3b8;
 font-size:14px;
 }
 
+.form-grid{
+display:grid;
+grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;
+gap:12px;
+margin-bottom:18px;
+}
+
+.filters{
+display:grid;
+grid-template-columns:1fr 1fr 1fr 1fr 1fr;
+gap:12px;
+margin-bottom:18px;
+}
+
+input{
+padding:12px;
+border-radius:6px;
+border:1px solid #334155;
+background:#111827;
+color:white;
+}
+
+button{
+padding:12px 16px;
+background:#2563eb;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+button.secondary{
+background:#334155;
+}
+
+.actions{
+display:flex;
+gap:12px;
+flex-wrap:wrap;
+margin-top:16px;
+}
+
 table{
 width:100%;
 border-collapse:collapse;
@@ -109,67 +142,101 @@ text-transform:uppercase;
 letter-spacing:.5px;
 }
 
-button{
-padding:12px 16px;
-background:#2563eb;
-color:white;
-border:none;
-border-radius:6px;
-cursor:pointer;
+.notice{
+margin-top:14px;
+color:#94a3b8;
+font-size:14px;
 }
 
-button.secondary{
-background:#334155;
-}
-
-.actions{
-display:flex;
-gap:12px;
-margin-top:16px;
-flex-wrap:wrap;
-}
-
-@media (max-width:1000px){
-.filters,
-.summary{
+@media (max-width:1100px){
+.summary,
+.form-grid,
+.filters{
 grid-template-columns:1fr;
 }
 }
-</style></head><body><div class="sidebar"><div class="logo">WashTrac</div><div class="nav">
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+<div class="logo">WashTrac</div>
+
+<div class="nav">
 <a href="dashboard.html">Dashboard</a>
 <a href="codes.html">Codes</a>
 <a href="activity.html">Activity</a>
-<a href="#">Reports</a>
+<a href="usage.html">Reports</a>
 <a href="#">Locations</a>
 <a href="#">Devices</a>
 <a href="#">Account</a>
-</div></div><div class="main"><div class="page-header">
+</div>
+</div>
+
+<div class="main">
+
+<div class="page-header">
 <h1>Activity</h1>
-<p style="color:#94a3b8;">Search wash events by code, department, name, bay, or time.</p>
-</div><div class="summary">
+<p style="color:#94a3b8;">Log wash events and view live activity by code, department, name, bay, and event.</p>
+</div>
+
+<div class="summary">
 <div class="summary-box">
 <strong id="totalEvents">0</strong>
 <span>Total Events</span>
-</div><div class="summary-box">
+</div>
+
+<div class="summary-box">
 <strong id="uniqueCodes">0</strong>
 <span>Unique Codes</span>
-</div><div class="summary-box">
+</div>
+
+<div class="summary-box">
 <strong id="uniqueDepartments">0</strong>
 <span>Departments</span>
-</div><div class="summary-box">
+</div>
+
+<div class="summary-box">
 <strong id="uniqueBays">0</strong>
 <span>Bays</span>
 </div>
-</div><div class="card"><div class="filters">
+</div>
+
+<div class="card">
+<h3 style="margin-top:0;">Log Wash Event</h3>
+
+<div class="form-grid">
+<input id="logCode" placeholder="Code">
+<input id="logDepartment" placeholder="Department">
+<input id="logName" placeholder="Name">
+<input id="logBay" placeholder="Bay">
+<input id="logEvent" placeholder="Event" value="Activated wash">
+<button onclick="logWashEvent()">Log Event</button>
+</div>
+
+<div class="notice">
+When you log an event here, WashTrac also updates the matching code's usage count and last used time.
+</div>
+</div>
+
+<div class="card">
+<h3 style="margin-top:0;">Search Activity</h3>
+
+<div class="filters">
 <input id="filterCode" placeholder="Filter by code" oninput="renderActivity()">
 <input id="filterDepartment" placeholder="Filter by department" oninput="renderActivity()">
 <input id="filterName" placeholder="Filter by name" oninput="renderActivity()">
 <input id="filterBay" placeholder="Filter by bay" oninput="renderActivity()">
 <input id="filterEvent" placeholder="Filter by event" oninput="renderActivity()">
-</div><div class="actions">
+</div>
+
+<div class="actions">
 <button onclick="clearFilters()">Clear Filters</button>
 <button class="secondary" onclick="window.print()">Print</button>
-</div><table>
+</div>
+
+<table>
 <thead>
 <tr>
 <th>Time</th>
@@ -181,7 +248,12 @@ grid-template-columns:1fr;
 </tr>
 </thead>
 <tbody id="activityTableBody"></tbody>
-</table></div></div><script>
+</table>
+</div>
+
+</div>
+
+<script>
 
 const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co"
 const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS"
@@ -259,6 +331,99 @@ tbody.innerHTML = `
 
 }
 
+async function logWashEvent(){
+
+const code = document.getElementById("logCode").value.trim()
+const department = document.getElementById("logDepartment").value.trim()
+const name = document.getElementById("logName").value.trim()
+const bay = document.getElementById("logBay").value.trim()
+const event = document.getElementById("logEvent").value.trim()
+
+if(!code || !department || !name || !bay || !event){
+alert("Fill in all fields before logging an event.")
+return
+}
+
+const timestamp = new Date().toISOString()
+const displayTime = new Date().toLocaleString()
+
+const { error: activityError } = await client
+.from("activity")
+.insert([{
+code,
+department,
+name,
+bay,
+event,
+event_time: timestamp
+}])
+
+if(activityError){
+console.log(activityError)
+alert("Could not log activity.")
+return
+}
+
+const { data: existingCodes, error: fetchCodeError } = await client
+.from("codes")
+.select("*")
+.eq("code", code)
+.limit(1)
+
+if(fetchCodeError){
+console.log(fetchCodeError)
+alert("Activity logged, but code lookup failed.")
+renderActivity()
+return
+}
+
+if(existingCodes && existingCodes.length > 0){
+
+const existing = existingCodes[0]
+const newUses = Number(existing.uses || 0) + 1
+
+const { error: updateError } = await client
+.from("codes")
+.update({
+uses: newUses,
+last_used: displayTime,
+department: department,
+name: name
+})
+.eq("id", existing.id)
+
+if(updateError){
+console.log(updateError)
+alert("Activity logged, but code usage update failed.")
+}
+
+}else{
+
+const { error: insertCodeError } = await client
+.from("codes")
+.insert([{
+code,
+department,
+name,
+uses: 1,
+last_used: displayTime
+}])
+
+if(insertCodeError){
+console.log(insertCodeError)
+alert("Activity logged, but code record could not be created.")
+}
+}
+
+document.getElementById("logCode").value = ""
+document.getElementById("logDepartment").value = ""
+document.getElementById("logName").value = ""
+document.getElementById("logBay").value = ""
+document.getElementById("logEvent").value = "Activated wash"
+
+renderActivity()
+}
+
 function clearFilters(){
 document.getElementById("filterCode").value = ""
 document.getElementById("filterDepartment").value = ""
@@ -270,5 +435,7 @@ renderActivity()
 
 renderActivity()
 
-</script></body>
+</script>
+
+</body>
 </html>
