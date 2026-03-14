@@ -34,7 +34,7 @@
     }
 
     .nav {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 0 20px;
       min-height: 72px;
@@ -116,7 +116,7 @@
     }
 
     .container {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 0 20px 60px;
     }
@@ -161,7 +161,7 @@
     }
 
     .grid-2 {
-      grid-template-columns: 1.15fr 0.85fr;
+      grid-template-columns: 1.1fr 0.9fr;
     }
 
     .card {
@@ -264,57 +264,12 @@
       border-bottom: none;
     }
 
-    .code-header,
-    .code-row {
+    .toolbar-grid {
       display: grid;
-      grid-template-columns: 100px 1fr 1fr 90px 90px;
+      grid-template-columns: 1fr 1fr;
       gap: 12px;
-      align-items: center;
-    }
-
-    .code-header {
-      margin-top: 20px;
-      padding: 0 0 10px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.10);
-      color: #8eb5ff;
-      font-size: 13px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-    }
-
-    .code-list {
-      margin-top: 8px;
-    }
-
-    .code-row {
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      color: #dbe5fb;
-    }
-
-    .code-row:last-child {
-      border-bottom: none;
-    }
-
-    .code-status {
-      color: #bfd0ef;
-      font-size: 14px;
-    }
-
-    .delete-btn {
-      background: rgba(255,255,255,0.06);
-      color: #fff;
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 10px;
-      padding: 8px 12px;
-      cursor: pointer;
-      font-weight: 700;
-      transition: 0.2s ease;
-    }
-
-    .delete-btn:hover {
-      background: rgba(255,255,255,0.10);
+      margin-top: 18px;
+      margin-bottom: 18px;
     }
 
     .form-grid {
@@ -346,7 +301,8 @@
       box-shadow: 0 0 0 3px rgba(66,255,135,0.08);
     }
 
-    .add-btn {
+    .add-btn,
+    .small-btn {
       padding: 13px 18px;
       border: none;
       border-radius: 12px;
@@ -359,9 +315,69 @@
       transition: 0.25s ease;
     }
 
-    .add-btn:hover {
+    .add-btn:hover,
+    .small-btn:hover {
       background: rgba(255,255,255,0.12);
       transform: translateY(-2px);
+    }
+
+    .code-header,
+    .code-row {
+      display: grid;
+      grid-template-columns: 90px 1fr 1fr 80px 130px 90px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .code-header {
+      margin-top: 16px;
+      padding: 0 0 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+      color: #8eb5ff;
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .code-list {
+      margin-top: 8px;
+    }
+
+    .code-row {
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      color: #dbe5fb;
+    }
+
+    .code-row:last-child {
+      border-bottom: none;
+    }
+
+    .code-status {
+      color: #bfd0ef;
+      font-size: 14px;
+    }
+
+    .code-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .delete-btn {
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: 0.2s ease;
+    }
+
+    .delete-btn:hover {
+      background: rgba(255,255,255,0.10);
     }
 
     .footer-space {
@@ -394,6 +410,13 @@
       }
     }
 
+    @media (max-width: 1100px) {
+      .code-header,
+      .code-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
     @media (max-width: 980px) {
       .grid-3,
       .grid-2 {
@@ -418,8 +441,7 @@
       }
 
       .activity-row,
-      .code-header,
-      .code-row,
+      .toolbar-grid,
       .form-grid {
         grid-template-columns: 1fr;
       }
@@ -462,9 +484,9 @@
         </div>
 
         <div class="card">
-          <h2>Codes Used</h2>
-          <div class="stat">31</div>
-          <div class="muted">Unique access code activations</div>
+          <h2>Total Active Codes</h2>
+          <div class="stat" id="totalCodesStat">0</div>
+          <div class="muted">Codes currently available in the system</div>
         </div>
 
         <div class="card">
@@ -507,6 +529,7 @@
           </div>
 
           <button class="action-btn" onclick="toggleEStop()">Toggle Demo E-STOP</button>
+          <button class="action-btn" onclick="seedUsageDemo()">Seed Usage Demo</button>
         </div>
       </div>
 
@@ -514,7 +537,12 @@
         <div class="card">
           <h2>Code Management</h2>
           <div class="muted">
-            Add and remove active wash codes here. Department and Name help identify who each code belongs to.
+            Add, search, and remove active wash codes. Search by code, department, or name.
+          </div>
+
+          <div class="toolbar-grid">
+            <input id="searchCodes" type="text" placeholder="Search code, department, or name" oninput="renderCodes()" />
+            <button class="small-btn" onclick="clearSearch()">Clear Search</button>
           </div>
 
           <div class="form-grid">
@@ -528,33 +556,12 @@
             <div>Code</div>
             <div>Department</div>
             <div>Name</div>
-            <div>Status</div>
+            <div>Uses</div>
+            <div>Last Used</div>
             <div>Action</div>
           </div>
 
-          <div class="code-list" id="codeList">
-            <div class="code-row">
-              <div><strong>4421</strong></div>
-              <div>Maintenance</div>
-              <div>John Smith</div>
-              <div class="code-status">Active</div>
-              <button class="delete-btn" onclick="removeCode(this)">Remove</button>
-            </div>
-            <div class="code-row">
-              <div><strong>9933</strong></div>
-              <div>Operations</div>
-              <div>Lisa Carter</div>
-              <div class="code-status">Active</div>
-              <button class="delete-btn" onclick="removeCode(this)">Remove</button>
-            </div>
-            <div class="code-row">
-              <div><strong>2208</strong></div>
-              <div>Service</div>
-              <div>Mike Davis</div>
-              <div class="code-status">Active</div>
-              <button class="delete-btn" onclick="removeCode(this)">Remove</button>
-            </div>
-          </div>
+          <div class="code-list" id="codeList"></div>
         </div>
 
         <div class="card">
@@ -591,41 +598,151 @@
   </div>
 
   <script>
-    function logout() {
-      localStorage.removeItem("washtracLoggedIn");
-      window.location.href = "login.html";
+    const STORAGE_KEY = "washtracCodesV1";
+
+    function defaultCodes() {
+      return [
+        { code: "4421", department: "Maintenance", name: "John Smith", uses: 5, lastUsed: "2026-03-14 6:42 PM" },
+        { code: "9933", department: "Operations", name: "Lisa Carter", uses: 8, lastUsed: "2026-03-14 6:38 PM" },
+        { code: "2208", department: "Service", name: "Mike Davis", uses: 3, lastUsed: "2026-03-14 6:30 PM" }
+      ];
+    }
+
+    function getCodes() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) {
+        const initial = defaultCodes();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
+        return initial;
+      }
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        const fallback = defaultCodes();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(fallback));
+        return fallback;
+      }
+    }
+
+    function saveCodes(codes) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(codes));
+    }
+
+    function updateStats() {
+      const codes = getCodes();
+      document.getElementById("totalCodesStat").innerText = codes.length;
+    }
+
+    function renderCodes() {
+      const list = document.getElementById("codeList");
+      const search = document.getElementById("searchCodes").value.trim().toLowerCase();
+      const codes = getCodes();
+
+      let filtered = codes;
+
+      if (search !== "") {
+        filtered = codes.filter(item =>
+          item.code.toLowerCase().includes(search) ||
+          item.department.toLowerCase().includes(search) ||
+          item.name.toLowerCase().includes(search)
+        );
+      }
+
+      list.innerHTML = "";
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="code-row"><div>No matching codes found.</div></div>';
+        updateStats();
+        return;
+      }
+
+      filtered.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "code-row";
+        row.innerHTML = `
+          <div><strong>${item.code}</strong></div>
+          <div>${item.department}</div>
+          <div>${item.name}</div>
+          <div>${item.uses}</div>
+          <div>${item.lastUsed || "-"}</div>
+          <div class="code-actions">
+            <button class="delete-btn" onclick="removeCode('${item.code}')">Remove</button>
+          </div>
+        `;
+        list.appendChild(row);
+      });
+
+      updateStats();
     }
 
     function addCode() {
-      var codeInput = document.getElementById("newCode");
-      var departmentInput = document.getElementById("newDepartment");
-      var nameInput = document.getElementById("newName");
+      const codeInput = document.getElementById("newCode");
+      const departmentInput = document.getElementById("newDepartment");
+      const nameInput = document.getElementById("newName");
 
-      var code = codeInput.value.trim();
-      var department = departmentInput.value.trim();
-      var name = nameInput.value.trim();
+      const code = codeInput.value.trim();
+      const department = departmentInput.value.trim();
+      const name = nameInput.value.trim();
 
-      if (code === "" || department === "" || name === "") return;
+      if (!code || !department || !name) return;
 
-      var list = document.getElementById("codeList");
-      var row = document.createElement("div");
-      row.className = "code-row";
-      row.innerHTML = `
-        <div><strong>${code}</strong></div>
-        <div>${department}</div>
-        <div>${name}</div>
-        <div class="code-status">Active</div>
-        <button class="delete-btn" onclick="removeCode(this)">Remove</button>
-      `;
-      list.prepend(row);
+      const codes = getCodes();
+      const exists = codes.some(item => item.code.toLowerCase() === code.toLowerCase());
 
+      if (exists) {
+        alert("That code already exists.");
+        return;
+      }
+
+      codes.unshift({
+        code,
+        department,
+        name,
+        uses: 0,
+        lastUsed: "-"
+      });
+
+      saveCodes(codes);
       codeInput.value = "";
       departmentInput.value = "";
       nameInput.value = "";
+      renderCodes();
     }
 
-    function removeCode(button) {
-      button.parentElement.remove();
+    function removeCode(codeToRemove) {
+      const codes = getCodes().filter(item => item.code !== codeToRemove);
+      saveCodes(codes);
+      renderCodes();
+    }
+
+    function clearSearch() {
+      document.getElementById("searchCodes").value = "";
+      renderCodes();
+    }
+
+    function seedUsageDemo() {
+      const codes = getCodes();
+
+      if (codes.length === 0) return;
+
+      const now = new Date();
+      const stamp = now.toLocaleDateString() + " " + now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+      codes[0].uses += 1;
+      codes[0].lastUsed = stamp;
+
+      if (codes[1]) {
+        codes[1].uses += 1;
+        codes[1].lastUsed = stamp;
+      }
+
+      saveCodes(codes);
+      renderCodes();
+    }
+
+    function logout() {
+      localStorage.removeItem("washtracLoggedIn");
+      window.location.href = "login.html";
     }
 
     function toggleEStop() {
@@ -644,6 +761,8 @@
         text.style.color = "#ffffff";
       }
     }
+
+    renderCodes();
   </script>
 </body>
 </html>
