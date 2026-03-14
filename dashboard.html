@@ -8,9 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-*{
-box-sizing:border-box;
-}
+*{box-sizing:border-box;}
 
 body{
 margin:0;
@@ -224,6 +222,17 @@ background:linear-gradient(90deg,#2563eb,#60a5fa);
 border-radius:999px;
 }
 
+.live-pill{
+display:inline-block;
+padding:6px 10px;
+border-radius:999px;
+background:rgba(34,197,94,.15);
+color:#86efac;
+font-size:12px;
+font-weight:bold;
+margin-left:10px;
+}
+
 .note{
 margin-top:14px;
 color:#94a3b8;
@@ -311,14 +320,14 @@ grid-template-columns:1fr;
 <div class="main">
 
 <div class="page-header">
-<h1>Dashboard</h1>
+<h1>Dashboard <span class="live-pill">LIVE</span></h1>
 <p>Overview of wash usage, active codes, department activity, and recent events.</p>
 </div>
 
 <div class="summary">
 <div class="summary-box">
 <strong id="todayWashes">0</strong>
-<span>Today's Washes</span>
+<span>Total Activity Records</span>
 </div>
 
 <div class="summary-box">
@@ -342,7 +351,7 @@ grid-template-columns:1fr;
 <div class="card">
 <h3>Recent Activity</h3>
 <div id="recentActivity"></div>
-<div class="note">Latest events from your activity log.</div>
+<div class="note">This feed updates automatically when new activity is logged.</div>
 </div>
 
 <div class="card">
@@ -404,7 +413,7 @@ async function fetchCodes(){
   return data || [];
 }
 
-async function fetchActivity(){
+async function fetchRecentActivity(){
   const { data, error } = await client
     .from("activity")
     .select("*")
@@ -522,7 +531,7 @@ function renderDepartmentBars(departments){
 
 async function loadDashboard(){
   const codes = await fetchCodes();
-  const recentActivity = await fetchActivity();
+  const recentActivity = await fetchRecentActivity();
   const allActivity = await fetchAllActivity();
   const departments = buildDepartmentData(codes);
 
@@ -542,6 +551,24 @@ async function loadDashboard(){
 }
 
 loadDashboard();
+
+client
+  .channel("washtrac-live-dashboard")
+  .on(
+    "postgres_changes",
+    { event: "*", schema: "public", table: "activity" },
+    () => {
+      loadDashboard();
+    }
+  )
+  .on(
+    "postgres_changes",
+    { event: "*", schema: "public", table: "codes" },
+    () => {
+      loadDashboard();
+    }
+  )
+  .subscribe();
 </script>
 
 </body>
