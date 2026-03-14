@@ -2,11 +2,11 @@
 <html>
 <head>
 <title>WashTrac Login</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
-
 body{
-font-family:Arial;
+font-family:Arial, sans-serif;
 background:#0b1220;
 color:white;
 display:flex;
@@ -19,17 +19,24 @@ margin:0;
 .card{
 background:#16233f;
 padding:40px;
-border-radius:10px;
+border-radius:12px;
 width:320px;
 text-align:center;
+box-shadow:0 10px 30px rgba(0,0,0,0.25);
+}
+
+h2{
+margin-top:0;
+margin-bottom:20px;
 }
 
 input{
 width:100%;
 padding:12px;
 margin:10px 0;
-border-radius:6px;
+border-radius:8px;
 border:none;
+box-sizing:border-box;
 }
 
 button{
@@ -37,51 +44,40 @@ width:100%;
 padding:12px;
 background:#42ff87;
 border:none;
-border-radius:6px;
+border-radius:8px;
 font-weight:bold;
 cursor:pointer;
+margin-top:10px;
 }
 
+.small{
+margin-top:15px;
+color:#b9c7e6;
+font-size:14px;
+}
 </style>
 
 <script>
+function login() {
+  var user = document.getElementById("user").value.trim();
+  var pass = document.getElementById("pass").value.trim();
 
-function login(){
-
-var user = document.getElementById("user").value
-var pass = document.getElementById("pass").value
-
-if(user=="admin" && pass=="wash123"){
-
-window.location="dashboard.html"
-
+  if (user === "admin" && pass === "wash123") {
+    window.location.href = "dashboard.html";
+  } else {
+    alert("Invalid login");
+  }
 }
-
-else{
-
-alert("Invalid Login")
-
-}
-
-}
-
 </script>
-
 </head>
 
 <body>
-
-<div class="card">
-
-<h2>WashTrac Login</h2>
-
-<input id="user" placeholder="Username">
-
-<input id="pass" type="password" placeholder="Password">
-
-<button onclick="login()">Login</button>
-
-</div>
-
+  <div class="card">
+    <h2>WashTrac Login</h2>
+    <input id="user" type="text" placeholder="Username">
+    <input id="pass" type="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <div class="small">Temporary login for testing</div>
+  </div>
 </body>
 </html>
