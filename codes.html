@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WashTrac Code Management</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #08111f;
+      color: #fff;
+      line-height: 1.5;
+    }
+
+    a { text-decoration: none; color: inherit; }
+
+    .topbar {
+      background: rgba(8,17,31,.92);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+
+    .nav {
+      max-width: 1250px;
+      margin: auto;
+      padding: 0 20px;
+      min-height: 72px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .brand {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a, .nav-links button {
+      color: #bfd0ef;
+      font-size: 15px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .logout-btn {
+      padding: 11px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.14);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .container {
+      max-width: 1250px;
+      margin: auto;
+      padding: 40px 20px 60px;
+    }
+
+    .hero {
+      margin-bottom: 26px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 12px;
+      color: #8eb5ff;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 1.3px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+
+    p {
+      color: #bfd0ef;
+      font-size: 17px;
+      max-width: 900px;
+    }
+
+    .card {
+      background: rgba(10,16,30,.72);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.18);
+      margin-bottom: 20px;
+    }
+
+    .toolbar-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr auto auto auto;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.05);
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+    }
+
+    input::placeholder { color: #8fa4ca; }
+
+    .btn {
+      padding: 13px 18px;
+      border: none;
+      border-radius: 12px;
+      background: rgba(255,255,255,.08);
+      color: #fff;
+      font-weight: 800;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .btn:hover { background: rgba(255,255,255,.12); }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 900px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      color: #dbe5fb;
+    }
+
+    th {
+      color: #8eb5ff;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .small-btn {
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .small-btn:hover { background: rgba(255,255,255,.10); }
+
+    @media (max-width: 900px) {
+      .toolbar-grid, .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <script>
+    if (localStorage.getItem("washtracLoggedIn") !== "yes") {
+      window.location.href = "login.html";
+    }
+  </script>
+
+  <div class="topbar">
+    <div class="nav">
+      <div class="brand">WASHTRAC</div>
+      <div class="nav-links">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="usage.html">Usage</a>
+        <button onclick="logout()" class="logout-btn">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="hero">
+      <div class="eyebrow">Code Management</div>
+      <h1>Search, add, remove, print, and export codes.</h1>
+      <p>
+        Search by code, department, or name. Manage your active code list and export data for printing or email.
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="toolbar-grid">
+        <input id="searchInput" type="text" placeholder="Search code, department, or name" oninput="renderCodes()" />
+        <input id="departmentFilter" type="text" placeholder="Filter by department" oninput="renderCodes()" />
+        <input id="nameFilter" type="text" placeholder="Filter by name" oninput="renderCodes()" />
+        <button class="btn" onclick="clearFilters()">Clear</button>
+        <button class="btn" onclick="printTable()">Print</button>
+        <button class="btn" onclick="downloadCSV()">Export CSV</button>
+      </div>
+
+      <div class="form-grid">
+        <input id="newCode" type="text" placeholder="Code" />
+        <input id="newDepartment" type="text" placeholder="Department" />
+        <input id="newName" type="text" placeholder="Name" />
+        <button class="btn" onclick="addCode()">Add Code</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Department</th>
+              <th>Name</th>
+              <th>Uses</th>
+              <th>Last Used</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="codesTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "washtracCodesV1";
+
+    function defaultCodes() {
+      return [
+        { code: "4421", department: "Maintenance", name: "John Smith", uses: 5, lastUsed: "2026-03-14 6:42 PM" },
+        { code: "9933", department: "Operations", name: "Lisa Carter", uses: 8, lastUsed: "2026-03-14 6:38 PM" },
+        { code: "2208", department: "Service", name: "Mike Davis", uses: 3, lastUsed: "2026-03-14 6:30 PM" }
+      ];
+    }
+
+    function getCodes() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) {
+        const initial = defaultCodes();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
+        return initial;
+      }
+      return JSON.parse(saved);
+    }
+
+    function saveCodes(codes) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(codes));
+    }
+
+    function renderCodes() {
+      const body = document.getElementById("codesTableBody");
+      const search = document.getElementById("searchInput").value.trim().toLowerCase();
+      const dept = document.getElementById("departmentFilter").value.trim().toLowerCase();
+      const name = document.getElementById("nameFilter").value.trim().toLowerCase();
+
+      let codes = getCodes().filter(item => {
+        const matchSearch =
+          item.code.toLowerCase().includes(search) ||
+          item.department.toLowerCase().includes(search) ||
+          item.name.toLowerCase().includes(search);
+
+        const matchDept = item.department.toLowerCase().includes(dept);
+        const matchName = item.name.toLowerCase().includes(name);
+
+        return matchSearch && matchDept && matchName;
+      });
+
+      body.innerHTML = "";
+
+      if (codes.length === 0) {
+        body.innerHTML = `<tr><td colspan="6">No matching codes found.</td></tr>`;
+        return;
+      }
+
+      codes.forEach(item => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>${item.code}</strong></td>
+          <td>${item.department}</td>
+          <td>${item.name}</td>
+          <td>${item.uses}</td>
+          <td>${item.lastUsed || "-"}</td>
+          <td>
+            <div class="actions">
+              <button class="small-btn" onclick="removeCode('${item.code}')">Remove</button>
+            </div>
+          </td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    function addCode() {
+      const code = document.getElementById("newCode").value.trim();
+      const department = document.getElementById("newDepartment").value.trim();
+      const name = document.getElementById("newName").value.trim();
+
+      if (!code || !department || !name) return;
+
+      const codes = getCodes();
+      if (codes.some(item => item.code.toLowerCase() === code.toLowerCase())) {
+        alert("That code already exists.");
+        return;
+      }
+
+      codes.unshift({
+        code,
+        department,
+        name,
+        uses: 0,
+        lastUsed: "-"
+      });
+
+      saveCodes(codes);
+
+      document.getElementById("newCode").value = "";
+      document.getElementById("newDepartment").value = "";
+      document.getElementById("newName").value = "";
+
+      renderCodes();
+    }
+
+    function removeCode(codeToRemove) {
+      const codes = getCodes().filter(item => item.code !== codeToRemove);
+      saveCodes(codes);
+      renderCodes();
+    }
+
+    function clearFilters() {
+      document.getElementById("searchInput").value = "";
+      document.getElementById("departmentFilter").value = "";
+      document.getElementById("nameFilter").value = "";
+      renderCodes();
+    }
+
+    function printTable() {
+      window.print();
+    }
+
+    function downloadCSV() {
+      const codes = getCodes();
+      let csv = "Code,Department,Name,Uses,Last Used\n";
+      codes.forEach(item => {
+        csv += `${item.code},${item.department},${item.name},${item.uses},${item.lastUsed}\n`;
+      });
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "washtrac_codes.csv";
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function logout() {
+      localStorage.removeItem("washtracLoggedIn");
+      window.location.href = "login.html";
+    }
+
+    renderCodes();
+  </script>
+</body>
+</html>
