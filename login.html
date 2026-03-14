@@ -40,12 +40,18 @@
       background: #42ff87;
       color: black;
       font-weight: bold;
+      cursor: pointer;
     }
     a {
       color: #8fb2ff;
       text-decoration: none;
       display: inline-block;
       margin-top: 14px;
+    }
+    .note {
+      margin-top: 14px;
+      color: #b9c7e6;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -55,19 +61,20 @@
     <input id="user" type="text" placeholder="Username">
     <input id="pass" type="password" placeholder="Password">
     <button onclick="login()">Login</button>
+    <div class="note">Test login: admin / wash123</div>
     <a href="index.html">Back to Home</a>
   </div>
 
   <script>
     function login() {
-      var user = document.getElementById('user').value;
-      var pass = document.getElementById('pass').value;
+      var user = document.getElementById("user").value.trim();
+      var pass = document.getElementById("pass").value.trim();
 
-      if (user === 'admin' && pass === 'wash123') {
-        localStorage.setItem('washtracLoggedIn', 'yes');
-        window.location.href = 'dashboard.html';
+      if (user === "admin" && pass === "wash123") {
+        localStorage.setItem("washtracLoggedIn", "yes");
+        window.location.href = "dashboard.html";
       } else {
-        alert('Invalid username or password');
+        alert("Invalid username or password");
       }
     }
   </script>
