@@ -1,115 +1,263 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>WashTrac Dashboard</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WashTrac Operator Dashboard</title>
+  <style>
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+    }
 
-<style>
+    body{
+      font-family:Arial, Helvetica, sans-serif;
+      background:#0b1220;
+      color:#fff;
+    }
 
-body{
-font-family:Arial;
-background:#0b1220;
-color:white;
-margin:0;
-}
+    .topbar{
+      background:#111a30;
+      padding:18px 20px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+    }
 
-.header{
-background:#111a30;
-padding:20px;
-font-size:24px;
-font-weight:bold;
-}
+    .brand{
+      font-size:24px;
+      font-weight:700;
+    }
 
-.container{
-padding:30px;
-}
+    .topbar a{
+      color:#8fb2ff;
+      text-decoration:none;
+      font-weight:bold;
+    }
 
-.card{
-background:#16233f;
-padding:20px;
-margin-bottom:20px;
-border-radius:10px;
-}
+    .wrap{
+      max-width:1100px;
+      margin:auto;
+      padding:24px;
+    }
 
-.status{
-display:flex;
-justify-content:space-between;
-padding:10px 0;
-border-bottom:1px solid rgba(255,255,255,0.1);
-}
+    .hero{
+      margin-bottom:24px;
+    }
 
-.running{
-color:#42ff87;
-}
+    .hero h1{
+      font-size:34px;
+      margin-bottom:10px;
+    }
 
-.idle{
-color:#aaa;
-}
+    .hero p{
+      color:#b9c7e6;
+      font-size:18px;
+    }
 
-.activity{
-display:flex;
-justify-content:space-between;
-padding:8px 0;
-}
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:20px;
+      margin-bottom:24px;
+    }
 
-</style>
+    .card{
+      background:#16233f;
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:16px;
+      padding:22px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.18);
+    }
+
+    .card h2{
+      font-size:20px;
+      margin-bottom:16px;
+    }
+
+    .stat{
+      font-size:34px;
+      font-weight:700;
+      margin-bottom:8px;
+    }
+
+    .muted{
+      color:#aebcda;
+    }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:12px 0;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+
+    .row:last-child{
+      border-bottom:none;
+    }
+
+    .pill{
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+    }
+
+    .running{
+      background:rgba(66,255,135,0.14);
+      color:#42ff87;
+    }
+
+    .idle{
+      background:rgba(255,255,255,0.08);
+      color:#d6def1;
+    }
+
+    .wide{
+      display:grid;
+      grid-template-columns:1.2fr 0.8fr;
+      gap:20px;
+      margin-bottom:24px;
+    }
+
+    .activity-row{
+      display:grid;
+      grid-template-columns:120px 1fr 100px;
+      gap:12px;
+      padding:12px 0;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+      color:#dbe5fb;
+    }
+
+    .activity-row:last-child{
+      border-bottom:none;
+    }
+
+    .btn{
+      display:inline-block;
+      margin-top:16px;
+      padding:12px 18px;
+      border-radius:10px;
+      background:#42ff87;
+      color:#000;
+      font-weight:bold;
+      text-decoration:none;
+    }
+
+    @media (max-width: 900px){
+      .grid,
+      .wide{
+        grid-template-columns:1fr;
+      }
+
+      .activity-row{
+        grid-template-columns:1fr;
+      }
+
+      .hero h1{
+        font-size:28px;
+      }
+    }
+  </style>
 </head>
-
 <body>
 
-<div class="header">
-WashTrac Operator Dashboard
-</div>
+  <div class="topbar">
+    <div class="brand">WashTrac</div>
+    <a href="index.html">← Back to Home</a>
+  </div>
 
-<div class="container">
+  <div class="wrap">
 
-<div class="card">
-<h2>Bay Status</h2>
+    <div class="hero">
+      <h1>Operator Dashboard</h1>
+      <p>Monitor wash activity, bay status, code usage, and daily performance from one clean view.</p>
+    </div>
 
-<div class="status">
-<span>Bay 1</span>
-<span class="running">RUNNING</span>
-</div>
+    <div class="grid">
+      <div class="card">
+        <h2>Today's Washes</h2>
+        <div class="stat">47</div>
+        <div class="muted">Total completed cycles today</div>
+      </div>
 
-<div class="status">
-<span>Bay 2</span>
-<span class="idle">IDLE</span>
-</div>
+      <div class="card">
+        <h2>Codes Used</h2>
+        <div class="stat">31</div>
+        <div class="muted">Unique access code activations</div>
+      </div>
 
-</div>
+      <div class="card">
+        <h2>System Status</h2>
+        <div class="stat">Online</div>
+        <div class="muted">Controller connected and reporting</div>
+      </div>
+    </div>
 
-<div class="card">
-<h2>Today's Stats</h2>
+    <div class="wide">
+      <div class="card">
+        <h2>Live Bay Status</h2>
 
-<div class="status">
-<span>Washes</span>
-<span>47</span>
-</div>
+        <div class="row">
+          <span>Bay 1</span>
+          <span class="pill running">RUNNING</span>
+        </div>
 
-<div class="status">
-<span>Codes Used</span>
-<span>31</span>
-</div>
+        <div class="row">
+          <span>Bay 2</span>
+          <span class="pill idle">IDLE</span>
+        </div>
 
-</div>
+        <div class="row">
+          <span>Vacuum Row</span>
+          <span class="pill idle">IDLE</span>
+        </div>
 
-<div class="card">
-<h2>Recent Activity</h2>
+        <div class="row">
+          <span>Controller</span>
+          <span class="pill running">ONLINE</span>
+        </div>
+      </div>
 
-<div class="activity">
-<span>6:42 PM</span>
-<span>Code 4421</span>
-<span>Bay 2</span>
-</div>
+      <div class="card">
+        <h2>Quick Actions</h2>
+        <div class="muted">This section can later connect to live controls, code management, and reporting tools.</div>
+        <a class="btn" href="#">View Audit Log</a>
+      </div>
+    </div>
 
-<div class="activity">
-<span>6:38 PM</span>
-<span>Code 9933</span>
-<span>Bay 1</span>
-</div>
+    <div class="card">
+      <h2>Recent Activity</h2>
 
-</div>
+      <div class="activity-row">
+        <div>6:42 PM</div>
+        <div>Code 4421 activated wash</div>
+        <div>Bay 2</div>
+      </div>
 
-</div>
+      <div class="activity-row">
+        <div>6:38 PM</div>
+        <div>Code 9933 activated wash</div>
+        <div>Bay 1</div>
+      </div>
+
+      <div class="activity-row">
+        <div>6:30 PM</div>
+        <div>Code 2208 activated wash</div>
+        <div>Bay 1</div>
+      </div>
+
+      <div class="activity-row">
+        <div>6:21 PM</div>
+        <div>Operator login detected</div>
+        <div>System</div>
+      </div>
+    </div>
+
+  </div>
 
 </body>
 </html>
