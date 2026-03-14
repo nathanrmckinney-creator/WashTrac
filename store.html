@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WashTrac Store</title>
+
+<style>
+
+body{
+font-family:Arial, Helvetica, sans-serif;
+background:#08111f;
+color:white;
+margin:0;
+}
+
+.topbar{
+background:rgba(8,17,31,.92);
+border-bottom:1px solid rgba(255,255,255,.08);
+position:sticky;
+top:0;
+z-index:100;
+backdrop-filter:blur(8px);
+}
+
+.nav{
+max-width:1100px;
+margin:auto;
+padding:20px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:20px;
+}
+
+.brand{
+font-size:28px;
+font-weight:800;
+letter-spacing:1px;
+}
+
+.nav-links{
+display:flex;
+gap:20px;
+flex-wrap:wrap;
+}
+
+.nav-links a{
+color:#bfd0ef;
+text-decoration:none;
+font-size:15px;
+}
+
+.login-btn{
+padding:11px 16px;
+border-radius:10px;
+border:1px solid rgba(255,255,255,.14);
+color:#fff;
+font-weight:700;
+}
+
+.wrap{
+max-width:1000px;
+margin:auto;
+padding:80px 20px;
+text-align:center;
+}
+
+h1{
+font-size:48px;
+margin-bottom:20px;
+}
+
+p{
+color:#bfd0ef;
+font-size:18px;
+max-width:700px;
+margin:auto;
+}
+
+.product{
+margin-top:60px;
+padding:40px;
+background:rgba(255,255,255,.04);
+border:1px solid rgba(255,255,255,.08);
+border-radius:20px;
+}
+
+.product h2{
+font-size:32px;
+margin-bottom:10px;
+}
+
+.product p{
+margin-bottom:20px;
+}
+
+.btn{
+display:inline-block;
+padding:14px 24px;
+border-radius:12px;
+background:rgba(255,255,255,.08);
+border:1px solid rgba(255,255,255,.14);
+color:white;
+font-weight:700;
+text-decoration:none;
+}
+
+.note{
+margin-top:16px;
+font-size:14px;
+color:#8fa4ca;
+}
+
+@media (max-width:700px){
+.nav{
+flex-direction:column;
+align-items:flex-start;
+}
+h1{
+font-size:34px;
+}
+p{
+font-size:17px;
+}
+.product{
+padding:28px 20px;
+}
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+<div class="nav">
+<div class="brand">WASHTRAC</div>
+
+<div class="nav-links">
+<a href="index.html">Home</a>
+<a href="store.html">Store</a>
+<a href="login.html" class="login-btn">Login</a>
+</div>
+</div>
+</div>
+
+<div class="wrap">
+
+<h1>WashTrac Hardware</h1>
+
+<p>
+The WashTrac platform works with dedicated hardware to provide
+secure access control and wash activation for modern carwash operations.
+</p>
+
+<div class="product">
+
+<h2>WashTrac CodeBox</h2>
+
+<p>
+The CodeBox is a rugged entry system designed for carwash environments.
+It provides a simple keypad interface for entering access codes while
+communicating directly with the WashTrac platform for tracking,
+management, and reporting.
+</p>
+
+<a class="btn">Purchase</a>
+
+<div class="note">
+Ordering and product availability information will appear here.
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>
