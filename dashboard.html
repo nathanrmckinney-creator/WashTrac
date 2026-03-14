@@ -71,11 +71,6 @@
       border: 1px solid rgba(255,255,255,0.14) !important;
       color: #fff !important;
       font-weight: 700;
-      transition: 0.2s ease;
-    }
-
-    .login-btn:hover {
-      background: rgba(255,255,255,0.06);
     }
 
     .container {
@@ -121,7 +116,7 @@
     }
 
     .grid-2 {
-      grid-template-columns: 1.2fr 0.8fr;
+      grid-template-columns: 1.15fr 0.85fr;
     }
 
     .card {
@@ -156,6 +151,7 @@
       padding: 12px 0;
       border-bottom: 1px solid rgba(255,255,255,0.08);
       color: #d2dcf4;
+      align-items: center;
     }
 
     .row:last-child {
@@ -167,6 +163,7 @@
       border-radius: 999px;
       font-size: 12px;
       font-weight: 800;
+      white-space: nowrap;
     }
 
     .running {
@@ -179,9 +176,14 @@
       color: #d8e2f6;
     }
 
-    .online {
+    .normal {
       background: rgba(66,255,135,0.14);
       color: #42ff87;
+    }
+
+    .estop {
+      background: rgba(255,70,70,0.16);
+      color: #ff7d7d;
     }
 
     .action-btn {
@@ -194,6 +196,7 @@
       color: #fff;
       background: rgba(255,255,255,0.04);
       margin-top: 16px;
+      cursor: pointer;
     }
 
     .activity-row {
@@ -207,6 +210,72 @@
 
     .activity-row:last-child {
       border-bottom: none;
+    }
+
+    .code-list {
+      margin-top: 8px;
+    }
+
+    .code-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      align-items: center;
+      color: #dbe5fb;
+    }
+
+    .code-row:last-child {
+      border-bottom: none;
+    }
+
+    .code-status {
+      color: #bfd0ef;
+      font-size: 14px;
+    }
+
+    .delete-btn {
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+    }
+
+    input::placeholder {
+      color: #8fa4ca;
+    }
+
+    .add-btn {
+      padding: 13px 18px;
+      border: none;
+      border-radius: 12px;
+      background: #42ff87;
+      color: #07111f;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
     }
 
     .footer-space {
@@ -236,7 +305,9 @@
         font-size: 17px;
       }
 
-      .activity-row {
+      .activity-row,
+      .code-row,
+      .form-row {
         grid-template-columns: 1fr;
       }
     }
@@ -261,11 +332,11 @@
 
   <div class="container">
     <div class="hero">
-      <div class="eyebrow">Operator Dashboard</div>
+      <div class="eyebrow">Dashboard</div>
       <h1>Live visibility into your wash operation.</h1>
       <p>
-        Monitor site activity, check bay status, review code usage, and keep a clean view
-        of daily performance from one dashboard.
+        Monitor site activity, check bay status, review code usage, manage active codes,
+        and track E-STOP condition from one control panel.
       </p>
     </div>
 
@@ -283,9 +354,9 @@
       </div>
 
       <div class="card">
-        <h2>System Status</h2>
-        <div class="stat">Online</div>
-        <div class="muted">Controller connected and reporting</div>
+        <h2>E-STOP Status</h2>
+        <div class="stat" id="estopText">Normal</div>
+        <div class="muted">This will later reflect the live Pi input state</div>
       </div>
     </div>
 
@@ -309,47 +380,79 @@
         </div>
 
         <div class="row">
-          <span>Controller</span>
-          <span class="pill online">ONLINE</span>
+          <span>E-STOP Input</span>
+          <span class="pill normal" id="estopPill">NORMAL</span>
         </div>
       </div>
 
       <div class="card">
         <h2>Quick Actions</h2>
         <div class="muted">
-          This area can later connect to live controls, code management, activity logs,
-          and automated reporting.
+          This area can later connect to live controls, activity logs, hardware inputs,
+          and real-time reporting from the Pi.
         </div>
 
-        <a href="#" class="action-btn">View Activity Log</a>
+        <button class="action-btn" onclick="toggleEStop()">Toggle Demo E-STOP</button>
       </div>
     </div>
 
-    <div class="card">
-      <h2>Recent Activity</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h2>Code Management</h2>
+        <div class="muted">
+          Add and remove active wash codes here. Later this can connect to your live code database.
+        </div>
 
-      <div class="activity-row">
-        <div>6:42 PM</div>
-        <div>Code 4421 activated wash</div>
-        <div>Bay 2</div>
+        <div class="form-row">
+          <input id="newCode" type="text" placeholder="Enter new code" />
+          <button class="add-btn" onclick="addCode()">Add Code</button>
+        </div>
+
+        <div class="code-list" id="codeList">
+          <div class="code-row">
+            <div><strong>4421</strong></div>
+            <div class="code-status">Active</div>
+            <button class="delete-btn" onclick="removeCode(this)">Remove</button>
+          </div>
+          <div class="code-row">
+            <div><strong>9933</strong></div>
+            <div class="code-status">Active</div>
+            <button class="delete-btn" onclick="removeCode(this)">Remove</button>
+          </div>
+          <div class="code-row">
+            <div><strong>2208</strong></div>
+            <div class="code-status">Active</div>
+            <button class="delete-btn" onclick="removeCode(this)">Remove</button>
+          </div>
+        </div>
       </div>
 
-      <div class="activity-row">
-        <div>6:38 PM</div>
-        <div>Code 9933 activated wash</div>
-        <div>Bay 1</div>
-      </div>
+      <div class="card">
+        <h2>Recent Activity</h2>
 
-      <div class="activity-row">
-        <div>6:30 PM</div>
-        <div>Code 2208 activated wash</div>
-        <div>Bay 3</div>
-      </div>
+        <div class="activity-row">
+          <div>6:42 PM</div>
+          <div>Code 4421 activated wash</div>
+          <div>Bay 2</div>
+        </div>
 
-      <div class="activity-row">
-        <div>6:21 PM</div>
-        <div>Operator login detected</div>
-        <div>System</div>
+        <div class="activity-row">
+          <div>6:38 PM</div>
+          <div>Code 9933 activated wash</div>
+          <div>Bay 1</div>
+        </div>
+
+        <div class="activity-row">
+          <div>6:30 PM</div>
+          <div>Code 2208 activated wash</div>
+          <div>Bay 3</div>
+        </div>
+
+        <div class="activity-row">
+          <div>6:21 PM</div>
+          <div>Operator login detected</div>
+          <div>System</div>
+        </div>
       </div>
     </div>
 
@@ -360,6 +463,42 @@
     function logout() {
       localStorage.removeItem("washtracLoggedIn");
       window.location.href = "login.html";
+    }
+
+    function addCode() {
+      var input = document.getElementById("newCode");
+      var code = input.value.trim();
+      if (code === "") return;
+
+      var list = document.getElementById("codeList");
+      var row = document.createElement("div");
+      row.className = "code-row";
+      row.innerHTML = `
+        <div><strong>${code}</strong></div>
+        <div class="code-status">Active</div>
+        <button class="delete-btn" onclick="removeCode(this)">Remove</button>
+      `;
+      list.prepend(row);
+      input.value = "";
+    }
+
+    function removeCode(button) {
+      button.parentElement.remove();
+    }
+
+    function toggleEStop() {
+      var pill = document.getElementById("estopPill");
+      var text = document.getElementById("estopText");
+
+      if (pill.textContent === "NORMAL") {
+        pill.textContent = "ACTIVE";
+        pill.className = "pill estop";
+        text.textContent = "Active";
+      } else {
+        pill.textContent = "NORMAL";
+        pill.className = "pill normal";
+        text.textContent = "Normal";
+      }
     }
   </script>
 </body>
