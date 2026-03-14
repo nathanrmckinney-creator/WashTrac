@@ -182,8 +182,8 @@
     }
 
     .estop {
-      background: rgba(255,70,70,0.16);
-      color: #ff7d7d;
+      background: rgba(255,70,70,0.18);
+      color: #ff4d4d;
     }
 
     .action-btn {
@@ -212,17 +212,32 @@
       border-bottom: none;
     }
 
+    .code-header,
+    .code-row {
+      display: grid;
+      grid-template-columns: 100px 1fr 1fr 90px 90px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .code-header {
+      margin-top: 20px;
+      padding: 0 0 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+      color: #8eb5ff;
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
     .code-list {
       margin-top: 8px;
     }
 
     .code-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr auto;
-      gap: 12px;
       padding: 12px 0;
       border-bottom: 1px solid rgba(255,255,255,0.08);
-      align-items: center;
       color: #dbe5fb;
     }
 
@@ -245,9 +260,9 @@
       font-weight: 700;
     }
 
-    .form-row {
+    .form-grid {
       display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: 1fr 1fr 1fr auto;
       gap: 12px;
       margin-top: 18px;
     }
@@ -306,8 +321,9 @@
       }
 
       .activity-row,
+      .code-header,
       .code-row,
-      .form-row {
+      .form-grid {
         grid-template-columns: 1fr;
       }
     }
@@ -356,7 +372,7 @@
       <div class="card">
         <h2>E-STOP Status</h2>
         <div class="stat" id="estopText">Normal</div>
-        <div class="muted">This will later reflect the live Pi input state</div>
+        <div class="muted">This will later reflect the live Pi state</div>
       </div>
     </div>
 
@@ -380,7 +396,7 @@
         </div>
 
         <div class="row">
-          <span>E-STOP Input</span>
+          <span>E-STOP</span>
           <span class="pill normal" id="estopPill">NORMAL</span>
         </div>
       </div>
@@ -400,27 +416,43 @@
       <div class="card">
         <h2>Code Management</h2>
         <div class="muted">
-          Add and remove active wash codes here. Later this can connect to your live code database.
+          Add and remove active wash codes here. Department and Name help identify who each code belongs to.
         </div>
 
-        <div class="form-row">
-          <input id="newCode" type="text" placeholder="Enter new code" />
+        <div class="form-grid">
+          <input id="newCode" type="text" placeholder="Code" />
+          <input id="newDepartment" type="text" placeholder="Department" />
+          <input id="newName" type="text" placeholder="Name" />
           <button class="add-btn" onclick="addCode()">Add Code</button>
+        </div>
+
+        <div class="code-header">
+          <div>Code</div>
+          <div>Department</div>
+          <div>Name</div>
+          <div>Status</div>
+          <div>Action</div>
         </div>
 
         <div class="code-list" id="codeList">
           <div class="code-row">
             <div><strong>4421</strong></div>
+            <div>Maintenance</div>
+            <div>John Smith</div>
             <div class="code-status">Active</div>
             <button class="delete-btn" onclick="removeCode(this)">Remove</button>
           </div>
           <div class="code-row">
             <div><strong>9933</strong></div>
+            <div>Operations</div>
+            <div>Lisa Carter</div>
             <div class="code-status">Active</div>
             <button class="delete-btn" onclick="removeCode(this)">Remove</button>
           </div>
           <div class="code-row">
             <div><strong>2208</strong></div>
+            <div>Service</div>
+            <div>Mike Davis</div>
             <div class="code-status">Active</div>
             <button class="delete-btn" onclick="removeCode(this)">Remove</button>
           </div>
@@ -466,20 +498,31 @@
     }
 
     function addCode() {
-      var input = document.getElementById("newCode");
-      var code = input.value.trim();
-      if (code === "") return;
+      var codeInput = document.getElementById("newCode");
+      var departmentInput = document.getElementById("newDepartment");
+      var nameInput = document.getElementById("newName");
+
+      var code = codeInput.value.trim();
+      var department = departmentInput.value.trim();
+      var name = nameInput.value.trim();
+
+      if (code === "" || department === "" || name === "") return;
 
       var list = document.getElementById("codeList");
       var row = document.createElement("div");
       row.className = "code-row";
       row.innerHTML = `
         <div><strong>${code}</strong></div>
+        <div>${department}</div>
+        <div>${name}</div>
         <div class="code-status">Active</div>
         <button class="delete-btn" onclick="removeCode(this)">Remove</button>
       `;
       list.prepend(row);
-      input.value = "";
+
+      codeInput.value = "";
+      departmentInput.value = "";
+      nameInput.value = "";
     }
 
     function removeCode(button) {
@@ -490,14 +533,16 @@
       var pill = document.getElementById("estopPill");
       var text = document.getElementById("estopText");
 
-      if (pill.textContent === "NORMAL") {
-        pill.textContent = "ACTIVE";
+      if (pill.innerText === "NORMAL") {
+        pill.innerText = "ACTIVE";
         pill.className = "pill estop";
-        text.textContent = "Active";
+        text.innerText = "ACTIVE";
+        text.style.color = "#ff4d4d";
       } else {
-        pill.textContent = "NORMAL";
+        pill.innerText = "NORMAL";
         pill.className = "pill normal";
-        text.textContent = "Normal";
+        text.innerText = "Normal";
+        text.style.color = "#ffffff";
       }
     }
   </script>
