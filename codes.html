@@ -1,17 +1,10 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html><html lang="en">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WashTrac Codes</title>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<style>
-
+<title>WashTrac Code Manager</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>
 body{
-font-family:Arial;
+font-family:Arial,Helvetica,sans-serif;
 background:#f4f6f8;
 padding:40px;
 }
@@ -20,23 +13,31 @@ h1{
 margin-bottom:20px;
 }
 
+.form{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+margin-bottom:20px;
+}
+
 input{
 padding:10px;
-margin:5px;
+border:1px solid #ccc;
+border-radius:4px;
 }
 
 button{
 padding:10px 16px;
-cursor:pointer;
-background:#0b5cff;
+background:#1d4ed8;
 color:white;
 border:none;
+border-radius:4px;
+cursor:pointer;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:20px;
 background:white;
 }
 
@@ -46,26 +47,15 @@ border-bottom:1px solid #ddd;
 text-align:left;
 }
 
-</style>
-
-</head>
-
-<body>
-
-<h1>WashTrac Code Manager</h1>
-
-<div>
-
+th{
+background:#f1f1f1;
+}
+</style></head><body><h1>WashTrac Code Manager</h1><div class="form">
 <input id="newCode" placeholder="Code">
 <input id="newDepartment" placeholder="Department">
 <input id="newName" placeholder="Name">
-
 <button onclick="addCode()">Add Code</button>
-
-</div>
-
-<table>
-
+</div><table>
 <thead>
 <tr>
 <th>Code</th>
@@ -76,57 +66,40 @@ text-align:left;
 <th>Remove</th>
 </tr>
 </thead>
-
-<tbody id="codesTableBody">
-</tbody>
-
-</table>
-
-<script>
+<tbody id="codesTableBody"></tbody>
+</table><script>
 
 const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
 const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-async function fetchCodes(){
+async function loadCodes(){
 
-const { data, error } = await supabaseClient
+const {data,error}=await supabaseClient
 .from("codes")
 .select("*")
 .order("created_at",{ascending:false});
 
 if(error){
 console.log(error);
-return[];
+return;
 }
 
-return data;
-
-}
-
-async function renderCodes(){
-
-const codes = await fetchCodes();
-const body = document.getElementById("codesTableBody");
-
+const body=document.getElementById("codesTableBody");
 body.innerHTML="";
 
-codes.forEach(item=>{
+data.forEach(row=>{
 
 const tr=document.createElement("tr");
 
 tr.innerHTML=`
-
-<td>${item.code}</td>
-<td>${item.department||""}</td>
-<td>${item.name||""}</td>
-<td>${item.uses||0}</td>
-<td>${item.last_used||"-"}</td>
-<td>
-<button onclick="removeCode('${item.code}')">Remove</button>
-</td>
-
+<td>${row.code}</td>
+<td>${row.department||""}</td>
+<td>${row.name||""}</td>
+<td>${row.uses||0}</td>
+<td>${row.last_used||"-"}</td>
+<td><button onclick="deleteCode('${row.code}')">Remove</button></td>
 `;
 
 body.appendChild(tr);
@@ -142,53 +115,40 @@ const department=document.getElementById("newDepartment").value.trim();
 const name=document.getElementById("newName").value.trim();
 
 if(!code||!department||!name){
-
-alert("Fill in all fields");
+alert("Fill all fields");
 return;
-
 }
 
-const { error } = await supabaseClient
+const {error}=await supabaseClient
 .from("codes")
 .insert([{code,department,name,uses:0,last_used:"-"}]);
 
 if(error){
-
-alert("Code already exists or error occurred");
+alert("Code exists or error");
 console.log(error);
 return;
-
 }
 
 document.getElementById("newCode").value="";
 document.getElementById("newDepartment").value="";
 document.getElementById("newName").value="";
 
-renderCodes();
+loadCodes();
 
 }
 
-async function removeCode(code){
+async function deleteCode(code){
 
-const { error } = await supabaseClient
+await supabaseClient
 .from("codes")
 .delete()
 .eq("code",code);
 
-if(error){
-
-alert("Could not delete code");
-console.log(error);
+loadCodes();
 
 }
 
-renderCodes();
+loadCodes();
 
-}
-
-renderCodes();
-
-</script>
-
-</body>
+</script></body>
 </html>
