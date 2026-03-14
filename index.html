@@ -3,93 +3,629 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WashTrac</title>
+  <title>WashTrac | Modern Carwash Control</title>
   <style>
-    body {
+    * {
+      box-sizing: border-box;
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #0b1220;
-      color: white;
-      text-align: center;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #08111f;
+      color: #ffffff;
+      line-height: 1.5;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0 20px;
     }
 
     .topbar {
-      background: #111a30;
-      padding: 20px;
-      font-size: 24px;
-      font-weight: bold;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(8, 17, 31, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .nav {
+      min-height: 74px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .brand {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+    }
+
+    .nav-links a {
+      color: #bfd0ef;
+      font-size: 15px;
+    }
+
+    .login-btn {
+      padding: 11px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.14);
+      color: #ffffff;
+      font-weight: 700;
     }
 
     .hero {
-      padding: 80px 20px;
+      background:
+        radial-gradient(circle at top left, rgba(66,255,135,0.10), transparent 28%),
+        radial-gradient(circle at top right, rgba(74,144,255,0.16), transparent 35%),
+        linear-gradient(180deg, #08111f 0%, #0d1730 100%);
+      padding: 90px 0 70px;
     }
 
-    h1 {
-      font-size: 42px;
-      margin-bottom: 20px;
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 28px;
+      align-items: center;
     }
 
-    p {
-      font-size: 20px;
-      max-width: 700px;
-      margin: 0 auto 30px auto;
-      color: #c6d3f0;
-    }
-
-    .button {
+    .eyebrow {
       display: inline-block;
-      padding: 16px 30px;
+      margin-bottom: 16px;
+      color: #8eb5ff;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 1.3px;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      font-size: 58px;
+      line-height: 1.02;
+      margin-bottom: 20px;
+      max-width: 700px;
+    }
+
+    .hero p {
+      max-width: 700px;
+      color: #c8d5ef;
+      font-size: 20px;
+      margin-bottom: 28px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      display: inline-block;
+      padding: 15px 22px;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 15px;
+    }
+
+    .btn-primary {
       background: #42ff87;
-      color: black;
-      text-decoration: none;
-      font-weight: bold;
-      border-radius: 8px;
+      color: #07111f;
+      box-shadow: 0 14px 30px rgba(66,255,135,0.18);
+    }
+
+    .btn-secondary {
+      border: 1px solid rgba(255,255,255,0.16);
+      color: #ffffff;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .hero-note {
+      color: #93a7ca;
+      font-size: 15px;
+    }
+
+    .hero-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 22px;
+      padding: 22px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    }
+
+    .dashboard-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      color: #dbe6ff;
+      font-weight: 700;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+      background: #42ff87;
+      margin-right: 8px;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .mini-card,
+    .activity-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .mini-card h3,
+    .activity-card h3 {
+      font-size: 16px;
+      margin-bottom: 14px;
+      color: #dce7ff;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      color: #d2dcf4;
+    }
+
+    .row:last-child {
+      border-bottom: none;
+    }
+
+    .pill {
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .running {
+      background: rgba(66,255,135,0.14);
+      color: #42ff87;
+    }
+
+    .idle {
+      background: rgba(255,255,255,0.08);
+      color: #d8e2f6;
     }
 
     .section {
-      padding: 50px 20px;
+      padding: 76px 0;
     }
 
-    .card {
-      background: #16233f;
-      margin: 15px auto;
-      padding: 20px;
-      border-radius: 12px;
-      max-width: 700px;
+    .section-heading {
+      text-align: center;
+      margin-bottom: 18px;
+      font-size: 40px;
+    }
+
+    .section-sub {
+      text-align: center;
+      color: #bfd0ef;
+      max-width: 760px;
+      margin: 0 auto 42px;
+      font-size: 18px;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+    }
+
+    .feature-card h3 {
+      font-size: 22px;
+      margin-bottom: 12px;
+    }
+
+    .feature-card p {
+      color: #c2cee8;
+      font-size: 16px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .stat-box {
+      background: linear-gradient(180deg, rgba(66,255,135,0.08), rgba(255,255,255,0.03));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 26px;
+      text-align: center;
+    }
+
+    .stat-box strong {
+      display: block;
+      font-size: 36px;
+      margin-bottom: 8px;
+    }
+
+    .stat-box span {
+      color: #bfd0ef;
+    }
+
+    .pricing {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .price-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 28px;
+    }
+
+    .price-card.featured {
+      border: 1px solid rgba(66,255,135,0.45);
+      box-shadow: 0 0 0 1px rgba(66,255,135,0.10) inset;
+    }
+
+    .price-card h3 {
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+
+    .price {
+      font-size: 42px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .price small {
+      font-size: 15px;
+      color: #9eb2d7;
+      font-weight: 600;
+    }
+
+    .price-card p {
+      color: #bfd0ef;
+      margin-bottom: 16px;
+    }
+
+    .price-card ul {
+      list-style: none;
+      color: #d6e0f5;
+    }
+
+    .price-card li {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .price-card li:last-child {
+      border-bottom: none;
+    }
+
+    .cta {
+      padding: 84px 0;
+    }
+
+    .cta-box {
+      background: linear-gradient(180deg, rgba(66,255,135,0.10), rgba(255,255,255,0.04));
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 24px;
+      padding: 42px 24px;
+      text-align: center;
+    }
+
+    .cta-box h2 {
+      font-size: 42px;
+      margin-bottom: 14px;
+    }
+
+    .cta-box p {
+      color: #c8d5ef;
+      max-width: 760px;
+      margin: 0 auto 24px;
+      font-size: 18px;
+    }
+
+    .footer {
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding: 30px 0;
+      color: #8fa4ca;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid,
+      .features,
+      .stats,
+      .pricing {
+        grid-template-columns: 1fr;
+      }
+
+      .hero h1 {
+        font-size: 42px;
+      }
+
+      .mini-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .nav {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 16px 0;
+      }
+
+      .nav-links {
+        width: 100%;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .hero {
+        padding: 70px 0 56px;
+      }
+
+      .hero h1 {
+        font-size: 34px;
+      }
+
+      .hero p,
+      .section-sub,
+      .cta-box p {
+        font-size: 17px;
+      }
+
+      .section-heading,
+      .cta-box h2 {
+        font-size: 30px;
+      }
     }
   </style>
 </head>
 <body>
+
   <div class="topbar">
-  WASHTRAC
-  <a href="login.html" style="
-  float:right;
-  color:#42ff87;
-  text-decoration:none;
-  font-weight:bold;
-  ">Login</a>
-  </div>
-
-  <div class="hero">
-    <h1>Modern Carwash Control</h1>
-    <p>Monitor wash activity, manage access codes, and track usage from anywhere.</p>
-  </div>
-
-  <div class="section">
-    <div class="card">
-      <h2>Live Bay Status</h2>
-      <p>See which bays are running or idle from one clean dashboard.</p>
-    </div>
-
-    <div class="card">
-      <h2>Access Code Tracking</h2>
-      <p>Review which codes were used and when they were activated.</p>
-    </div>
-
-    <div class="card">
-      <h2>Mobile Access</h2>
-      <p>Open WashTrac from your phone and monitor your wash anywhere.</p>
+    <div class="container nav">
+      <div class="brand">WASHTRAC</div>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#visibility">Visibility</a>
+        <a href="#pricing">Plans</a>
+        <a href="login.html" class="login-btn">Operator Login</a>
+      </div>
     </div>
   </div>
+
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <div class="eyebrow">Modern Carwash Control</div>
+        <h1>One clean platform for wash activity, code tracking, and operator visibility.</h1>
+        <p>
+          WashTrac gives operators a better way to monitor bays, track access codes,
+          review activity, and stay connected to the wash from anywhere.
+        </p>
+
+        <div class="hero-actions">
+          <a class="btn-primary" href="login.html">Operator Login</a>
+          <a class="btn-secondary" href="#features">Explore Features</a>
+        </div>
+
+        <div class="hero-note">
+          Built for operators who want cleaner reporting, mobile access, and real visibility.
+        </div>
+      </div>
+
+      <div class="hero-card">
+        <div class="dashboard-title">
+          <span>Live Operator Snapshot</span>
+          <span><span class="status-dot"></span>System Online</span>
+        </div>
+
+        <div class="mini-grid">
+          <div class="mini-card">
+            <h3>Bay Status</h3>
+            <div class="row"><span>Bay 1</span><span class="pill running">RUNNING</span></div>
+            <div class="row"><span>Bay 2</span><span class="pill idle">IDLE</span></div>
+            <div class="row"><span>Vacuum Row</span><span class="pill idle">IDLE</span></div>
+          </div>
+
+          <div class="mini-card">
+            <h3>Today</h3>
+            <div class="row"><span>Washes</span><strong>47</strong></div>
+            <div class="row"><span>Codes Used</span><strong>31</strong></div>
+            <div class="row"><span>Last Activity</span><strong>6:42 PM</strong></div>
+          </div>
+        </div>
+
+        <div class="activity-card">
+          <h3>Recent Activity</h3>
+          <div class="row"><span>6:42 PM</span><span>Code 4421</span><span>Bay 2</span></div>
+          <div class="row"><span>6:38 PM</span><span>Code 9933</span><span>Bay 1</span></div>
+          <div class="row"><span>6:30 PM</span><span>Code 2208</span><span>Bay 1</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="features">
+    <div class="container">
+      <h2 class="section-heading">Everything you need in one place</h2>
+      <p class="section-sub">
+        WashTrac combines monitoring, access control, and activity visibility into one
+        operator-friendly platform.
+      </p>
+
+      <div class="features">
+        <div class="feature-card">
+          <h3>Live Bay Status</h3>
+          <p>See which bays are running, idle, or available from one clean dashboard.</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>Access Code Tracking</h3>
+          <p>Review which codes were used, when they were activated, and where they were entered.</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>Mobile Operator Access</h3>
+          <p>Open WashTrac from your phone and stay connected to your site anywhere.</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>Activity Logging</h3>
+          <p>Keep a clearer record of washes, usage, and operational activity throughout the day.</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>Cleaner Reporting</h3>
+          <p>Replace scattered notes with one simple source of truth for your operation.</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>Built to Grow</h3>
+          <p>Expand from basic monitoring into code management, automation, and remote controls.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="visibility">
+    <div class="container">
+      <h2 class="section-heading">Built for modern wash operators</h2>
+      <p class="section-sub">
+        Stop piecing together activity from scattered notes and manual tracking. WashTrac is designed
+        to give operators one place to monitor usage, review events, and manage visibility.
+      </p>
+
+      <div class="stats">
+        <div class="stat-box">
+          <strong>24/7</strong>
+          <span>Remote visibility from any device</span>
+        </div>
+
+        <div class="stat-box">
+          <strong>Real-Time</strong>
+          <span>Bay and activity monitoring</span>
+        </div>
+
+        <div class="stat-box">
+          <strong>One View</strong>
+          <span>Codes, logs, and status together</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="pricing">
+    <div class="container">
+      <h2 class="section-heading">Simple plans for growing operators</h2>
+      <p class="section-sub">
+        Start with core monitoring, then scale into full visibility and management as your system grows.
+      </p>
+
+      <div class="pricing">
+        <div class="price-card">
+          <h3>Starter</h3>
+          <div class="price">$49 <small>/ month</small></div>
+          <p>For smaller operations getting started with visibility.</p>
+          <ul>
+            <li>Basic dashboard access</li>
+            <li>Bay status monitoring</li>
+            <li>Recent activity feed</li>
+            <li>Email support</li>
+          </ul>
+        </div>
+
+        <div class="price-card featured">
+          <h3>Operator Pro</h3>
+          <div class="price">$99 <small>/ month</small></div>
+          <p>Best for active sites that need better tracking and reporting.</p>
+          <ul>
+            <li>Everything in Starter</li>
+            <li>Code usage tracking</li>
+            <li>Expanded reporting</li>
+            <li>Mobile-first operator access</li>
+          </ul>
+        </div>
+
+        <div class="price-card">
+          <h3>Enterprise</h3>
+          <div class="price">Custom</div>
+          <p>For larger sites or custom hardware integrations.</p>
+          <ul>
+            <li>Custom dashboards</li>
+            <li>Multi-site visibility</li>
+            <li>Advanced integrations</li>
+            <li>Priority support</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta">
+    <div class="container">
+      <div class="cta-box">
+        <h2>Ready to run smarter?</h2>
+        <p>
+          Get cleaner visibility into your wash operation with one modern platform for monitoring,
+          access control, and operator reporting.
+        </p>
+        <a class="btn-primary" href="login.html">Operator Login</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">
+    <div class="container">
+      WashTrac © 2026 — Modern Carwash Control
+    </div>
+  </div>
+
 </body>
 </html>
