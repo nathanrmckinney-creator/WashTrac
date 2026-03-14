@@ -1,33 +1,88 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>WashTrac</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WashTrac</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0b1220;
+      color: white;
+      text-align: center;
+    }
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    .topbar {
+      background: #111a30;
+      padding: 20px;
+      font-size: 24px;
+      font-weight: bold;
+    }
 
-<style>
-body{
-font-family:Arial, sans-serif;
-margin:0;
-background:#0b1220;
-color:white;
-}
+    .hero {
+      padding: 80px 20px;
+    }
 
-.topbar{
-background:#111a30;
-padding:18px 22px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-border-bottom:1px solid rgba(255,255,255,0.08);
-}
+    h1 {
+      font-size: 42px;
+      margin-bottom: 20px;
+    }
 
-.brand{
-font-size:24px;
-font-weight:bold;
-letter-spacing:1px;
-}
+    p {
+      font-size: 20px;
+      max-width: 700px;
+      margin: 0 auto 30px auto;
+      color: #c6d3f0;
+    }
 
-.topbar a{
-color:#8fb2ff;
-text
+    .button {
+      display: inline-block;
+      padding: 16px 30px;
+      background: #42ff87;
+      color: black;
+      text-decoration: none;
+      font-weight: bold;
+      border-radius: 8px;
+    }
+
+    .section {
+      padding: 50px 20px;
+    }
+
+    .card {
+      background: #16233f;
+      margin: 15px auto;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 700px;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">WASHTRAC</div>
+
+  <div class="hero">
+    <h1>Modern Carwash Control</h1>
+    <p>Monitor wash activity, manage access codes, and track usage from anywhere.</p>
+    <a class="button" href="dashboard.html">Open Operator Dashboard</a>
+  </div>
+
+  <div class="section">
+    <div class="card">
+      <h2>Live Bay Status</h2>
+      <p>See which bays are running or idle from one clean dashboard.</p>
+    </div>
+
+    <div class="card">
+      <h2>Access Code Tracking</h2>
+      <p>Review which codes were used and when they were activated.</p>
+    </div>
+
+    <div class="card">
+      <h2>Mobile Access</h2>
+      <p>Open WashTrac from your phone and monitor your wash anywhere.</p>
+    </div>
+  </div>
+</body>
+</html>
