@@ -93,6 +93,10 @@
       max-width: 900px;
     }
 
+    .report-header {
+      display: none;
+    }
+
     .grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -112,6 +116,29 @@
       font-size: 20px;
       margin-bottom: 14px;
       color: #dce7ff;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .btn {
+      padding: 13px 18px;
+      border: none;
+      border-radius: 12px;
+      background: rgba(255,255,255,.08);
+      color: #fff;
+      font-weight: 800;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,.12);
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      background: rgba(255,255,255,.12);
     }
 
     .chart-wrap {
@@ -185,8 +212,91 @@
 
     .list-row:last-child { border-bottom: none; }
 
+    .email-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.05);
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+    }
+
+    input::placeholder { color: #8fa4ca; }
+
     @media (max-width: 900px) {
       .grid-2 { grid-template-columns: 1fr; }
+      .email-row { grid-template-columns: 1fr; }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+        color: #000;
+      }
+
+      .topbar,
+      .toolbar,
+      .email-row {
+        display: none !important;
+      }
+
+      .container {
+        max-width: 100%;
+        padding: 0;
+      }
+
+      .report-header {
+        display: block;
+        margin-bottom: 24px;
+        padding-bottom: 14px;
+        border-bottom: 2px solid #000;
+      }
+
+      .report-header h1 {
+        font-size: 28px;
+        margin-bottom: 8px;
+        color: #000;
+      }
+
+      .report-header p {
+        color: #000;
+        font-size: 14px;
+        max-width: none;
+      }
+
+      .card {
+        background: #fff;
+        border: 1px solid #ccc;
+        box-shadow: none;
+      }
+
+      .card h2,
+      .bar-label,
+      .bar-value,
+      .detail-box h3,
+      .list-row,
+      .detail-box p {
+        color: #000 !important;
+      }
+
+      .detail-box {
+        background: #fff;
+        border: 1px solid #ccc;
+      }
+
+      .eyebrow,
+      .hero-copy {
+        display: none;
+      }
     }
   </style>
 </head>
@@ -209,11 +319,27 @@
   </div>
 
   <div class="container">
-    <div class="eyebrow">Usage Analytics</div>
-    <h1>Department usage and top-used codes.</h1>
-    <p>
-      Click a department bar to see exact usage totals and the most-used codes inside that department.
-    </p>
+    <div class="hero-copy">
+      <div class="eyebrow">Usage Analytics</div>
+      <h1>Department usage and top-used codes.</h1>
+      <p>
+        Click a department bar to see exact usage totals and the most-used codes inside that department.
+      </p>
+
+      <div class="toolbar">
+        <button class="btn" onclick="printUsage()">Print Report</button>
+      </div>
+
+      <div class="email-row">
+        <input id="usageEmailInput" type="email" placeholder="Enter email address for usage report" />
+        <button class="btn" onclick="emailUsageReport()">Email Report</button>
+      </div>
+    </div>
+
+    <div class="report-header">
+      <h1>WashTrac Usage Report</h1>
+      <p id="printDateUsage"></p>
+    </div>
 
     <div class="grid-2">
       <div class="card">
@@ -335,6 +461,21 @@
         `;
         list.appendChild(row);
       });
+    }
+
+    function printUsage() {
+      document.getElementById("printDateUsage").innerText =
+        "Generated: " + new Date().toLocaleString();
+      window.print();
+    }
+
+    function emailUsageReport() {
+      const email = document.getElementById("usageEmailInput").value.trim();
+      if (!email) {
+        alert("Enter an email address first.");
+        return;
+      }
+      alert("Email reporting will work after backend setup. For now, use Print.");
     }
 
     function logout() {
