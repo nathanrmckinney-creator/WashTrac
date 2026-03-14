@@ -9,278 +9,73 @@
 
 <style>
 *{box-sizing:border-box;}
-
-body{
-margin:0;
-font-family:Arial, Helvetica, sans-serif;
-background:#020617;
-color:white;
-overflow-x:hidden;
-}
-
-.topbar{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:16px 20px;
-background:#0f172a;
-border-bottom:1px solid #1e293b;
-position:sticky;
-top:0;
-z-index:1000;
-gap:12px;
-flex-wrap:wrap;
-}
-
-.brand{
-font-size:24px;
-font-weight:bold;
-}
-
-.top-actions{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-}
-
-button{
-padding:10px 14px;
-border:none;
-border-radius:8px;
-cursor:pointer;
-background:#2563eb;
-color:white;
-font-weight:bold;
-}
-
-button.secondary{
-background:#334155;
-}
-
-button.active{
-outline:2px solid #60a5fa;
-}
-
-.main{
-padding:20px;
-}
-
-.hero{
-display:flex;
-justify-content:space-between;
-align-items:flex-end;
-gap:20px;
-margin-bottom:20px;
-flex-wrap:wrap;
-}
-
-.hero h1{
-margin:0 0 8px 0;
-font-size:38px;
-}
-
-.hero p{
-margin:0;
-color:#94a3b8;
-}
-
-.live-pill{
-display:inline-block;
-padding:6px 10px;
-border-radius:999px;
-background:rgba(34,197,94,.15);
-color:#86efac;
-font-size:12px;
-font-weight:bold;
-margin-left:10px;
-}
-
-.summary{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:16px;
-margin-bottom:20px;
-}
-
-.summary-box{
-background:#111827;
-padding:18px;
-border-radius:10px;
-}
-
-.summary-box strong{
-display:block;
-font-size:30px;
-margin-bottom:6px;
-}
-
-.summary-box span{
-color:#94a3b8;
-font-size:14px;
-}
-
-.grid{
-display:grid;
-grid-template-columns:1.2fr .8fr;
-gap:20px;
-}
-
-.card{
-background:#111827;
-padding:20px;
-border-radius:10px;
-margin-bottom:20px;
-}
-
-.card h3{
-margin:0 0 16px 0;
-}
-
-.monitor-list{
-display:flex;
-flex-direction:column;
-gap:12px;
-max-height:60vh;
-overflow-y:auto;
-padding-right:4px;
-}
-
-.monitor-row{
-display:grid;
-grid-template-columns:150px 120px 1fr 110px 140px;
-gap:12px;
-align-items:center;
-padding:16px;
-border-radius:10px;
-background:#0b1220;
-border:1px solid #1f2937;
-}
-
-.monitor-time{
-font-size:18px;
-font-weight:bold;
-color:#93c5fd;
-}
-
-.monitor-code{
-font-size:22px;
-font-weight:bold;
-}
-
-.monitor-name{
-color:#dbe5fb;
-}
-
-.monitor-bay{
-text-align:center;
-font-weight:bold;
-}
-
-.monitor-event{
-text-align:right;
-color:#86efac;
-font-weight:bold;
-}
-
-.manager-table-wrap{
-overflow-x:auto;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-min-width:760px;
-}
-
-th,td{
-padding:12px 8px;
-border-bottom:1px solid #1f2937;
-text-align:left;
-}
-
-th{
-color:#93c5fd;
-font-size:13px;
-text-transform:uppercase;
-letter-spacing:.5px;
-}
-
-.list-row{
-display:flex;
-justify-content:space-between;
-gap:12px;
-padding:12px 0;
-border-bottom:1px solid #1f2937;
-color:#dbe5fb;
-}
-
-.list-row:last-child{
-border-bottom:none;
-}
-
-.empty{
-padding:20px;
-background:#0b1220;
-border-radius:10px;
-color:#94a3b8;
-}
-
-.hidden{
-display:none;
-}
-
+body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:white;overflow-x:hidden;}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:#0f172a;border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:1000;gap:12px;flex-wrap:wrap;}
+.brand{font-size:24px;font-weight:bold;}
+.top-actions{display:flex;gap:10px;flex-wrap:wrap;}
+button{padding:10px 14px;border:none;border-radius:8px;cursor:pointer;background:#2563eb;color:white;font-weight:bold;}
+button.secondary{background:#334155;}
+button.active{outline:2px solid #60a5fa;}
+.main{padding:20px;}
+.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:20px;flex-wrap:wrap;}
+.hero h1{margin:0 0 8px 0;font-size:38px;}
+.hero p{margin:0;color:#94a3b8;}
+.live-pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(34,197,94,.15);color:#86efac;font-size:12px;font-weight:bold;margin-left:10px;}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;}
+.summary-box{background:#111827;padding:18px;border-radius:10px;}
+.summary-box strong{display:block;font-size:30px;margin-bottom:6px;}
+.summary-box span{color:#94a3b8;font-size:14px;}
+.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:20px;}
+.card{background:#111827;padding:20px;border-radius:10px;margin-bottom:20px;}
+.card h3{margin:0 0 16px 0;}
+.monitor-list{display:flex;flex-direction:column;gap:12px;max-height:60vh;overflow-y:auto;padding-right:4px;}
+.monitor-row{display:grid;grid-template-columns:150px 120px 1fr 110px 140px;gap:12px;align-items:center;padding:16px;border-radius:10px;background:#0b1220;border:1px solid #1f2937;}
+.monitor-time{font-size:18px;font-weight:bold;color:#93c5fd;}
+.monitor-code{font-size:22px;font-weight:bold;}
+.monitor-name{color:#dbe5fb;}
+.monitor-bay{text-align:center;font-weight:bold;}
+.monitor-event{text-align:right;color:#86efac;font-weight:bold;}
+.manager-table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;min-width:760px;}
+th,td{padding:12px 8px;border-bottom:1px solid #1f2937;text-align:left;}
+th{color:#93c5fd;font-size:13px;text-transform:uppercase;letter-spacing:.5px;}
+.list-row{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #1f2937;color:#dbe5fb;}
+.list-row:last-child{border-bottom:none;}
+.empty{padding:20px;background:#0b1220;border-radius:10px;color:#94a3b8;}
+.hidden{display:none;}
 @media (max-width:1100px){
-.summary{
-grid-template-columns:1fr 1fr;
+.summary{grid-template-columns:1fr 1fr;}
+.grid{grid-template-columns:1fr;}
+.monitor-row{grid-template-columns:1fr;text-align:left;}
+.monitor-bay,.monitor-event{text-align:left;}
 }
-
-.grid{
-grid-template-columns:1fr;
-}
-
-.monitor-row{
-grid-template-columns:1fr;
-text-align:left;
-}
-
-.monitor-bay,
-.monitor-event{
-text-align:left;
-}
-}
-
 @media (max-width:700px){
-.hero h1{
-font-size:32px;
-}
-
-.summary{
-grid-template-columns:1fr;
-}
-
-.topbar{
-align-items:flex-start;
-}
-
-.top-actions{
-width:100%;
-}
+.hero h1{font-size:32px;}
+.summary{grid-template-columns:1fr;}
+.topbar{align-items:flex-start;}
+.top-actions{width:100%;}
 }
 </style>
 </head>
 <body>
+<script>
+if(localStorage.getItem("washtracLoggedIn") !== "yes"){
+  window.location.href = "login.html";
+}
+</script>
 
 <div class="topbar">
 <div class="brand">WashTrac</div>
 <div class="top-actions">
 <button id="operatorBtn" class="active" onclick="setMode('operator')">Operator Mode</button>
 <button id="managerBtn" class="secondary" onclick="setMode('manager')">Manager Mode</button>
-<button class="secondary" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+<button class="secondary" onclick="window.location.href='dashboard.html'">Dashboard</button>
+<button class="secondary" onclick="window.location.href='index.html'">Homepage</button>
+<button class="secondary" onclick="logout()">Logout</button>
 </div>
 </div>
 
 <div class="main">
-
 <div class="hero">
 <div>
 <h1>Live Monitor <span class="live-pill">LIVE</span></h1>
@@ -289,25 +84,10 @@ width:100%;
 </div>
 
 <div class="summary">
-<div class="summary-box">
-<strong id="totalEvents">0</strong>
-<span>Total Activity Records</span>
-</div>
-
-<div class="summary-box">
-<strong id="lastCode">-</strong>
-<span>Last Code Used</span>
-</div>
-
-<div class="summary-box">
-<strong id="lastBay">-</strong>
-<span>Last Bay</span>
-</div>
-
-<div class="summary-box">
-<strong id="lastUpdated">-</strong>
-<span>Last Updated</span>
-</div>
+<div class="summary-box"><strong id="totalEvents">0</strong><span>Total Activity Records</span></div>
+<div class="summary-box"><strong id="lastCode">-</strong><span>Last Code Used</span></div>
+<div class="summary-box"><strong id="lastBay">-</strong><span>Last Bay</span></div>
+<div class="summary-box"><strong id="lastUpdated">-</strong><span>Last Updated</span></div>
 </div>
 
 <div id="operatorMode">
@@ -319,7 +99,6 @@ width:100%;
 
 <div id="managerMode" class="hidden">
 <div class="grid">
-
 <div class="card">
 <h3>Manager Activity Table</h3>
 <div class="manager-table-wrap">
@@ -350,10 +129,8 @@ width:100%;
 <div id="topDepartmentsList"></div>
 </div>
 </div>
-
 </div>
 </div>
-
 </div>
 
 <script>
@@ -361,11 +138,12 @@ const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
 const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let currentMode = "operator";
+function logout(){
+  localStorage.removeItem("washtracLoggedIn");
+  window.location.href = "login.html";
+}
 
 function setMode(mode){
-  currentMode = mode;
-
   const operatorMode = document.getElementById("operatorMode");
   const managerMode = document.getElementById("managerMode");
   const operatorBtn = document.getElementById("operatorBtn");
@@ -385,38 +163,19 @@ function setMode(mode){
 }
 
 async function fetchActivity(){
-  const { data, error } = await client
-    .from("activity")
-    .select("*")
-    .order("event_time", { ascending:false })
-    .limit(25);
-
-  if(error){
-    console.log(error);
-    return [];
-  }
-
+  const { data, error } = await client.from("activity").select("*").order("event_time", { ascending:false }).limit(25);
+  if(error){ console.log(error); return []; }
   return data || [];
 }
 
 async function fetchCodes(){
-  const { data, error } = await client
-    .from("codes")
-    .select("*")
-    .order("uses", { ascending:false })
-    .limit(10);
-
-  if(error){
-    console.log(error);
-    return [];
-  }
-
+  const { data, error } = await client.from("codes").select("*").order("uses", { ascending:false }).limit(10);
+  if(error){ console.log(error); return []; }
   return data || [];
 }
 
 function renderSummary(activity){
   document.getElementById("totalEvents").innerText = activity.length;
-
   if(activity.length){
     document.getElementById("lastCode").innerText = activity[0].code || "-";
     document.getElementById("lastBay").innerText = activity[0].bay || "-";
@@ -424,19 +183,16 @@ function renderSummary(activity){
     document.getElementById("lastCode").innerText = "-";
     document.getElementById("lastBay").innerText = "-";
   }
-
   document.getElementById("lastUpdated").innerText = new Date().toLocaleTimeString();
 }
 
 function renderOperatorFeed(activity){
   const wrap = document.getElementById("operatorFeed");
   wrap.innerHTML = "";
-
   if(!activity.length){
     wrap.innerHTML = `<div class="empty">No activity yet.</div>`;
     return;
   }
-
   activity.forEach(row => {
     wrap.innerHTML += `
       <div class="monitor-row">
@@ -453,12 +209,10 @@ function renderOperatorFeed(activity){
 function renderManagerTable(activity){
   const tbody = document.getElementById("managerTableBody");
   tbody.innerHTML = "";
-
   if(!activity.length){
     tbody.innerHTML = `<tr><td colspan="6">No activity yet.</td></tr>`;
     return;
   }
-
   activity.forEach(row => {
     tbody.innerHTML += `
       <tr>
@@ -475,30 +229,22 @@ function renderManagerTable(activity){
 
 function buildDepartmentTotals(codes){
   const map = {};
-
   codes.forEach(item => {
     const department = item.department || "Unassigned";
     const uses = Number(item.uses || 0);
-
-    if(!map[department]){
-      map[department] = 0;
-    }
-
+    if(!map[department]) map[department] = 0;
     map[department] += uses;
   });
-
   return Object.entries(map).sort((a,b) => b[1] - a[1]);
 }
 
 function renderTopCodes(codes){
   const wrap = document.getElementById("topCodesList");
   wrap.innerHTML = "";
-
   if(!codes.length){
     wrap.innerHTML = `<div class="empty">No code data yet.</div>`;
     return;
   }
-
   codes.forEach(item => {
     wrap.innerHTML += `
       <div class="list-row">
@@ -512,14 +258,11 @@ function renderTopCodes(codes){
 function renderTopDepartments(codes){
   const wrap = document.getElementById("topDepartmentsList");
   wrap.innerHTML = "";
-
   const departments = buildDepartmentTotals(codes);
-
   if(!departments.length){
     wrap.innerHTML = `<div class="empty">No department data yet.</div>`;
     return;
   }
-
   departments.forEach(dep => {
     wrap.innerHTML += `
       <div class="list-row">
@@ -533,7 +276,6 @@ function renderTopDepartments(codes){
 async function loadMonitor(){
   const activity = await fetchActivity();
   const codes = await fetchCodes();
-
   renderSummary(activity);
   renderOperatorFeed(activity);
   renderManagerTable(activity);
@@ -543,24 +285,10 @@ async function loadMonitor(){
 
 loadMonitor();
 
-client
-  .channel("washtrac-live-monitor")
-  .on(
-    "postgres_changes",
-    { event: "*", schema: "public", table: "activity" },
-    () => {
-      loadMonitor();
-    }
-  )
-  .on(
-    "postgres_changes",
-    { event: "*", schema: "public", table: "codes" },
-    () => {
-      loadMonitor();
-    }
-  )
-  .subscribe();
+client.channel("washtrac-live-monitor")
+.on("postgres_changes", { event: "*", schema: "public", table: "activity" }, () => loadMonitor())
+.on("postgres_changes", { event: "*", schema: "public", table: "codes" }, () => loadMonitor())
+.subscribe();
 </script>
-
 </body>
 </html>
