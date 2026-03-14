@@ -30,6 +30,7 @@ width:220px;
 background:#0f172a;
 padding:20px;
 flex-shrink:0;
+border-right:1px solid #1e293b;
 }
 
 .logo{
@@ -82,9 +83,16 @@ cursor:pointer;
 
 .mobile-menu{
 display:none;
+position:absolute;
+top:64px;
+right:16px;
+width:220px;
 background:#0f172a;
-padding:0 20px 16px 20px;
-border-bottom:1px solid #1e293b;
+border:1px solid #1e293b;
+border-radius:12px;
+padding:12px 16px;
+box-shadow:0 12px 30px rgba(0,0,0,.45);
+z-index:1100;
 }
 
 .mobile-menu a{
@@ -223,6 +231,14 @@ font-size:14px;
 line-height:1.5;
 }
 
+.backdrop{
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.35);
+z-index:1050;
+}
+
 @media (max-width:1100px){
 .summary{
 grid-template-columns:1fr 1fr;
@@ -279,14 +295,16 @@ min-width:600px;
 </div>
 
 <div class="mobile-menu" id="mobileMenu">
-<a href="dashboard.html">Dashboard</a>
-<a href="codes.html">Codes</a>
-<a href="activity.html">Activity</a>
-<a href="usage.html">Reports</a>
-<a href="#">Locations</a>
-<a href="#">Devices</a>
-<a href="#">Account</a>
+<a href="dashboard.html" onclick="closeMenu()">Dashboard</a>
+<a href="codes.html" onclick="closeMenu()">Codes</a>
+<a href="activity.html" onclick="closeMenu()">Activity</a>
+<a href="usage.html" onclick="closeMenu()">Reports</a>
+<a href="#" onclick="closeMenu()">Locations</a>
+<a href="#" onclick="closeMenu()">Devices</a>
+<a href="#" onclick="closeMenu()">Account</a>
 </div>
+
+<div class="backdrop" id="backdrop" onclick="closeMenu()"></div>
 
 <div class="app">
 
@@ -394,7 +412,16 @@ const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 function toggleMenu(){
   const menu = document.getElementById("mobileMenu");
-  menu.style.display = menu.style.display === "block" ? "none" : "block";
+  const backdrop = document.getElementById("backdrop");
+
+  const isOpen = menu.style.display === "block";
+  menu.style.display = isOpen ? "none" : "block";
+  backdrop.style.display = isOpen ? "none" : "block";
+}
+
+function closeMenu(){
+  document.getElementById("mobileMenu").style.display = "none";
+  document.getElementById("backdrop").style.display = "none";
 }
 
 async function fetchActivity(){
