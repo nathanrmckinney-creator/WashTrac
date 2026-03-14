@@ -67,7 +67,7 @@
 
   <script>
     function login() {
-      var user = document.getElementById("user").value.trim();
+      var user = document.getElementById("user").value.trim().toLowerCase();
       var pass = document.getElementById("pass").value.trim();
 
       if (user === "admin" && pass === "wash123") {
