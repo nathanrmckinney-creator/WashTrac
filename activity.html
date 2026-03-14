@@ -20,15 +20,16 @@ color:white;
 overflow-x:hidden;
 }
 
+.app{
+display:flex;
+min-height:100vh;
+}
+
 .sidebar{
-position:fixed;
-left:0;
-top:0;
-bottom:0;
 width:220px;
 background:#0f172a;
 padding:20px;
-overflow-y:auto;
+flex-shrink:0;
 }
 
 .logo{
@@ -49,8 +50,52 @@ color:white;
 }
 
 .main{
-margin-left:220px;
+flex:1;
 padding:30px;
+}
+
+.mobile-topbar{
+display:none;
+align-items:center;
+justify-content:space-between;
+padding:16px 20px;
+background:#0f172a;
+border-bottom:1px solid #1e293b;
+position:sticky;
+top:0;
+z-index:1000;
+}
+
+.mobile-logo{
+font-size:22px;
+font-weight:bold;
+}
+
+.menu-btn{
+background:#2563eb;
+border:none;
+color:white;
+padding:10px 14px;
+border-radius:8px;
+cursor:pointer;
+}
+
+.mobile-menu{
+display:none;
+background:#0f172a;
+padding:0 20px 16px 20px;
+border-bottom:1px solid #1e293b;
+}
+
+.mobile-menu a{
+display:block;
+color:#cbd5f5;
+text-decoration:none;
+padding:10px 0;
+}
+
+.mobile-menu a:hover{
+color:white;
 }
 
 .page-header{
@@ -65,6 +110,7 @@ font-size:42px;
 .page-header p{
 margin:0;
 color:#94a3b8;
+line-height:1.5;
 }
 
 .summary{
@@ -174,6 +220,7 @@ letter-spacing:.5px;
 margin-top:14px;
 color:#94a3b8;
 font-size:14px;
+line-height:1.5;
 }
 
 @media (max-width:1100px){
@@ -188,20 +235,19 @@ grid-template-columns:1fr 1fr;
 }
 
 @media (max-width:900px){
-
-.sidebar{
-position:relative;
-width:100%;
-height:auto;
-padding:20px;
+.app{
+display:block;
 }
 
-.logo{
-margin-bottom:20px;
+.sidebar{
+display:none;
+}
+
+.mobile-topbar{
+display:flex;
 }
 
 .main{
-margin-left:0;
 padding:20px;
 }
 
@@ -226,6 +272,23 @@ min-width:600px;
 </head>
 
 <body>
+
+<div class="mobile-topbar">
+<div class="mobile-logo">WashTrac</div>
+<button class="menu-btn" onclick="toggleMenu()">Menu</button>
+</div>
+
+<div class="mobile-menu" id="mobileMenu">
+<a href="dashboard.html">Dashboard</a>
+<a href="codes.html">Codes</a>
+<a href="activity.html">Activity</a>
+<a href="usage.html">Reports</a>
+<a href="#">Locations</a>
+<a href="#">Devices</a>
+<a href="#">Account</a>
+</div>
+
+<div class="app">
 
 <div class="sidebar">
 <div class="logo">WashTrac</div>
@@ -322,12 +385,17 @@ Logging an event also updates that code's usage count and last used time.
 </div>
 
 </div>
+</div>
 
 <script>
 const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
 const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
-
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function toggleMenu(){
+  const menu = document.getElementById("mobileMenu");
+  menu.style.display = menu.style.display === "block" ? "none" : "block";
+}
 
 async function fetchActivity(){
   const { data, error } = await client
