@@ -2,11 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>WashTrac Usage</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WashTrac Reports</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
+*{box-sizing:border-box;}
+
 body{
 margin:0;
 font-family:Arial;
@@ -14,20 +17,22 @@ background:#020617;
 color:white;
 }
 
+.app{
+display:flex;
+min-height:100vh;
+}
+
 .sidebar{
-position:fixed;
-left:0;
-top:0;
-bottom:0;
 width:220px;
 background:#0f172a;
 padding:20px;
+border-right:1px solid #1e293b;
 }
 
 .logo{
 font-size:22px;
 font-weight:bold;
-margin-bottom:40px;
+margin-bottom:32px;
 }
 
 .nav a{
@@ -37,142 +42,160 @@ text-decoration:none;
 padding:10px 0;
 }
 
-.nav a:hover{
-color:white;
-}
+.nav a:hover{color:white;}
 
 .main{
-margin-left:220px;
+flex:1;
 padding:30px;
 }
 
-.page-header{
-margin-bottom:24px;
+.mobile-topbar{
+display:none;
+align-items:center;
+justify-content:space-between;
+padding:16px 20px;
+background:#0f172a;
+border-bottom:1px solid #1e293b;
 }
 
-.card{
-background:#111827;
-padding:20px;
+.mobile-logo{font-size:22px;font-weight:bold;}
+
+.menu-btn{
+background:#2563eb;
+border:none;
+color:white;
+padding:10px 14px;
 border-radius:8px;
-margin-bottom:20px;
+cursor:pointer;
 }
 
-.card h3{
-margin-top:0;
-margin-bottom:14px;
+.mobile-menu{
+display:none;
+position:absolute;
+top:64px;
+right:16px;
+width:220px;
+background:#0f172a;
+border-radius:10px;
+padding:14px;
+}
+
+.mobile-menu a{
+display:block;
+color:#cbd5f5;
+text-decoration:none;
+padding:10px 0;
+}
+
+.mobile-menu a:hover{color:white;}
+
+.page-header h1{
+margin:0 0 10px 0;
+font-size:40px;
+}
+
+.page-header p{
+margin:0;
+color:#94a3b8;
 }
 
 .summary{
 display:grid;
 grid-template-columns:repeat(4,1fr);
 gap:16px;
-margin-bottom:20px;
+margin:20px 0;
 }
 
 .summary-box{
 background:#111827;
 padding:18px;
-border-radius:8px;
+border-radius:10px;
 }
 
 .summary-box strong{
-display:block;
 font-size:28px;
+display:block;
 margin-bottom:6px;
 }
 
-.summary-box span{
-color:#94a3b8;
-font-size:14px;
+.card{
+background:#111827;
+padding:20px;
+border-radius:10px;
+margin-bottom:20px;
 }
 
-.grid-2{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:20px;
-}
-
-.bar-row{
-margin-bottom:16px;
-}
+.bar-row{margin-bottom:16px;}
 
 .bar-label{
 display:flex;
 justify-content:space-between;
 margin-bottom:6px;
-color:#cbd5e1;
-font-size:14px;
 }
 
 .bar{
-width:100%;
 height:16px;
 background:#1f2937;
 border-radius:999px;
 overflow:hidden;
-cursor:pointer;
 }
 
 .bar-fill{
 height:100%;
 background:linear-gradient(90deg,#2563eb,#60a5fa);
-border-radius:999px;
 }
 
 .list-row{
 display:flex;
 justify-content:space-between;
-gap:12px;
 padding:10px 0;
 border-bottom:1px solid #1f2937;
-color:#dbe5fb;
-}
-
-.list-row:last-child{
-border-bottom:none;
-}
-
-.detail-box{
-margin-top:18px;
-padding:16px;
-border-radius:8px;
-background:#0b1220;
-border:1px solid #1f2937;
-color:#cbd5e1;
-}
-
-.actions{
-display:flex;
-gap:12px;
-flex-wrap:wrap;
-margin-top:16px;
 }
 
 button{
 padding:12px 16px;
 background:#2563eb;
-color:white;
 border:none;
-border-radius:6px;
+border-radius:8px;
+color:white;
 cursor:pointer;
+margin-right:10px;
 }
 
-button.secondary{
-background:#334155;
-}
+button.secondary{background:#334155;}
 
-@media (max-width:1000px){
-.summary,
-.grid-2{
-grid-template-columns:1fr;
-}
+@media(max-width:900px){
+
+.sidebar{display:none;}
+
+.mobile-topbar{display:flex;}
+
+.app{display:block;}
+
+.summary{grid-template-columns:1fr;}
+
 }
 </style>
 </head>
 
 <body>
 
+<div class="mobile-topbar">
+<div class="mobile-logo">WashTrac</div>
+<button class="menu-btn" onclick="toggleMenu()">Menu</button>
+</div>
+
+<div class="mobile-menu" id="mobileMenu">
+<a href="dashboard.html">Dashboard</a>
+<a href="codes.html">Codes</a>
+<a href="activity.html">Activity</a>
+<a href="usage.html">Reports</a>
+</div>
+
+<div class="app">
+
 <div class="sidebar">
+
 <div class="logo">WashTrac</div>
 
 <div class="nav">
@@ -180,255 +203,153 @@ grid-template-columns:1fr;
 <a href="codes.html">Codes</a>
 <a href="activity.html">Activity</a>
 <a href="usage.html">Reports</a>
-<a href="#">Locations</a>
-<a href="#">Devices</a>
-<a href="#">Account</a>
 </div>
+
 </div>
 
 <div class="main">
 
 <div class="page-header">
 <h1>Reports</h1>
-<p style="color:#94a3b8;">Department usage, top-used codes, and summary reporting.</p>
+<p>Usage analytics and reporting.</p>
 </div>
 
 <div class="summary">
+
 <div class="summary-box">
 <strong id="totalUses">0</strong>
 <span>Total Uses</span>
 </div>
 
 <div class="summary-box">
-<strong id="totalDepartments">0</strong>
-<span>Departments</span>
-</div>
-
-<div class="summary-box">
-<strong id="topCodeCount">0</strong>
-<span>Top Code Uses</span>
-</div>
-
-<div class="summary-box">
 <strong id="totalCodes">0</strong>
 <span>Total Codes</span>
 </div>
+
+<div class="summary-box">
+<strong id="topCode">-</strong>
+<span>Top Code</span>
 </div>
 
-<div class="grid-2">
+<div class="summary-box">
+<strong id="topDept">-</strong>
+<span>Top Department</span>
+</div>
+
+</div>
 
 <div class="card">
-<h3>Usage by Department</h3>
+
+<h3>Department Usage</h3>
+
 <div id="departmentBars"></div>
 
-<div class="detail-box" id="departmentDetail">
-Click a department bar to see the top-used code in that department.
-</div>
 </div>
 
 <div class="card">
+
 <h3>Top Used Codes</h3>
-<div id="topCodesList"></div>
-</div>
+
+<div id="topCodes"></div>
 
 </div>
 
 <div class="card">
+
 <h3>Report Actions</h3>
 
-<div class="actions">
-<button onclick="window.print()">Print Report</button>
-<button class="secondary" onclick="downloadUsageCSV()">Export CSV</button>
-<button class="secondary" onclick="emailUsageSummary()">Email Summary</button>
+<button onclick="exportCSV()">Export CSV</button>
+<button class="secondary" onclick="emailReport()">Email Report</button>
+
 </div>
 
-<div class="detail-box">
-The Email Summary button opens your email app with a prefilled report summary.
-Later we can upgrade this to true automatic emailed reports from the backend.
 </div>
-</div>
-
 </div>
 
 <script>
 
-const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co"
-const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS"
+const SUPABASE_URL="https://feqrsypiugwwdweiwvua.supabase.co"
+const SUPABASE_KEY="sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS"
 
-const client = supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
+const client=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
 
-let cachedCodes = []
-let cachedDepartments = []
+function toggleMenu(){
+const m=document.getElementById("mobileMenu")
+m.style.display=m.style.display==="block"?"none":"block"
+}
 
-async function fetchCodes(){
-const {data,error} = await client
+async function loadUsage(){
+
+const {data:codes}=await client
 .from("codes")
 .select("*")
 .order("uses",{ascending:false})
 
-if(error){
-console.log(error)
-return []
+if(!codes)return
+
+document.getElementById("totalCodes").innerText=codes.length
+
+let totalUses=0
+codes.forEach(c=>totalUses+=Number(c.uses||0))
+document.getElementById("totalUses").innerText=totalUses
+
+if(codes.length){
+document.getElementById("topCode").innerText=codes[0].code
 }
 
-return data || []
-}
+const dept={}
 
-function buildDepartmentData(codes){
-const map = {}
-
-codes.forEach(item => {
-const department = item.department || "Unassigned"
-const uses = Number(item.uses || 0)
-
-if(!map[department]){
-map[department] = {
-department,
-totalUses:0,
-codes:[]
-}
-}
-
-map[department].totalUses += uses
-map[department].codes.push(item)
+codes.forEach(c=>{
+const d=c.department||"Unassigned"
+dept[d]=(dept[d]||0)+Number(c.uses||0)
 })
 
-return Object.values(map).sort((a,b) => b.totalUses - a.totalUses)
+const sorted=Object.entries(dept).sort((a,b)=>b[1]-a[1])
+
+if(sorted.length){
+document.getElementById("topDept").innerText=sorted[0][0]
 }
 
-function renderDepartmentBars(departments){
-const wrap = document.getElementById("departmentBars")
-wrap.innerHTML = ""
+const barWrap=document.getElementById("departmentBars")
+barWrap.innerHTML=""
 
-const max = Math.max(...departments.map(d => d.totalUses), 1)
+const max=Math.max(...sorted.map(d=>d[1]),1)
 
-departments.forEach(dep => {
-const percent = Math.max((dep.totalUses / max) * 100, 4)
-
-wrap.innerHTML += `
+sorted.forEach(d=>{
+const percent=(d[1]/max)*100
+barWrap.innerHTML+=`
 <div class="bar-row">
-  <div class="bar-label">
-    <span>${dep.department}</span>
-    <span>${dep.totalUses}</span>
-  </div>
-  <div class="bar" onclick="showDepartmentDetail('${dep.department.replace(/'/g,"\\'")}')">
-    <div class="bar-fill" style="width:${percent}%"></div>
-  </div>
+<div class="bar-label">
+<span>${d[0]}</span>
+<span>${d[1]}</span>
+</div>
+<div class="bar">
+<div class="bar-fill" style="width:${percent}%"></div>
+</div>
 </div>
 `
 })
-}
 
-function showDepartmentDetail(departmentName){
-const dep = cachedDepartments.find(d => d.department === departmentName)
+const list=document.getElementById("topCodes")
+list.innerHTML=""
 
-if(!dep){
-document.getElementById("departmentDetail").innerText = "No department data found."
-return
-}
-
-const sortedCodes = dep.codes.slice().sort((a,b) => Number(b.uses || 0) - Number(a.uses || 0))
-const top = sortedCodes[0]
-
-document.getElementById("departmentDetail").innerHTML = `
-<strong>${dep.department}</strong><br><br>
-Total uses: ${dep.totalUses}<br>
-Top code: ${top ? top.code : "-"}<br>
-Assigned to: ${top ? (top.name || "-") : "-"}<br>
-Top code uses: ${top ? (top.uses || 0) : 0}
-`
-}
-
-function renderTopCodes(codes){
-const list = document.getElementById("topCodesList")
-list.innerHTML = ""
-
-if(!codes.length){
-list.innerHTML = `<div class="list-row"><span>No usage data yet.</span><span>0</span></div>`
-return
-}
-
-codes.slice(0,10).forEach(item => {
-list.innerHTML += `
+codes.slice(0,10).forEach(c=>{
+list.innerHTML+=`
 <div class="list-row">
-  <span><strong>${item.code}</strong> — ${item.department || ""} / ${item.name || ""}</span>
-  <span>${item.uses || 0}</span>
+<span>${c.code}</span>
+<span>${c.uses||0}</span>
 </div>
 `
 })
+
 }
 
-function updateSummary(codes, departments){
-const totalUses = codes.reduce((sum,item) => sum + Number(item.uses || 0), 0)
-const totalDepartments = departments.length
-const totalCodes = codes.length
-const topCodeCount = codes.length ? Number(codes[0].uses || 0) : 0
-
-document.getElementById("totalUses").innerText = totalUses
-document.getElementById("totalDepartments").innerText = totalDepartments
-document.getElementById("totalCodes").innerText = totalCodes
-document.getElementById("topCodeCount").innerText = topCodeCount
+function exportCSV(){
+alert("CSV export coming next step")
 }
 
-async function loadUsage(){
-cachedCodes = await fetchCodes()
-cachedDepartments = buildDepartmentData(cachedCodes)
-
-updateSummary(cachedCodes, cachedDepartments)
-renderDepartmentBars(cachedDepartments)
-renderTopCodes(cachedCodes)
-}
-
-function downloadUsageCSV(){
-if(!cachedCodes.length){
-alert("No data to export.")
-return
-}
-
-let csv = "Code,Department,Name,Uses,Last Used\n"
-
-cachedCodes.forEach(item => {
-csv += `${item.code},${item.department || ""},${item.name || ""},${item.uses || 0},${item.last_used || "-"}\n`
-})
-
-const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
-const url = URL.createObjectURL(blob)
-const link = document.createElement("a")
-link.href = url
-link.download = "washtrac_usage_report.csv"
-link.click()
-URL.revokeObjectURL(url)
-}
-
-function emailUsageSummary(){
-if(!cachedCodes.length){
-alert("No usage data available yet.")
-return
-}
-
-const totalUses = cachedCodes.reduce((sum,item) => sum + Number(item.uses || 0), 0)
-const topCode = cachedCodes[0]
-const topDepartment = cachedDepartments[0]
-
-const subject = encodeURIComponent("WashTrac Usage Summary")
-const body = encodeURIComponent(
-`WashTrac Usage Summary
-
-Total Uses: ${totalUses}
-Total Codes: ${cachedCodes.length}
-Departments: ${cachedDepartments.length}
-
-Top Department:
-${topDepartment ? topDepartment.department : "-"} — ${topDepartment ? topDepartment.totalUses : 0} uses
-
-Top Code:
-${topCode ? topCode.code : "-"} — ${topCode ? topCode.uses : 0} uses
-${topCode ? (topCode.department || "") : ""} / ${topCode ? (topCode.name || "") : ""}
-
-Generated: ${new Date().toLocaleString()}`
-)
-
-window.location.href = `mailto:?subject=${subject}&body=${body}`
+function emailReport(){
+alert("Email report coming next step")
 }
 
 loadUsage()
