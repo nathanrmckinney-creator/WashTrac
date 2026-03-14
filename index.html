@@ -3,137 +3,31 @@
 <head>
 <title>WashTrac</title>
 
-<style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+<style>
 body{
-font-family: Arial, sans-serif;
+font-family:Arial, sans-serif;
 margin:0;
 background:#0b1220;
 color:white;
 }
 
-.header{
+.topbar{
 background:#111a30;
-padding:20px;
-font-size:26px;
+padding:18px 22px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.brand{
+font-size:24px;
 font-weight:bold;
-text-align:center;
+letter-spacing:1px;
 }
 
-.hero{
-padding:80px 20px;
-text-align:center;
-background-image:url("https://images.unsplash.com/photo-1607863680198-23d4b2565df0");
-background-size:cover;
-background-position:center;
-}
-
-.hero h1{
-font-size:48px;
-margin-bottom:20px;
-}
-
-.hero p{
-font-size:20px;
-max-width:700px;
-margin:auto;
-}
-
-.button{
-display:inline-block;
-margin-top:30px;
-padding:16px 34px;
-background:#42ff87;
-color:black;
-font-weight:bold;
-text-decoration:none;
-border-radius:8px;
-}
-
-.section{
-padding:60px 20px;
-text-align:center;
-}
-
-.features{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-gap:20px;
-max-width:900px;
-margin:auto;
-}
-
-.card{
-background:#16233f;
-padding:25px;
-border-radius:10px;
-}
-
-.footer{
-padding:30px;
-text-align:center;
-background:#111a30;
-color:#aaa;
-margin-top:40px;
-}
-
-</style>
-
-</head>
-
-<body>
-
-<div class="header">
-WASHTRAC
-</div>
-
-<div class="hero">
-
-<h1>Modern Carwash Control</h1>
-
-<p>
-Monitor wash activity, manage access codes, and track usage from anywhere.
-</p>
-
-<a class="button" href="dashboard.html">Open Operator Dashboard</a>
-
-</div>
-
-<div class="section">
-
-<h2>Platform Features</h2>
-
-<div class="features">
-
-<div class="card">
-<h3>Live Bay Status</h3>
-<p>See when each wash bay is running or idle in real time.</p>
-</div>
-
-<div class="card">
-<h3>Access Code Tracking</h3>
-<p>Monitor which codes were used and when they were activated.</p>
-</div>
-
-<div class="card">
-<h3>Usage Analytics</h3>
-<p>Track washes per day and code usage across locations.</p>
-</div>
-
-<div class="card">
-<h3>Remote Management</h3>
-<p>Operate and monitor your wash from any phone or computer.</p>
-</div>
-
-</div>
-
-</div>
-
-<div class="footer">
-
-WashTrac © 2026 — Carwash Monitoring Platform
-
-</div>
-
-</body>
-</html>
+.topbar a{
+color:#8fb2ff;
+text
