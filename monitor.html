@@ -28,6 +28,8 @@ border-bottom:1px solid #1e293b;
 position:sticky;
 top:0;
 z-index:1000;
+gap:12px;
+flex-wrap:wrap;
 }
 
 .brand{
@@ -138,6 +140,9 @@ margin:0 0 16px 0;
 display:flex;
 flex-direction:column;
 gap:12px;
+max-height:60vh;
+overflow-y:auto;
+padding-right:4px;
 }
 
 .monitor-row{
@@ -251,6 +256,14 @@ font-size:32px;
 
 .summary{
 grid-template-columns:1fr;
+}
+
+.topbar{
+align-items:flex-start;
+}
+
+.top-actions{
+width:100%;
 }
 }
 </style>
@@ -429,7 +442,7 @@ function renderOperatorFeed(activity){
       <div class="monitor-row">
         <div class="monitor-time">${new Date(row.event_time).toLocaleTimeString()}</div>
         <div class="monitor-code">${row.code || ""}</div>
-        <div class="monitor-name">${row.department || ""} ${row.name ? "— " + row.name : ""}</div>
+        <div class="monitor-name">${row.department || ""}${row.name ? " — " + row.name : ""}</div>
         <div class="monitor-bay">${row.bay || ""}</div>
         <div class="monitor-event">${row.event || ""}</div>
       </div>
