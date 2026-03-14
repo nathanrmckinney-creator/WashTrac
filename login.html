@@ -13,13 +13,11 @@
 
     body {
       font-family: Arial, Helvetica, sans-serif;
-      background:
-        radial-gradient(circle at top left, rgba(66,255,135,0.10), transparent 28%),
-        radial-gradient(circle at top right, rgba(74,144,255,0.16), transparent 35%),
-        linear-gradient(180deg, #08111f 0%, #0d1730 100%);
-      color: #fff;
+      background: #08111f;
+      color: #ffffff;
       min-height: 100vh;
       line-height: 1.5;
+      overflow-x: hidden;
     }
 
     a {
@@ -28,11 +26,12 @@
     }
 
     .topbar {
-      background: rgba(8, 17, 31, 0.94);
-      border-bottom: 1px solid rgba(255,255,255,0.08);
       position: sticky;
       top: 0;
       z-index: 100;
+      background: rgba(8, 17, 31, 0.92);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(8px);
     }
 
     .nav {
@@ -55,7 +54,7 @@
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 20px;
       flex-wrap: wrap;
     }
 
@@ -70,11 +69,12 @@
       border: 1px solid rgba(255,255,255,0.14);
       color: #fff;
       font-weight: 700;
-      transition: 0.2s ease;
+      transition: 0.25s ease;
     }
 
     .home-btn:hover {
-      background: rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.08);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.22);
     }
 
     .wrap {
@@ -83,6 +83,40 @@
       align-items: center;
       justify-content: center;
       padding: 40px 20px;
+      position: relative;
+      overflow: hidden;
+      background-image:
+        radial-gradient(circle at 28% 32%, rgba(8,17,31,0.15), rgba(8,17,31,0.72)),
+        linear-gradient(rgba(8,17,31,0.24), rgba(8,17,31,0.78)),
+        url("Carwash.png");
+      background-size: cover;
+      background-position: center 55%;
+      background-repeat: no-repeat;
+    }
+
+    .wrap::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(
+          115deg,
+          rgba(255,255,255,0.00) 0%,
+          rgba(255,255,255,0.05) 35%,
+          rgba(255,255,255,0.00) 60%
+        );
+      transform: translateX(-35%);
+      animation: shimmer 8s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .wrap::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 78%, rgba(255,255,255,0.08), rgba(255,255,255,0.00) 30%);
+      pointer-events: none;
     }
 
     .login-shell {
@@ -92,6 +126,12 @@
       grid-template-columns: 1fr 420px;
       gap: 28px;
       align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .intro {
+      animation: fadeUp 0.9s ease-out;
     }
 
     .intro h1 {
@@ -99,6 +139,7 @@
       line-height: 1.04;
       margin-bottom: 18px;
       max-width: 620px;
+      text-shadow: 0 10px 40px rgba(0,0,0,0.85);
     }
 
     .eyebrow {
@@ -112,21 +153,24 @@
     }
 
     .intro p {
-      color: #c8d5ef;
+      color: #d7e1f5;
       font-size: 19px;
       max-width: 620px;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.75);
     }
 
     .login-card,
     .info-card {
-      background: rgba(255,255,255,0.04);
+      background: rgba(10,16,30,0.72);
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 20px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.28);
+      backdrop-filter: blur(6px);
     }
 
     .login-card {
       padding: 28px;
+      animation: floatCard 5s ease-in-out infinite;
     }
 
     .login-card h2 {
@@ -162,6 +206,7 @@
       color: #fff;
       font-size: 16px;
       outline: none;
+      transition: 0.2s ease;
     }
 
     input::placeholder {
@@ -171,6 +216,7 @@
     input:focus {
       border-color: rgba(66,255,135,0.45);
       background: rgba(255,255,255,0.07);
+      box-shadow: 0 0 0 3px rgba(66,255,135,0.08);
     }
 
     .login-btn {
@@ -178,16 +224,19 @@
       padding: 14px 18px;
       border: none;
       border-radius: 12px;
-      background: #42ff87;
-      color: #07111f;
+      background: rgba(255,255,255,0.06);
+      color: #fff;
       font-size: 16px;
       font-weight: 800;
       cursor: pointer;
       margin-top: 6px;
+      border: 1px solid rgba(255,255,255,0.12);
+      transition: 0.25s ease;
     }
 
     .login-btn:hover {
-      opacity: 0.96;
+      background: rgba(255,255,255,0.11);
+      transform: translateY(-2px);
     }
 
     .helper {
@@ -218,6 +267,44 @@
       margin-top: 16px;
       color: #7f95bb;
       font-size: 13px;
+    }
+
+    @keyframes shimmer {
+      0% {
+        transform: translateX(-35%);
+        opacity: 0.25;
+      }
+      50% {
+        transform: translateX(10%);
+        opacity: 0.5;
+      }
+      100% {
+        transform: translateX(-35%);
+        opacity: 0.25;
+      }
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes floatCard {
+      0% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-6px);
+      }
+      100% {
+        transform: translateY(0px);
+      }
     }
 
     @media (max-width: 980px) {
@@ -257,7 +344,7 @@
     <div class="nav">
       <div class="brand">WASHTRAC</div>
       <div class="nav-links">
-        <a href="index.html">Features</a>
+        <a href="index.html#features">Features</a>
         <a href="index.html#how-it-works">How It Works</a>
         <a href="index.html#visibility">Visibility</a>
         <a href="index.html" class="home-btn">Home</a>
@@ -299,8 +386,8 @@
         <div class="info-card">
           <h3>What’s next</h3>
           <p>
-            This dashboard will also support code management so you can add, remove,
-            and control access codes directly from WashTrac.
+            WashTrac will support live code management so you can add, remove,
+            and control access codes directly from the dashboard.
           </p>
         </div>
 
