@@ -3,181 +3,273 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WashTrac Operator Dashboard</title>
+  <title>WashTrac Dashboard</title>
   <style>
-    *{
-      box-sizing:border-box;
-      margin:0;
-      padding:0;
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
-    body{
-      font-family:Arial, Helvetica, sans-serif;
-      background:#0b1220;
-      color:#fff;
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #08111f;
+      color: #fff;
+      line-height: 1.5;
     }
 
-    .topbar{
-      background:#111a30;
-      padding:18px 20px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      border-bottom:1px solid rgba(255,255,255,0.08);
+    a {
+      text-decoration: none;
+      color: inherit;
     }
 
-    .brand{
-      font-size:24px;
-      font-weight:700;
+    .topbar {
+      background: rgba(8, 17, 31, 0.94);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
-    .topbar a{
-      color:#8fb2ff;
-      text-decoration:none;
-      font-weight:bold;
+    .nav {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px;
+      min-height: 72px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
     }
 
-    .wrap{
-      max-width:1100px;
-      margin:auto;
-      padding:24px;
+    .brand {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 1px;
     }
 
-    .hero{
-      margin-bottom:24px;
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
     }
 
-    .hero h1{
-      font-size:34px;
-      margin-bottom:10px;
+    .nav-links a,
+    .nav-links button {
+      color: #bfd0ef;
+      font-size: 15px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
     }
 
-    .hero p{
-      color:#b9c7e6;
-      font-size:18px;
+    .login-btn {
+      padding: 11px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.14) !important;
+      color: #fff !important;
+      font-weight: 700;
+      transition: 0.2s ease;
     }
 
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:20px;
-      margin-bottom:24px;
+    .login-btn:hover {
+      background: rgba(255,255,255,0.06);
     }
 
-    .card{
-      background:#16233f;
-      border:1px solid rgba(255,255,255,0.08);
-      border-radius:16px;
-      padding:22px;
-      box-shadow:0 10px 30px rgba(0,0,0,0.18);
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 60px;
     }
 
-    .card h2{
-      font-size:20px;
-      margin-bottom:16px;
+    .hero {
+      margin-bottom: 26px;
     }
 
-    .stat{
-      font-size:34px;
-      font-weight:700;
-      margin-bottom:8px;
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 12px;
+      color: #8eb5ff;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 1.3px;
+      text-transform: uppercase;
     }
 
-    .muted{
-      color:#aebcda;
+    .hero h1 {
+      font-size: 42px;
+      margin-bottom: 12px;
     }
 
-    .row{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      padding:12px 0;
-      border-bottom:1px solid rgba(255,255,255,0.08);
+    .hero p {
+      color: #c8d5ef;
+      font-size: 18px;
+      max-width: 760px;
     }
 
-    .row:last-child{
-      border-bottom:none;
+    .grid-3,
+    .grid-2 {
+      display: grid;
+      gap: 20px;
+      margin-bottom: 20px;
     }
 
-    .pill{
-      padding:6px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:700;
+    .grid-3 {
+      grid-template-columns: repeat(3, 1fr);
     }
 
-    .running{
-      background:rgba(66,255,135,0.14);
-      color:#42ff87;
+    .grid-2 {
+      grid-template-columns: 1.2fr 0.8fr;
     }
 
-    .idle{
-      background:rgba(255,255,255,0.08);
-      color:#d6def1;
+    .card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.18);
     }
 
-    .wide{
-      display:grid;
-      grid-template-columns:1.2fr 0.8fr;
-      gap:20px;
-      margin-bottom:24px;
+    .card h2 {
+      font-size: 20px;
+      margin-bottom: 14px;
+      color: #dce7ff;
     }
 
-    .activity-row{
-      display:grid;
-      grid-template-columns:120px 1fr 100px;
-      gap:12px;
-      padding:12px 0;
-      border-bottom:1px solid rgba(255,255,255,0.08);
-      color:#dbe5fb;
+    .stat {
+      font-size: 38px;
+      font-weight: 800;
+      margin-bottom: 8px;
     }
 
-    .activity-row:last-child{
-      border-bottom:none;
+    .muted {
+      color: #bfd0ef;
+      font-size: 15px;
     }
 
-    .btn{
-      display:inline-block;
-      margin-top:16px;
-      padding:12px 18px;
-      border-radius:10px;
-      background:#42ff87;
-      color:#000;
-      font-weight:bold;
-      text-decoration:none;
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      color: #d2dcf4;
     }
 
-    @media (max-width: 900px){
-      .grid,
-      .wide{
-        grid-template-columns:1fr;
+    .row:last-child {
+      border-bottom: none;
+    }
+
+    .pill {
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .running {
+      background: rgba(66,255,135,0.14);
+      color: #42ff87;
+    }
+
+    .idle {
+      background: rgba(255,255,255,0.08);
+      color: #d8e2f6;
+    }
+
+    .online {
+      background: rgba(66,255,135,0.14);
+      color: #42ff87;
+    }
+
+    .action-btn {
+      display: inline-block;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 15px;
+      border: 1px solid rgba(255,255,255,0.16);
+      color: #fff;
+      background: rgba(255,255,255,0.04);
+      margin-top: 16px;
+    }
+
+    .activity-row {
+      display: grid;
+      grid-template-columns: 120px 1fr 100px;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      color: #dbe5fb;
+    }
+
+    .activity-row:last-child {
+      border-bottom: none;
+    }
+
+    .footer-space {
+      height: 10px;
+    }
+
+    @media (max-width: 980px) {
+      .grid-3,
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .nav {
+        flex-direction: column;
+        align-items: flex-start;
+        padding-top: 16px;
+        padding-bottom: 16px;
       }
 
-      .activity-row{
-        grid-template-columns:1fr;
+      .hero h1 {
+        font-size: 32px;
       }
 
-      .hero h1{
-        font-size:28px;
+      .hero p {
+        font-size: 17px;
+      }
+
+      .activity-row {
+        grid-template-columns: 1fr;
       }
     }
   </style>
 </head>
 <body>
+  <script>
+    if (localStorage.getItem("washtracLoggedIn") !== "yes") {
+      window.location.href = "login.html";
+    }
+  </script>
 
   <div class="topbar">
-    <div class="brand">WashTrac</div>
-    <a href="index.html">← Back to Home</a>
+    <div class="nav">
+      <div class="brand">WASHTRAC</div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <button onclick="logout()" class="login-btn">Logout</button>
+      </div>
+    </div>
   </div>
 
-  <div class="wrap">
-
+  <div class="container">
     <div class="hero">
-      <h1>Operator Dashboard</h1>
-      <p>Monitor wash activity, bay status, code usage, and daily performance from one clean view.</p>
+      <div class="eyebrow">Operator Dashboard</div>
+      <h1>Live visibility into your wash operation.</h1>
+      <p>
+        Monitor site activity, check bay status, review code usage, and keep a clean view
+        of daily performance from one dashboard.
+      </p>
     </div>
 
-    <div class="grid">
+    <div class="grid-3">
       <div class="card">
         <h2>Today's Washes</h2>
         <div class="stat">47</div>
@@ -197,7 +289,7 @@
       </div>
     </div>
 
-    <div class="wide">
+    <div class="grid-2">
       <div class="card">
         <h2>Live Bay Status</h2>
 
@@ -212,20 +304,24 @@
         </div>
 
         <div class="row">
-          <span>Vacuum Row</span>
+          <span>Bay 3</span>
           <span class="pill idle">IDLE</span>
         </div>
 
         <div class="row">
           <span>Controller</span>
-          <span class="pill running">ONLINE</span>
+          <span class="pill online">ONLINE</span>
         </div>
       </div>
 
       <div class="card">
         <h2>Quick Actions</h2>
-        <div class="muted">This section can later connect to live controls, code management, and reporting tools.</div>
-        <a class="btn" href="#">View Audit Log</a>
+        <div class="muted">
+          This area can later connect to live controls, code management, activity logs,
+          and automated reporting.
+        </div>
+
+        <a href="#" class="action-btn">View Activity Log</a>
       </div>
     </div>
 
@@ -247,7 +343,7 @@
       <div class="activity-row">
         <div>6:30 PM</div>
         <div>Code 2208 activated wash</div>
-        <div>Bay 1</div>
+        <div>Bay 3</div>
       </div>
 
       <div class="activity-row">
@@ -257,7 +353,14 @@
       </div>
     </div>
 
+    <div class="footer-space"></div>
   </div>
 
+  <script>
+    function logout() {
+      localStorage.removeItem("washtracLoggedIn");
+      window.location.href = "login.html";
+    }
+  </script>
 </body>
 </html>
