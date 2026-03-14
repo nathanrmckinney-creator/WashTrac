@@ -1,426 +1,148 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WashTrac Dashboard</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8">
+<title>WashTrac Dashboard</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>
 
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      background: #08111f;
-      color: #fff;
-      line-height: 1.5;
-    }
+body{
+margin:0;
+font-family:Arial;
+background:#020617;
+color:white;
+}
 
-    a { text-decoration: none; color: inherit; }
+.sidebar{
+position:fixed;
+left:0;
+top:0;
+bottom:0;
+width:220px;
+background:#0f172a;
+padding:20px;
+}
 
-    .topbar {
-      background: rgba(8,17,31,.92);
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      backdrop-filter: blur(8px);
-    }
+.logo{
+font-size:22px;
+font-weight:bold;
+margin-bottom:40px;
+}
 
-    .nav {
-      max-width: 1200px;
-      margin: auto;
-      padding: 0 20px;
-      min-height: 72px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 20px;
-    }
+.nav a{
+display:block;
+color:#cbd5f5;
+text-decoration:none;
+padding:10px 0;
+}
 
-    .brand {
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: 1px;
-    }
+.nav a:hover{
+color:white;
+}
 
-    .nav-links {
-      display: flex;
-      gap: 14px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
+.main{
+margin-left:220px;
+padding:30px;
+}
 
-    .nav-links a, .nav-links button {
-      color: #bfd0ef;
-      font-size: 15px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-family: inherit;
-    }
+.cards{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:20px;
+margin-bottom:30px;
+}
 
-    .logout-btn {
-      padding: 11px 16px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,.14);
-      color: #fff;
-      font-weight: 700;
-    }
+.card{
+background:#111827;
+padding:20px;
+border-radius:6px;
+}
 
-    .hero {
-      padding: 60px 20px 30px;
-      background:
-        linear-gradient(rgba(8,17,31,.22), rgba(8,17,31,.72)),
-        url("Carwash.png");
-      background-size: cover;
-      background-position: center 55%;
-      background-repeat: no-repeat;
-    }
+.card h3{
+margin:0 0 10px 0;
+}
 
-    .container {
-      max-width: 1200px;
-      margin: auto;
-      padding: 0 20px 60px;
-    }
+.big{
+font-size:32px;
+}
 
-    .eyebrow {
-      display: inline-block;
-      margin-bottom: 12px;
-      color: #8eb5ff;
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 1.3px;
-      text-transform: uppercase;
-    }
+.activity{
+background:#111827;
+padding:20px;
+border-radius:6px;
+}
 
-    .hero h1 {
-      font-size: 42px;
-      margin-bottom: 12px;
-      text-shadow: 0 10px 40px rgba(0,0,0,.85);
-    }
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:10px;
+}
 
-    .hero p {
-      color: #d7e1f5;
-      font-size: 18px;
-      max-width: 760px;
-      text-shadow: 0 4px 20px rgba(0,0,0,.75);
-    }
+td{
+padding:8px;
+border-bottom:1px solid #1f2937;
+}
 
-    .grid-3, .grid-2 {
-      display: grid;
-      gap: 20px;
-      margin-bottom: 20px;
-    }
+</style></head><body><div class="sidebar"><div class="logo">WashTrac</div><div class="nav"><a href="dashboard.html">Dashboard</a>
+<a href="codes.html">Codes</a>
+<a href="#">Activity</a>
+<a href="#">Reports</a>
+<a href="#">Locations</a>
+<a href="#">Devices</a>
+<a href="#">Account</a>
 
-    .grid-3 { grid-template-columns: repeat(3, 1fr); }
-    .grid-2 { grid-template-columns: 1.1fr 0.9fr; }
+</div></div><div class="main"><h1>Dashboard</h1><div class="cards"><div class="card">
+<h3>Today's Washes</h3>
+<div class="big" id="todayWashes">0</div>
+</div><div class="card">
+<h3>Active Codes</h3>
+<div class="big" id="activeCodes">0</div>
+</div><div class="card">
+<h3>Online Devices</h3>
+<div class="big">0</div>
+</div></div><div class="activity"><h3>Recent Activity</h3><table id="activityTable">
+<tbody></tbody>
+</table></div></div><script>
 
-    .card {
-      background: rgba(10,16,30,.72);
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 18px;
-      padding: 24px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.18);
-      backdrop-filter: blur(6px);
-    }
+const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co"
+const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS"
 
-    .card h2 {
-      font-size: 20px;
-      margin-bottom: 14px;
-      color: #dce7ff;
-    }
+const client = supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
 
-    .stat {
-      font-size: 38px;
-      font-weight: 800;
-      margin-bottom: 8px;
-    }
+async function loadDashboard(){
 
-    .muted {
-      color: #bfd0ef;
-      font-size: 15px;
-    }
+const {data:codes} = await client
+.from("codes")
+.select("*")
 
-    .row {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      color: #d2dcf4;
-      align-items: center;
-    }
+document.getElementById("activeCodes").innerText=codes.length
 
-    .row:last-child { border-bottom: none; }
+const {data:activity} = await client
+.from("activity")
+.select("*")
+.order("event_time",{ascending:false})
+.limit(10)
 
-    .pill {
-      padding: 5px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 800;
-      white-space: nowrap;
-    }
+document.getElementById("todayWashes").innerText=activity.length
 
-    .running {
-      background: rgba(66,255,135,.14);
-      color: #42ff87;
-    }
+const tbody=document.querySelector("#activityTable tbody")
 
-    .idle {
-      background: rgba(255,255,255,.08);
-      color: #d8e2f6;
-    }
+tbody.innerHTML=""
 
-    .normal {
-      background: rgba(66,255,135,.14);
-      color: #42ff87;
-    }
+activity.forEach(row=>{
 
-    .estop {
-      background: rgba(255,70,70,.18);
-      color: #ff4d4d;
-    }
+tbody.innerHTML+=`
 
-    .action-btn {
-      display: inline-block;
-      padding: 12px 18px;
-      border-radius: 12px;
-      font-weight: 800;
-      font-size: 15px;
-      border: 1px solid rgba(255,255,255,.16);
-      color: #fff;
-      background: rgba(255,255,255,.04);
-      cursor: pointer;
-      transition: .2s ease;
-    }
+<tr>
+<td>${new Date(row.event_time).toLocaleTimeString()}</td>
+<td>${row.code}</td>
+<td>${row.bay || ""}</td>
+</tr>
 
-    .action-btn:hover {
-      background: rgba(255,255,255,.10);
-      transform: translateY(-2px);
-    }
+`
 
-    .actions {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 16px;
-    }
+})
 
-    .activity-row {
-      display: grid;
-      grid-template-columns: 120px 1fr 100px;
-      gap: 12px;
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      color: #dbe5fb;
-    }
+}
 
-    .activity-row:last-child { border-bottom: none; }
+loadDashboard()
 
-    @media (max-width: 980px) {
-      .grid-3, .grid-2 { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 700px) {
-      .nav {
-        flex-direction: column;
-        align-items: flex-start;
-        padding-top: 16px;
-        padding-bottom: 16px;
-      }
-
-      .hero h1 { font-size: 32px; }
-      .hero p { font-size: 17px; }
-      .activity-row { grid-template-columns: 1fr; }
-    }
-  </style>
-</head>
-<body>
-  <script>
-    if (localStorage.getItem("washtracLoggedIn") !== "yes") {
-      window.location.href = "login.html";
-    }
-  </script>
-
-  <div class="topbar">
-    <div class="nav">
-      <div class="brand">WASHTRAC</div>
-      <div class="nav-links">
-  <a href="codes.html">Codes</a>
-  <a href="usage.html">Usage</a>
-  <a href="activity.html">Activity</a>
-  <button onclick="logout()" class="logout-btn">Logout</button>
-      </div>
-    </div>
-  </div>
-
-  <section class="hero">
-    <div class="container">
-      <div class="eyebrow">Dashboard</div>
-      <h1>Live visibility into your wash operation.</h1>
-      <p>
-        Monitor site activity, review code usage, manage access, and track department activity from one control panel.
-      </p>
-    </div>
-  </section>
-
-  <div class="container">
-    <div class="grid-3">
-      <div class="card">
-        <h2>Today's Washes</h2>
-        <div class="stat">47</div>
-        <div class="muted">Total completed cycles today</div>
-      </div>
-
-      <div class="card">
-        <h2>Total Active Codes</h2>
-        <div class="stat" id="totalCodesStat">0</div>
-        <div class="muted">Codes currently available in the system</div>
-      </div>
-
-      <div class="card">
-        <h2>E-STOP Status</h2>
-        <div class="stat" id="estopText">Normal</div>
-        <div class="muted">This will later reflect the live Pi state</div>
-      </div>
-    </div>
-
-    <div class="grid-2">
-      <div class="card">
-        <h2>Live Bay Status</h2>
-
-        <div class="row">
-          <span>Bay 1</span>
-          <span class="pill running">RUNNING</span>
-        </div>
-
-        <div class="row">
-          <span>Bay 2</span>
-          <span class="pill idle">IDLE</span>
-        </div>
-
-        <div class="row">
-          <span>Bay 3</span>
-          <span class="pill idle">IDLE</span>
-        </div>
-
-        <div class="row">
-          <span>E-STOP</span>
-          <span class="pill normal" id="estopPill">NORMAL</span>
-        </div>
-
-        <div class="actions">
-          <button class="action-btn" onclick="toggleEStop()">Toggle Demo E-STOP</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Expand Dashboard Areas</h2>
-        <div class="muted">
-          Open full management pages for deeper search, reporting, code entry/removal, and charts.
-        </div>
-
-        <div class="actions">
-  <a class="action-btn" href="codes.html">Manage Codes</a>
-  <a class="action-btn" href="usage.html">View Usage</a>
-  <a class="action-btn" href="activity.html">View Activity Log</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="grid-2">
-      <div class="card">
-        <h2>Code Management Summary</h2>
-        <div class="muted">
-          Search, add, remove, print, and export from the full code management page.
-        </div>
-
-        <div class="row"><span>Search by</span><span>Name / Department / Code</span></div>
-        <div class="row"><span>Actions</span><span>Add / Remove / Print / Export</span></div>
-        <div class="row"><span>Department tracking</span><span>Enabled</span></div>
-
-        <div class="actions">
-          <a class="action-btn" href="codes.html">Open Code Management</a>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Recent Activity</h2>
-
-        <div class="activity-row">
-          <div>6:42 PM</div>
-          <div>Code 4421 activated wash</div>
-          <div>Bay 2</div>
-        </div>
-
-        <div class="activity-row">
-          <div>6:38 PM</div>
-          <div>Code 9933 activated wash</div>
-          <div>Bay 1</div>
-        </div>
-
-        <div class="activity-row">
-          <div>6:30 PM</div>
-          <div>Code 2208 activated wash</div>
-          <div>Bay 3</div>
-        </div>
-
-        <div class="activity-row">
-          <div>6:21 PM</div>
-          <div>Operator login detected</div>
-          <div>System</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const STORAGE_KEY = "washtracCodesV1";
-
-    function defaultCodes() {
-      return [
-        { code: "4421", department: "Maintenance", name: "John Smith", uses: 5, lastUsed: "2026-03-14 6:42 PM" },
-        { code: "9933", department: "Operations", name: "Lisa Carter", uses: 8, lastUsed: "2026-03-14 6:38 PM" },
-        { code: "2208", department: "Service", name: "Mike Davis", uses: 3, lastUsed: "2026-03-14 6:30 PM" }
-      ];
-    }
-
-    function getCodes() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) {
-        const initial = defaultCodes();
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
-        return initial;
-      }
-      return JSON.parse(saved);
-    }
-
-    function updateStats() {
-      document.getElementById("totalCodesStat").innerText = getCodes().length;
-    }
-
-    function logout() {
-      localStorage.removeItem("washtracLoggedIn");
-      window.location.href = "login.html";
-    }
-
-    function toggleEStop() {
-      const pill = document.getElementById("estopPill");
-      const text = document.getElementById("estopText");
-
-      if (pill.innerText === "NORMAL") {
-        pill.innerText = "ACTIVE";
-        pill.className = "pill estop";
-        text.innerText = "ACTIVE";
-        text.style.color = "#ff4d4d";
-      } else {
-        pill.innerText = "NORMAL";
-        pill.className = "pill normal";
-        text.innerText = "Normal";
-        text.style.color = "#ffffff";
-      }
-    }
-
-    updateStats();
-  </script>
-</body>
+</script></body>
 </html>
