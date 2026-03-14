@@ -1,1 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>WashTrac Dashboard</title>
 
+<style>
+
+body{
+font-family:Arial;
+background:#0b1220;
+color:white;
+margin:0;
+}
+
+.header{
+background:#111a30;
+padding:20px;
+font-size:24px;
+font-weight:bold;
+}
+
+.container{
+padding:30px;
+}
+
+.card{
+background:#16233f;
+padding:20px;
+margin-bottom:20px;
+border-radius:10px;
+}
+
+.status{
+display:flex;
+justify-content:space-between;
+padding:10px 0;
+border-bottom:1px solid rgba(255,255,255,0.1);
+}
+
+.running{
+color:#42ff87;
+}
+
+.idle{
+color:#aaa;
+}
+
+.activity{
+display:flex;
+justify-content:space-between;
+padding:8px 0;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+WashTrac Operator Dashboard
+</div>
+
+<div class="container">
+
+<div class="card">
+<h2>Bay Status</h2>
+
+<div class="status">
+<span>Bay 1</span>
+<span class="running">RUNNING</span>
+</div>
+
+<div class="status">
+<span>Bay 2</span>
+<span class="idle">IDLE</span>
+</div>
+
+</div>
+
+<div class="card">
+<h2>Today's Stats</h2>
+
+<div class="status">
+<span>Washes</span>
+<span>47</span>
+</div>
+
+<div class="status">
+<span>Codes Used</span>
+<span>31</span>
+</div>
+
+</div>
+
+<div class="card">
+<h2>Recent Activity</h2>
+
+<div class="activity">
+<span>6:42 PM</span>
+<span>Code 4421</span>
+<span>Bay 2</span>
+</div>
+
+<div class="activity">
+<span>6:38 PM</span>
+<span>Code 9933</span>
+<span>Bay 1</span>
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>
