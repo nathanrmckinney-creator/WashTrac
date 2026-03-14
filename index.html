@@ -14,7 +14,7 @@
     body {
       font-family: Arial, Helvetica, sans-serif;
       background: #08111f;
-      color: #ffffff;
+      color: #fff;
       line-height: 1.5;
     }
 
@@ -24,39 +24,38 @@
     }
 
     .container {
-      width: 100%;
-      max-width: 1140px;
+      max-width: 1100px;
       margin: 0 auto;
       padding: 0 20px;
     }
 
     .topbar {
+      background: rgba(8, 17, 31, 0.94);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(8, 17, 31, 0.92);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(255,255,255,0.08);
     }
 
     .nav {
-      min-height: 74px;
+      min-height: 72px;
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
       gap: 20px;
     }
 
     .brand {
       font-size: 28px;
       font-weight: 800;
-      letter-spacing: 0.8px;
+      letter-spacing: 1px;
     }
 
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 22px;
+      gap: 20px;
+      flex-wrap: wrap;
     }
 
     .nav-links a {
@@ -68,7 +67,7 @@
       padding: 11px 16px;
       border-radius: 10px;
       border: 1px solid rgba(255,255,255,0.14);
-      color: #ffffff;
+      color: #fff;
       font-weight: 700;
     }
 
@@ -98,8 +97,8 @@
     }
 
     .hero h1 {
-      font-size: 58px;
-      line-height: 1.02;
+      font-size: 56px;
+      line-height: 1.04;
       margin-bottom: 20px;
       max-width: 700px;
     }
@@ -130,12 +129,11 @@
     .btn-primary {
       background: #42ff87;
       color: #07111f;
-      box-shadow: 0 14px 30px rgba(66,255,135,0.18);
     }
 
     .btn-secondary {
       border: 1px solid rgba(255,255,255,0.16);
-      color: #ffffff;
+      color: #fff;
       background: rgba(255,255,255,0.04);
     }
 
@@ -144,10 +142,18 @@
       font-size: 15px;
     }
 
+    .hero-card,
+    .feature-card,
+    .stat-box,
+    .cta-box,
+    .mini-card,
+    .activity-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+    }
+
     .hero-card {
-      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
-      border: 1px solid rgba(255,255,255,0.10);
-      border-radius: 22px;
       padding: 22px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.35);
     }
@@ -159,6 +165,7 @@
       margin-bottom: 18px;
       color: #dbe6ff;
       font-weight: 700;
+      gap: 10px;
     }
 
     .status-dot {
@@ -179,16 +186,14 @@
 
     .mini-card,
     .activity-card {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 16px;
       padding: 18px;
     }
 
     .mini-card h3,
-    .activity-card h3 {
-      font-size: 16px;
-      margin-bottom: 14px;
+    .activity-card h3,
+    .feature-card h3 {
+      font-size: 20px;
+      margin-bottom: 12px;
       color: #dce7ff;
     }
 
@@ -240,42 +245,37 @@
       font-size: 18px;
     }
 
-    .features {
+    .features,
+    .stats,
+    .steps {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
       gap: 20px;
     }
 
-    .feature-card {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 18px;
+    .features {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .stats,
+    .steps {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .feature-card,
+    .stat-box,
+    .step-card {
       padding: 24px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.18);
     }
 
-    .feature-card h3 {
-      font-size: 22px;
-      margin-bottom: 12px;
-    }
-
-    .feature-card p {
+    .feature-card p,
+    .step-card p {
       color: #c2cee8;
       font-size: 16px;
     }
 
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-    }
-
     .stat-box {
-      background: linear-gradient(180deg, rgba(66,255,135,0.08), rgba(255,255,255,0.03));
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 18px;
-      padding: 26px;
       text-align: center;
+      background: linear-gradient(180deg, rgba(66,255,135,0.08), rgba(255,255,255,0.03));
     }
 
     .stat-box strong {
@@ -288,58 +288,28 @@
       color: #bfd0ef;
     }
 
-    .pricing {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-    }
-
-    .price-card {
+    .step-card {
       background: rgba(255,255,255,0.04);
       border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 20px;
-      padding: 28px;
+      border-radius: 18px;
     }
 
-    .price-card.featured {
-      border: 1px solid rgba(66,255,135,0.45);
-      box-shadow: 0 0 0 1px rgba(66,255,135,0.10) inset;
+    .step-number {
+      width: 42px;
+      height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: #42ff87;
+      color: #07111f;
+      font-weight: 800;
+      margin-bottom: 14px;
     }
 
-    .price-card h3 {
+    .step-card h3 {
       font-size: 22px;
       margin-bottom: 10px;
-    }
-
-    .price {
-      font-size: 42px;
-      font-weight: 800;
-      margin-bottom: 12px;
-    }
-
-    .price small {
-      font-size: 15px;
-      color: #9eb2d7;
-      font-weight: 600;
-    }
-
-    .price-card p {
-      color: #bfd0ef;
-      margin-bottom: 16px;
-    }
-
-    .price-card ul {
-      list-style: none;
-      color: #d6e0f5;
-    }
-
-    .price-card li {
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-    }
-
-    .price-card li:last-child {
-      border-bottom: none;
     }
 
     .cta {
@@ -347,11 +317,9 @@
     }
 
     .cta-box {
-      background: linear-gradient(180deg, rgba(66,255,135,0.10), rgba(255,255,255,0.04));
-      border: 1px solid rgba(255,255,255,0.10);
-      border-radius: 24px;
       padding: 42px 24px;
       text-align: center;
+      background: linear-gradient(180deg, rgba(66,255,135,0.10), rgba(255,255,255,0.04));
     }
 
     .cta-box h2 {
@@ -378,16 +346,13 @@
       .hero-grid,
       .features,
       .stats,
-      .pricing {
+      .steps,
+      .mini-grid {
         grid-template-columns: 1fr;
       }
 
       .hero h1 {
         font-size: 42px;
-      }
-
-      .mini-grid {
-        grid-template-columns: 1fr;
       }
     }
 
@@ -402,7 +367,6 @@
         width: 100%;
         justify-content: space-between;
         gap: 12px;
-        flex-wrap: wrap;
       }
 
       .hero {
@@ -423,6 +387,11 @@
       .cta-box h2 {
         font-size: 30px;
       }
+
+      .dashboard-title {
+        flex-direction: column;
+        align-items: flex-start;
+      }
     }
   </style>
 </head>
@@ -433,8 +402,8 @@
       <div class="brand">WASHTRAC</div>
       <div class="nav-links">
         <a href="#features">Features</a>
+        <a href="#how-it-works">How It Works</a>
         <a href="#visibility">Visibility</a>
-        <a href="#pricing">Plans</a>
         <a href="login.html" class="login-btn">Operator Login</a>
       </div>
     </div>
@@ -534,6 +503,35 @@
     </div>
   </section>
 
+  <section class="section" id="how-it-works">
+    <div class="container">
+      <h2 class="section-heading">How WashTrac Works</h2>
+      <p class="section-sub">
+        A simple one-package system built to give you better control and visibility over your wash operation.
+      </p>
+
+      <div class="steps">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <h3>Connect the system</h3>
+          <p>Link your site hardware and controller so WashTrac can receive activity and status data.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <h3>Monitor operations</h3>
+          <p>View bay status, operator activity, and code usage from one clean dashboard.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <h3>Track and manage</h3>
+          <p>Review events, usage trends, and operational data from your phone or desktop anywhere.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="section" id="visibility">
     <div class="container">
       <h2 class="section-heading">Built for modern wash operators</h2>
@@ -554,55 +552,8 @@
         </div>
 
         <div class="stat-box">
-          <strong>One View</strong>
-          <span>Codes, logs, and status together</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section" id="pricing">
-    <div class="container">
-      <h2 class="section-heading">Simple plans for growing operators</h2>
-      <p class="section-sub">
-        Start with core monitoring, then scale into full visibility and management as your system grows.
-      </p>
-
-      <div class="pricing">
-        <div class="price-card">
-          <h3>Starter</h3>
-          <div class="price">$49 <small>/ month</small></div>
-          <p>For smaller operations getting started with visibility.</p>
-          <ul>
-            <li>Basic dashboard access</li>
-            <li>Bay status monitoring</li>
-            <li>Recent activity feed</li>
-            <li>Email support</li>
-          </ul>
-        </div>
-
-        <div class="price-card featured">
-          <h3>Operator Pro</h3>
-          <div class="price">$99 <small>/ month</small></div>
-          <p>Best for active sites that need better tracking and reporting.</p>
-          <ul>
-            <li>Everything in Starter</li>
-            <li>Code usage tracking</li>
-            <li>Expanded reporting</li>
-            <li>Mobile-first operator access</li>
-          </ul>
-        </div>
-
-        <div class="price-card">
-          <h3>Enterprise</h3>
-          <div class="price">Custom</div>
-          <p>For larger sites or custom hardware integrations.</p>
-          <ul>
-            <li>Custom dashboards</li>
-            <li>Multi-site visibility</li>
-            <li>Advanced integrations</li>
-            <li>Priority support</li>
-          </ul>
+          <strong>One Package</strong>
+          <span>One complete system for monitoring and control</span>
         </div>
       </div>
     </div>
@@ -611,9 +562,9 @@
   <section class="cta">
     <div class="container">
       <div class="cta-box">
-        <h2>Ready to run smarter?</h2>
+        <h2>Ready to modernize your carwash operation?</h2>
         <p>
-          Get cleaner visibility into your wash operation with one modern platform for monitoring,
+          Get cleaner visibility into your wash with one modern platform for monitoring,
           access control, and operator reporting.
         </p>
         <a class="btn-primary" href="login.html">Operator Login</a>
