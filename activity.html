@@ -1,444 +1,274 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WashTrac Activity Log</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8">
+<title>WashTrac Activity</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>
+body{
+margin:0;
+font-family:Arial;
+background:#020617;
+color:white;
+}
 
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      background: #08111f;
-      color: #fff;
-      line-height: 1.5;
-    }
+.sidebar{
+position:fixed;
+left:0;
+top:0;
+bottom:0;
+width:220px;
+background:#0f172a;
+padding:20px;
+}
 
-    a { text-decoration: none; color: inherit; }
+.logo{
+font-size:22px;
+font-weight:bold;
+margin-bottom:40px;
+}
 
-    .topbar {
-      background: rgba(8,17,31,.92);
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      backdrop-filter: blur(8px);
-    }
+.nav a{
+display:block;
+color:#cbd5f5;
+text-decoration:none;
+padding:10px 0;
+}
 
-    .nav {
-      max-width: 1300px;
-      margin: auto;
-      padding: 0 20px;
-      min-height: 72px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 20px;
-    }
+.nav a:hover{
+color:white;
+}
 
-    .brand {
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: 1px;
-    }
+.main{
+margin-left:220px;
+padding:30px;
+}
 
-    .nav-links {
-      display: flex;
-      gap: 14px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
+.page-header{
+margin-bottom:24px;
+}
 
-    .nav-links a, .nav-links button {
-      color: #bfd0ef;
-      font-size: 15px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-family: inherit;
-    }
+.filters{
+display:grid;
+grid-template-columns:repeat(5,1fr);
+gap:12px;
+margin-bottom:20px;
+}
 
-    .logout-btn {
-      padding: 11px 16px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,.14);
-      color: #fff;
-      font-weight: 700;
-    }
+.filters input{
+padding:12px;
+border-radius:6px;
+border:1px solid #334155;
+background:#111827;
+color:white;
+}
 
-    .container {
-      max-width: 1300px;
-      margin: auto;
-      padding: 40px 20px 60px;
-    }
+.card{
+background:#111827;
+padding:20px;
+border-radius:8px;
+}
 
-    .eyebrow {
-      display: inline-block;
-      margin-bottom: 12px;
-      color: #8eb5ff;
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 1.3px;
-      text-transform: uppercase;
-    }
+.summary{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:16px;
+margin-bottom:20px;
+}
 
-    h1 {
-      font-size: 40px;
-      margin-bottom: 12px;
-    }
+.summary-box{
+background:#111827;
+padding:18px;
+border-radius:8px;
+}
 
-    p {
-      color: #bfd0ef;
-      font-size: 17px;
-      max-width: 900px;
-    }
+.summary-box strong{
+display:block;
+font-size:28px;
+margin-bottom:6px;
+}
 
-    .report-header {
-      display: none;
-    }
+.summary-box span{
+color:#94a3b8;
+font-size:14px;
+}
 
-    .card {
-      background: rgba(10,16,30,.72);
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 18px;
-      padding: 24px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.18);
-      margin-top: 24px;
-    }
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:10px;
+}
 
-    .toolbar-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr 1fr 1fr auto auto;
-      gap: 12px;
-      margin-bottom: 18px;
-    }
+th,td{
+padding:12px 8px;
+border-bottom:1px solid #1f2937;
+text-align:left;
+}
 
-    input, select {
-      width: 100%;
-      padding: 13px 14px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.05);
-      color: #fff;
-      font-size: 15px;
-      outline: none;
-    }
+th{
+color:#93c5fd;
+font-size:13px;
+text-transform:uppercase;
+letter-spacing:.5px;
+}
 
-    input::placeholder {
-      color: #8fa4ca;
-    }
+button{
+padding:12px 16px;
+background:#2563eb;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
 
-    .btn {
-      padding: 13px 18px;
-      border: none;
-      border-radius: 12px;
-      background: rgba(255,255,255,.08);
-      color: #fff;
-      font-weight: 800;
-      cursor: pointer;
-      border: 1px solid rgba(255,255,255,.12);
-      white-space: nowrap;
-    }
+button.secondary{
+background:#334155;
+}
 
-    .btn:hover {
-      background: rgba(255,255,255,.12);
-    }
+.actions{
+display:flex;
+gap:12px;
+margin-top:16px;
+flex-wrap:wrap;
+}
 
-    .table-wrap {
-      overflow-x: auto;
-    }
+@media (max-width:1000px){
+.filters,
+.summary{
+grid-template-columns:1fr;
+}
+}
+</style></head><body><div class="sidebar"><div class="logo">WashTrac</div><div class="nav">
+<a href="dashboard.html">Dashboard</a>
+<a href="codes.html">Codes</a>
+<a href="activity.html">Activity</a>
+<a href="#">Reports</a>
+<a href="#">Locations</a>
+<a href="#">Devices</a>
+<a href="#">Account</a>
+</div></div><div class="main"><div class="page-header">
+<h1>Activity</h1>
+<p style="color:#94a3b8;">Search wash events by code, department, name, bay, or time.</p>
+</div><div class="summary">
+<div class="summary-box">
+<strong id="totalEvents">0</strong>
+<span>Total Events</span>
+</div><div class="summary-box">
+<strong id="uniqueCodes">0</strong>
+<span>Unique Codes</span>
+</div><div class="summary-box">
+<strong id="uniqueDepartments">0</strong>
+<span>Departments</span>
+</div><div class="summary-box">
+<strong id="uniqueBays">0</strong>
+<span>Bays</span>
+</div>
+</div><div class="card"><div class="filters">
+<input id="filterCode" placeholder="Filter by code" oninput="renderActivity()">
+<input id="filterDepartment" placeholder="Filter by department" oninput="renderActivity()">
+<input id="filterName" placeholder="Filter by name" oninput="renderActivity()">
+<input id="filterBay" placeholder="Filter by bay" oninput="renderActivity()">
+<input id="filterEvent" placeholder="Filter by event" oninput="renderActivity()">
+</div><div class="actions">
+<button onclick="clearFilters()">Clear Filters</button>
+<button class="secondary" onclick="window.print()">Print</button>
+</div><table>
+<thead>
+<tr>
+<th>Time</th>
+<th>Code</th>
+<th>Department</th>
+<th>Name</th>
+<th>Bay</th>
+<th>Event</th>
+</tr>
+</thead>
+<tbody id="activityTableBody"></tbody>
+</table></div></div><script>
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 1100px;
-    }
+const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co"
+const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS"
 
-    th, td {
-      text-align: left;
-      padding: 12px 10px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      color: #dbe5fb;
-    }
+const client = supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
 
-    th {
-      color: #8eb5ff;
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: .8px;
-    }
+async function fetchActivity(){
 
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 20px;
-    }
+const {data,error} = await client
+.from("activity")
+.select("*")
+.order("event_time",{ascending:false})
 
-    .summary-box {
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 14px;
-      padding: 18px;
-    }
+if(error){
+console.log(error)
+return []
+}
 
-    .summary-box strong {
-      display: block;
-      font-size: 28px;
-      margin-bottom: 6px;
-    }
+return data || []
 
-    .summary-box span {
-      color: #bfd0ef;
-      font-size: 14px;
-    }
+}
 
-    .print-note {
-      margin-top: 16px;
-      color: #8fa4ca;
-      font-size: 14px;
-    }
+async function renderActivity(){
 
-    @media (max-width: 1100px) {
-      .toolbar-grid,
-      .summary-grid {
-        grid-template-columns: 1fr;
-      }
-    }
+const codeFilter = document.getElementById("filterCode").value.trim().toLowerCase()
+const departmentFilter = document.getElementById("filterDepartment").value.trim().toLowerCase()
+const nameFilter = document.getElementById("filterName").value.trim().toLowerCase()
+const bayFilter = document.getElementById("filterBay").value.trim().toLowerCase()
+const eventFilter = document.getElementById("filterEvent").value.trim().toLowerCase()
 
-    @media print {
-      body {
-        background: #fff;
-        color: #000;
-      }
+let rows = await fetchActivity()
 
-      .topbar,
-      .toolbar-grid,
-      .print-note,
-      .hero-copy {
-        display: none !important;
-      }
+rows = rows.filter(row => {
+const code = (row.code || "").toLowerCase()
+const department = (row.department || "").toLowerCase()
+const name = (row.name || "").toLowerCase()
+const bay = (row.bay || "").toLowerCase()
+const event = (row.event || "").toLowerCase()
 
-      .container {
-        max-width: 100%;
-        padding: 0;
-      }
+return code.includes(codeFilter)
+&& department.includes(departmentFilter)
+&& name.includes(nameFilter)
+&& bay.includes(bayFilter)
+&& event.includes(eventFilter)
+})
 
-      .report-header {
-        display: block;
-        margin-bottom: 24px;
-        padding-bottom: 14px;
-        border-bottom: 2px solid #000;
-      }
+const tbody = document.getElementById("activityTableBody")
+tbody.innerHTML = ""
 
-      .report-header h1 {
-        font-size: 28px;
-        margin-bottom: 8px;
-        color: #000;
-      }
+rows.forEach(row => {
+tbody.innerHTML += `
+<tr>
+<td>${new Date(row.event_time).toLocaleString()}</td>
+<td>${row.code || ""}</td>
+<td>${row.department || ""}</td>
+<td>${row.name || ""}</td>
+<td>${row.bay || ""}</td>
+<td>${row.event || ""}</td>
+</tr>
+`
+})
 
-      .report-header p {
-        color: #000;
-        font-size: 14px;
-        max-width: none;
-      }
+document.getElementById("totalEvents").innerText = rows.length
+document.getElementById("uniqueCodes").innerText = new Set(rows.map(r => r.code)).size
+document.getElementById("uniqueDepartments").innerText = new Set(rows.map(r => r.department)).size
+document.getElementById("uniqueBays").innerText = new Set(rows.map(r => r.bay)).size
 
-      .card, .summary-box {
-        background: #fff;
-        border: 1px solid #ccc;
-        box-shadow: none;
-      }
+if(rows.length === 0){
+tbody.innerHTML = `
+<tr>
+<td colspan="6">No matching activity found.</td>
+</tr>
+`
+}
 
-      th, td, .summary-box strong, .summary-box span {
-        color: #000 !important;
-      }
-    }
-  </style>
-</head>
-<body>
-  <script>
-    if (localStorage.getItem("washtracLoggedIn") !== "yes") {
-      window.location.href = "login.html";
-    }
-  </script>
+}
 
-  <div class="topbar">
-    <div class="nav">
-      <div class="brand">WASHTRAC</div>
-      <div class="nav-links">
-        <a href="dashboard.html">Dashboard</a>
-        <a href="codes.html">Codes</a>
-        <a href="usage.html">Usage</a>
-        <button onclick="logout()" class="logout-btn">Logout</button>
-      </div>
-    </div>
-  </div>
+function clearFilters(){
+document.getElementById("filterCode").value = ""
+document.getElementById("filterDepartment").value = ""
+document.getElementById("filterName").value = ""
+document.getElementById("filterBay").value = ""
+document.getElementById("filterEvent").value = ""
+renderActivity()
+}
 
-  <div class="container">
-    <div class="hero-copy">
-      <div class="eyebrow">Activity Log</div>
-      <h1>Search and review wash activity.</h1>
-      <p>
-        Filter events by code, department, name, bay, and date to see exactly what happened and when.
-      </p>
-    </div>
+renderActivity()
 
-    <div class="report-header">
-      <h1>WashTrac Activity Report</h1>
-      <p id="printDateActivity"></p>
-    </div>
-
-    <div class="card">
-      <div class="summary-grid">
-        <div class="summary-box">
-          <strong id="summaryEvents">0</strong>
-          <span>Total matching events</span>
-        </div>
-        <div class="summary-box">
-          <strong id="summaryDepartments">0</strong>
-          <span>Departments represented</span>
-        </div>
-        <div class="summary-box">
-          <strong id="summaryCodes">0</strong>
-          <span>Codes represented</span>
-        </div>
-        <div class="summary-box">
-          <strong id="summaryBays">0</strong>
-          <span>Bays represented</span>
-        </div>
-      </div>
-
-      <div class="toolbar-grid">
-        <input id="filterCode" type="text" placeholder="Filter by code" oninput="renderActivity()" />
-        <input id="filterDepartment" type="text" placeholder="Filter by department" oninput="renderActivity()" />
-        <input id="filterName" type="text" placeholder="Filter by name" oninput="renderActivity()" />
-        <input id="filterBay" type="text" placeholder="Filter by bay" oninput="renderActivity()" />
-        <input id="filterDate" type="text" placeholder="Filter by date" oninput="renderActivity()" />
-        <button class="btn" onclick="clearFilters()">Clear</button>
-        <button class="btn" onclick="printActivity()">Print</button>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Date / Time</th>
-              <th>Code</th>
-              <th>Department</th>
-              <th>Name</th>
-              <th>Bay</th>
-              <th>Event</th>
-            </tr>
-          </thead>
-          <tbody id="activityTableBody"></tbody>
-        </table>
-      </div>
-
-      <div class="print-note">
-        Later this page can support CSV export, emailed reports, and live data from the CodeBox and Pi.
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const ACTIVITY_KEY = "washtracActivityV1";
-
-    function defaultActivity() {
-      return [
-        { datetime: "2026-03-14 6:42 PM", code: "4421", department: "Maintenance", name: "John Smith", bay: "Bay 2", event: "Activated wash" },
-        { datetime: "2026-03-14 6:38 PM", code: "9933", department: "Operations", name: "Lisa Carter", bay: "Bay 1", event: "Activated wash" },
-        { datetime: "2026-03-14 6:30 PM", code: "2208", department: "Service", name: "Mike Davis", bay: "Bay 3", event: "Activated wash" },
-        { datetime: "2026-03-14 5:58 PM", code: "9933", department: "Operations", name: "Lisa Carter", bay: "Bay 1", event: "Activated wash" },
-        { datetime: "2026-03-14 5:11 PM", code: "4421", department: "Maintenance", name: "John Smith", bay: "Bay 2", event: "Activated wash" },
-        { datetime: "2026-03-13 4:50 PM", code: "2208", department: "Service", name: "Mike Davis", bay: "Bay 3", event: "Activated wash" },
-        { datetime: "2026-03-13 3:35 PM", code: "5510", department: "Operations", name: "Ryan Lee", bay: "Bay 1", event: "Activated wash" }
-      ];
-    }
-
-    function getActivity() {
-      const saved = localStorage.getItem(ACTIVITY_KEY);
-      if (!saved) {
-        const initial = defaultActivity();
-        localStorage.setItem(ACTIVITY_KEY, JSON.stringify(initial));
-        return initial;
-      }
-      return JSON.parse(saved);
-    }
-
-    function renderActivity() {
-      const code = document.getElementById("filterCode").value.trim().toLowerCase();
-      const department = document.getElementById("filterDepartment").value.trim().toLowerCase();
-      const name = document.getElementById("filterName").value.trim().toLowerCase();
-      const bay = document.getElementById("filterBay").value.trim().toLowerCase();
-      const date = document.getElementById("filterDate").value.trim().toLowerCase();
-
-      let activity = getActivity().filter(item => {
-        return (
-          item.code.toLowerCase().includes(code) &&
-          item.department.toLowerCase().includes(department) &&
-          item.name.toLowerCase().includes(name) &&
-          item.bay.toLowerCase().includes(bay) &&
-          item.datetime.toLowerCase().includes(date)
-        );
-      });
-
-      const body = document.getElementById("activityTableBody");
-      body.innerHTML = "";
-
-      if (activity.length === 0) {
-        body.innerHTML = `<tr><td colspan="6">No matching activity found.</td></tr>`;
-        updateSummary(activity);
-        return;
-      }
-
-      activity.forEach(item => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${item.datetime}</td>
-          <td><strong>${item.code}</strong></td>
-          <td>${item.department}</td>
-          <td>${item.name}</td>
-          <td>${item.bay}</td>
-          <td>${item.event}</td>
-        `;
-        body.appendChild(tr);
-      });
-
-      updateSummary(activity);
-    }
-
-    function updateSummary(activity) {
-      const departments = new Set(activity.map(a => a.department));
-      const codes = new Set(activity.map(a => a.code));
-      const bays = new Set(activity.map(a => a.bay));
-
-      document.getElementById("summaryEvents").innerText = activity.length;
-      document.getElementById("summaryDepartments").innerText = departments.size;
-      document.getElementById("summaryCodes").innerText = codes.size;
-      document.getElementById("summaryBays").innerText = bays.size;
-    }
-
-    function clearFilters() {
-      document.getElementById("filterCode").value = "";
-      document.getElementById("filterDepartment").value = "";
-      document.getElementById("filterName").value = "";
-      document.getElementById("filterBay").value = "";
-      document.getElementById("filterDate").value = "";
-      renderActivity();
-    }
-
-    function printActivity() {
-      document.getElementById("printDateActivity").innerText =
-        "Generated: " + new Date().toLocaleString();
-      window.print();
-    }
-
-    function logout() {
-      localStorage.removeItem("washtracLoggedIn");
-      window.location.href = "login.html";
-    }
-
-    renderActivity();
-  </script>
-</body>
+</script></body>
 </html>
