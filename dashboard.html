@@ -16,6 +16,7 @@
       background: #08111f;
       color: #fff;
       line-height: 1.5;
+      overflow-x: hidden;
     }
 
     a {
@@ -24,11 +25,12 @@
     }
 
     .topbar {
-      background: rgba(8, 17, 31, 0.94);
+      background: rgba(8, 17, 31, 0.92);
       border-bottom: 1px solid rgba(255,255,255,0.08);
       position: sticky;
       top: 0;
       z-index: 100;
+      backdrop-filter: blur(8px);
     }
 
     .nav {
@@ -65,22 +67,63 @@
       font-family: inherit;
     }
 
-    .login-btn {
+    .logout-btn {
       padding: 11px 16px;
       border-radius: 10px;
       border: 1px solid rgba(255,255,255,0.14) !important;
       color: #fff !important;
       font-weight: 700;
+      transition: 0.25s ease;
+    }
+
+    .logout-btn:hover {
+      background: rgba(255,255,255,0.08);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+    }
+
+    .dashboard-hero {
+      position: relative;
+      padding: 70px 0 30px;
+      overflow: hidden;
+      background-image:
+        radial-gradient(circle at 30% 35%, rgba(8,17,31,0.18), rgba(8,17,31,0.72)),
+        linear-gradient(rgba(8,17,31,0.20), rgba(8,17,31,0.72)),
+        url("Carwash.png");
+      background-size: cover;
+      background-position: center 55%;
+      background-repeat: no-repeat;
+    }
+
+    .dashboard-hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(
+          115deg,
+          rgba(255,255,255,0.00) 0%,
+          rgba(255,255,255,0.04) 35%,
+          rgba(255,255,255,0.00) 60%
+        );
+      transform: translateX(-35%);
+      animation: shimmer 8s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .dashboard-hero .container {
+      position: relative;
+      z-index: 2;
     }
 
     .container {
       max-width: 1100px;
       margin: 0 auto;
-      padding: 32px 20px 60px;
+      padding: 0 20px 60px;
     }
 
     .hero {
       margin-bottom: 26px;
+      animation: fadeUp 0.9s ease-out;
     }
 
     .eyebrow {
@@ -96,12 +139,14 @@
     .hero h1 {
       font-size: 42px;
       margin-bottom: 12px;
+      text-shadow: 0 10px 40px rgba(0,0,0,0.85);
     }
 
     .hero p {
-      color: #c8d5ef;
+      color: #d7e1f5;
       font-size: 18px;
       max-width: 760px;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.75);
     }
 
     .grid-3,
@@ -120,11 +165,12 @@
     }
 
     .card {
-      background: rgba(255,255,255,0.04);
+      background: rgba(10,16,30,0.72);
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 18px;
       padding: 24px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+      backdrop-filter: blur(6px);
     }
 
     .card h2 {
@@ -197,6 +243,12 @@
       background: rgba(255,255,255,0.04);
       margin-top: 16px;
       cursor: pointer;
+      transition: 0.25s ease;
+    }
+
+    .action-btn:hover {
+      background: rgba(255,255,255,0.10);
+      transform: translateY(-2px);
     }
 
     .activity-row {
@@ -258,6 +310,11 @@
       padding: 8px 12px;
       cursor: pointer;
       font-weight: 700;
+      transition: 0.2s ease;
+    }
+
+    .delete-btn:hover {
+      background: rgba(255,255,255,0.10);
     }
 
     .form-grid {
@@ -276,25 +333,65 @@
       color: #fff;
       font-size: 15px;
       outline: none;
+      transition: 0.2s ease;
     }
 
     input::placeholder {
       color: #8fa4ca;
     }
 
+    input:focus {
+      border-color: rgba(66,255,135,0.45);
+      background: rgba(255,255,255,0.07);
+      box-shadow: 0 0 0 3px rgba(66,255,135,0.08);
+    }
+
     .add-btn {
       padding: 13px 18px;
       border: none;
       border-radius: 12px;
-      background: #42ff87;
-      color: #07111f;
+      background: rgba(255,255,255,0.08);
+      color: #ffffff;
       font-weight: 800;
       cursor: pointer;
       white-space: nowrap;
+      border: 1px solid rgba(255,255,255,0.12);
+      transition: 0.25s ease;
+    }
+
+    .add-btn:hover {
+      background: rgba(255,255,255,0.12);
+      transform: translateY(-2px);
     }
 
     .footer-space {
       height: 10px;
+    }
+
+    @keyframes shimmer {
+      0% {
+        transform: translateX(-35%);
+        opacity: 0.25;
+      }
+      50% {
+        transform: translateX(10%);
+        opacity: 0.5;
+      }
+      100% {
+        transform: translateX(-35%);
+        opacity: 0.25;
+      }
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     @media (max-width: 980px) {
@@ -341,154 +438,156 @@
       <div class="brand">WASHTRAC</div>
       <div class="nav-links">
         <a href="index.html">Home</a>
-        <button onclick="logout()" class="login-btn">Logout</button>
+        <button onclick="logout()" class="logout-btn">Logout</button>
       </div>
     </div>
   </div>
 
-  <div class="container">
-    <div class="hero">
-      <div class="eyebrow">Dashboard</div>
-      <h1>Live visibility into your wash operation.</h1>
-      <p>
-        Monitor site activity, check bay status, review code usage, manage active codes,
-        and track E-STOP condition from one control panel.
-      </p>
-    </div>
-
-    <div class="grid-3">
-      <div class="card">
-        <h2>Today's Washes</h2>
-        <div class="stat">47</div>
-        <div class="muted">Total completed cycles today</div>
+  <div class="dashboard-hero">
+    <div class="container">
+      <div class="hero">
+        <div class="eyebrow">Dashboard</div>
+        <h1>Live visibility into your wash operation.</h1>
+        <p>
+          Monitor site activity, check bay status, review code usage, manage active codes,
+          and track E-STOP condition from one control panel.
+        </p>
       </div>
 
-      <div class="card">
-        <h2>Codes Used</h2>
-        <div class="stat">31</div>
-        <div class="muted">Unique access code activations</div>
-      </div>
-
-      <div class="card">
-        <h2>E-STOP Status</h2>
-        <div class="stat" id="estopText">Normal</div>
-        <div class="muted">This will later reflect the live Pi state</div>
-      </div>
-    </div>
-
-    <div class="grid-2">
-      <div class="card">
-        <h2>Live Bay Status</h2>
-
-        <div class="row">
-          <span>Bay 1</span>
-          <span class="pill running">RUNNING</span>
+      <div class="grid-3">
+        <div class="card">
+          <h2>Today's Washes</h2>
+          <div class="stat">47</div>
+          <div class="muted">Total completed cycles today</div>
         </div>
 
-        <div class="row">
-          <span>Bay 2</span>
-          <span class="pill idle">IDLE</span>
+        <div class="card">
+          <h2>Codes Used</h2>
+          <div class="stat">31</div>
+          <div class="muted">Unique access code activations</div>
         </div>
 
-        <div class="row">
-          <span>Bay 3</span>
-          <span class="pill idle">IDLE</span>
-        </div>
-
-        <div class="row">
-          <span>E-STOP</span>
-          <span class="pill normal" id="estopPill">NORMAL</span>
+        <div class="card">
+          <h2>E-STOP Status</h2>
+          <div class="stat" id="estopText">Normal</div>
+          <div class="muted">This will later reflect the live Pi state</div>
         </div>
       </div>
 
-      <div class="card">
-        <h2>Quick Actions</h2>
-        <div class="muted">
-          This area can later connect to live controls, activity logs, hardware inputs,
-          and real-time reporting from the Pi.
-        </div>
+      <div class="grid-2">
+        <div class="card">
+          <h2>Live Bay Status</h2>
 
-        <button class="action-btn" onclick="toggleEStop()">Toggle Demo E-STOP</button>
-      </div>
-    </div>
-
-    <div class="grid-2">
-      <div class="card">
-        <h2>Code Management</h2>
-        <div class="muted">
-          Add and remove active wash codes here. Department and Name help identify who each code belongs to.
-        </div>
-
-        <div class="form-grid">
-          <input id="newCode" type="text" placeholder="Code" />
-          <input id="newDepartment" type="text" placeholder="Department" />
-          <input id="newName" type="text" placeholder="Name" />
-          <button class="add-btn" onclick="addCode()">Add Code</button>
-        </div>
-
-        <div class="code-header">
-          <div>Code</div>
-          <div>Department</div>
-          <div>Name</div>
-          <div>Status</div>
-          <div>Action</div>
-        </div>
-
-        <div class="code-list" id="codeList">
-          <div class="code-row">
-            <div><strong>4421</strong></div>
-            <div>Maintenance</div>
-            <div>John Smith</div>
-            <div class="code-status">Active</div>
-            <button class="delete-btn" onclick="removeCode(this)">Remove</button>
+          <div class="row">
+            <span>Bay 1</span>
+            <span class="pill running">RUNNING</span>
           </div>
-          <div class="code-row">
-            <div><strong>9933</strong></div>
-            <div>Operations</div>
-            <div>Lisa Carter</div>
-            <div class="code-status">Active</div>
-            <button class="delete-btn" onclick="removeCode(this)">Remove</button>
+
+          <div class="row">
+            <span>Bay 2</span>
+            <span class="pill idle">IDLE</span>
           </div>
-          <div class="code-row">
-            <div><strong>2208</strong></div>
-            <div>Service</div>
-            <div>Mike Davis</div>
-            <div class="code-status">Active</div>
-            <button class="delete-btn" onclick="removeCode(this)">Remove</button>
+
+          <div class="row">
+            <span>Bay 3</span>
+            <span class="pill idle">IDLE</span>
+          </div>
+
+          <div class="row">
+            <span>E-STOP</span>
+            <span class="pill normal" id="estopPill">NORMAL</span>
           </div>
         </div>
-      </div>
 
-      <div class="card">
-        <h2>Recent Activity</h2>
+        <div class="card">
+          <h2>Quick Actions</h2>
+          <div class="muted">
+            This area can later connect to live controls, activity logs, hardware inputs,
+            and real-time reporting from the Pi.
+          </div>
 
-        <div class="activity-row">
-          <div>6:42 PM</div>
-          <div>Code 4421 activated wash</div>
-          <div>Bay 2</div>
-        </div>
-
-        <div class="activity-row">
-          <div>6:38 PM</div>
-          <div>Code 9933 activated wash</div>
-          <div>Bay 1</div>
-        </div>
-
-        <div class="activity-row">
-          <div>6:30 PM</div>
-          <div>Code 2208 activated wash</div>
-          <div>Bay 3</div>
-        </div>
-
-        <div class="activity-row">
-          <div>6:21 PM</div>
-          <div>Operator login detected</div>
-          <div>System</div>
+          <button class="action-btn" onclick="toggleEStop()">Toggle Demo E-STOP</button>
         </div>
       </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h2>Code Management</h2>
+          <div class="muted">
+            Add and remove active wash codes here. Department and Name help identify who each code belongs to.
+          </div>
+
+          <div class="form-grid">
+            <input id="newCode" type="text" placeholder="Code" />
+            <input id="newDepartment" type="text" placeholder="Department" />
+            <input id="newName" type="text" placeholder="Name" />
+            <button class="add-btn" onclick="addCode()">Add Code</button>
+          </div>
+
+          <div class="code-header">
+            <div>Code</div>
+            <div>Department</div>
+            <div>Name</div>
+            <div>Status</div>
+            <div>Action</div>
+          </div>
+
+          <div class="code-list" id="codeList">
+            <div class="code-row">
+              <div><strong>4421</strong></div>
+              <div>Maintenance</div>
+              <div>John Smith</div>
+              <div class="code-status">Active</div>
+              <button class="delete-btn" onclick="removeCode(this)">Remove</button>
+            </div>
+            <div class="code-row">
+              <div><strong>9933</strong></div>
+              <div>Operations</div>
+              <div>Lisa Carter</div>
+              <div class="code-status">Active</div>
+              <button class="delete-btn" onclick="removeCode(this)">Remove</button>
+            </div>
+            <div class="code-row">
+              <div><strong>2208</strong></div>
+              <div>Service</div>
+              <div>Mike Davis</div>
+              <div class="code-status">Active</div>
+              <button class="delete-btn" onclick="removeCode(this)">Remove</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Recent Activity</h2>
+
+          <div class="activity-row">
+            <div>6:42 PM</div>
+            <div>Code 4421 activated wash</div>
+            <div>Bay 2</div>
+          </div>
+
+          <div class="activity-row">
+            <div>6:38 PM</div>
+            <div>Code 9933 activated wash</div>
+            <div>Bay 1</div>
+          </div>
+
+          <div class="activity-row">
+            <div>6:30 PM</div>
+            <div>Code 2208 activated wash</div>
+            <div>Bay 3</div>
+          </div>
+
+          <div class="activity-row">
+            <div>6:21 PM</div>
+            <div>Operator login detected</div>
+            <div>System</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-space"></div>
     </div>
-
-    <div class="footer-space"></div>
   </div>
 
   <script>
