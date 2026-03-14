@@ -1,415 +1,217 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WashTrac Login</title>
+
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    *{box-sizing:border-box;}
 
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      background: #08111f;
-      color: #ffffff;
-      min-height: 100vh;
-      line-height: 1.5;
-      overflow-x: hidden;
-    }
-
-    a {
-      text-decoration: none;
-      color: inherit;
-    }
-
-    .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(8, 17, 31, 0.92);
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      backdrop-filter: blur(8px);
-    }
-
-    .nav {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 20px;
-      min-height: 72px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .brand {
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: 1px;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-
-    .nav-links a {
-      color: #bfd0ef;
-      font-size: 15px;
-    }
-
-    .home-btn {
-      padding: 11px 16px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.14);
-      color: #fff;
-      font-weight: 700;
-      transition: 0.25s ease;
-    }
-
-    .home-btn:hover {
-      background: rgba(255,255,255,0.08);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.22);
-    }
-
-    .wrap {
-      min-height: calc(100vh - 72px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 20px;
-      position: relative;
-      overflow: hidden;
-      background-image:
-        radial-gradient(circle at 28% 32%, rgba(8,17,31,0.15), rgba(8,17,31,0.72)),
-        linear-gradient(rgba(8,17,31,0.24), rgba(8,17,31,0.78)),
-        url("Carwash.png");
-      background-size: cover;
-      background-position: center 55%;
-      background-repeat: no-repeat;
-    }
-
-    .wrap::before {
-      content: "";
-      position: absolute;
-      inset: 0;
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:Arial, Helvetica, sans-serif;
       background:
-        linear-gradient(
-          115deg,
-          rgba(255,255,255,0.00) 0%,
-          rgba(255,255,255,0.05) 35%,
-          rgba(255,255,255,0.00) 60%
-        );
-      transform: translateX(-35%);
-      animation: shimmer 8s ease-in-out infinite;
-      pointer-events: none;
+        radial-gradient(circle at top left, rgba(37,99,235,.18), transparent 35%),
+        radial-gradient(circle at bottom right, rgba(59,130,246,.14), transparent 35%),
+        #020617;
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
     }
 
-    .wrap::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(circle at 50% 78%, rgba(255,255,255,0.08), rgba(255,255,255,0.00) 30%);
-      pointer-events: none;
+    .login-shell{
+      width:100%;
+      max-width:420px;
     }
 
-    .login-shell {
-      width: 100%;
-      max-width: 1100px;
-      display: grid;
-      grid-template-columns: 1fr 420px;
-      gap: 28px;
-      align-items: center;
-      position: relative;
-      z-index: 2;
+    .brand{
+      text-align:center;
+      margin-bottom:18px;
     }
 
-    .intro {
-      animation: fadeUp 0.9s ease-out;
+    .brand h1{
+      margin:0 0 8px 0;
+      font-size:42px;
     }
 
-    .intro h1 {
-      font-size: 52px;
-      line-height: 1.04;
-      margin-bottom: 18px;
-      max-width: 620px;
-      text-shadow: 0 10px 40px rgba(0,0,0,0.85);
+    .brand p{
+      margin:0;
+      color:#94a3b8;
+      font-size:15px;
     }
 
-    .eyebrow {
-      display: inline-block;
-      margin-bottom: 16px;
-      color: #8eb5ff;
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 1.3px;
-      text-transform: uppercase;
+    .login-card{
+      background:#111827;
+      border:1px solid #1f2937;
+      border-radius:16px;
+      padding:28px;
+      box-shadow:0 18px 50px rgba(0,0,0,.45);
     }
 
-    .intro p {
-      color: #d7e1f5;
-      font-size: 19px;
-      max-width: 620px;
-      text-shadow: 0 4px 20px rgba(0,0,0,0.75);
+    .login-card h2{
+      margin:0 0 20px 0;
+      font-size:26px;
     }
 
-    .login-card,
-    .info-card {
-      background: rgba(10,16,30,0.72);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 20px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.28);
-      backdrop-filter: blur(6px);
+    .field{
+      margin-bottom:16px;
     }
 
-    .login-card {
-      padding: 28px;
-      animation: floatCard 5s ease-in-out infinite;
+    .field label{
+      display:block;
+      margin-bottom:8px;
+      color:#cbd5e1;
+      font-size:14px;
+      font-weight:bold;
     }
 
-    .login-card h2 {
-      font-size: 28px;
-      margin-bottom: 8px;
-      color: #dce7ff;
+    .field input{
+      width:100%;
+      padding:14px;
+      border-radius:10px;
+      border:1px solid #334155;
+      background:#0b1220;
+      color:#fff;
+      font-size:15px;
+      outline:none;
     }
 
-    .login-sub {
-      color: #bfd0ef;
-      margin-bottom: 22px;
-      font-size: 15px;
+    .field input:focus{
+      border-color:#3b82f6;
+      box-shadow:0 0 0 3px rgba(59,130,246,.18);
     }
 
-    .field-label {
-      display: block;
-      font-size: 14px;
-      color: #dbe5fb;
-      margin-bottom: 8px;
-      font-weight: 700;
+    .field input::placeholder{
+      color:#64748b;
     }
 
-    .field {
-      margin-bottom: 16px;
+    .login-btn{
+      width:100%;
+      padding:14px;
+      border:none;
+      border-radius:10px;
+      background:#2563eb;
+      color:#fff;
+      font-size:16px;
+      font-weight:bold;
+      cursor:pointer;
     }
 
-    input {
-      width: 100%;
-      padding: 14px 14px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.05);
-      color: #fff;
-      font-size: 16px;
-      outline: none;
-      transition: 0.2s ease;
+    .login-btn:hover{
+      background:#1d4ed8;
     }
 
-    input::placeholder {
-      color: #8fa4ca;
+    .status{
+      margin-top:16px;
+      padding:12px 14px;
+      border-radius:10px;
+      background:#0b1220;
+      border:1px solid #1f2937;
+      color:#cbd5e1;
+      display:none;
+      line-height:1.4;
     }
 
-    input:focus {
-      border-color: rgba(66,255,135,0.45);
-      background: rgba(255,255,255,0.07);
-      box-shadow: 0 0 0 3px rgba(66,255,135,0.08);
+    .status.show{
+      display:block;
     }
 
-    .login-btn {
-      width: 100%;
-      padding: 14px 18px;
-      border: none;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.06);
-      color: #fff;
-      font-size: 16px;
-      font-weight: 800;
-      cursor: pointer;
-      margin-top: 6px;
-      border: 1px solid rgba(255,255,255,0.12);
-      transition: 0.25s ease;
+    .hint{
+      margin-top:16px;
+      text-align:center;
+      color:#64748b;
+      font-size:13px;
     }
 
-    .login-btn:hover {
-      background: rgba(255,255,255,0.11);
-      transform: translateY(-2px);
-    }
-
-    .helper {
-      margin-top: 16px;
-      color: #93a7ca;
-      font-size: 14px;
-      text-align: center;
-    }
-
-    .info-card {
-      margin-top: 18px;
-      padding: 18px;
-    }
-
-    .info-card h3 {
-      font-size: 18px;
-      margin-bottom: 10px;
-      color: #dce7ff;
-    }
-
-    .info-card p {
-      color: #bfd0ef;
-      font-size: 15px;
-    }
-
-    .footer-note {
-      text-align: center;
-      margin-top: 16px;
-      color: #7f95bb;
-      font-size: 13px;
-    }
-
-    @keyframes shimmer {
-      0% {
-        transform: translateX(-35%);
-        opacity: 0.25;
-      }
-      50% {
-        transform: translateX(10%);
-        opacity: 0.5;
-      }
-      100% {
-        transform: translateX(-35%);
-        opacity: 0.25;
-      }
-    }
-
-    @keyframes fadeUp {
-      from {
-        opacity: 0;
-        transform: translateY(18px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes floatCard {
-      0% {
-        transform: translateY(0px);
-      }
-      50% {
-        transform: translateY(-6px);
-      }
-      100% {
-        transform: translateY(0px);
-      }
-    }
-
-    @media (max-width: 980px) {
-      .login-shell {
-        grid-template-columns: 1fr;
+    @media (max-width:600px){
+      .brand h1{
+        font-size:36px;
       }
 
-      .intro h1 {
-        font-size: 40px;
-      }
-    }
-
-    @media (max-width: 700px) {
-      .nav {
-        flex-direction: column;
-        align-items: flex-start;
-        padding-top: 16px;
-        padding-bottom: 16px;
-      }
-
-      .intro h1 {
-        font-size: 32px;
-      }
-
-      .intro p {
-        font-size: 17px;
-      }
-
-      .login-card {
-        padding: 22px;
+      .login-card{
+        padding:22px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="topbar">
-    <div class="nav">
-      <div class="brand">WASHTRAC</div>
-      <div class="nav-links">
-        <a href="index.html#features">Features</a>
-        <a href="index.html#how-it-works">How It Works</a>
-        <a href="index.html#visibility">Visibility</a>
-        <a href="index.html" class="home-btn">Home</a>
-      </div>
+
+  <div class="login-shell">
+    <div class="brand">
+      <h1>WashTrac</h1>
+      <p>Modern carwash control</p>
     </div>
-  </div>
 
-  <div class="wrap">
-    <div class="login-shell">
-      <div class="intro">
-        <div class="eyebrow">Secure Access</div>
-        <h1>Sign in to your WashTrac dashboard.</h1>
-        <p>
-          Access wash activity, review code usage, monitor bay status, and manage your
-          system from one clean control panel.
-        </p>
-      </div>
+    <div class="login-card">
+      <h2>Sign in</h2>
 
-      <div>
-        <div class="login-card">
-          <h2>Login</h2>
-          <div class="login-sub">Enter your credentials to continue.</div>
-
-          <div class="field">
-            <label class="field-label" for="user">Username</label>
-            <input id="user" type="text" placeholder="Enter username" />
-          </div>
-
-          <div class="field">
-            <label class="field-label" for="pass">Password</label>
-            <input id="pass" type="password" placeholder="Enter password" />
-          </div>
-
-          <button class="login-btn" onclick="login()">Login</button>
-
-          <div class="helper">Authorized access only.</div>
+      <form onsubmit="login(event)">
+        <div class="field">
+          <label for="user">Username</label>
+          <input
+            id="user"
+            type="text"
+            placeholder="Enter username"
+            autocomplete="username"
+            required
+          >
         </div>
 
-        <div class="info-card">
-          <h3>What’s next</h3>
-          <p>
-            WashTrac will support live code management so you can add, remove,
-            and control access codes directly from the dashboard.
-          </p>
+        <div class="field">
+          <label for="pass">Password</label>
+          <input
+            id="pass"
+            type="password"
+            placeholder="Enter password"
+            autocomplete="current-password"
+            required
+          >
         </div>
 
-        <div class="footer-note">
-          WashTrac © 2026 — Modern Carwash Control
-        </div>
+        <button type="submit" class="login-btn">Login</button>
+      </form>
+
+      <div class="status" id="statusBox"></div>
+
+      <div class="hint">
+        Press Enter after typing your password to log in.
       </div>
     </div>
   </div>
 
   <script>
-    function login() {
-      var user = document.getElementById("user").value.trim().toLowerCase();
-      var pass = document.getElementById("pass").value.trim();
+    function setStatus(message){
+      const box = document.getElementById("statusBox");
+      box.innerText = message;
+      box.classList.add("show");
+    }
 
-      if (user === "admin" && pass === "wash123") {
+    function clearStatus(){
+      const box = document.getElementById("statusBox");
+      box.innerText = "";
+      box.classList.remove("show");
+    }
+
+    function login(event){
+      event.preventDefault();
+      clearStatus();
+
+      const user = document.getElementById("user").value.trim().toLowerCase();
+      const pass = document.getElementById("pass").value.trim();
+
+      if(user === "admin" && pass === "wash123"){
         localStorage.setItem("washtracLoggedIn", "yes");
         window.location.href = "dashboard.html";
-      } else {
-        alert("Invalid username or password");
+        return;
       }
+
+      setStatus("Invalid username or password.");
     }
   </script>
+
 </body>
 </html>
