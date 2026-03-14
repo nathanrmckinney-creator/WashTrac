@@ -1,44 +1,44 @@
 <!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WashTrac Code Manager</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>
 body{
-font-family:Arial,Helvetica,sans-serif;
-background:#f4f6f8;
+font-family: Arial;
+background:#f4f4f4;
 padding:40px;
 }
 
-h1{
-margin-bottom:20px;
+.container{
+max-width:900px;
+margin:auto;
+background:white;
+padding:30px;
+border-radius:6px;
+box-shadow:0 2px 10px rgba(0,0,0,.1);
 }
 
-.form{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-margin-bottom:20px;
+h1{
+margin-bottom:30px;
 }
 
 input{
-padding:10px;
-border:1px solid #ccc;
-border-radius:4px;
+padding:12px;
+margin:5px;
+width:200px;
 }
 
 button{
-padding:10px 16px;
-background:#1d4ed8;
-color:white;
+padding:12px 18px;
+background:#2d6cdf;
 border:none;
-border-radius:4px;
+color:white;
 cursor:pointer;
 }
 
 table{
 width:100%;
+margin-top:30px;
 border-collapse:collapse;
-background:white;
 }
 
 th,td{
@@ -47,16 +47,14 @@ border-bottom:1px solid #ddd;
 text-align:left;
 }
 
-th{
-background:#f1f1f1;
+.removeBtn{
+background:#d9534f;
 }
-</style></head><body><h1>WashTrac Code Manager</h1><div class="form">
-<input id="newCode" placeholder="Code">
-<input id="newDepartment" placeholder="Department">
-<input id="newName" placeholder="Name">
-<button onclick="addCode()">Add Code</button>
-</div><table>
-<thead>
+</style></head><body><div class="container"><h1>WashTrac Code Manager</h1><div><input id="code" placeholder="Code">
+<input id="department" placeholder="Department">
+<input id="name" placeholder="Name"><button onclick="addCode()">Add Code</button>
+
+</div><table id="codesTable"><thead>
 <tr>
 <th>Code</th>
 <th>Department</th>
@@ -65,90 +63,83 @@ background:#f1f1f1;
 <th>Last Used</th>
 <th>Remove</th>
 </tr>
-</thead>
-<tbody id="codesTableBody"></tbody>
-</table><script>
+</thead><tbody></tbody></table></div><script>
 
-const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
-const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
+const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co"
+const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS"
 
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const client = supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
 
 async function loadCodes(){
 
-const {data,error}=await supabaseClient
+const {data,error} = await client
 .from("codes")
 .select("*")
-.order("created_at",{ascending:false});
+.order("id",{ascending:false})
 
-if(error){
-console.log(error);
-return;
-}
+const tbody=document.querySelector("#codesTable tbody")
 
-const body=document.getElementById("codesTableBody");
-body.innerHTML="";
+tbody.innerHTML=""
 
 data.forEach(row=>{
 
-const tr=document.createElement("tr");
+tbody.innerHTML+=`
 
-tr.innerHTML=`
+<tr>
+
 <td>${row.code}</td>
-<td>${row.department||""}</td>
-<td>${row.name||""}</td>
-<td>${row.uses||0}</td>
-<td>${row.last_used||"-"}</td>
-<td><button onclick="deleteCode('${row.code}')">Remove</button></td>
-`;
+<td>${row.department}</td>
+<td>${row.name}</td>
+<td>${row.uses}</td>
+<td>${row.last_used || ""}</td>
 
-body.appendChild(tr);
+<td>
+<button class="removeBtn"
+onclick="deleteCode(${row.id})">
+Remove
+</button>
+</td>
 
-});
+</tr>
+
+`
+
+})
 
 }
 
 async function addCode(){
 
-const code=document.getElementById("newCode").value.trim();
-const department=document.getElementById("newDepartment").value.trim();
-const name=document.getElementById("newName").value.trim();
+const code=document.getElementById("code").value
+const department=document.getElementById("department").value
+const name=document.getElementById("name").value
 
-if(!code||!department||!name){
-alert("Fill all fields");
-return;
-}
+await client.from("codes").insert([{
+code,
+department,
+name
+}])
 
-const {error}=await supabaseClient
-.from("codes")
-.insert([{code,department,name,uses:0,last_used:"-"}]);
+document.getElementById("code").value=""
+document.getElementById("department").value=""
+document.getElementById("name").value=""
 
-if(error){
-alert("Code exists or error");
-console.log(error);
-return;
-}
-
-document.getElementById("newCode").value="";
-document.getElementById("newDepartment").value="";
-document.getElementById("newName").value="";
-
-loadCodes();
+loadCodes()
 
 }
 
-async function deleteCode(code){
+async function deleteCode(id){
 
-await supabaseClient
+await client
 .from("codes")
 .delete()
-.eq("code",code);
+.eq("id",id)
 
-loadCodes();
+loadCodes()
 
 }
 
-loadCodes();
+loadCodes()
 
 </script></body>
 </html>
