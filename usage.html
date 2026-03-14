@@ -60,6 +60,9 @@ justify-content:space-between;
 padding:16px 20px;
 background:#0f172a;
 border-bottom:1px solid #1e293b;
+position:sticky;
+top:0;
+z-index:1000;
 }
 
 .mobile-logo{
@@ -87,6 +90,7 @@ border-radius:10px;
 padding:14px;
 z-index:1000;
 border:1px solid #1e293b;
+box-shadow:0 12px 30px rgba(0,0,0,.45);
 }
 
 .mobile-menu a{
@@ -98,6 +102,14 @@ padding:10px 0;
 
 .mobile-menu a:hover{
 color:white;
+}
+
+.backdrop{
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.35);
+z-index:900;
 }
 
 .page-header h1{
@@ -129,6 +141,11 @@ display:block;
 margin-bottom:6px;
 }
 
+.summary-box span{
+color:#94a3b8;
+font-size:14px;
+}
+
 .grid-2{
 display:grid;
 grid-template-columns:1fr 1fr;
@@ -156,12 +173,19 @@ height:320px;
 .list-row{
 display:flex;
 justify-content:space-between;
+gap:12px;
 padding:10px 0;
 border-bottom:1px solid #1f2937;
 }
 
 .list-row:last-child{
 border-bottom:none;
+}
+
+.actions{
+display:flex;
+gap:12px;
+flex-wrap:wrap;
 }
 
 button{
@@ -171,7 +195,7 @@ border:none;
 border-radius:8px;
 color:white;
 cursor:pointer;
-margin-right:10px;
+font-weight:bold;
 }
 
 button.secondary{
@@ -183,6 +207,20 @@ margin-top:14px;
 color:#94a3b8;
 font-size:14px;
 line-height:1.5;
+}
+
+.status{
+margin-top:16px;
+padding:12px 14px;
+border-radius:8px;
+background:#0b1220;
+border:1px solid #1f2937;
+color:#cbd5e1;
+display:none;
+}
+
+.status.show{
+display:block;
 }
 
 @media(max-width:900px){
@@ -204,12 +242,14 @@ line-height:1.5;
 </div>
 
 <div class="mobile-menu" id="mobileMenu">
-<a href="dashboard.html">Dashboard</a>
-<a href="codes.html">Codes</a>
-<a href="activity.html">Activity</a>
-<a href="usage.html">Reports</a>
-<a href="monitor.html">Monitor</a>
+<a href="dashboard.html" onclick="closeMenu()">Dashboard</a>
+<a href="codes.html" onclick="closeMenu()">Codes</a>
+<a href="activity.html" onclick="closeMenu()">Activity</a>
+<a href="usage.html" onclick="closeMenu()">Reports</a>
+<a href="monitor.html" onclick="closeMenu()">Monitor</a>
 </div>
+
+<div class="backdrop" id="backdrop" onclick="closeMenu()"></div>
 
 <div class="app">
 
@@ -283,9 +323,17 @@ line-height:1.5;
 
 <div class="card">
 <h3>Report Actions</h3>
+
+<div class="actions">
 <button onclick="exportCSV()">Export CSV</button>
 <button class="secondary" onclick="emailReport()">Email Report</button>
-<div class="note">The email button is still a placeholder until we wire the backend email function.</div>
+</div>
+
+<div class="note">
+The Email Report button sends through your Supabase Edge Function named <strong>send-report</strong>.
+</div>
+
+<div class="status" id="emailStatus"></div>
 </div>
 
 </div>
@@ -294,136 +342,247 @@ line-height:1.5;
 </div>
 
 <script>
-const SUPABASE_URL="https://feqrsypiugwwdweiwvua.supabase.co";
-const SUPABASE_KEY="sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
-const client=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
+const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let departmentUsageChartInstance = null;
 let topCodesChartInstance = null;
+let cachedCodes = [];
+let cachedDepartmentData = [];
 
 function toggleMenu(){
-const m=document.getElementById("mobileMenu");
-m.style.display=m.style.display==="block"?"none":"block";
+  const m = document.getElementById("mobileMenu");
+  const b = document.getElementById("backdrop");
+  const isOpen = m.style.display === "block";
+  m.style.display = isOpen ? "none" : "block";
+  b.style.display = isOpen ? "none" : "block";
+}
+
+function closeMenu(){
+  document.getElementById("mobileMenu").style.display = "none";
+  document.getElementById("backdrop").style.display = "none";
+}
+
+function setStatus(message){
+  const box = document.getElementById("emailStatus");
+  box.innerText = message;
+  box.classList.add("show");
 }
 
 async function loadUsage(){
-const {data:codes,error}=await client
-.from("codes")
-.select("*")
-.order("uses",{ascending:false});
+  const { data: codes, error } = await client
+    .from("codes")
+    .select("*")
+    .order("uses", { ascending:false });
 
-if(error || !codes){
-console.log(error);
-return;
-}
+  if(error || !codes){
+    console.log(error);
+    return;
+  }
 
-document.getElementById("totalCodes").innerText=codes.length;
+  cachedCodes = codes;
 
-let totalUses=0;
-codes.forEach(c=>totalUses+=Number(c.uses||0));
-document.getElementById("totalUses").innerText=totalUses;
+  document.getElementById("totalCodes").innerText = codes.length;
 
-if(codes.length){
-document.getElementById("topCode").innerText=codes[0].code;
-}
+  let totalUses = 0;
+  codes.forEach(c => totalUses += Number(c.uses || 0));
+  document.getElementById("totalUses").innerText = totalUses;
 
-const dept={};
+  if(codes.length){
+    document.getElementById("topCode").innerText = codes[0].code;
+  } else {
+    document.getElementById("topCode").innerText = "-";
+  }
 
-codes.forEach(c=>{
-const d=c.department||"Unassigned";
-dept[d]=(dept[d]||0)+Number(c.uses||0);
-});
+  const dept = {};
 
-const sorted=Object.entries(dept).sort((a,b)=>b[1]-a[1]);
+  codes.forEach(c => {
+    const d = c.department || "Unassigned";
+    dept[d] = (dept[d] || 0) + Number(c.uses || 0);
+  });
 
-if(sorted.length){
-document.getElementById("topDept").innerText=sorted[0][0];
-}
+  const sorted = Object.entries(dept).sort((a,b) => b[1] - a[1]);
+  cachedDepartmentData = sorted;
 
-renderDepartmentChart(sorted);
-renderTopCodesChart(codes.slice(0,10));
+  if(sorted.length){
+    document.getElementById("topDept").innerText = sorted[0][0];
+  } else {
+    document.getElementById("topDept").innerText = "-";
+  }
 
-const list=document.getElementById("topCodes");
-list.innerHTML="";
+  renderDepartmentChart(sorted);
+  renderTopCodesChart(codes.slice(0,10));
 
-codes.slice(0,10).forEach(c=>{
-list.innerHTML+=`
-<div class="list-row">
-<span>${c.code}</span>
-<span>${c.uses||0}</span>
-</div>
-`;
-});
+  const list = document.getElementById("topCodes");
+  list.innerHTML = "";
+
+  if(!codes.length){
+    list.innerHTML = `<div class="list-row"><span>No code data yet.</span><span>0</span></div>`;
+    return;
+  }
+
+  codes.slice(0,10).forEach(c => {
+    list.innerHTML += `
+      <div class="list-row">
+        <span>${c.code}</span>
+        <span>${c.uses || 0}</span>
+      </div>
+    `;
+  });
 }
 
 function renderDepartmentChart(sorted){
-const ctx=document.getElementById("departmentUsageChart");
+  const ctx = document.getElementById("departmentUsageChart");
 
-if(departmentUsageChartInstance){
-departmentUsageChartInstance.destroy();
-}
+  if(departmentUsageChartInstance){
+    departmentUsageChartInstance.destroy();
+  }
 
-departmentUsageChartInstance=new Chart(ctx,{
-type:"bar",
-data:{
-labels:sorted.map(d=>d[0]),
-datasets:[{
-label:"Uses",
-data:sorted.map(d=>d[1])
-}]
-},
-options:{
-responsive:true,
-maintainAspectRatio:false,
-plugins:{
-legend:{labels:{color:"#e5e7eb"}}
-},
-scales:{
-x:{ticks:{color:"#cbd5e1"},grid:{color:"#1f2937"}},
-y:{ticks:{color:"#cbd5e1"},grid:{color:"#1f2937"}}
-}
-}
-});
+  departmentUsageChartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: sorted.map(d => d[0]),
+      datasets: [{
+        label: "Uses",
+        data: sorted.map(d => d[1])
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: { color: "#e5e7eb" }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: "#cbd5e1" },
+          grid: { color: "#1f2937" }
+        },
+        y: {
+          ticks: { color: "#cbd5e1" },
+          grid: { color: "#1f2937" }
+        }
+      }
+    }
+  });
 }
 
 function renderTopCodesChart(codes){
-const ctx=document.getElementById("topCodesChart");
+  const ctx = document.getElementById("topCodesChart");
 
-if(topCodesChartInstance){
-topCodesChartInstance.destroy();
-}
+  if(topCodesChartInstance){
+    topCodesChartInstance.destroy();
+  }
 
-topCodesChartInstance=new Chart(ctx,{
-type:"line",
-data:{
-labels:codes.map(c=>c.code),
-datasets:[{
-label:"Uses",
-data:codes.map(c=>Number(c.uses||0)),
-fill:false,
-tension:0.3
-}]
-},
-options:{
-responsive:true,
-maintainAspectRatio:false,
-plugins:{
-legend:{labels:{color:"#e5e7eb"}}
-},
-scales:{
-x:{ticks:{color:"#cbd5e1"},grid:{color:"#1f2937"}},
-y:{ticks:{color:"#cbd5e1"},grid:{color:"#1f2937"}}
-}
-}
-});
+  topCodesChartInstance = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: codes.map(c => c.code),
+      datasets: [{
+        label: "Uses",
+        data: codes.map(c => Number(c.uses || 0)),
+        fill: false,
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: { color: "#e5e7eb" }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: "#cbd5e1" },
+          grid: { color: "#1f2937" }
+        },
+        y: {
+          ticks: { color: "#cbd5e1" },
+          grid: { color: "#1f2937" }
+        }
+      }
+    }
+  });
 }
 
 function exportCSV(){
-alert("CSV export coming next step");
+  if(!cachedCodes.length){
+    alert("No data to export.");
+    return;
+  }
+
+  let csv = "Code,Department,Name,Uses,Last Used\n";
+
+  cachedCodes.forEach(item => {
+    csv += `${item.code},${item.department || ""},${item.name || ""},${item.uses || 0},${item.last_used || ""}\n`;
+  });
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "washtrac_report.csv";
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
-function emailReport(){
-alert("Email report backend comes next.");
+async function emailReport(){
+  const email = prompt("Enter the email address for this report:");
+  if(!email) return;
+
+  const totalUses = document.getElementById("totalUses").innerText;
+  const totalCodes = document.getElementById("totalCodes").innerText;
+  const topCode = document.getElementById("topCode").innerText;
+  const topDept = document.getElementById("topDept").innerText;
+
+  let topCodesHtml = "<ul>";
+  cachedCodes.slice(0,5).forEach(item => {
+    topCodesHtml += `<li>${item.code} — ${item.uses || 0} uses</li>`;
+  });
+  topCodesHtml += "</ul>";
+
+  let deptHtml = "<ul>";
+  cachedDepartmentData.slice(0,5).forEach(item => {
+    deptHtml += `<li>${item[0]} — ${item[1]} uses</li>`;
+  });
+  deptHtml += "</ul>";
+
+  const html = `
+    <h2>WashTrac Report</h2>
+    <p><strong>Total Uses:</strong> ${totalUses}</p>
+    <p><strong>Total Codes:</strong> ${totalCodes}</p>
+    <p><strong>Top Code:</strong> ${topCode}</p>
+    <p><strong>Top Department:</strong> ${topDept}</p>
+    <h3>Top Codes</h3>
+    ${topCodesHtml}
+    <h3>Top Departments</h3>
+    ${deptHtml}
+    <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+  `;
+
+  setStatus("Sending report...");
+
+  const { data, error } = await client.functions.invoke("send-report", {
+    body: {
+      to: email,
+      subject: "WashTrac Report",
+      html
+    }
+  });
+
+  if(error){
+    console.log(error);
+    setStatus("Email failed. Check your Edge Function and secrets.");
+    return;
+  }
+
+  console.log(data);
+  setStatus("Report sent.");
 }
 
 loadUsage();
