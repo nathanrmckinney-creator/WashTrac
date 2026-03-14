@@ -72,10 +72,6 @@
       padding: 40px 20px 60px;
     }
 
-    .hero {
-      margin-bottom: 26px;
-    }
-
     .eyebrow {
       display: inline-block;
       margin-bottom: 12px;
@@ -97,13 +93,23 @@
       max-width: 900px;
     }
 
+    .report-header {
+      display: none;
+    }
+
     .card {
       background: rgba(10,16,30,.72);
       border: 1px solid rgba(255,255,255,.08);
       border-radius: 18px;
       padding: 24px;
       box-shadow: 0 10px 30px rgba(0,0,0,.18);
-      margin-bottom: 20px;
+      margin-top: 24px;
+    }
+
+    .card h2 {
+      font-size: 22px;
+      margin-bottom: 14px;
+      color: #dce7ff;
     }
 
     .toolbar-grid {
@@ -142,9 +148,12 @@
       font-weight: 800;
       cursor: pointer;
       border: 1px solid rgba(255,255,255,.12);
+      white-space: nowrap;
     }
 
-    .btn:hover { background: rgba(255,255,255,.12); }
+    .btn:hover {
+      background: rgba(255,255,255,.12);
+    }
 
     .table-wrap {
       overflow-x: auto;
@@ -186,11 +195,94 @@
       font-weight: 700;
     }
 
-    .small-btn:hover { background: rgba(255,255,255,.10); }
+    .small-btn:hover {
+      background: rgba(255,255,255,.10);
+    }
+
+    .print-note {
+      margin-top: 16px;
+      color: #8fa4ca;
+      font-size: 14px;
+    }
 
     @media (max-width: 900px) {
       .toolbar-grid, .form-grid {
         grid-template-columns: 1fr;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+        color: #000;
+      }
+
+      .topbar,
+      .toolbar-grid,
+      .form-grid,
+      .actions,
+      .print-note {
+        display: none !important;
+      }
+
+      .container {
+        max-width: 100%;
+        padding: 0;
+      }
+
+      .report-header {
+        display: block;
+        margin-bottom: 24px;
+        padding-bottom: 14px;
+        border-bottom: 2px solid #000;
+      }
+
+      .report-header h1 {
+        font-size: 28px;
+        margin-bottom: 8px;
+        color: #000;
+      }
+
+      .report-header p {
+        color: #000;
+        font-size: 14px;
+        max-width: none;
+      }
+
+      .card {
+        background: #fff;
+        border: 1px solid #ccc;
+        box-shadow: none;
+        margin-top: 0;
+        padding: 0;
+      }
+
+      .card h2 {
+        color: #000;
+        margin: 0 0 12px 0;
+        padding: 16px 16px 0 16px;
+      }
+
+      .table-wrap {
+        overflow: visible;
+      }
+
+      table {
+        min-width: 0;
+      }
+
+      th, td {
+        color: #000;
+        border-bottom: 1px solid #ccc;
+      }
+
+      th {
+        color: #000;
+      }
+
+      .eyebrow,
+      .hero-copy {
+        display: none;
       }
     }
   </style>
@@ -214,7 +306,7 @@
   </div>
 
   <div class="container">
-    <div class="hero">
+    <div class="hero-copy">
       <div class="eyebrow">Code Management</div>
       <h1>Search, add, remove, print, and export codes.</h1>
       <p>
@@ -222,7 +314,14 @@
       </p>
     </div>
 
+    <div class="report-header">
+      <h1>WashTrac Code Management Report</h1>
+      <p id="printDateCodes"></p>
+    </div>
+
     <div class="card">
+      <h2>Code List</h2>
+
       <div class="toolbar-grid">
         <input id="searchInput" type="text" placeholder="Search code, department, or name" oninput="renderCodes()" />
         <input id="departmentFilter" type="text" placeholder="Filter by department" oninput="renderCodes()" />
@@ -230,6 +329,11 @@
         <button class="btn" onclick="clearFilters()">Clear</button>
         <button class="btn" onclick="printTable()">Print</button>
         <button class="btn" onclick="downloadCSV()">Export CSV</button>
+      </div>
+
+      <div class="toolbar-grid" style="grid-template-columns: 1fr auto;">
+        <input id="emailInput" type="email" placeholder="Enter email address for report" />
+        <button class="btn" onclick="emailReport()">Email Report</button>
       </div>
 
       <div class="form-grid">
@@ -253,6 +357,10 @@
           </thead>
           <tbody id="codesTableBody"></tbody>
         </table>
+      </div>
+
+      <div class="print-note">
+        Email sending is a placeholder for now. Once we connect a backend, this button can send live reports automatically.
       </div>
     </div>
   </div>
@@ -369,6 +477,8 @@
     }
 
     function printTable() {
+      document.getElementById("printDateCodes").innerText =
+        "Generated: " + new Date().toLocaleString();
       window.print();
     }
 
@@ -386,6 +496,15 @@
       link.download = "washtrac_codes.csv";
       link.click();
       URL.revokeObjectURL(url);
+    }
+
+    function emailReport() {
+      const email = document.getElementById("emailInput").value.trim();
+      if (!email) {
+        alert("Enter an email address first.");
+        return;
+      }
+      alert("Email reporting will work after backend setup. For now, use Print or Export CSV.");
     }
 
     function logout() {
