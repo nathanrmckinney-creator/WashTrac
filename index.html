@@ -11,16 +11,11 @@
       padding: 0;
     }
 
-    body{
-margin:0;
-font-family:Arial, sans-serif;
-color:white;
-
-background-image:url("carwash.png");
-background-size:cover;
-background-position:center;
-background-repeat:no-repeat;
-height:100vh;
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #08111f;
+      color: #fff;
+      line-height: 1.5;
     }
 
     a {
@@ -35,11 +30,12 @@ height:100vh;
     }
 
     .topbar {
-      background: rgba(8, 17, 31, 0.94);
+      background: rgba(8, 17, 31, 0.92);
       border-bottom: 1px solid rgba(255,255,255,0.08);
       position: sticky;
       top: 0;
       z-index: 100;
+      backdrop-filter: blur(8px);
     }
 
     .nav {
@@ -74,19 +70,16 @@ height:100vh;
       border: 1px solid rgba(255,255,255,0.14);
       color: #fff;
       font-weight: 700;
-      transition: 0.2s ease;
-    }
-
-    .login-btn:hover {
-      background: rgba(255,255,255,0.06);
     }
 
     .hero {
+      padding: 140px 0 90px;
       background:
-        radial-gradient(circle at top left, rgba(66,255,135,0.10), transparent 28%),
-        radial-gradient(circle at top right, rgba(74,144,255,0.16), transparent 35%),
-        linear-gradient(180deg, #08111f 0%, #0d1730 100%);
-      padding: 90px 0 70px;
+        linear-gradient(rgba(8,17,31,0.72), rgba(8,17,31,0.88)),
+        url("carwash.png");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
     }
 
     .hero-grid {
@@ -115,7 +108,7 @@ height:100vh;
 
     .hero p {
       max-width: 700px;
-      color: #c8d5ef;
+      color: #d7e1f5;
       font-size: 20px;
       margin-bottom: 28px;
     }
@@ -135,11 +128,11 @@ height:100vh;
       font-size: 15px;
       border: 1px solid rgba(255,255,255,0.16);
       color: #fff;
-      background: rgba(255,255,255,0.04);
+      background: rgba(255,255,255,0.05);
     }
 
     .hero-note {
-      color: #93a7ca;
+      color: #b8c7e6;
       font-size: 15px;
     }
 
@@ -149,9 +142,10 @@ height:100vh;
     .cta-box,
     .mini-card,
     .activity-card {
-      background: rgba(255,255,255,0.04);
+      background: rgba(10,16,30,0.70);
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 18px;
+      backdrop-filter: blur(4px);
     }
 
     .hero-card {
@@ -230,6 +224,7 @@ height:100vh;
 
     .section {
       padding: 76px 0;
+      background: #08111f;
     }
 
     .section-heading {
@@ -315,6 +310,7 @@ height:100vh;
 
     .cta {
       padding: 84px 0;
+      background: #08111f;
     }
 
     .cta-box {
@@ -341,6 +337,7 @@ height:100vh;
       color: #8fa4ca;
       text-align: center;
       font-size: 14px;
+      background: #08111f;
     }
 
     @media (max-width: 980px) {
@@ -361,7 +358,8 @@ height:100vh;
       .nav {
         flex-direction: column;
         align-items: flex-start;
-        padding: 16px 0;
+        padding-top: 16px;
+        padding-bottom: 16px;
       }
 
       .nav-links {
@@ -371,7 +369,7 @@ height:100vh;
       }
 
       .hero {
-        padding: 70px 0 56px;
+        padding: 90px 0 56px;
       }
 
       .hero h1 {
