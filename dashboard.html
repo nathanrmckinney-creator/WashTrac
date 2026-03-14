@@ -10,259 +10,61 @@
 
 <style>
 *{box-sizing:border-box;}
-
-body{
-margin:0;
-font-family:Arial, Helvetica, sans-serif;
-background:#020617;
-color:white;
-overflow-x:hidden;
-}
-
-.app{
-display:flex;
-min-height:100vh;
-}
-
-.sidebar{
-width:220px;
-background:#0f172a;
-padding:20px;
-flex-shrink:0;
-border-right:1px solid #1e293b;
-}
-
-.logo{
-font-size:22px;
-font-weight:bold;
-margin-bottom:32px;
-}
-
-.nav a{
-display:block;
-color:#cbd5f5;
-text-decoration:none;
-padding:10px 0;
-}
-
-.nav a:hover{
-color:white;
-}
-
-.main{
-flex:1;
-padding:30px;
-}
-
-.mobile-topbar{
-display:none;
-align-items:center;
-justify-content:space-between;
-padding:16px 20px;
-background:#0f172a;
-border-bottom:1px solid #1e293b;
-position:sticky;
-top:0;
-z-index:1000;
-}
-
-.mobile-logo{
-font-size:22px;
-font-weight:bold;
-}
-
-.menu-btn{
-background:#2563eb;
-border:none;
-color:white;
-padding:10px 14px;
-border-radius:8px;
-cursor:pointer;
-}
-
-.mobile-menu{
-display:none;
-position:absolute;
-top:64px;
-right:16px;
-width:220px;
-background:#0f172a;
-border:1px solid #1e293b;
-border-radius:12px;
-padding:12px 16px;
-box-shadow:0 12px 30px rgba(0,0,0,.45);
-z-index:1100;
-}
-
-.mobile-menu a{
-display:block;
-color:#cbd5f5;
-text-decoration:none;
-padding:10px 0;
-}
-
-.mobile-menu a:hover{
-color:white;
-}
-
-.backdrop{
-display:none;
-position:fixed;
-inset:0;
-background:rgba(0,0,0,.35);
-z-index:1050;
-}
-
-.page-header{
-margin-bottom:24px;
-}
-
-.page-header h1{
-margin:0 0 10px 0;
-font-size:42px;
-}
-
-.page-header p{
-margin:0;
-color:#94a3b8;
-line-height:1.5;
-}
-
-.summary{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:16px;
-margin-bottom:20px;
-}
-
-.summary-box{
-background:#111827;
-padding:18px;
-border-radius:10px;
-}
-
-.summary-box strong{
-display:block;
-font-size:30px;
-margin-bottom:6px;
-}
-
-.summary-box span{
-color:#94a3b8;
-font-size:14px;
-}
-
-.grid-2{
-display:grid;
-grid-template-columns:1.2fr .8fr;
-gap:20px;
-margin-bottom:20px;
-}
-
-.card{
-background:#111827;
-padding:20px;
-border-radius:10px;
-margin-bottom:20px;
-}
-
-.card h3{
-margin-top:0;
-margin-bottom:16px;
-}
-
-.list-row{
-display:flex;
-justify-content:space-between;
-gap:12px;
-padding:12px 0;
-border-bottom:1px solid #1f2937;
-color:#dbe5fb;
-}
-
-.list-row:last-child{
-border-bottom:none;
-}
-
-.activity-row{
-display:grid;
-grid-template-columns:160px 1fr 100px;
-gap:12px;
-padding:12px 0;
-border-bottom:1px solid #1f2937;
-color:#dbe5fb;
-}
-
-.activity-row:last-child{
-border-bottom:none;
-}
-
-.chart-wrap{
-position:relative;
-height:320px;
-}
-
-.live-pill{
-display:inline-block;
-padding:6px 10px;
-border-radius:999px;
-background:rgba(34,197,94,.15);
-color:#86efac;
-font-size:12px;
-font-weight:bold;
-margin-left:10px;
-}
-
-.note{
-margin-top:14px;
-color:#94a3b8;
-font-size:14px;
-line-height:1.5;
-}
-
+body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:white;overflow-x:hidden;}
+.app{display:flex;min-height:100vh;}
+.sidebar{width:220px;background:#0f172a;padding:20px;flex-shrink:0;border-right:1px solid #1e293b;}
+.logo{font-size:22px;font-weight:bold;margin-bottom:32px;}
+.nav a,.sidebar-bottom a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
+.nav a:hover,.sidebar-bottom a:hover{color:white;}
+.sidebar-bottom{margin-top:40px;padding-top:20px;border-top:1px solid #1e293b;}
+.sidebar-bottom a.logout-link{color:#f87171;}
+.main{flex:1;padding:30px;}
+.mobile-topbar{display:none;align-items:center;justify-content:space-between;padding:16px 20px;background:#0f172a;border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:1000;}
+.mobile-logo{font-size:22px;font-weight:bold;}
+.menu-btn{background:#2563eb;border:none;color:white;padding:10px 14px;border-radius:8px;cursor:pointer;}
+.mobile-menu{display:none;position:absolute;top:64px;right:16px;width:240px;background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:12px 16px;box-shadow:0 12px 30px rgba(0,0,0,.45);z-index:1100;}
+.mobile-menu a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
+.mobile-menu a:hover{color:white;}
+.mobile-menu a.logout-link{color:#f87171;}
+.backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1050;}
+.page-header{margin-bottom:24px;}
+.page-header h1{margin:0 0 10px 0;font-size:42px;}
+.page-header p{margin:0;color:#94a3b8;line-height:1.5;}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;}
+.summary-box{background:#111827;padding:18px;border-radius:10px;}
+.summary-box strong{display:block;font-size:30px;margin-bottom:6px;}
+.summary-box span{color:#94a3b8;font-size:14px;}
+.grid-2{display:grid;grid-template-columns:1.2fr .8fr;gap:20px;margin-bottom:20px;}
+.card{background:#111827;padding:20px;border-radius:10px;margin-bottom:20px;}
+.card h3{margin-top:0;margin-bottom:16px;}
+.list-row{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #1f2937;color:#dbe5fb;}
+.list-row:last-child{border-bottom:none;}
+.activity-row{display:grid;grid-template-columns:160px 1fr 100px;gap:12px;padding:12px 0;border-bottom:1px solid #1f2937;color:#dbe5fb;}
+.activity-row:last-child{border-bottom:none;}
+.chart-wrap{position:relative;height:320px;}
+.live-pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(34,197,94,.15);color:#86efac;font-size:12px;font-weight:bold;margin-left:10px;}
+.note{margin-top:14px;color:#94a3b8;font-size:14px;line-height:1.5;}
 @media (max-width:1100px){
-.summary{
-grid-template-columns:1fr 1fr;
+.summary{grid-template-columns:1fr 1fr;}
+.grid-2{grid-template-columns:1fr;}
+.activity-row{grid-template-columns:1fr;}
 }
-
-.grid-2{
-grid-template-columns:1fr;
-}
-
-.activity-row{
-grid-template-columns:1fr;
-}
-}
-
 @media (max-width:900px){
-.app{
-display:block;
-}
-
-.sidebar{
-display:none;
-}
-
-.mobile-topbar{
-display:flex;
-}
-
-.main{
-padding:20px;
-}
-
-.page-header h1{
-font-size:34px;
-}
-
-.summary{
-grid-template-columns:1fr;
-}
+.app{display:block;}
+.sidebar{display:none;}
+.mobile-topbar{display:flex;}
+.main{padding:20px;}
+.page-header h1{font-size:34px;}
+.summary{grid-template-columns:1fr;}
 }
 </style>
 </head>
-
 <body>
+<script>
+if(localStorage.getItem("washtracLoggedIn") !== "yes"){
+  window.location.href = "login.html";
+}
+</script>
 
 <div class="mobile-topbar">
 <div class="mobile-logo">WashTrac</div>
@@ -275,61 +77,42 @@ grid-template-columns:1fr;
 <a href="activity.html" onclick="closeMenu()">Activity</a>
 <a href="usage.html" onclick="closeMenu()">Reports</a>
 <a href="monitor.html" onclick="closeMenu()">Monitor</a>
-<a href="#" onclick="closeMenu()">Locations</a>
-<a href="#" onclick="closeMenu()">Devices</a>
-<a href="#" onclick="closeMenu()">Account</a>
+<a href="index.html" onclick="closeMenu()">Back to Homepage</a>
+<a href="#" class="logout-link" onclick="logout()">Logout</a>
 </div>
 
 <div class="backdrop" id="backdrop" onclick="closeMenu()"></div>
 
 <div class="app">
-
 <div class="sidebar">
 <div class="logo">WashTrac</div>
-
 <div class="nav">
 <a href="dashboard.html">Dashboard</a>
 <a href="codes.html">Codes</a>
 <a href="activity.html">Activity</a>
 <a href="usage.html">Reports</a>
 <a href="monitor.html">Monitor</a>
-<a href="#">Locations</a>
-<a href="#">Devices</a>
-<a href="#">Account</a>
+</div>
+<div class="sidebar-bottom">
+<a href="index.html">Back to Homepage</a>
+<a href="#" class="logout-link" onclick="logout()">Logout</a>
 </div>
 </div>
 
 <div class="main">
-
 <div class="page-header">
 <h1>Dashboard <span class="live-pill">LIVE</span></h1>
 <p>Overview of wash usage, active codes, department activity, and recent events.</p>
 </div>
 
 <div class="summary">
-<div class="summary-box">
-<strong id="todayWashes">0</strong>
-<span>Total Activity Records</span>
-</div>
-
-<div class="summary-box">
-<strong id="activeCodes">0</strong>
-<span>Active Codes</span>
-</div>
-
-<div class="summary-box">
-<strong id="topCode">-</strong>
-<span>Top Used Code</span>
-</div>
-
-<div class="summary-box">
-<strong id="topDepartment">-</strong>
-<span>Top Department</span>
-</div>
+<div class="summary-box"><strong id="todayWashes">0</strong><span>Total Activity Records</span></div>
+<div class="summary-box"><strong id="activeCodes">0</strong><span>Active Codes</span></div>
+<div class="summary-box"><strong id="topCode">-</strong><span>Top Used Code</span></div>
+<div class="summary-box"><strong id="topDepartment">-</strong><span>Top Department</span></div>
 </div>
 
 <div class="grid-2">
-
 <div class="card">
 <h3>Recent Activity</h3>
 <div id="recentActivity"></div>
@@ -340,29 +123,21 @@ grid-template-columns:1fr;
 <h3>Top Codes</h3>
 <div id="topCodesList"></div>
 </div>
-
 </div>
 
 <div class="grid-2">
-
 <div class="card">
 <h3>Department Usage Chart</h3>
-<div class="chart-wrap">
-<canvas id="departmentChart"></canvas>
-</div>
+<div class="chart-wrap"><canvas id="departmentChart"></canvas></div>
 </div>
 
 <div class="card">
 <h3>Daily Activity Chart</h3>
-<div class="chart-wrap">
-<canvas id="dailyChart"></canvas>
+<div class="chart-wrap"><canvas id="dailyChart"></canvas></div>
 </div>
-</div>
-
 </div>
 
 <div class="grid-2">
-
 <div class="card">
 <h3>System Snapshot</h3>
 <div class="list-row"><span>Total Activity Records</span><span id="totalActivityRecords">0</span></div>
@@ -377,9 +152,7 @@ grid-template-columns:1fr;
 <div class="list-row"><span>View reports</span><span><a href="usage.html" style="color:#93c5fd;text-decoration:none;">Open</a></span></div>
 <div class="list-row"><span>Live monitor</span><span><a href="monitor.html" style="color:#93c5fd;text-decoration:none;">Open</a></span></div>
 </div>
-
 </div>
-
 </div>
 </div>
 
@@ -398,102 +171,62 @@ function toggleMenu(){
   menu.style.display = isOpen ? "none" : "block";
   backdrop.style.display = isOpen ? "none" : "block";
 }
-
 function closeMenu(){
   document.getElementById("mobileMenu").style.display = "none";
   document.getElementById("backdrop").style.display = "none";
 }
+function logout(){
+  localStorage.removeItem("washtracLoggedIn");
+  window.location.href = "login.html";
+}
 
 async function fetchCodes(){
-  const { data, error } = await client
-    .from("codes")
-    .select("*")
-    .order("uses", { ascending:false });
-
-  if(error){
-    console.log(error);
-    return [];
-  }
-
+  const { data, error } = await client.from("codes").select("*").order("uses", { ascending:false });
+  if(error){ console.log(error); return []; }
   return data || [];
 }
 
 async function fetchRecentActivity(){
-  const { data, error } = await client
-    .from("activity")
-    .select("*")
-    .order("event_time", { ascending:false })
-    .limit(10);
-
-  if(error){
-    console.log(error);
-    return [];
-  }
-
+  const { data, error } = await client.from("activity").select("*").order("event_time", { ascending:false }).limit(10);
+  if(error){ console.log(error); return []; }
   return data || [];
 }
 
 async function fetchAllActivity(){
-  const { data, error } = await client
-    .from("activity")
-    .select("*")
-    .order("event_time", { ascending:false });
-
-  if(error){
-    console.log(error);
-    return [];
-  }
-
+  const { data, error } = await client.from("activity").select("*").order("event_time", { ascending:false });
+  if(error){ console.log(error); return []; }
   return data || [];
 }
 
 function buildDepartmentData(codes){
   const map = {};
-
   codes.forEach(item => {
     const department = item.department || "Unassigned";
     const uses = Number(item.uses || 0);
-
-    if(!map[department]){
-      map[department] = {
-        department,
-        totalUses:0
-      };
-    }
-
+    if(!map[department]) map[department] = { department, totalUses:0 };
     map[department].totalUses += uses;
   });
-
   return Object.values(map).sort((a,b) => b.totalUses - a.totalUses);
 }
 
 function buildDailyData(activity){
   const map = {};
-
   activity.forEach(item => {
     const day = new Date(item.event_time).toLocaleDateString();
-    if(!map[day]){
-      map[day] = 0;
-    }
+    if(!map[day]) map[day] = 0;
     map[day] += 1;
   });
-
   const entries = Object.entries(map).sort((a,b) => new Date(a[0]) - new Date(b[0]));
-  return {
-    labels: entries.map(e => e[0]),
-    values: entries.map(e => e[1])
-  };
+  return { labels: entries.map(e => e[0]), values: entries.map(e => e[1]) };
 }
 
 function renderRecentActivity(rows){
   const wrap = document.getElementById("recentActivity");
   wrap.innerHTML = "";
-
   if(!rows.length){
     wrap.innerHTML = `<div class="list-row"><span>No activity yet.</span><span>-</span></div>`;
     return;
   }
-
   rows.forEach(row => {
     wrap.innerHTML += `
       <div class="activity-row">
@@ -508,12 +241,10 @@ function renderRecentActivity(rows){
 function renderTopCodes(codes){
   const wrap = document.getElementById("topCodesList");
   wrap.innerHTML = "";
-
   if(!codes.length){
     wrap.innerHTML = `<div class="list-row"><span>No codes yet.</span><span>0</span></div>`;
     return;
   }
-
   codes.slice(0,5).forEach(item => {
     wrap.innerHTML += `
       <div class="list-row">
@@ -526,37 +257,20 @@ function renderTopCodes(codes){
 
 function renderDepartmentChart(departments){
   const ctx = document.getElementById("departmentChart");
-
-  if(departmentChartInstance){
-    departmentChartInstance.destroy();
-  }
-
+  if(departmentChartInstance) departmentChartInstance.destroy();
   departmentChartInstance = new Chart(ctx, {
     type: "bar",
     data: {
       labels: departments.map(d => d.department),
-      datasets: [{
-        label: "Uses",
-        data: departments.map(d => d.totalUses)
-      }]
+      datasets: [{ label: "Uses", data: departments.map(d => d.totalUses) }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          labels: { color: "#e5e7eb" }
-        }
-      },
+      plugins: { legend: { labels: { color: "#e5e7eb" } } },
       scales: {
-        x: {
-          ticks: { color: "#cbd5e1" },
-          grid: { color: "#1f2937" }
-        },
-        y: {
-          ticks: { color: "#cbd5e1" },
-          grid: { color: "#1f2937" }
-        }
+        x: { ticks: { color: "#cbd5e1" }, grid: { color: "#1f2937" } },
+        y: { ticks: { color: "#cbd5e1" }, grid: { color: "#1f2937" } }
       }
     }
   });
@@ -564,39 +278,20 @@ function renderDepartmentChart(departments){
 
 function renderDailyChart(daily){
   const ctx = document.getElementById("dailyChart");
-
-  if(dailyChartInstance){
-    dailyChartInstance.destroy();
-  }
-
+  if(dailyChartInstance) dailyChartInstance.destroy();
   dailyChartInstance = new Chart(ctx, {
     type: "line",
     data: {
       labels: daily.labels,
-      datasets: [{
-        label: "Events",
-        data: daily.values,
-        fill: false,
-        tension: 0.3
-      }]
+      datasets: [{ label: "Events", data: daily.values, fill:false, tension:0.3 }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          labels: { color: "#e5e7eb" }
-        }
-      },
+      plugins: { legend: { labels: { color: "#e5e7eb" } } },
       scales: {
-        x: {
-          ticks: { color: "#cbd5e1" },
-          grid: { color: "#1f2937" }
-        },
-        y: {
-          ticks: { color: "#cbd5e1" },
-          grid: { color: "#1f2937" }
-        }
+        x: { ticks: { color: "#cbd5e1" }, grid: { color: "#1f2937" } },
+        y: { ticks: { color: "#cbd5e1" }, grid: { color: "#1f2937" } }
       }
     }
   });
@@ -613,7 +308,6 @@ async function loadDashboard(){
   document.getElementById("todayWashes").innerText = allActivity.length;
   document.getElementById("topCode").innerText = codes.length ? codes[0].code : "-";
   document.getElementById("topDepartment").innerText = departments.length ? departments[0].department : "-";
-
   document.getElementById("totalActivityRecords").innerText = allActivity.length;
   document.getElementById("totalDepartments").innerText = departments.length;
   document.getElementById("totalBays").innerText = new Set(allActivity.map(r => r.bay)).size;
@@ -627,24 +321,10 @@ async function loadDashboard(){
 
 loadDashboard();
 
-client
-  .channel("washtrac-live-dashboard")
-  .on(
-    "postgres_changes",
-    { event: "*", schema: "public", table: "activity" },
-    () => {
-      loadDashboard();
-    }
-  )
-  .on(
-    "postgres_changes",
-    { event: "*", schema: "public", table: "codes" },
-    () => {
-      loadDashboard();
-    }
-  )
-  .subscribe();
+client.channel("washtrac-live-dashboard")
+.on("postgres_changes", { event: "*", schema: "public", table: "activity" }, () => loadDashboard())
+.on("postgres_changes", { event: "*", schema: "public", table: "codes" }, () => loadDashboard())
+.subscribe();
 </script>
-
 </body>
 </html>
