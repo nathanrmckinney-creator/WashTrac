@@ -1,494 +1,87 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WashTrac Code Management</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      background: #08111f;
-      color: #fff;
-      line-height: 1.5;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WashTrac Codes</title>
 
-    a { text-decoration: none; color: inherit; }
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    .topbar {
-      background: rgba(8,17,31,.92);
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      backdrop-filter: blur(8px);
-    }
+<style>
 
-    .nav {
-      max-width: 1250px;
-      margin: auto;
-      padding: 0 20px;
-      min-height: 72px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 20px;
-    }
+body{
+font-family:Arial;
+background:#f4f6f8;
+padding:40px;
+}
 
-    .brand {
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: 1px;
-    }
+h1{
+margin-bottom:20px;
+}
 
-    .nav-links {
-      display: flex;
-      gap: 14px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
+input{
+padding:10px;
+margin:5px;
+}
 
-    .nav-links a, .nav-links button {
-      color: #bfd0ef;
-      font-size: 15px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-family: inherit;
-    }
+button{
+padding:10px 16px;
+cursor:pointer;
+background:#0b5cff;
+color:white;
+border:none;
+}
 
-    .logout-btn {
-      padding: 11px 16px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,.14);
-      color: #fff;
-      font-weight: 700;
-    }
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
+background:white;
+}
 
-    .container {
-      max-width: 1250px;
-      margin: auto;
-      padding: 40px 20px 60px;
-    }
+th,td{
+padding:10px;
+border-bottom:1px solid #ddd;
+text-align:left;
+}
 
-    .eyebrow {
-      display: inline-block;
-      margin-bottom: 12px;
-      color: #8eb5ff;
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 1.3px;
-      text-transform: uppercase;
-    }
+</style>
 
-    h1 {
-      font-size: 40px;
-      margin-bottom: 12px;
-    }
-
-    p {
-      color: #bfd0ef;
-      font-size: 17px;
-      max-width: 900px;
-    }
-
-    .report-header {
-      display: none;
-    }
-
-    .card {
-      background: rgba(10,16,30,.72);
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 18px;
-      padding: 24px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.18);
-      margin-top: 24px;
-    }
-
-    .card h2 {
-      font-size: 22px;
-      margin-bottom: 14px;
-      color: #dce7ff;
-    }
-
-    .toolbar-grid {
-      display: grid;
-      grid-template-columns: 1.3fr 1fr 1fr auto auto auto;
-      gap: 12px;
-      margin-bottom: 18px;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr auto;
-      gap: 12px;
-      margin-bottom: 18px;
-    }
-
-    input {
-      width: 100%;
-      padding: 13px 14px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.05);
-      color: #fff;
-      font-size: 15px;
-      outline: none;
-    }
-
-    input::placeholder { color: #8fa4ca; }
-
-    .btn {
-      padding: 13px 18px;
-      border: none;
-      border-radius: 12px;
-      background: rgba(255,255,255,.08);
-      color: #fff;
-      font-weight: 800;
-      cursor: pointer;
-      border: 1px solid rgba(255,255,255,.12);
-      white-space: nowrap;
-    }
-
-    .btn:hover {
-      background: rgba(255,255,255,.12);
-    }
-
-    .table-wrap {
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 900px;
-    }
-
-    th, td {
-      text-align: left;
-      padding: 12px 10px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      color: #dbe5fb;
-    }
-
-    th {
-      color: #8eb5ff;
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: .8px;
-    }
-
-    .actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .small-btn {
-      padding: 8px 12px;
-      border-radius: 10px;
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.12);
-      color: #fff;
-      cursor: pointer;
-      font-weight: 700;
-    }
-
-    .small-btn:hover {
-      background: rgba(255,255,255,.10);
-    }
-
-    .print-note {
-      margin-top: 16px;
-      color: #8fa4ca;
-      font-size: 14px;
-    }
-
-    @media (max-width: 900px) {
-      .toolbar-grid, .form-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media print {
-      body {
-        background: #fff;
-        color: #000;
-      }
-
-      .topbar,
-      .toolbar-grid,
-      .form-grid,
-      .actions,
-      .print-note {
-        display: none !important;
-      }
-
-      .container {
-        max-width: 100%;
-        padding: 0;
-      }
-
-      .report-header {
-        display: block;
-        margin-bottom: 24px;
-        padding-bottom: 14px;
-        border-bottom: 2px solid #000;
-      }
-
-      .report-header h1 {
-        font-size: 28px;
-        margin-bottom: 8px;
-        color: #000;
-      }
-
-      .report-header p {
-        color: #000;
-        font-size: 14px;
-        max-width: none;
-      }
-
-      .card {
-        background: #fff;
-        border: 1px solid #ccc;
-        box-shadow: none;
-        margin-top: 0;
-        padding: 0;
-      }
-
-      .card h2 {
-        color: #000;
-        margin: 0 0 12px 0;
-        padding: 16px 16px 0 16px;
-      }
-
-      .table-wrap {
-        overflow: visible;
-      }
-
-      table {
-        min-width: 0;
-      }
-
-      th, td {
-        color: #000;
-        border-bottom: 1px solid #ccc;
-      }
-
-      th {
-        color: #000;
-      }
-
-      .eyebrow,
-      .hero-copy {
-        display: none;
-      }
-    }
-  </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
-  <script>
-    if (localStorage.getItem("washtracLoggedIn") !== "yes") {
-      window.location.href = "login.html";
-    }
-  </script>
 
-  <div class="topbar">
-    <div class="nav">
-      <div class="brand">WASHTRAC</div>
-      <div class="nav-links">
-        <a href="dashboard.html">Dashboard</a>
-        <a href="usage.html">Usage</a>
-        <button onclick="logout()" class="logout-btn">Logout</button>
-      </div>
-    </div>
-  </div>
+<h1>WashTrac Code Manager</h1>
 
-  <div class="container">
-    <div class="hero-copy">
-      <div class="eyebrow">Code Management</div>
-      <h1>Search, add, remove, print, and export codes.</h1>
-      <p>
-        Search by code, department, or name. Manage your active code list and export data for printing or email.
-      </p>
-    </div>
+<div>
 
-    <div class="report-header">
-      <h1>WashTrac Code Management Report</h1>
-      <p id="printDateCodes"></p>
-    </div>
+<input id="newCode" placeholder="Code">
+<input id="newDepartment" placeholder="Department">
+<input id="newName" placeholder="Name">
 
-    <div class="card">
-      <h2>Code List</h2>
+<button onclick="addCode()">Add Code</button>
 
-      <div class="toolbar-grid">
-        <input id="searchInput" type="text" placeholder="Search code, department, or name" oninput="renderCodes()" />
-        <input id="departmentFilter" type="text" placeholder="Filter by department" oninput="renderCodes()" />
-        <input id="nameFilter" type="text" placeholder="Filter by name" oninput="renderCodes()" />
-        <button class="btn" onclick="clearFilters()">Clear</button>
-        <button class="btn" onclick="printTable()">Print</button>
-        <button class="btn" onclick="downloadCSV()">Export CSV</button>
-      </div>
+</div>
 
-      <div class="toolbar-grid" style="grid-template-columns: 1fr auto;">
-        <input id="emailInput" type="email" placeholder="Enter email address for report" />
-        <button class="btn" onclick="emailReport()">Email Report</button>
-      </div>
+<table>
 
-      <div class="form-grid">
-        <input id="newCode" type="text" placeholder="Code" />
-        <input id="newDepartment" type="text" placeholder="Department" />
-        <input id="newName" type="text" placeholder="Name" />
-        <button class="btn" onclick="addCode()">Add Code</button>
-      </div>
+<thead>
+<tr>
+<th>Code</th>
+<th>Department</th>
+<th>Name</th>
+<th>Uses</th>
+<th>Last Used</th>
+<th>Remove</th>
+</tr>
+</thead>
 
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Code</th>
-              <th>Department</th>
-              <th>Name</th>
-              <th>Uses</th>
-              <th>Last Used</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="codesTableBody"></tbody>
-        </table>
-      </div>
+<tbody id="codesTableBody">
+</tbody>
 
-      <div class="print-note">
-        Email sending is a placeholder for now. Once we connect a backend, this button can send live reports automatically.
-      </div>
-    </div>
-  </div>
+</table>
 
-  <script>
-    const STORAGE_KEY = "washtracCodesV1";
-
-    function defaultCodes() {
-      return [
-        { code: "4421", department: "Maintenance", name: "John Smith", uses: 5, lastUsed: "2026-03-14 6:42 PM" },
-        { code: "9933", department: "Operations", name: "Lisa Carter", uses: 8, lastUsed: "2026-03-14 6:38 PM" },
-        { code: "2208", department: "Service", name: "Mike Davis", uses: 3, lastUsed: "2026-03-14 6:30 PM" }
-      ];
-    }
-
-    function getCodes() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) {
-        const initial = defaultCodes();
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
-        return initial;
-      }
-      return JSON.parse(saved);
-    }
-
-    function saveCodes(codes) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(codes));
-    }
-
-    function renderCodes() {
-      const body = document.getElementById("codesTableBody");
-      const search = document.getElementById("searchInput").value.trim().toLowerCase();
-      const dept = document.getElementById("departmentFilter").value.trim().toLowerCase();
-      const name = document.getElementById("nameFilter").value.trim().toLowerCase();
-
-      let codes = getCodes().filter(item => {
-        const matchSearch =
-          item.code.toLowerCase().includes(search) ||
-          item.department.toLowerCase().includes(search) ||
-          item.name.toLowerCase().includes(search);
-
-        const matchDept = item.department.toLowerCase().includes(dept);
-        const matchName = item.name.toLowerCase().includes(name);
-
-        return matchSearch && matchDept && matchName;
-      });
-
-      body.innerHTML = "";
-
-      if (codes.length === 0) {
-        body.innerHTML = `<tr><td colspan="6">No matching codes found.</td></tr>`;
-        return;
-      }
-
-      codes.forEach(item => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td><strong>${item.code}</strong></td>
-          <td>${item.department}</td>
-          <td>${item.name}</td>
-          <td>${item.uses}</td>
-          <td>${item.lastUsed || "-"}</td>
-          <td>
-            <div class="actions">
-              <button class="small-btn" onclick="removeCode('${item.code}')">Remove</button>
-            </div>
-          </td>
-        `;
-        body.appendChild(tr);
-      });
-    }
-
-    function addCode() {
-      const code = document.getElementById("newCode").value.trim();
-      const department = document.getElementById("newDepartment").value.trim();
-      const name = document.getElementById("newName").value.trim();
-
-      if (!code || !department || !name) return;
-
-      const codes = getCodes();
-      if (codes.some(item => item.code.toLowerCase() === code.toLowerCase())) {
-        alert("That code already exists.");
-        return;
-      }
-
-      codes.unshift({
-        code,
-        department,
-        name,
-        uses: 0,
-        lastUsed: "-"
-      });
-
-      saveCodes(codes);
-
-      document.getElementById("newCode").value = "";
-      document.getElementById("newDepartment").value = "";
-      document.getElementById("newName").value = "";
-
-      renderCodes();
-    }
-
-    function removeCode(codeToRemove) {
-      const codes = getCodes().filter(item => item.code !== codeToRemove);
-      saveCodes(codes);
-      renderCodes();
-    }
-
-    function clearFilters() {
-      document.getElementById("searchInput").value = "";
-      document.getElementById("departmentFilter").value = "";
-      document.getElementById("nameFilter").value = "";
-      renderCodes();
-    }
-
-    function printTable() {
-      document.getElementById("printDateCodes").innerText =
-        "Generated: " + new Date().toLocaleString();
-      window.print();
-    }
-
-    function downloadCSV() {
-      const codes = getCodes();
-      let csv = "Code,Department,Name,Uses,Last Used\n";
-      codes.forEach(item => {
-        csv += `${item.code},${item.department},${item.name},${item.uses},${item.lastUsed}\n`;
-      });
 <script>
 
 const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
@@ -496,107 +89,106 @@ const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-async function fetchCodes() {
+async function fetchCodes(){
 
-  const { data, error } = await supabaseClient
-    .from("codes")
-    .select("*")
-    .order("created_at", { ascending: false });
+const { data, error } = await supabaseClient
+.from("codes")
+.select("*")
+.order("created_at",{ascending:false});
 
-  if (error) {
-    console.error(error);
-    return [];
-  }
-
-  return data || [];
+if(error){
+console.log(error);
+return[];
 }
 
-async function renderCodes() {
-
-  const body = document.getElementById("codesTableBody");
-  const codes = await fetchCodes();
-
-  body.innerHTML = "";
-
-  if (!codes.length) {
-    body.innerHTML = `<tr><td colspan="6">No codes found.</td></tr>`;
-    return;
-  }
-
-  codes.forEach(item => {
-
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-      <td><strong>${item.code}</strong></td>
-      <td>${item.department || ""}</td>
-      <td>${item.name || ""}</td>
-      <td>${item.uses || 0}</td>
-      <td>${item.last_used || "-"}</td>
-      <td>
-        <button onclick="removeCode('${item.code}')">Remove</button>
-      </td>
-    `;
-
-    body.appendChild(tr);
-  });
+return data;
 
 }
 
-async function addCode() {
+async function renderCodes(){
 
-  const code = document.getElementById("newCode").value.trim();
-  const department = document.getElementById("newDepartment").value.trim();
-  const name = document.getElementById("newName").value.trim();
+const codes = await fetchCodes();
+const body = document.getElementById("codesTableBody");
 
-  if (!code || !department || !name) {
-    alert("Fill in code, department, and name.");
-    return;
-  }
+body.innerHTML="";
 
-  const { error } = await supabaseClient
-    .from("codes")
-    .insert([
-      {
-        code,
-        department,
-        name,
-        uses: 0,
-        last_used: "-"
-      }
-    ]);
+codes.forEach(item=>{
 
-  if (error) {
-    alert("Code already exists or error occurred.");
-    console.error(error);
-    return;
-  }
+const tr=document.createElement("tr");
 
-  document.getElementById("newCode").value = "";
-  document.getElementById("newDepartment").value = "";
-  document.getElementById("newName").value = "";
+tr.innerHTML=`
 
-  renderCodes();
+<td>${item.code}</td>
+<td>${item.department||""}</td>
+<td>${item.name||""}</td>
+<td>${item.uses||0}</td>
+<td>${item.last_used||"-"}</td>
+<td>
+<button onclick="removeCode('${item.code}')">Remove</button>
+</td>
+
+`;
+
+body.appendChild(tr);
+
+});
+
 }
 
-async function removeCode(code) {
+async function addCode(){
 
-  const { error } = await supabaseClient
-    .from("codes")
-    .delete()
-    .eq("code", code);
+const code=document.getElementById("newCode").value.trim();
+const department=document.getElementById("newDepartment").value.trim();
+const name=document.getElementById("newName").value.trim();
 
-  if (error) {
-    console.error(error);
-    alert("Could not remove code.");
-    return;
-  }
+if(!code||!department||!name){
 
-  renderCodes();
+alert("Fill in all fields");
+return;
+
+}
+
+const { error } = await supabaseClient
+.from("codes")
+.insert([{code,department,name,uses:0,last_used:"-"}]);
+
+if(error){
+
+alert("Code already exists or error occurred");
+console.log(error);
+return;
+
+}
+
+document.getElementById("newCode").value="";
+document.getElementById("newDepartment").value="";
+document.getElementById("newName").value="";
+
+renderCodes();
+
+}
+
+async function removeCode(code){
+
+const { error } = await supabaseClient
+.from("codes")
+.delete()
+.eq("code",code);
+
+if(error){
+
+alert("Could not delete code");
+console.log(error);
+
+}
+
+renderCodes();
+
 }
 
 renderCodes();
 
 </script>
+
 </body>
 </html>
