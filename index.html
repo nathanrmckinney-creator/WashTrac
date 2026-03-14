@@ -3,11 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>WashTrac</title>
 
 <style>
-
 *{
 box-sizing:border-box;
 margin:0;
@@ -43,6 +41,7 @@ min-height:72px;
 display:flex;
 justify-content:space-between;
 align-items:center;
+gap:20px;
 }
 
 .brand{
@@ -55,6 +54,7 @@ letter-spacing:1px;
 display:flex;
 gap:22px;
 align-items:center;
+flex-wrap:wrap;
 }
 
 .nav-links a{
@@ -77,6 +77,7 @@ linear-gradient(rgba(8,17,31,.35),rgba(8,17,31,.75)),
 url("Carwash.png");
 background-size:cover;
 background-position:center;
+background-repeat:no-repeat;
 }
 
 .container{
@@ -92,7 +93,7 @@ margin-bottom:20px;
 .hero p{
 color:#bfd0ef;
 font-size:19px;
-max-width:700px;
+max-width:760px;
 margin-bottom:26px;
 }
 
@@ -143,6 +144,12 @@ font-size:40px;
 margin-bottom:20px;
 }
 
+.section p{
+color:#bfd0ef;
+max-width:760px;
+font-size:18px;
+}
+
 .features{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
@@ -165,6 +172,7 @@ margin-bottom:10px;
 .feature-card p{
 color:#bfd0ef;
 font-size:16px;
+max-width:none;
 }
 
 .footer{
@@ -176,7 +184,6 @@ font-size:14px;
 }
 
 @media (max-width:700px){
-
 .hero h1{
 font-size:36px;
 }
@@ -189,8 +196,15 @@ gap:10px;
 display:none;
 }
 
+.nav{
+padding-top:14px;
+padding-bottom:14px;
 }
 
+.nav-links{
+gap:14px;
+}
+}
 </style>
 </head>
 
@@ -198,7 +212,6 @@ display:none;
 
 <div class="topbar">
 <div class="nav">
-
 <div class="brand">WASHTRAC</div>
 
 <div class="nav-links">
@@ -208,12 +221,10 @@ display:none;
 <a href="store.html">Store</a>
 <a href="login.html" class="login-btn">Login →</a>
 </div>
-
 </div>
 </div>
 
 <section class="hero">
-
 <div class="container">
 
 <h1>One clean platform for wash activity, code tracking, and operator visibility.</h1>
@@ -221,23 +232,18 @@ display:none;
 <p>
 WashTrac gives operators a better way to monitor bays, track access codes,
 review activity, and stay connected to the wash from anywhere. The system
-works with the WashTrac CodeBox entry unit installed at each bay, allowing
-users to enter access codes to activate washes while operators track
-usage, activity, and system status through the WashTrac platform.
+works with the WashTrac CodeBox terminal installed on a post at each bay,
+allowing users to enter access codes, activate washes, and interact with
+the system while operators track usage, activity, and status through
+the WashTrac platform.
 </p>
 
 <div class="hero-flow">
-
-<div class="flow-step">Install CodeBox</div>
-
+<div class="flow-step">Install CodeBox Terminal</div>
 <div class="flow-arrow">→</div>
-
 <div class="flow-step">Enter Access Code</div>
-
 <div class="flow-arrow">→</div>
-
 <div class="flow-step">WashTrac Tracks Activity</div>
-
 </div>
 
 <div class="hero-actions">
@@ -245,11 +251,9 @@ usage, activity, and system status through the WashTrac platform.
 </div>
 
 </div>
-
 </section>
 
 <section id="features" class="section">
-
 <div class="container">
 
 <h2>Features</h2>
@@ -281,57 +285,50 @@ tablet, or computer.
 </div>
 
 <div class="feature-card">
-<h3>CodeBox Entry System</h3>
+<h3>CodeBox Terminal</h3>
 <p>
-The WashTrac CodeBox provides a dedicated entry interface for wash
-activation while communicating directly with the WashTrac platform
-for tracking and management.
+The WashTrac CodeBox is a full-screen mounted terminal designed for
+customer-facing access control at the bay. It provides a clean interface
+for code entry, wash activation, and platform interaction.
 </p>
 </div>
 
 </div>
 
 </div>
-
 </section>
 
 <section id="how-it-works" class="section">
-
 <div class="container">
 
 <h2>How It Works</h2>
 
-<p style="color:#bfd0ef;max-width:700px;">
-Install a WashTrac CodeBox at each bay entrance. Users enter their
-assigned access code to activate the wash. WashTrac records every
-activation and provides operators with a clear view of activity,
-usage, and system status.
+<p>
+Install a WashTrac CodeBox terminal on a post at each bay entrance.
+Users interact with the screen to enter their assigned access code and
+activate the wash. WashTrac records each activation and gives operators
+a clear view of activity, usage, and system status.
 </p>
 
 </div>
-
 </section>
 
 <section id="visibility" class="section">
-
 <div class="container">
 
 <h2>Operator Visibility</h2>
 
-<p style="color:#bfd0ef;max-width:700px;">
+<p>
 WashTrac gives operators a clean dashboard for reviewing wash
 activity, monitoring bay status, and managing access codes
 from anywhere.
 </p>
 
 </div>
-
 </section>
 
 <div class="footer">
-
 WashTrac © 2026 — Modern Carwash Control
-
 </div>
 
 </body>
