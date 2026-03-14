@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WashTrac Usage</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #08111f;
+      color: #fff;
+      line-height: 1.5;
+    }
+
+    a { text-decoration: none; color: inherit; }
+
+    .topbar {
+      background: rgba(8,17,31,.92);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+
+    .nav {
+      max-width: 1200px;
+      margin: auto;
+      padding: 0 20px;
+      min-height: 72px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .brand {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a, .nav-links button {
+      color: #bfd0ef;
+      font-size: 15px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .logout-btn {
+      padding: 11px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.14);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 40px 20px 60px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 12px;
+      color: #8eb5ff;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 1.3px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+
+    p {
+      color: #bfd0ef;
+      font-size: 17px;
+      max-width: 900px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 24px;
+    }
+
+    .card {
+      background: rgba(10,16,30,.72);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.18);
+    }
+
+    .card h2 {
+      font-size: 20px;
+      margin-bottom: 14px;
+      color: #dce7ff;
+    }
+
+    .chart-wrap {
+      display: flex;
+      align-items: end;
+      gap: 14px;
+      min-height: 260px;
+      margin-top: 20px;
+      padding-top: 10px;
+    }
+
+    .bar-col {
+      flex: 1;
+      text-align: center;
+    }
+
+    .bar {
+      width: 100%;
+      border-radius: 12px 12px 0 0;
+      background: linear-gradient(180deg, #4c7dff, #2c4ca8);
+      cursor: pointer;
+      transition: .2s ease;
+    }
+
+    .bar:hover {
+      transform: translateY(-4px);
+      filter: brightness(1.08);
+    }
+
+    .bar-label {
+      margin-top: 10px;
+      color: #bfd0ef;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .bar-value {
+      color: #ffffff;
+      font-size: 13px;
+      margin-top: 6px;
+    }
+
+    .detail-box {
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      color: #dbe5fb;
+    }
+
+    .detail-box h3 {
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+
+    .detail-box p {
+      font-size: 15px;
+      color: #bfd0ef;
+      margin-bottom: 6px;
+    }
+
+    .list-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      color: #dbe5fb;
+    }
+
+    .list-row:last-child { border-bottom: none; }
+
+    @media (max-width: 900px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <script>
+    if (localStorage.getItem("washtracLoggedIn") !== "yes") {
+      window.location.href = "login.html";
+    }
+  </script>
+
+  <div class="topbar">
+    <div class="nav">
+      <div class="brand">WASHTRAC</div>
+      <div class="nav-links">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="codes.html">Codes</a>
+        <button onclick="logout()" class="logout-btn">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="eyebrow">Usage Analytics</div>
+    <h1>Department usage and top-used codes.</h1>
+    <p>
+      Click a department bar to see exact usage totals and the most-used codes inside that department.
+    </p>
+
+    <div class="grid-2">
+      <div class="card">
+        <h2>Usage by Department</h2>
+        <div class="chart-wrap" id="departmentChart"></div>
+        <div class="detail-box" id="departmentDetail">
+          <h3>Select a department</h3>
+          <p>Click a bar to view detailed stats.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Top Used Codes</h2>
+        <div id="topCodesList"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "washtracCodesV1";
+
+    function defaultCodes() {
+      return [
+        { code: "4421", department: "Maintenance", name: "John Smith", uses: 5, lastUsed: "2026-03-14 6:42 PM" },
+        { code: "9933", department: "Operations", name: "Lisa Carter", uses: 8, lastUsed: "2026-03-14 6:38 PM" },
+        { code: "2208", department: "Service", name: "Mike Davis", uses: 3, lastUsed: "2026-03-14 6:30 PM" }
+      ];
+    }
+
+    function getCodes() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) {
+        const initial = defaultCodes();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
+        return initial;
+      }
+      return JSON.parse(saved);
+    }
+
+    function buildDepartmentData(codes) {
+      const map = {};
+
+      codes.forEach(item => {
+        if (!map[item.department]) {
+          map[item.department] = {
+            department: item.department,
+            totalUses: 0,
+            codes: []
+          };
+        }
+
+        map[item.department].totalUses += Number(item.uses || 0);
+        map[item.department].codes.push(item);
+      });
+
+      return Object.values(map).sort((a, b) => b.totalUses - a.totalUses);
+    }
+
+    function renderDepartmentChart() {
+      const chart = document.getElementById("departmentChart");
+      const codes = getCodes();
+      const departments = buildDepartmentData(codes);
+      const max = Math.max(...departments.map(d => d.totalUses), 1);
+
+      chart.innerHTML = "";
+
+      departments.forEach(dep => {
+        const col = document.createElement("div");
+        col.className = "bar-col";
+
+        const height = Math.max((dep.totalUses / max) * 220, 20);
+
+        col.innerHTML = `
+          <div class="bar" style="height:${height}px" onclick="showDepartmentDetail('${dep.department.replace(/'/g, "\\'")}')"></div>
+          <div class="bar-label">${dep.department}</div>
+          <div class="bar-value">${dep.totalUses} uses</div>
+        `;
+
+        chart.appendChild(col);
+      });
+    }
+
+    function showDepartmentDetail(departmentName) {
+      const codes = getCodes();
+      const departmentCodes = codes
+        .filter(item => item.department === departmentName)
+        .sort((a, b) => b.uses - a.uses);
+
+      const total = departmentCodes.reduce((sum, item) => sum + Number(item.uses || 0), 0);
+      const top = departmentCodes[0];
+
+      const detail = document.getElementById("departmentDetail");
+      detail.innerHTML = `
+        <h3>${departmentName}</h3>
+        <p><strong>Total uses:</strong> ${total}</p>
+        <p><strong>Most-used code:</strong> ${top ? top.code : "-"}</p>
+        <p><strong>Assigned to:</strong> ${top ? top.name : "-"}</p>
+        <p><strong>Last used:</strong> ${top ? top.lastUsed : "-"}</p>
+      `;
+    }
+
+    function renderTopCodes() {
+      const list = document.getElementById("topCodesList");
+      const codes = getCodes().sort((a, b) => b.uses - a.uses);
+
+      list.innerHTML = "";
+
+      if (codes.length === 0) {
+        list.innerHTML = "<p>No data available.</p>";
+        return;
+      }
+
+      codes.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "list-row";
+        row.innerHTML = `
+          <span><strong>${item.code}</strong> — ${item.department} / ${item.name}</span>
+          <span>${item.uses} uses</span>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    function logout() {
+      localStorage.removeItem("washtracLoggedIn");
+      window.location.href = "login.html";
+    }
+
+    renderDepartmentChart();
+    renderTopCodes();
+  </script>
+</body>
+</html>
