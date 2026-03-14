@@ -489,31 +489,114 @@
       codes.forEach(item => {
         csv += `${item.code},${item.department},${item.name},${item.uses},${item.lastUsed}\n`;
       });
+<script>
 
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "washtrac_codes.csv";
-      link.click();
-      URL.revokeObjectURL(url);
-    }
+const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
+const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 
-    function emailReport() {
-      const email = document.getElementById("emailInput").value.trim();
-      if (!email) {
-        alert("Enter an email address first.");
-        return;
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function fetchCodes() {
+
+  const { data, error } = await supabaseClient
+    .from("codes")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    return [];
+  }
+
+  return data || [];
+}
+
+async function renderCodes() {
+
+  const body = document.getElementById("codesTableBody");
+  const codes = await fetchCodes();
+
+  body.innerHTML = "";
+
+  if (!codes.length) {
+    body.innerHTML = `<tr><td colspan="6">No codes found.</td></tr>`;
+    return;
+  }
+
+  codes.forEach(item => {
+
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td><strong>${item.code}</strong></td>
+      <td>${item.department || ""}</td>
+      <td>${item.name || ""}</td>
+      <td>${item.uses || 0}</td>
+      <td>${item.last_used || "-"}</td>
+      <td>
+        <button onclick="removeCode('${item.code}')">Remove</button>
+      </td>
+    `;
+
+    body.appendChild(tr);
+  });
+
+}
+
+async function addCode() {
+
+  const code = document.getElementById("newCode").value.trim();
+  const department = document.getElementById("newDepartment").value.trim();
+  const name = document.getElementById("newName").value.trim();
+
+  if (!code || !department || !name) {
+    alert("Fill in code, department, and name.");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("codes")
+    .insert([
+      {
+        code,
+        department,
+        name,
+        uses: 0,
+        last_used: "-"
       }
-      alert("Email reporting will work after backend setup. For now, use Print or Export CSV.");
-    }
+    ]);
 
-    function logout() {
-      localStorage.removeItem("washtracLoggedIn");
-      window.location.href = "login.html";
-    }
+  if (error) {
+    alert("Code already exists or error occurred.");
+    console.error(error);
+    return;
+  }
 
-    renderCodes();
-  </script>
+  document.getElementById("newCode").value = "";
+  document.getElementById("newDepartment").value = "";
+  document.getElementById("newName").value = "";
+
+  renderCodes();
+}
+
+async function removeCode(code) {
+
+  const { error } = await supabaseClient
+    .from("codes")
+    .delete()
+    .eq("code", code);
+
+  if (error) {
+    console.error(error);
+    alert("Could not remove code.");
+    return;
+  }
+
+  renderCodes();
+}
+
+renderCodes();
+
+</script>
 </body>
 </html>
