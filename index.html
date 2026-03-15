@@ -970,14 +970,16 @@
 
       statusBox.innerText = "Sending...";
 
-      const { error: saveError } = await supabaseClient
-        .from("contact_requests")
-        .insert([{ name, company, email, phone, message }]);
+      const { data: saved, error: saveError } = await supabaseClient
+  .from("contact_requests")
+  .insert([{ name, company, email, phone, message }]);
 
-      if (saveError) {
-        statusBox.innerText = "Error saving message";
-        return;
-      }
+console.log("DB insert:", saved, saveError);
+
+if (saveError) {
+  statusBox.innerText = saveError.message;
+  return;
+}
 
       const { data, error } = await supabaseClient.functions.invoke("rapid-task", {
         body: {
