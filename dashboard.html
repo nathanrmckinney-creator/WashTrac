@@ -39,9 +39,7 @@
       letter-spacing:2px;
     }
 
-    .logo span{
-      color:#1ea7ff;
-    }
+    .logo span{color:#1ea7ff}
 
     .nav a,
     .sidebar-bottom a{
@@ -89,9 +87,7 @@
       letter-spacing:2px;
     }
 
-    .mobile-logo span{
-      color:#1ea7ff;
-    }
+    .mobile-logo span{color:#1ea7ff}
 
     .menu-btn{
       background:#2563eb;
@@ -100,6 +96,7 @@
       padding:10px 14px;
       border-radius:8px;
       cursor:pointer;
+      font-weight:bold;
     }
 
     .mobile-menu{
@@ -123,13 +120,8 @@
       padding:10px 0;
     }
 
-    .mobile-menu a:hover{
-      color:white;
-    }
-
-    .mobile-menu a.logout-link{
-      color:#f87171;
-    }
+    .mobile-menu a:hover{color:white}
+    .mobile-menu a.logout-link{color:#f87171}
 
     .backdrop{
       display:none;
@@ -198,6 +190,13 @@
       margin-bottom:20px;
     }
 
+    .grid-3{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:20px;
+      margin-bottom:20px;
+    }
+
     .card{
       background:#111827;
       padding:20px;
@@ -226,9 +225,7 @@
       color:#dbe5fb;
     }
 
-    .list-row:last-child{
-      border-bottom:none;
-    }
+    .list-row:last-child{border-bottom:none}
 
     .activity-row{
       display:grid;
@@ -239,29 +236,37 @@
       color:#dbe5fb;
     }
 
-    .activity-row:last-child{
-      border-bottom:none;
-    }
+    .activity-row:last-child{border-bottom:none}
 
     .chart-wrap{
       position:relative;
       height:320px;
     }
 
-    .control-banner{
+    .banner{
       display:none;
       margin-bottom:16px;
       padding:14px 16px;
       border-radius:10px;
-      border:1px solid rgba(239,68,68,.35);
-      background:rgba(127,29,29,.28);
-      color:#fecaca;
       font-weight:bold;
       letter-spacing:.2px;
     }
 
-    .control-banner.show{
-      display:block;
+    .banner.show{display:block}
+    .banner.red{
+      background:rgba(127,29,29,.28);
+      border:1px solid rgba(239,68,68,.35);
+      color:#fecaca;
+    }
+    .banner.yellow{
+      background:rgba(120,53,15,.28);
+      border:1px solid rgba(245,158,11,.35);
+      color:#fde68a;
+    }
+    .banner.green{
+      background:rgba(20,83,45,.28);
+      border:1px solid rgba(34,197,94,.35);
+      color:#bbf7d0;
     }
 
     .control-grid{
@@ -330,17 +335,9 @@
       font-weight:bold;
     }
 
-    button.secondary{
-      background:#334155;
-    }
-
-    button.success{
-      background:#16a34a;
-    }
-
-    button.danger{
-      background:#dc2626;
-    }
+    button.secondary{background:#334155}
+    button.success{background:#16a34a}
+    button.danger{background:#dc2626}
 
     .field-grid{
       display:grid;
@@ -360,7 +357,8 @@
       color:#94a3b8;
     }
 
-    input[type="time"]{
+    input[type="time"],
+    select{
       width:100%;
       padding:12px;
       border-radius:8px;
@@ -388,53 +386,52 @@
       display:none;
     }
 
-    .control-status.show{
-      display:block;
+    .control-status.show{display:block}
+
+    .bay-editor-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:16px;
+    }
+
+    .bay-editor-card{
+      background:#0b1220;
+      border:1px solid #1f2937;
+      border-radius:12px;
+      padding:16px;
+    }
+
+    .bay-editor-card h4{
+      margin:0 0 12px 0;
+      font-size:18px;
+    }
+
+    .bay-status-preview{
+      margin-top:12px;
+      font-size:14px;
+      color:#94a3b8;
+    }
+
+    @media (max-width:1200px){
+      .bay-editor-grid{
+        grid-template-columns:1fr 1fr;
+      }
     }
 
     @media (max-width:1100px){
-      .summary{
-        grid-template-columns:1fr 1fr;
-      }
-
-      .grid-2{
-        grid-template-columns:1fr;
-      }
-
-      .activity-row{
-        grid-template-columns:1fr;
-      }
+      .summary{grid-template-columns:1fr 1fr}
+      .grid-2,.grid-3{grid-template-columns:1fr}
+      .activity-row{grid-template-columns:1fr}
     }
 
     @media (max-width:900px){
-      .app{
-        display:block;
-      }
-
-      .sidebar{
-        display:none;
-      }
-
-      .mobile-topbar{
-        display:flex;
-      }
-
-      .main{
-        padding:20px;
-      }
-
-      .page-header h1{
-        font-size:34px;
-      }
-
-      .summary{
-        grid-template-columns:1fr;
-      }
-
-      .control-grid,
-      .field-grid{
-        grid-template-columns:1fr;
-      }
+      .app{display:block}
+      .sidebar{display:none}
+      .mobile-topbar{display:flex}
+      .main{padding:20px}
+      .page-header h1{font-size:34px}
+      .summary{grid-template-columns:1fr}
+      .control-grid,.field-grid,.bay-editor-grid{grid-template-columns:1fr}
     }
   </style>
 </head>
@@ -483,7 +480,7 @@
     <div class="main">
       <div class="page-header">
         <h1>Dashboard <span class="live-pill">LIVE</span></h1>
-        <p>Overview of wash usage, reporting, activity, and remote wash control.</p>
+        <p>Overview of wash usage, reporting, activity, bay status, and remote wash control.</p>
       </div>
 
       <div class="summary">
@@ -509,11 +506,9 @@
       </div>
 
       <div class="card">
-        <h3>Remote Wash Control</h3>
+        <h3>Automatic After-Hours Lockout</h3>
 
-        <div id="estopBanner" class="control-banner">
-          🚨 EMERGENCY STOP ACTIVE
-        </div>
+        <div id="accessBanner" class="banner green">SYSTEM AVAILABLE</div>
 
         <div class="control-grid">
           <div class="control-box">
@@ -549,7 +544,7 @@
 
         <div class="checkbox-row">
           <input type="checkbox" id="lockoutEnabled">
-          <label for="lockoutEnabled">Enable scheduled lockout</label>
+          <label for="lockoutEnabled">Enable automatic after-hours lockout</label>
         </div>
 
         <div class="field-grid">
@@ -565,14 +560,20 @@
         </div>
 
         <div class="controls">
-          <button onclick="saveSchedule()">Save Schedule</button>
+          <button onclick="saveSchedule()">Save Lockout Schedule</button>
         </div>
 
         <div id="controlStatus" class="control-status"></div>
 
         <div class="note">
-          Use this section to disable the wash manually, indicate an E-STOP condition, or set an after-hours lockout window.
+          When enabled, WashTrac can automatically block wash activation during the selected lockout window.
         </div>
+      </div>
+
+      <div class="card">
+        <h3>Bay Status Editor</h3>
+        <div class="bay-editor-grid" id="bayEditorGrid"></div>
+        <div id="bayStatusMessage" class="control-status"></div>
       </div>
 
       <div class="grid-2">
@@ -652,6 +653,32 @@
       box.classList.add("show");
     }
 
+    function setBayStatusMessage(message){
+      const box = document.getElementById("bayStatusMessage");
+      box.innerText = message;
+      box.classList.add("show");
+    }
+
+    function isLockoutActive(control){
+      if(!control.lockout_enabled) return false;
+      if(!control.lockout_start || !control.lockout_end) return false;
+
+      const now = new Date();
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+      const start = control.lockout_start.split(":");
+      const end = control.lockout_end.split(":");
+
+      const startMin = parseInt(start[0]) * 60 + parseInt(start[1]);
+      const endMin = parseInt(end[0]) * 60 + parseInt(end[1]);
+
+      if(startMin <= endMin){
+        return nowMinutes >= startMin && nowMinutes <= endMin;
+      }else{
+        return nowMinutes >= startMin || nowMinutes <= endMin;
+      }
+    }
+
     async function fetchCodes(){
       const { data, error } = await client.from("codes").select("*").order("uses", { ascending:false });
       if(error){ console.log(error); return []; }
@@ -674,6 +701,12 @@
       const { data, error } = await client.from("system_control").select("*").limit(1).single();
       if(error){ console.log(error); return null; }
       return data;
+    }
+
+    async function fetchBayStatus(){
+      const { data, error } = await client.from("bay_status").select("*").order("bay_name", { ascending:true });
+      if(error){ console.log(error); return []; }
+      return data || [];
     }
 
     function buildDepartmentData(codes){
@@ -802,17 +835,53 @@
       document.getElementById("lockoutPill").innerText = control.lockout_enabled ? "Schedule Enabled" : "No Schedule";
 
       document.getElementById("lockoutWindow").innerText = `${control.lockout_start || "--:--"} to ${control.lockout_end || "--:--"}`;
-
       document.getElementById("lockoutEnabled").checked = !!control.lockout_enabled;
       document.getElementById("lockoutStart").value = control.lockout_start || "";
       document.getElementById("lockoutEnd").value = control.lockout_end || "";
 
-      const banner = document.getElementById("estopBanner");
+      const banner = document.getElementById("accessBanner");
+
       if(control.estop_active){
-        banner.classList.add("show");
+        banner.className = "banner red show";
+        banner.innerText = "🚨 EMERGENCY STOP ACTIVE";
+      } else if(!control.wash_enabled){
+        banner.className = "banner red show";
+        banner.innerText = "WASH DISABLED";
+      } else if(isLockoutActive(control)){
+        banner.className = "banner yellow show";
+        banner.innerText = "AFTER-HOURS LOCKOUT ACTIVE";
       } else {
-        banner.classList.remove("show");
+        banner.className = "banner green show";
+        banner.innerText = "SYSTEM AVAILABLE";
       }
+    }
+
+    function renderBayEditor(bays){
+      const wrap = document.getElementById("bayEditorGrid");
+      wrap.innerHTML = "";
+
+      if(!bays.length){
+        wrap.innerHTML = `<div class="bay-editor-card"><h4>No bays found</h4></div>`;
+        return;
+      }
+
+      bays.forEach(bay => {
+        wrap.innerHTML += `
+          <div class="bay-editor-card">
+            <h4>${bay.bay_name}</h4>
+            <div class="field">
+              <label>Status</label>
+              <select onchange="updateBayStatus(${bay.id}, this.value)">
+                <option value="Ready" ${bay.status === "Ready" ? "selected" : ""}>Ready</option>
+                <option value="Running" ${bay.status === "Running" ? "selected" : ""}>Running</option>
+                <option value="Idle" ${bay.status === "Idle" ? "selected" : ""}>Idle</option>
+                <option value="Offline" ${bay.status === "Offline" ? "selected" : ""}>Offline</option>
+              </select>
+            </div>
+            <div class="bay-status-preview">Current status: ${bay.status}</div>
+          </div>
+        `;
+      });
     }
 
     async function setWashEnabled(enabled){
@@ -820,10 +889,7 @@
 
       const { error } = await client
         .from("system_control")
-        .update({
-          wash_enabled: enabled,
-          updated_at: new Date().toISOString()
-        })
+        .update({ wash_enabled: enabled, updated_at: new Date().toISOString() })
         .eq("id", controlRowId);
 
       if(error){
@@ -841,10 +907,7 @@
 
       const { error } = await client
         .from("system_control")
-        .update({
-          estop_active: active,
-          updated_at: new Date().toISOString()
-        })
+        .update({ estop_active: active, updated_at: new Date().toISOString() })
         .eq("id", controlRowId);
 
       if(error){
@@ -876,11 +939,30 @@
 
       if(error){
         console.log(error);
-        setControlStatus("Could not save schedule.");
+        setControlStatus("Could not save lockout schedule.");
         return;
       }
 
       setControlStatus("Lockout schedule saved.");
+      loadDashboard();
+    }
+
+    async function updateBayStatus(id, status){
+      const { error } = await client
+        .from("bay_status")
+        .update({
+          status,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", id);
+
+      if(error){
+        console.log(error);
+        setBayStatusMessage("Could not update bay status.");
+        return;
+      }
+
+      setBayStatusMessage(`Bay updated to ${status}.`);
       loadDashboard();
     }
 
@@ -889,6 +971,7 @@
       const recentActivity = await fetchRecentActivity();
       const allActivity = await fetchAllActivity();
       const control = await fetchSystemControl();
+      const bays = await fetchBayStatus();
 
       const departments = buildDepartmentData(codes);
       const daily = buildDailyData(allActivity);
@@ -899,7 +982,7 @@
       document.getElementById("topDepartment").innerText = departments.length ? departments[0].department : "-";
       document.getElementById("totalActivityRecords").innerText = allActivity.length;
       document.getElementById("totalDepartments").innerText = departments.length;
-      document.getElementById("totalBays").innerText = new Set(allActivity.map(r => r.bay)).size;
+      document.getElementById("totalBays").innerText = bays.length;
       document.getElementById("lastUpdated").innerText = new Date().toLocaleTimeString();
 
       renderRecentActivity(recentActivity);
@@ -907,6 +990,7 @@
       renderDepartmentChart(departments);
       renderDailyChart(daily);
       renderSystemControl(control);
+      renderBayEditor(bays);
     }
 
     loadDashboard();
@@ -915,6 +999,7 @@
       .on("postgres_changes", { event: "*", schema: "public", table: "activity" }, () => loadDashboard())
       .on("postgres_changes", { event: "*", schema: "public", table: "codes" }, () => loadDashboard())
       .on("postgres_changes", { event: "*", schema: "public", table: "system_control" }, () => loadDashboard())
+      .on("postgres_changes", { event: "*", schema: "public", table: "bay_status" }, () => loadDashboard())
       .subscribe();
   </script>
 </body>
