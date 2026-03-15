@@ -428,14 +428,15 @@
     loadMonitor();
 
     client.channel("monitor-live")
-      .on("postgres_changes",{event:"*",schema:"public",table:"activity"},()=>loadMonitor())
-      .on("postgres_changes",{event:"*",schema:"public",table:"system_control"},()=>loadMonitor())
-      .on("postgres_changes",{event:"*",schema:"public",table:"bay_status"},()=>loadMonitor())
-      .subscribe();
-  </script>
+  .on("postgres_changes",{event:"*",schema:"public",table:"activity"},()=>loadMonitor())
+  .on("postgres_changes",{event:"*",schema:"public",table:"system_control"},()=>loadMonitor())
+  .on("postgres_changes",{event:"*",schema:"public",table:"bay_status"},()=>loadMonitor())
+  .subscribe();
 
-</body>
-  setInterval(() => {
+setInterval(() => {
   console.log("WashTrac heartbeat");
 }, 20000);
+
+</script>
+</body>
 </html>
