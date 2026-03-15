@@ -1,290 +1,559 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0"><title>WashTrac</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WashTrac</title>
 
-*{box-sizing:border-box}
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-body{
-margin:0;
-font-family:Arial,Helvetica,sans-serif;
-background:#020617;
-color:white;
-}
+  <style>
+    *{box-sizing:border-box}
 
-a{text-decoration:none;color:inherit}
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background:#020617;
+      color:#fff;
+    }
 
-.logo{
-font-size:28px;
-font-weight:800;
-letter-spacing:4px;
-}
+    a{
+      text-decoration:none;
+      color:inherit;
+    }
 
-.logo span{color:#1ea7ff}
+    .logo{
+      font-size:28px;
+      font-weight:800;
+      letter-spacing:4px;
+    }
 
-header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:18px 40px;
-background:rgba(2,6,23,.9);
-border-bottom:1px solid #1e293b;
-position:sticky;
-top:0;
-z-index:1000;
-}
+    .logo span{
+      color:#1ea7ff;
+    }
 
-.nav{
-display:flex;
-gap:20px;
-}
+    header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:18px 40px;
+      background:rgba(2,6,23,.9);
+      border-bottom:1px solid #1e293b;
+      position:sticky;
+      top:0;
+      z-index:1000;
+    }
 
-.btn{
-padding:12px 18px;
-border-radius:8px;
-background:#1ea7ff;
-border:none;
-color:white;
-font-weight:bold;
-cursor:pointer;
-}
+    .nav{
+      display:flex;
+      gap:20px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
 
-.btn.secondary{
-background:#334155;
-}
+    .btn{
+      padding:12px 18px;
+      border-radius:8px;
+      background:#1ea7ff;
+      border:none;
+      color:white;
+      font-weight:bold;
+      cursor:pointer;
+      display:inline-block;
+    }
 
-.hero{
-min-height:90vh;
-display:flex;
-align-items:center;
+    .btn.secondary{
+      background:#334155;
+    }
 
-background:
-linear-gradient(90deg, rgba(2,6,23,.9) 0%, rgba(2,6,23,.7) 40%, rgba(2,6,23,.2) 100%),
-url("Carwash.png") center/cover no-repeat;
+    .hero{
+      min-height:90vh;
+      display:flex;
+      align-items:center;
+      background:
+        linear-gradient(90deg, rgba(2,6,23,.95) 0%, rgba(2,6,23,.85) 40%, rgba(2,6,23,.35) 100%),
+        url("Carwash.png") center/cover no-repeat;
+      padding:70px 40px;
+    }
 
-padding:70px 40px;
-}
+    .hero-inner{
+      max-width:1200px;
+      margin:auto;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:40px;
+      align-items:center;
+      width:100%;
+    }
 
-.hero-inner{
-max-width:1200px;
-margin:auto;
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:40px;
-align-items:center;
-}
+    .eyebrow{
+      color:#38bdf8;
+      letter-spacing:2px;
+      font-weight:bold;
+      margin-bottom:12px;
+      font-size:15px;
+    }
 
-.hero h1{
-font-size:72px;
-margin:0;
-}
+    .hero h1{
+      font-size:72px;
+      margin:0;
+      line-height:.95;
+    }
 
-.hero h2{
-letter-spacing:5px;
-color:#1ea7ff;
-margin-top:10px;
-}
+    .hero h2{
+      letter-spacing:5px;
+      color:#1ea7ff;
+      margin-top:14px;
+      margin-bottom:0;
+      font-size:28px;
+    }
 
-.hero p{
-font-size:22px;
-margin-top:20px;
-line-height:1.4;
-color:#e2e8f0;
-}
+    .hero p{
+      font-size:22px;
+      margin-top:20px;
+      line-height:1.6;
+      max-width:520px;
+      color:#e2e8f0;
+    }
 
-.features{
-margin-top:30px;
-}
+    .features{
+      margin-top:30px;
+    }
 
-.features div{
-margin:10px 0;
-font-size:18px;
-}
+    .features div{
+      margin:12px 0;
+      font-size:18px;
+    }
 
-.device{
-background:#0f172a;
-border-radius:20px;
-padding:25px;
-border:1px solid #1e293b;
-max-width:420px;
-margin-left:auto;
-}
+    .hero-actions{
+      display:flex;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-top:28px;
+    }
 
-.screen{
-background:#020617;
-border-radius:16px;
-padding:20px;
-border:1px solid #1e293b;
-}
+    .device{
+      background:#0f172a;
+      border-radius:20px;
+      padding:25px;
+      border:1px solid #1e293b;
+      max-width:420px;
+      margin-left:auto;
+      box-shadow:0 20px 50px rgba(0,0,0,.35);
+    }
 
-.pad{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:10px;
-margin-top:15px;
-}
+    .screen{
+      background:#020617;
+      border-radius:16px;
+      padding:20px;
+      border:1px solid #1e293b;
+    }
 
-.pad div{
-background:#334155;
-padding:18px 0;
-border-radius:10px;
-text-align:center;
-font-weight:bold;
-font-size:22px;
-}
+    .screen-title{
+      text-align:center;
+      margin-bottom:12px;
+      font-size:16px;
+      letter-spacing:1px;
+    }
 
-.start{
-margin-top:15px;
-width:100%;
-padding:16px;
-background:#1ea7ff;
-border:none;
-border-radius:10px;
-font-size:22px;
-color:white;
-font-weight:bold;
-}
+    .pad{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+      margin-top:15px;
+    }
 
-.section{
-padding:70px 40px;
-max-width:1100px;
-margin:auto;
-}
+    .pad div{
+      background:#334155;
+      padding:18px 0;
+      border-radius:10px;
+      text-align:center;
+      font-weight:bold;
+      font-size:22px;
+    }
 
-.cards{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-gap:20px;
-}
+    .start{
+      margin-top:15px;
+      width:100%;
+      padding:16px;
+      background:#1ea7ff;
+      border:none;
+      border-radius:10px;
+      font-size:22px;
+      color:white;
+      font-weight:bold;
+      box-shadow:0 0 20px rgba(30,167,255,.6);
+    }
 
-.card{
-background:#0f172a;
-padding:25px;
-border-radius:12px;
-border:1px solid #1e293b;
-}
+    .section{
+      padding:70px 40px;
+      max-width:1100px;
+      margin:auto;
+    }
 
-.contact{
-background:#0f172a;
-padding:30px;
-border-radius:12px;
-border:1px solid #1e293b;
-max-width:600px;
-}
+    .section h2{
+      font-size:40px;
+      margin-top:0;
+    }
 
-input,textarea{
-width:100%;
-padding:12px;
-margin-top:8px;
-margin-bottom:14px;
-border-radius:6px;
-border:1px solid #334155;
-background:#020617;
-color:white;
-}
+    .section-intro{
+      font-size:18px;
+      color:#94a3b8;
+      line-height:1.6;
+      max-width:760px;
+      margin-bottom:30px;
+    }
 
-textarea{min-height:120px}
+    .cards{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+      gap:20px;
+    }
 
-footer{
-text-align:center;
-padding:30px;
-color:#64748b;
-border-top:1px solid #1e293b;
-margin-top:60px;
-}
+    .card{
+      background:#0f172a;
+      padding:25px;
+      border-radius:12px;
+      border:1px solid #1e293b;
+    }
 
-</style></head><body><header><div class="logo">
-WASH<span>TRAC</span>
-</div><div class="nav">
-<a href="#features">Features</a>
-<a href="#audit">Audit</a>
-<a href="#contact">Contact</a>
-<a href="login.html">Login</a>
-</div></header><section class="hero"><div class="hero-inner"><div><h1>CodeBox</h1>
-<h2>ENTRY TERMINAL</h2><p>
-Secure wash access with built-in auditing, reporting, and real-time tracking for dealerships, service departments, and fleet operations.
-</p><div class="features"><div>✔ Enter Access Code</div>
-<div>✔ Activate Wash</div>
-<div>✔ Track Every Use</div>
-<div>✔ Department Audit Logs</div>
-<div>✔ Real-Time Usage Monitoring</div>
-<div>✔ CSV & Email Reporting</div></div><br><a class="btn" href="#contact">Request Demo</a>
-<a class="btn secondary" href="login.html">Client Login</a>
+    .card h3{
+      margin-top:0;
+      margin-bottom:10px;
+      font-size:22px;
+    }
 
-</div><div class="device"><div class="screen"><div style="text-align:center;margin-bottom:10px">
-ENTER ACCESS CODE
-</div><div class="pad"><div>1</div><div>2</div><div>3</div>
-<div>4</div><div>5</div><div>6</div>
-<div>7</div><div>8</div><div>9</div>
-<div>*</div><div>0</div><div>←</div></div><button class="start">START WASH</button>
+    .card p{
+      margin:0;
+      color:#94a3b8;
+      line-height:1.6;
+    }
 
-</div></div></div></section><section id="features" class="section"><h2>WashTrac Management System</h2><p>
-WashTrac provides full visibility into wash usage so management always knows who is using the wash and when.
-</p><div class="cards"><div class="card">
-<h3>Usage Auditing</h3>
-<p>
-Every wash activation is logged with timestamp, code, department, and user information.
-</p>
-</div><div class="card">
-<h3>Department Tracking</h3>
-<p>
-Assign codes by department such as Service, Sales, Detail, or Management.
-</p>
-</div><div class="card">
-<h3>Reporting</h3>
-<p>
-Generate CSV exports and email reports to monitor wash activity and usage trends.
-</p>
-</div></div></section><section id="contact" class="section"><h2>Contact Us</h2><div class="contact"><form onsubmit="sendContact(event)"><label>Name</label>
-<input id="name" required>
+    .contact{
+      background:#0f172a;
+      padding:30px;
+      border-radius:12px;
+      border:1px solid #1e293b;
+      max-width:600px;
+    }
 
-<label>Company</label>
-<input id="company">
+    input, textarea{
+      width:100%;
+      padding:12px;
+      margin-top:8px;
+      margin-bottom:14px;
+      border-radius:6px;
+      border:1px solid #334155;
+      background:#020617;
+      color:white;
+      font-size:15px;
+    }
 
-<label>Email</label>
-<input id="email" required>
+    textarea{
+      min-height:120px;
+    }
 
-<label>Phone</label>
-<input id="phone">
+    #status{
+      margin-top:14px;
+      color:#cbd5e1;
+    }
 
-<label>Message</label>
+    footer{
+      text-align:center;
+      padding:30px;
+      color:#64748b;
+      border-top:1px solid #1e293b;
+      margin-top:60px;
+    }
 
-<textarea id="message" required></textarea><button class="btn">Send Message</button>
+    @media (max-width: 980px){
+      .hero-inner{
+        grid-template-columns:1fr;
+      }
 
-</form><div id="status"></div></div></section><footer>WASHTRAC © 2026
-Control. Track. Manage.
+      .device{
+        margin-left:0;
+      }
 
-</footer><script>
+      .hero h1{
+        font-size:58px;
+      }
+    }
 
-const SUPABASE_URL="https://feqrsypiugwwdweiwvua.supabase.co"
-const SUPABASE_KEY="sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS"
+    @media (max-width: 700px){
+      header{
+        padding:16px 20px;
+        flex-direction:column;
+        gap:14px;
+        align-items:flex-start;
+      }
 
-const supabaseClient=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
+      .hero{
+        padding:50px 20px;
+      }
 
-async function sendContact(e){
+      .section{
+        padding:55px 20px;
+      }
 
-e.preventDefault()
+      .hero h1{
+        font-size:48px;
+      }
 
-const name=document.getElementById("name").value
-const company=document.getElementById("company").value
-const email=document.getElementById("email").value
-const phone=document.getElementById("phone").value
-const message=document.getElementById("message").value
+      .hero h2{
+        font-size:22px;
+      }
 
-document.getElementById("status").innerText="Sending..."
+      .hero p{
+        font-size:19px;
+      }
 
-const {error}=await supabaseClient
-.from("contact_requests")
-.insert([{name,company,email,phone,message}])
+      .nav{
+        gap:14px;
+      }
+    }
+  </style>
+</head>
 
-if(error){
-document.getElementById("status").innerText="Error sending message"
-return
-}
+<body>
 
-document.getElementById("status").innerText="Message sent. We'll be in touch."
+  <header>
+    <div class="logo">WASH<span>TRAC</span></div>
 
-}
+    <div class="nav">
+      <a href="#features">Features</a>
+      <a href="#works">How It Works</a>
+      <a href="#audit">Audit</a>
+      <a href="#contact">Contact</a>
+      <a href="login.html">Login</a>
+    </div>
+  </header>
 
-</script></body>
+  <section class="hero">
+    <div class="hero-inner">
+
+      <div>
+        <div class="eyebrow">CARWASH CONTROL SYSTEM</div>
+
+        <h1>CodeBox</h1>
+        <h2>ENTRY TERMINAL</h2>
+
+        <p>
+          Control wash access and track every activation in real time.
+          WashTrac CodeBox provides secure entry codes, full audit logs,
+          and reporting tools for dealerships, service departments,
+          detail teams, and fleet operations.
+        </p>
+
+        <div class="features">
+          <div>✔ Enter Access Code</div>
+          <div>✔ Activate Wash</div>
+          <div>✔ Track Every Use</div>
+          <div>✔ Department Audit Logs</div>
+          <div>✔ Real-Time Usage Monitoring</div>
+          <div>✔ CSV & Email Reporting</div>
+        </div>
+
+        <div class="hero-actions">
+          <a class="btn" href="#contact">Request Demo</a>
+          <a class="btn secondary" href="login.html">Client Login</a>
+        </div>
+      </div>
+
+      <div class="device">
+        <div class="screen">
+          <div class="screen-title">ENTER ACCESS CODE</div>
+
+          <div class="pad">
+            <div>1</div><div>2</div><div>3</div>
+            <div>4</div><div>5</div><div>6</div>
+            <div>7</div><div>8</div><div>9</div>
+            <div>*</div><div>0</div><div>←</div>
+          </div>
+
+          <button class="start">START WASH</button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="features" class="section">
+    <h2>WashTrac Management System</h2>
+    <p class="section-intro">
+      WashTrac provides full visibility into wash usage so management always knows
+      who is using the wash, when it was activated, and how often each department uses it.
+    </p>
+
+    <div class="cards">
+      <div class="card">
+        <h3>Usage Auditing</h3>
+        <p>
+          Every wash activation is logged with timestamp, code, department,
+          and user information for complete accountability.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Department Tracking</h3>
+        <p>
+          Assign codes by department such as Service, Sales, Detail,
+          Manager, Temporary, or any custom department you need.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Reporting</h3>
+        <p>
+          Generate CSV exports and email reports to monitor wash activity,
+          usage trends, and operational accountability.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="works" class="section">
+    <h2>How WashTrac Works</h2>
+    <p class="section-intro">
+      WashTrac is built to make access control simple for users and visible for management.
+    </p>
+
+    <div class="cards">
+      <div class="card">
+        <h3>Create Access Codes</h3>
+        <p>
+          Managers assign wash access codes to departments,
+          employees, or temporary users.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Activate the Wash</h3>
+        <p>
+          Users enter their code on the CodeBox terminal
+          to activate the wash system quickly and securely.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Track Every Activation</h3>
+        <p>
+          Every wash event is logged with timestamps,
+          code usage history, and department tracking.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>View Reports</h3>
+        <p>
+          Managers can review dashboards, export reports,
+          and receive usage summaries by email.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="audit" class="section">
+    <h2>Audit & Reporting Visibility</h2>
+    <p class="section-intro">
+      WashTrac is not just a terminal. It is a complete auditing and visibility system
+      built to help managers track usage, reduce abuse, and review activity in real time.
+    </p>
+
+    <div class="cards">
+      <div class="card">
+        <h3>Timestamped Activity</h3>
+        <p>
+          Every code use can be recorded with date and time so you always know
+          exactly when the wash was activated.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Live Monitoring</h3>
+        <p>
+          See activity as it happens through live dashboards,
+          usage tracking, and monitoring screens.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Email & CSV Exports</h3>
+        <p>
+          Send reports by email or export usage history for accountability,
+          internal review, and management reporting.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact" class="section">
+    <h2>Contact Us</h2>
+
+    <div class="contact">
+      <form onsubmit="sendContact(event)">
+        <label>Name</label>
+        <input id="name" required>
+
+        <label>Company</label>
+        <input id="company">
+
+        <label>Email</label>
+        <input id="email" required>
+
+        <label>Phone</label>
+        <input id="phone">
+
+        <label>Message</label>
+        <textarea id="message" required></textarea>
+
+        <button class="btn">Send Message</button>
+      </form>
+
+      <div id="status"></div>
+    </div>
+  </section>
+
+  <footer>
+    WASHTRAC © 2026<br>
+    Control. Track. Manage.
+  </footer>
+
+  <script>
+    const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function sendContact(e){
+      e.preventDefault();
+
+      const name = document.getElementById("name").value;
+      const company = document.getElementById("company").value;
+      const email = document.getElementById("email").value;
+      const phone = document.getElementById("phone").value;
+      const message = document.getElementById("message").value;
+
+      document.getElementById("status").innerText = "Sending...";
+
+      const { error } = await supabaseClient
+        .from("contact_requests")
+        .insert([{ name, company, email, phone, message }]);
+
+      if(error){
+        document.getElementById("status").innerText = "Error sending message";
+        return;
+      }
+
+      document.getElementById("status").innerText = "Message sent. We'll be in touch.";
+
+      document.getElementById("name").value = "";
+      document.getElementById("company").value = "";
+      document.getElementById("email").value = "";
+      document.getElementById("phone").value = "";
+      document.getElementById("message").value = "";
+    }
+  </script>
+
+</body>
 </html>
