@@ -949,25 +949,57 @@
     }
 
     async function sendContact(e){
-      e.preventDefault();
+  e.preventDefault();
 
-      const name = document.getElementById("name").value;
-      const company = document.getElementById("company").value;
-      const email = document.getElementById("email").value;
-      const phone = document.getElementById("phone").value;
-      const message = document.getElementById("message").value;
-      const statusBox = document.getElementById("status");
+  const name = document.getElementById("name").value;
+  const company = document.getElementById("company").value;
+  const email = document.getElementById("email").value;
+  const phone = document.getElementById("phone").value;
+  const message = document.getElementById("message").value;
+  const statusBox = document.getElementById("status");
 
-      statusBox.innerText = "Sending...";
+  statusBox.innerText = "Sending...";
 
-      const { error: saveError } = await supabaseClient
-        .from("contact_requests")
-        .insert([{ name, company, email, phone, message }]);
+  const { error: saveError } = await supabaseClient
+    .from("contact_requests")
+    .insert([{ name, company, email, phone, message }]);
 
-      if (saveError) {
-        statusBox.innerText = "Error saving message";
-        return;
+  if (saveError) {
+    statusBox.innerText = "Error saving message";
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      "https://feqrsypiugwwdweiwvua.supabase.co/functions/v1/rapid-task",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name,
+          company,
+          email,
+          phone,
+          message
+        })
       }
+    );
+
+    const resultText = await response.text();
+    console.log("Contact email response:", response.status, resultText);
+
+    if (!response.ok) {
+      statusBox.innerText = "Saved, but email failed";
+      return;
+    }
+
+    statusBox.innerText = "Message sent. We'll be in touch.";
+
+    document.getElementById("name").value = "";
+    document.getElementById("company").value = "";
+    document.getElementById
 
       try {
         const response = await fetch(
