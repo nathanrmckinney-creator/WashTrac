@@ -1025,6 +1025,21 @@ if (saveError) {
         .on("postgres_changes", { event: "*", schema: "public", table: "bay_status" }, () => loadLiveSystemState())
         .subscribe();
     });
+    async function generatePairCode() {
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const { error } = await supabaseClient
+        .from("pair_codes")
+        .insert([{ code: code }]);
+
+    if (error) {
+        alert("Error creating pairing code");
+        console.error(error);
+        return;
+    }
+
+    alert("Device Pairing Code: " + code);
+    }
   </script>
 </body>
 </html>
