@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CarWash Control System Monitor</title>
+  <title>WashTrac Monitor</title>
   <style>
     * {
       box-sizing: border-box;
@@ -13,278 +13,361 @@
     }
 
     :root {
-      --bg1: #06101c;
-      --bg2: #10233b;
-      --card: rgba(10, 20, 35, 0.84);
-      --card-border: rgba(255, 255, 255, 0.08);
-      --text: #f3f7fb;
-      --muted: #9fb0c5;
-      --blue: #29a8ff;
-      --green: #20d38a;
+      --bg1: #050c18;
+      --bg2: #0d1f39;
+      --panel: rgba(6, 16, 31, 0.92);
+      --panel-2: rgba(9, 20, 38, 0.92);
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #eef4ff;
+      --muted: #97a8c2;
+      --blue: #1f7cff;
+      --blue-2: #2da9ff;
+      --green: #22d68a;
       --amber: #ffb648;
-      --red: #ff4f5e;
-      --shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+      --red: #ff5f6d;
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.38);
     }
 
     body {
       min-height: 100vh;
       color: var(--text);
       background:
-        radial-gradient(circle at top left, rgba(41,168,255,0.16), transparent 25%),
-        radial-gradient(circle at top right, rgba(32,211,138,0.10), transparent 20%),
+        radial-gradient(circle at top left, rgba(45, 169, 255, 0.16), transparent 24%),
+        radial-gradient(circle at top right, rgba(34, 214, 138, 0.08), transparent 20%),
         linear-gradient(145deg, var(--bg1), var(--bg2));
       overflow-x: hidden;
     }
 
-    .bg-overlay {
+    .bg-grid {
       position: fixed;
       inset: 0;
       pointer-events: none;
       background:
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-      background-size: 44px 44px;
-      opacity: 0.22;
+        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+      background-size: 42px 42px;
+      opacity: 0.3;
+    }
+
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      padding: 18px 28px;
+      background: rgba(7, 14, 28, 0.95);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: #ffffff;
+      text-decoration: none;
+    }
+
+    .logo span {
+      color: var(--blue-2);
+    }
+
+    .menu-wrap {
+      position: relative;
+    }
+
+    .menu-btn {
+      background: #2358cf;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 18px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(35, 88, 207, 0.28);
+    }
+
+    .menu-btn:hover {
+      filter: brightness(1.06);
+    }
+
+    .menu-dropdown {
+      position: absolute;
+      top: calc(100% + 12px);
+      right: 0;
+      width: 290px;
+      background: rgba(13, 24, 48, 0.98);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.45);
+      padding: 16px;
+      display: none;
+    }
+
+    .menu-dropdown.open {
+      display: block;
+    }
+
+    .menu-dropdown a {
+      display: block;
+      text-decoration: none;
+      color: #dfe8f8;
+      padding: 14px 12px;
+      border-radius: 12px;
+      font-size: 17px;
+      transition: background 0.15s ease;
+    }
+
+    .menu-dropdown a:hover {
+      background: rgba(255,255,255,0.06);
+    }
+
+    .menu-dropdown a.logout {
+      color: #ff8d98;
     }
 
     .page {
-      max-width: 1500px;
+      max-width: 1480px;
       margin: 0 auto;
       padding: 24px;
       position: relative;
       z-index: 1;
     }
 
-    .topbar {
+    .hero {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: stretch;
       gap: 18px;
-      padding: 20px 24px;
-      background: rgba(7, 14, 25, 0.78);
-      border: 1px solid var(--card-border);
-      border-radius: 22px;
-      backdrop-filter: blur(10px);
-      box-shadow: var(--shadow);
       margin-bottom: 22px;
     }
 
-    .brand h1 {
-      font-size: 2rem;
-      font-weight: 800;
-      margin-bottom: 6px;
+    .hero-main,
+    .hero-status {
+      background: linear-gradient(180deg, rgba(4,18,37,0.94), rgba(2,10,22,0.94));
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
     }
 
-    .brand p {
-      color: var(--muted);
-      font-size: 0.96rem;
-    }
-
-    .status-pills {
+    .hero-main {
+      flex: 1;
+      padding: 34px 38px;
+      min-height: 190px;
       display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .hero-main h1 {
+      font-size: 4rem;
+      line-height: 0.95;
+      margin-bottom: 14px;
+      font-weight: 800;
+    }
+
+    .hero-main p {
+      font-size: 1.35rem;
+      line-height: 1.35;
+      color: var(--muted);
+      max-width: 760px;
+    }
+
+    .hero-status {
+      width: 265px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 14px;
     }
 
     .pill {
-      padding: 10px 14px;
+      width: 100%;
+      text-align: center;
+      padding: 18px 16px;
       border-radius: 999px;
-      font-size: 0.9rem;
+      font-size: 1rem;
       font-weight: 800;
       border: 1px solid rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.05);
-      color: var(--text);
     }
 
     .pill.live {
       background: var(--green);
-      color: #082017;
+      color: #092116;
       border-color: transparent;
     }
 
     .pill.alert {
-      background: rgba(255,79,94,0.16);
-      color: #ffd7dc;
-      border-color: rgba(255,79,94,0.4);
+      background: rgba(255,95,109,0.16);
+      color: #ffdbe0;
+      border-color: rgba(255,95,109,0.34);
     }
 
-    .hero-alert {
+    .alert-banner {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 18px;
-      padding: 18px 20px;
-      background: linear-gradient(90deg, rgba(255,79,94,0.18), rgba(255,79,94,0.08));
-      border: 1px solid rgba(255,79,94,0.32);
-      border-radius: 18px;
+      gap: 20px;
+      padding: 26px 30px;
+      margin-bottom: 24px;
+      background: linear-gradient(90deg, rgba(255,95,109,0.12), rgba(255,182,72,0.05));
+      border: 1px solid rgba(255,95,109,0.26);
+      border-radius: 24px;
       box-shadow: var(--shadow);
-      margin-bottom: 22px;
     }
 
-    .hero-alert strong {
-      display: block;
-      font-size: 1.05rem;
-      margin-bottom: 4px;
-      color: #ffe6e9;
+    .alert-copy h2 {
+      font-size: 1.6rem;
+      margin-bottom: 10px;
     }
 
-    .hero-alert span {
-      color: #ffd0d6;
-      font-size: 0.94rem;
+    .alert-copy p {
+      color: #f0ccd1;
+      font-size: 1.18rem;
+      line-height: 1.45;
+      max-width: 860px;
     }
 
-    .hero-alert button {
+    .ack-btn {
       border: none;
-      border-radius: 12px;
-      padding: 12px 16px;
-      font-weight: 800;
-      cursor: pointer;
-      background: white;
+      border-radius: 18px;
+      background: #f2f2f2;
       color: #111;
+      font-size: 1rem;
+      font-weight: 800;
+      padding: 18px 24px;
+      min-width: 180px;
+      cursor: pointer;
     }
 
     .main-grid {
       display: grid;
       grid-template-columns: 2fr 0.95fr;
-      gap: 22px;
+      gap: 24px;
       align-items: start;
     }
 
-    .left-panel,
-    .right-panel {
+    .left-col,
+    .right-col {
       display: flex;
       flex-direction: column;
-      gap: 22px;
+      gap: 24px;
     }
 
     .cards-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 18px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
     }
 
     .card {
-      background: var(--card);
-      border: 1px solid var(--card-border);
-      border-radius: 22px;
-      padding: 20px;
+      background: rgba(4, 15, 31, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 26px;
+      padding: 26px;
       box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
     }
 
-    .metric-card h3 {
-      color: var(--muted);
-      font-size: 0.88rem;
-      font-weight: 700;
-      margin-bottom: 12px;
+    .metric-label {
+      color: #a8b8cf;
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: 1.8px;
+      margin-bottom: 22px;
       text-transform: uppercase;
-      letter-spacing: 1px;
     }
 
-    .metric {
-      font-size: 2.15rem;
+    .metric-value {
+      font-size: 4.2rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 18px;
+    }
+
+    .metric-blue { color: var(--blue-2); }
+    .metric-green { color: var(--green); }
+    .metric-amber { color: var(--amber); }
+    .metric-red { color: var(--red); }
+
+    .metric-sub {
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.4;
+    }
+
+    .section-title {
+      font-size: 1.35rem;
       font-weight: 800;
       margin-bottom: 10px;
     }
 
-    .submetric {
+    .section-subtitle {
       color: var(--muted);
-      font-size: 0.9rem;
+      font-size: 0.97rem;
+      line-height: 1.45;
+      margin-bottom: 18px;
     }
 
-    .metric.active { color: var(--green); }
-    .metric.warning { color: var(--amber); }
-    .metric.danger { color: var(--red); }
-    .metric.blue { color: var(--blue); }
-
-    .monitor-section {
+    .monitor-grid {
       display: grid;
       grid-template-columns: 1.45fr 1fr;
-      gap: 18px;
+      gap: 24px;
     }
 
-    .section-title {
-      font-size: 1.12rem;
-      font-weight: 800;
-      margin-bottom: 12px;
-    }
-
-    .section-subtitle {
-      font-size: 0.92rem;
-      color: var(--muted);
-      margin-bottom: 16px;
-    }
-
-    .graph-wrap {
-      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    .graph-shell {
+      background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.01));
       border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 18px;
-      padding: 16px;
-      min-height: 330px;
+      border-radius: 20px;
+      padding: 18px;
     }
 
     .graph-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
+      gap: 16px;
+      margin-bottom: 16px;
     }
 
-    .graph-header .label {
-      font-size: 0.96rem;
-      font-weight: 800;
+    .graph-header strong {
+      font-size: 1rem;
     }
 
-    .graph-header .small {
-      font-size: 0.86rem;
+    .graph-header span {
       color: var(--muted);
+      font-size: 0.9rem;
     }
 
     canvas {
       width: 100%;
-      height: 270px;
+      height: 280px;
       display: block;
     }
 
-    .keypad-card {
-      padding: 18px 16px 16px;
-    }
-
-    .keypad-header {
-      margin-bottom: 14px;
-    }
-
-    .keypad-header h3 {
-      font-size: 1.08rem;
-      font-weight: 800;
-      margin-bottom: 6px;
-    }
-
-    .keypad-header p {
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-
-    .code-display {
+    .keypad-display {
       width: 100%;
-      margin-bottom: 12px;
-      padding: 14px 12px;
-      border-radius: 14px;
+      padding: 15px 12px;
+      margin-bottom: 14px;
+      border-radius: 16px;
       border: 1px solid rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.05);
-      color: white;
-      font-size: 1.2rem;
-      letter-spacing: 5px;
+      color: #fff;
+      font-size: 1.25rem;
+      letter-spacing: 6px;
       text-align: center;
       outline: none;
     }
 
     .keypad {
       width: 100%;
-      max-width: 255px;
-      margin: 0 auto 10px;
+      max-width: 250px;
+      margin: 0 auto;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 10px;
@@ -294,45 +377,43 @@
       height: 58px;
       border: none;
       border-radius: 14px;
+      background: rgba(255,255,255,0.08);
+      color: #fff;
       font-size: 1.1rem;
       font-weight: 800;
       cursor: pointer;
-      color: white;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.06);
-      transition: transform 0.15s ease, background 0.15s ease;
+      border: 1px solid rgba(255,255,255,0.05);
     }
 
     .keypad button:hover {
-      transform: translateY(-1px);
       background: rgba(255,255,255,0.12);
-    }
-
-    .keypad .enter {
-      background: rgba(32,211,138,0.18);
-      border-color: rgba(32,211,138,0.35);
-      color: #ddfff1;
     }
 
     .keypad .clear {
       background: rgba(255,182,72,0.18);
-      border-color: rgba(255,182,72,0.35);
-      color: #ffe9c2;
+      color: #ffe9c1;
+      border-color: rgba(255,182,72,0.24);
+    }
+
+    .keypad .enter {
+      background: rgba(34,214,138,0.18);
+      color: #dcfff0;
+      border-color: rgba(34,214,138,0.24);
     }
 
     .estop-text {
       text-align: center;
-      margin-top: 12px;
-      color: #ff6a76;
-      font-weight: 800;
+      margin-top: 14px;
+      color: var(--red);
       font-size: 1rem;
+      font-weight: 800;
       letter-spacing: 0.4px;
     }
 
     .control-grid {
       display: grid;
-      grid-template-columns: 1.2fr 1fr;
-      gap: 18px;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 22px;
     }
 
     .control-list {
@@ -345,59 +426,59 @@
       justify-content: space-between;
       align-items: center;
       gap: 14px;
+      padding: 16px 18px;
+      border-radius: 18px;
       background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 16px;
-      padding: 14px 16px;
+      border: 1px solid rgba(255,255,255,0.05);
     }
 
-    .control-item .left h4 {
+    .control-item h4 {
       font-size: 1rem;
       margin-bottom: 4px;
     }
 
-    .control-item .left p {
+    .control-item p {
       color: var(--muted);
-      font-size: 0.88rem;
+      font-size: 0.9rem;
       line-height: 1.4;
     }
 
     .toggle {
       min-width: 92px;
-      text-align: center;
       padding: 11px 12px;
       border-radius: 999px;
-      font-weight: 800;
       border: none;
+      font-size: 0.95rem;
+      font-weight: 800;
       cursor: pointer;
     }
 
     .toggle.on {
-      background: rgba(32,211,138,0.18);
-      color: #d9ffef;
-      border: 1px solid rgba(32,211,138,0.35);
+      background: rgba(34,214,138,0.18);
+      color: #dcfff0;
+      border: 1px solid rgba(34,214,138,0.24);
     }
 
     .toggle.off {
-      background: rgba(255,79,94,0.18);
-      color: #ffe4e7;
-      border: 1px solid rgba(255,79,94,0.35);
+      background: rgba(255,95,109,0.18);
+      color: #ffe0e5;
+      border: 1px solid rgba(255,95,109,0.24);
     }
 
     .schedule-box {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 18px;
       padding: 18px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.05);
       display: flex;
       flex-direction: column;
       gap: 14px;
     }
 
     .schedule-box label {
+      display: block;
       font-size: 0.88rem;
       color: var(--muted);
-      display: block;
       margin-bottom: 6px;
     }
 
@@ -413,44 +494,39 @@
     }
 
     .schedule-box select option {
-      color: black;
+      color: #111;
     }
 
     .action-row {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
-      margin-top: 2px;
+      margin-top: 4px;
     }
 
     .btn {
       border: none;
-      cursor: pointer;
-      padding: 13px 16px;
       border-radius: 14px;
+      padding: 13px 16px;
+      font-size: 0.95rem;
       font-weight: 800;
-      transition: transform 0.15s ease, opacity 0.15s ease;
-    }
-
-    .btn:hover {
-      transform: translateY(-1px);
-      opacity: 0.96;
+      cursor: pointer;
     }
 
     .btn-primary {
-      background: linear-gradient(90deg, var(--blue), #63c4ff);
-      color: #03131f;
+      background: linear-gradient(90deg, var(--blue), #58b9ff);
+      color: #071424;
     }
 
     .btn-danger {
-      background: linear-gradient(90deg, #ff5b67, #ff8390);
+      background: linear-gradient(90deg, #ff6270, #ff8d98);
       color: white;
     }
 
     .btn-dark {
       background: rgba(255,255,255,0.08);
       color: white;
-      border: 1px solid rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.07);
     }
 
     .log-list {
@@ -470,146 +546,199 @@
       font-size: 0.92rem;
     }
 
-    .log-item span:first-child {
-      color: var(--text);
-    }
-
     .log-item span:last-child {
       color: var(--muted);
       white-space: nowrap;
     }
 
+    .note {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
     .footer-note {
-      margin-top: 22px;
+      margin-top: 24px;
+      text-align: center;
       color: var(--muted);
       font-size: 0.9rem;
-      text-align: center;
     }
 
-    @media (max-width: 1200px) {
-      .cards-grid {
-        grid-template-columns: repeat(2, 1fr);
+    @media (max-width: 1250px) {
+      .main-grid,
+      .monitor-grid,
+      .control-grid,
+      .hero {
+        grid-template-columns: 1fr;
+        display: grid;
       }
 
-      .monitor-section,
-      .control-grid,
-      .main-grid {
+      .hero-status {
+        width: 100%;
+        grid-template-columns: repeat(3, 1fr);
+        display: grid;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .cards-grid {
         grid-template-columns: 1fr;
       }
-    }
 
-    @media (max-width: 720px) {
-      .page {
-        padding: 16px;
+      .hero-main h1 {
+        font-size: 2.9rem;
       }
 
-      .topbar,
-      .hero-alert {
+      .hero-main p,
+      .alert-copy p {
+        font-size: 1rem;
+      }
+
+      .alert-banner {
         flex-direction: column;
         align-items: flex-start;
       }
 
-      .cards-grid {
-        grid-template-columns: 1fr;
+      .ack-btn {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        padding: 16px;
       }
 
-      .brand h1 {
-        font-size: 1.55rem;
+      .top-nav {
+        padding: 16px;
+      }
+
+      .hero-main {
+        padding: 24px;
+      }
+
+      .hero-main h1 {
+        font-size: 2.35rem;
+      }
+
+      .hero-status {
+        display: flex;
+      }
+
+      .menu-dropdown {
+        width: 250px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="bg-overlay"></div>
+  <div class="bg-grid"></div>
+
+  <header class="top-nav">
+    <a class="logo" href="/index.html">WASH<span>TRAC</span></a>
+
+    <div class="menu-wrap">
+      <button class="menu-btn" id="menuBtn" type="button">Menu</button>
+
+      <div class="menu-dropdown" id="menuDropdown">
+        <a href="/dashboard.html">Dashboard</a>
+        <a href="/codes.html">Codes</a>
+        <a href="/activity.html">Activity</a>
+        <a href="/reports.html">Reports</a>
+        <a href="/monitor.html">Monitor</a>
+        <a href="/index.html">Back to Homepage</a>
+        <a href="#" class="logout">Logout</a>
+      </div>
+    </div>
+  </header>
 
   <div class="page">
-    <header class="topbar">
-      <div class="brand">
+    <section class="hero">
+      <div class="hero-main">
         <h1>CarWash Control System</h1>
-        <p>Live monitor display with remote wash control, E-STOP status, and schedule lockout.</p>
+        <p>Live monitor display with remote wash control, E-STOP status, schedule lockout, and relay-ready shutdown control.</p>
       </div>
 
-      <div class="status-pills">
+      <div class="hero-status">
         <div class="pill live" id="systemPill">SYSTEM ONLINE</div>
         <div class="pill" id="modePill">MODE: MONITOR</div>
         <div class="pill alert" id="estopPill">E-STOP ALERT</div>
       </div>
-    </header>
+    </section>
 
-    <div class="hero-alert">
-      <div>
-        <strong>Emergency Stop Detected</strong>
-        <span>Immediate action may be required. Remote wash control can place the system into protected shutdown when the site is closed.</span>
+    <section class="alert-banner">
+      <div class="alert-copy">
+        <h2>Emergency Stop Detected</h2>
+        <p>Immediate action may be required. Remote wash control can place the system into protected shutdown when the site is closed.</p>
       </div>
-      <button id="ackBtn">Acknowledge Alert</button>
-    </div>
+      <button class="ack-btn" id="ackBtn" type="button">Acknowledge Alert</button>
+    </section>
 
     <div class="main-grid">
-      <div class="left-panel">
+      <div class="left-col">
         <section class="cards-grid">
-          <div class="card metric-card">
-            <h3>Washes Today</h3>
-            <div class="metric blue" id="washesToday">47</div>
-            <div class="submetric">+8 since last check</div>
+          <div class="card">
+            <div class="metric-label">Washes Today</div>
+            <div class="metric-value metric-blue" id="washesToday">47</div>
+            <div class="metric-sub">+8 since last check</div>
           </div>
 
-          <div class="card metric-card">
-            <h3>Wash Status</h3>
-            <div class="metric active" id="washStatus">READY</div>
-            <div class="submetric">System waiting for next cycle</div>
+          <div class="card">
+            <div class="metric-label">Wash Status</div>
+            <div class="metric-value metric-green" id="washStatus">READY</div>
+            <div class="metric-sub">System waiting for next cycle</div>
           </div>
 
-          <div class="card metric-card">
-            <h3>Revenue</h3>
-            <div class="metric" id="revenueToday">$564</div>
-            <div class="submetric">Estimated today</div>
+          <div class="card">
+            <div class="metric-label">Revenue</div>
+            <div class="metric-value" id="revenueToday">$564</div>
+            <div class="metric-sub">Estimated today</div>
           </div>
 
-          <div class="card metric-card">
-            <h3>Control State</h3>
-            <div class="metric warning" id="controlState">LOCKOUT</div>
-            <div class="submetric">Schedule-based protection active</div>
+          <div class="card">
+            <div class="metric-label">Control State</div>
+            <div class="metric-value metric-amber" id="controlState">LOCKOUT</div>
+            <div class="metric-sub">Schedule-based protection active</div>
           </div>
         </section>
 
-        <section class="monitor-section">
+        <section class="monitor-grid">
           <div class="card">
             <div class="section-title">Usage Monitor</div>
             <div class="section-subtitle">Recent wash activity graph.</div>
 
-            <div class="graph-wrap">
+            <div class="graph-shell">
               <div class="graph-header">
                 <div>
-                  <div class="label">Wash Activity</div>
-                  <div class="small">Last 8 hours</div>
+                  <strong>Wash Activity</strong><br />
+                  <span>Last 8 hours</span>
                 </div>
-                <div class="small" id="graphPeak">Peak: 12 washes/hr</div>
+                <span id="graphPeak">Peak: 12 washes/hr</span>
               </div>
+
               <canvas id="usageChart" width="900" height="280"></canvas>
             </div>
           </div>
 
-          <div class="card keypad-card">
-            <div class="keypad-header">
-              <h3>Enter Access Code</h3>
-              <p>Local operator access for monitor and control actions.</p>
-            </div>
+          <div class="card">
+            <div class="section-title">Enter Access Code</div>
+            <div class="section-subtitle">Local operator access for monitor and control actions.</div>
 
-            <input id="codeDisplay" class="code-display" type="password" value="" readonly placeholder="••••" />
+            <input class="keypad-display" id="codeDisplay" type="password" placeholder="••••" readonly />
 
             <div class="keypad">
-              <button onclick="pressKey('1')">1</button>
-              <button onclick="pressKey('2')">2</button>
-              <button onclick="pressKey('3')">3</button>
-              <button onclick="pressKey('4')">4</button>
-              <button onclick="pressKey('5')">5</button>
-              <button onclick="pressKey('6')">6</button>
-              <button onclick="pressKey('7')">7</button>
-              <button onclick="pressKey('8')">8</button>
-              <button onclick="pressKey('9')">9</button>
-              <button class="clear" onclick="clearCode()">CLR</button>
-              <button onclick="pressKey('0')">0</button>
-              <button class="enter" onclick="submitCode()">ENT</button>
+              <button type="button" onclick="pressKey('1')">1</button>
+              <button type="button" onclick="pressKey('2')">2</button>
+              <button type="button" onclick="pressKey('3')">3</button>
+              <button type="button" onclick="pressKey('4')">4</button>
+              <button type="button" onclick="pressKey('5')">5</button>
+              <button type="button" onclick="pressKey('6')">6</button>
+              <button type="button" onclick="pressKey('7')">7</button>
+              <button type="button" onclick="pressKey('8')">8</button>
+              <button type="button" onclick="pressKey('9')">9</button>
+              <button class="clear" type="button" onclick="clearCode()">CLR</button>
+              <button type="button" onclick="pressKey('0')">0</button>
+              <button class="enter" type="button" onclick="submitCode()">ENT</button>
             </div>
 
             <div class="estop-text" id="estopText">Emergency Stop Activated</div>
@@ -625,47 +754,47 @@
           <div class="control-grid">
             <div class="control-list">
               <div class="control-item">
-                <div class="left">
+                <div>
                   <h4>Remote Shutdown</h4>
                   <p>Disable wash enable command remotely when the business is closed.</p>
                 </div>
-                <button class="toggle off" id="shutdownToggle">OFF</button>
+                <button class="toggle off" id="shutdownToggle" type="button">OFF</button>
               </div>
 
               <div class="control-item">
-                <div class="left">
+                <div>
                   <h4>E-STOP Monitoring</h4>
                   <p>Track emergency stop condition and display alert status on the monitor.</p>
                 </div>
-                <button class="toggle on" id="estopToggle">ON</button>
+                <button class="toggle on" id="estopToggle" type="button">ON</button>
               </div>
 
               <div class="control-item">
-                <div class="left">
+                <div>
                   <h4>Remote Access Session</h4>
                   <p>Allow authenticated remote monitor access for diagnostics and shutdown control.</p>
                 </div>
-                <button class="toggle on" id="remoteToggle">ON</button>
+                <button class="toggle on" id="remoteToggle" type="button">ON</button>
               </div>
 
               <div class="control-item">
-                <div class="left">
+                <div>
                   <h4>Schedule Lockout</h4>
                   <p>Automatically protect the wash during selected closed hours.</p>
                 </div>
-                <button class="toggle on" id="scheduleToggle">ON</button>
+                <button class="toggle on" id="scheduleToggle" type="button">ON</button>
               </div>
             </div>
 
             <div class="schedule-box">
               <div>
                 <label for="startTime">Lockout Start</label>
-                <input type="time" id="startTime" value="21:00" />
+                <input id="startTime" type="time" value="21:00" />
               </div>
 
               <div>
                 <label for="endTime">Lockout End</label>
-                <input type="time" id="endTime" value="06:00" />
+                <input id="endTime" type="time" value="06:00" />
               </div>
 
               <div>
@@ -679,14 +808,14 @@
               </div>
 
               <div class="action-row">
-                <button class="btn btn-primary" id="saveScheduleBtn">Save Schedule</button>
-                <button class="btn btn-danger" id="shutdownNowBtn">Shutdown Now</button>
-                <button class="btn btn-dark" id="resumeBtn">Resume Wash</button>
+                <button class="btn btn-primary" id="saveScheduleBtn" type="button">Save Schedule</button>
+                <button class="btn btn-danger" id="shutdownNowBtn" type="button">Shutdown Now</button>
+                <button class="btn btn-dark" id="resumeBtn" type="button">Resume Wash</button>
               </div>
             </div>
           </div>
 
-          <div class="section-title" style="font-size:1rem; margin-top:20px; margin-bottom:0;">Recent Monitor Events</div>
+          <div class="section-title" style="font-size:1rem; margin-top:22px; margin-bottom:0;">Recent Monitor Events</div>
           <div class="log-list" id="logList">
             <div class="log-item"><span>E-STOP input changed to ACTIVE</span><span>09:02 PM</span></div>
             <div class="log-item"><span>Schedule lockout enabled</span><span>08:55 PM</span></div>
@@ -696,55 +825,60 @@
         </section>
       </div>
 
-      <div class="right-panel">
+      <div class="right-col">
         <section class="card">
           <div class="section-title">System Snapshot</div>
           <div class="section-subtitle">Current site operating conditions.</div>
 
           <div class="control-list">
             <div class="control-item">
-              <div class="left">
+              <div>
                 <h4>Site Status</h4>
                 <p id="siteStatusText">Closed Hours Protection</p>
               </div>
-              <button class="toggle off" id="siteStatusBtn">LOCKED</button>
+              <button class="toggle off" id="siteStatusBtn" type="button">LOCKED</button>
             </div>
 
             <div class="control-item">
-              <div class="left">
+              <div>
                 <h4>Relay State</h4>
                 <p id="relayStateText">Wash enable relay held open</p>
               </div>
-              <button class="toggle off" id="relayStateBtn">OPEN</button>
+              <button class="toggle off" id="relayStateBtn" type="button">OPEN</button>
             </div>
 
             <div class="control-item">
-              <div class="left">
+              <div>
                 <h4>Monitor Link</h4>
                 <p>Remote dashboard connected</p>
               </div>
-              <button class="toggle on">LIVE</button>
+              <button class="toggle on" type="button">LIVE</button>
             </div>
 
             <div class="control-item">
-              <div class="left">
+              <div>
                 <h4>Network</h4>
                 <p>Cellular / local uplink healthy</p>
               </div>
-              <button class="toggle on">GOOD</button>
+              <button class="toggle on" type="button">GOOD</button>
             </div>
           </div>
         </section>
 
         <section class="card">
           <div class="section-title">Test Actions</div>
-          <div class="section-subtitle">
-            These buttons only update the monitor UI for now.
-          </div>
+          <div class="section-subtitle">These buttons only update the monitor UI for now.</div>
 
           <div class="action-row">
-            <button class="btn btn-dark" id="simulateWashBtn">Simulate Wash</button>
-            <button class="btn btn-dark" id="simulateEstopBtn">Toggle E-STOP</button>
+            <button class="btn btn-dark" id="simulateWashBtn" type="button">Simulate Wash</button>
+            <button class="btn btn-dark" id="simulateEstopBtn" type="button">Toggle E-STOP</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-title">Monitor Notes</div>
+          <div class="note">
+            This version includes the same top menu style as the other WashTrac screens so you can always navigate back out of the monitor page.
           </div>
         </section>
       </div>
@@ -756,6 +890,20 @@
   </div>
 
   <script>
+    const menuBtn = document.getElementById("menuBtn");
+    const menuDropdown = document.getElementById("menuDropdown");
+
+    menuBtn.addEventListener("click", () => {
+      menuDropdown.classList.toggle("open");
+    });
+
+    document.addEventListener("click", (event) => {
+      const insideMenu = event.target.closest(".menu-wrap");
+      if (!insideMenu) {
+        menuDropdown.classList.remove("open");
+      }
+    });
+
     const state = {
       code: "",
       remoteShutdown: false,
@@ -791,18 +939,18 @@
 
       const washStatus = document.getElementById("washStatus");
       washStatus.textContent = state.washReady ? "READY" : "DISABLED";
-      washStatus.className = "metric " + (state.washReady ? "active" : "danger");
+      washStatus.className = "metric-value " + (state.washReady ? "metric-green" : "metric-red");
 
       const controlState = document.getElementById("controlState");
       if (state.remoteShutdown) {
         controlState.textContent = "SHUTDOWN";
-        controlState.className = "metric danger";
+        controlState.className = "metric-value metric-red";
       } else if (state.scheduleEnabled) {
         controlState.textContent = "LOCKOUT";
-        controlState.className = "metric warning";
+        controlState.className = "metric-value metric-amber";
       } else {
         controlState.textContent = "ACTIVE";
-        controlState.className = "metric active";
+        controlState.className = "metric-value metric-green";
       }
 
       const estopText = document.getElementById("estopText");
@@ -810,12 +958,12 @@
 
       if (state.estopActive) {
         estopText.textContent = "Emergency Stop Activated";
-        estopText.style.color = "#ff6a76";
+        estopText.style.color = "#ff5f6d";
         estopPill.textContent = "E-STOP ALERT";
         estopPill.className = "pill alert";
       } else {
         estopText.textContent = "Emergency Stop Clear";
-        estopText.style.color = "#20d38a";
+        estopText.style.color = "#22d68a";
         estopPill.textContent = "E-STOP CLEAR";
         estopPill.className = "pill";
       }
@@ -894,31 +1042,31 @@
       }
 
       ctx.beginPath();
-      ctx.strokeStyle = "#29a8ff";
+      ctx.strokeStyle = "#2da9ff";
       ctx.lineWidth = 3;
 
-      usageData.forEach((val, i) => {
-        const x = padding + (chartW / (usageData.length - 1)) * i;
-        const y = padding + chartH - (val / maxVal) * chartH;
-        if (i === 0) ctx.moveTo(x, y);
+      usageData.forEach((value, index) => {
+        const x = padding + (chartW / (usageData.length - 1)) * index;
+        const y = padding + chartH - (value / maxVal) * chartH;
+        if (index === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       });
 
       ctx.stroke();
 
-      usageData.forEach((val, i) => {
-        const x = padding + (chartW / (usageData.length - 1)) * i;
-        const y = padding + chartH - (val / maxVal) * chartH;
+      usageData.forEach((value, index) => {
+        const x = padding + (chartW / (usageData.length - 1)) * index;
+        const y = padding + chartH - (value / maxVal) * chartH;
 
         ctx.beginPath();
-        ctx.fillStyle = "#20d38a";
+        ctx.fillStyle = "#22d68a";
         ctx.arc(x, y, 5, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.fillStyle = "rgba(243,247,251,0.72)";
+        ctx.fillStyle = "rgba(238,244,255,0.72)";
         ctx.font = "12px Arial";
         ctx.textAlign = "center";
-        ctx.fillText(usageLabels[i], x, h - 10);
+        ctx.fillText(usageLabels[index], x, h - 10);
       });
 
       document.getElementById("graphPeak").textContent = `Peak: ${Math.max(...usageData)} washes/hr`;
