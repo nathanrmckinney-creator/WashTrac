@@ -9,53 +9,311 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-*{box-sizing:border-box;}
-body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:white;overflow-x:hidden;}
-.app{display:flex;min-height:100vh;}
-.sidebar{width:220px;background:#0f172a;padding:20px;flex-shrink:0;border-right:1px solid #1e293b;}
-.logo{font-size:22px;font-weight:bold;margin-bottom:32px;}
-.nav a,.sidebar-bottom a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
-.nav a:hover,.sidebar-bottom a:hover{color:white;}
-.sidebar-bottom{margin-top:40px;padding-top:20px;border-top:1px solid #1e293b;}
-.sidebar-bottom a.logout-link{color:#f87171;}
-.main{flex:1;padding:30px;}
-.mobile-topbar{display:none;align-items:center;justify-content:space-between;padding:16px 20px;background:#0f172a;border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:1000;}
-.mobile-logo{font-size:22px;font-weight:bold;}
-.menu-btn{background:#2563eb;border:none;color:white;padding:10px 14px;border-radius:8px;cursor:pointer;}
-.mobile-menu{display:none;position:absolute;top:64px;right:16px;width:240px;background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:12px 16px;box-shadow:0 12px 30px rgba(0,0,0,.45);z-index:1100;}
-.mobile-menu a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
-.mobile-menu a:hover{color:white;}
-.mobile-menu a.logout-link{color:#f87171;}
-.backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1050;}
-.page-header{margin-bottom:24px;}
-.page-header h1{margin:0 0 10px 0;font-size:42px;}
-.page-header p{margin:0;color:#94a3b8;line-height:1.5;}
-.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;}
-.summary-box{background:#111827;padding:18px;border-radius:10px;}
-.summary-box strong{display:block;font-size:30px;margin-bottom:6px;}
-.summary-box span{color:#94a3b8;font-size:14px;}
-.grid-2{display:grid;grid-template-columns:1.2fr .8fr;gap:20px;margin-bottom:20px;}
-.card{background:#111827;padding:20px;border-radius:10px;margin-bottom:20px;}
-.card h3{margin-top:0;margin-bottom:16px;}
-.list-row{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #1f2937;color:#dbe5fb;}
-.list-row:last-child{border-bottom:none;}
-.activity-row{display:grid;grid-template-columns:160px 1fr 100px;gap:12px;padding:12px 0;border-bottom:1px solid #1f2937;color:#dbe5fb;}
-.activity-row:last-child{border-bottom:none;}
-.chart-wrap{position:relative;height:320px;}
-.live-pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(34,197,94,.15);color:#86efac;font-size:12px;font-weight:bold;margin-left:10px;}
-.note{margin-top:14px;color:#94a3b8;font-size:14px;line-height:1.5;}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:#020617;
+  color:white;
+  overflow-x:hidden;
+}
+.app{
+  display:flex;
+  min-height:100vh;
+}
+.sidebar{
+  width:220px;
+  background:#0f172a;
+  padding:20px;
+  flex-shrink:0;
+  border-right:1px solid #1e293b;
+}
+.logo{
+  font-size:22px;
+  font-weight:bold;
+  margin-bottom:32px;
+  letter-spacing:2px;
+}
+.logo span{color:#1ea7ff}
+.nav a,.sidebar-bottom a{
+  display:block;
+  color:#cbd5f5;
+  text-decoration:none;
+  padding:10px 0;
+}
+.nav a:hover,.sidebar-bottom a:hover{color:white}
+.sidebar-bottom{
+  margin-top:40px;
+  padding-top:20px;
+  border-top:1px solid #1e293b;
+}
+.sidebar-bottom a.logout-link{color:#f87171}
+.main{
+  flex:1;
+  padding:30px;
+}
+.mobile-topbar{
+  display:none;
+  align-items:center;
+  justify-content:space-between;
+  padding:16px 20px;
+  background:#0f172a;
+  border-bottom:1px solid #1e293b;
+  position:sticky;
+  top:0;
+  z-index:1000;
+}
+.mobile-logo{
+  font-size:22px;
+  font-weight:bold;
+  letter-spacing:2px;
+}
+.mobile-logo span{color:#1ea7ff}
+.menu-btn{
+  background:#2563eb;
+  border:none;
+  color:white;
+  padding:10px 14px;
+  border-radius:8px;
+  cursor:pointer;
+}
+.mobile-menu{
+  display:none;
+  position:absolute;
+  top:64px;
+  right:16px;
+  width:240px;
+  background:#0f172a;
+  border:1px solid #1e293b;
+  border-radius:12px;
+  padding:12px 16px;
+  box-shadow:0 12px 30px rgba(0,0,0,.45);
+  z-index:1100;
+}
+.mobile-menu a{
+  display:block;
+  color:#cbd5f5;
+  text-decoration:none;
+  padding:10px 0;
+}
+.mobile-menu a:hover{color:white}
+.mobile-menu a.logout-link{color:#f87171}
+.backdrop{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.35);
+  z-index:1050;
+}
+.page-header{
+  margin-bottom:24px;
+}
+.page-header h1{
+  margin:0 0 10px 0;
+  font-size:42px;
+}
+.page-header p{
+  margin:0;
+  color:#94a3b8;
+  line-height:1.5;
+}
+.summary{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:16px;
+  margin-bottom:20px;
+}
+.summary-box{
+  background:#111827;
+  padding:18px;
+  border-radius:10px;
+}
+.summary-box strong{
+  display:block;
+  font-size:30px;
+  margin-bottom:6px;
+}
+.summary-box span{
+  color:#94a3b8;
+  font-size:14px;
+}
+.grid-2{
+  display:grid;
+  grid-template-columns:1.2fr .8fr;
+  gap:20px;
+  margin-bottom:20px;
+}
+.grid-2-even{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+  margin-bottom:20px;
+}
+.card{
+  background:#111827;
+  padding:20px;
+  border-radius:10px;
+  margin-bottom:20px;
+}
+.card h3{
+  margin-top:0;
+  margin-bottom:16px;
+}
+.list-row{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 0;
+  border-bottom:1px solid #1f2937;
+  color:#dbe5fb;
+}
+.list-row:last-child{border-bottom:none}
+.activity-row{
+  display:grid;
+  grid-template-columns:160px 1fr 100px;
+  gap:12px;
+  padding:12px 0;
+  border-bottom:1px solid #1f2937;
+  color:#dbe5fb;
+}
+.activity-row:last-child{border-bottom:none}
+.chart-wrap{
+  position:relative;
+  height:320px;
+}
+.live-pill{
+  display:inline-block;
+  padding:6px 10px;
+  border-radius:999px;
+  background:rgba(34,197,94,.15);
+  color:#86efac;
+  font-size:12px;
+  font-weight:bold;
+  margin-left:10px;
+}
+.note{
+  margin-top:14px;
+  color:#94a3b8;
+  font-size:14px;
+  line-height:1.5;
+}
+.control-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  margin-bottom:16px;
+}
+.control-box{
+  background:#0b1220;
+  border:1px solid #1f2937;
+  border-radius:12px;
+  padding:16px;
+}
+.control-box strong{
+  display:block;
+  font-size:26px;
+  margin-bottom:6px;
+}
+.control-box span{
+  color:#94a3b8;
+  font-size:14px;
+}
+.status-pill{
+  display:inline-block;
+  padding:8px 12px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:bold;
+}
+.status-on{
+  background:rgba(34,197,94,.16);
+  color:#86efac;
+}
+.status-off{
+  background:rgba(239,68,68,.16);
+  color:#fca5a5;
+}
+.status-warn{
+  background:rgba(245,158,11,.16);
+  color:#fcd34d;
+}
+.controls{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-top:14px;
+}
+button{
+  padding:12px 16px;
+  background:#2563eb;
+  color:white;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:bold;
+}
+button.secondary{
+  background:#334155;
+}
+button.danger{
+  background:#dc2626;
+}
+button.success{
+  background:#16a34a;
+}
+.field-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.field{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.field label{
+  font-size:13px;
+  color:#94a3b8;
+}
+input[type="time"]{
+  width:100%;
+  padding:12px;
+  border-radius:8px;
+  border:1px solid #334155;
+  background:#0b1220;
+  color:white;
+  font-size:15px;
+}
+.checkbox-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:14px 0;
+  color:#dbe5fb;
+}
+.status-message{
+  margin-top:14px;
+  padding:12px 14px;
+  border-radius:8px;
+  background:#0b1220;
+  border:1px solid #1f2937;
+  color:#cbd5e1;
+  display:none;
+}
+.status-message.show{display:block}
 @media (max-width:1100px){
-.summary{grid-template-columns:1fr 1fr;}
-.grid-2{grid-template-columns:1fr;}
-.activity-row{grid-template-columns:1fr;}
+  .summary{grid-template-columns:1fr 1fr}
+  .grid-2,.grid-2-even{grid-template-columns:1fr}
+  .activity-row{grid-template-columns:1fr}
 }
 @media (max-width:900px){
-.app{display:block;}
-.sidebar{display:none;}
-.mobile-topbar{display:flex;}
-.main{padding:20px;}
-.page-header h1{font-size:34px;}
-.summary{grid-template-columns:1fr;}
+  .app{display:block}
+  .sidebar{display:none}
+  .mobile-topbar{display:flex}
+  .main{padding:20px}
+  .page-header h1{font-size:34px}
+  .summary{grid-template-columns:1fr}
+  .control-grid,.field-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -67,93 +325,157 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
 </script>
 
 <div class="mobile-topbar">
-<div class="mobile-logo">WashTrac</div>
-<button class="menu-btn" onclick="toggleMenu()">Menu</button>
+  <div class="mobile-logo">WASH<span>TRAC</span></div>
+  <button class="menu-btn" onclick="toggleMenu()">Menu</button>
 </div>
 
 <div class="mobile-menu" id="mobileMenu">
-<a href="dashboard.html" onclick="closeMenu()">Dashboard</a>
-<a href="codes.html" onclick="closeMenu()">Codes</a>
-<a href="activity.html" onclick="closeMenu()">Activity</a>
-<a href="usage.html" onclick="closeMenu()">Reports</a>
-<a href="monitor.html" onclick="closeMenu()">Monitor</a>
-<a href="index.html" onclick="closeMenu()">Back to Homepage</a>
-<a href="#" class="logout-link" onclick="logout()">Logout</a>
+  <a href="dashboard.html" onclick="closeMenu()">Dashboard</a>
+  <a href="codes.html" onclick="closeMenu()">Codes</a>
+  <a href="activity.html" onclick="closeMenu()">Activity</a>
+  <a href="usage.html" onclick="closeMenu()">Reports</a>
+  <a href="monitor.html" onclick="closeMenu()">Monitor</a>
+  <a href="index.html" onclick="closeMenu()">Back to Homepage</a>
+  <a href="#" class="logout-link" onclick="logout()">Logout</a>
 </div>
 
 <div class="backdrop" id="backdrop" onclick="closeMenu()"></div>
 
 <div class="app">
-<div class="sidebar">
-<div class="logo">WashTrac</div>
-<div class="nav">
-<a href="dashboard.html">Dashboard</a>
-<a href="codes.html">Codes</a>
-<a href="activity.html">Activity</a>
-<a href="usage.html">Reports</a>
-<a href="monitor.html">Monitor</a>
-</div>
-<div class="sidebar-bottom">
-<a href="index.html">Back to Homepage</a>
-<a href="#" class="logout-link" onclick="logout()">Logout</a>
-</div>
-</div>
+  <div class="sidebar">
+    <div class="logo">WASH<span>TRAC</span></div>
+    <div class="nav">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="codes.html">Codes</a>
+      <a href="activity.html">Activity</a>
+      <a href="usage.html">Reports</a>
+      <a href="monitor.html">Monitor</a>
+    </div>
+    <div class="sidebar-bottom">
+      <a href="index.html">Back to Homepage</a>
+      <a href="#" class="logout-link" onclick="logout()">Logout</a>
+    </div>
+  </div>
 
-<div class="main">
-<div class="page-header">
-<h1>Dashboard <span class="live-pill">LIVE</span></h1>
-<p>Overview of wash usage, active codes, department activity, and recent events.</p>
-</div>
+  <div class="main">
+    <div class="page-header">
+      <h1>Dashboard <span class="live-pill">LIVE</span></h1>
+      <p>Overview of wash usage, activity, reporting, and remote wash control.</p>
+    </div>
 
-<div class="summary">
-<div class="summary-box"><strong id="todayWashes">0</strong><span>Total Activity Records</span></div>
-<div class="summary-box"><strong id="activeCodes">0</strong><span>Active Codes</span></div>
-<div class="summary-box"><strong id="topCode">-</strong><span>Top Used Code</span></div>
-<div class="summary-box"><strong id="topDepartment">-</strong><span>Top Department</span></div>
-</div>
+    <div class="summary">
+      <div class="summary-box"><strong id="todayWashes">0</strong><span>Total Activity Records</span></div>
+      <div class="summary-box"><strong id="activeCodes">0</strong><span>Active Codes</span></div>
+      <div class="summary-box"><strong id="topCode">-</strong><span>Top Used Code</span></div>
+      <div class="summary-box"><strong id="topDepartment">-</strong><span>Top Department</span></div>
+    </div>
 
-<div class="grid-2">
-<div class="card">
-<h3>Recent Activity</h3>
-<div id="recentActivity"></div>
-<div class="note">This feed updates automatically when new activity is logged.</div>
-</div>
+    <div class="grid-2-even">
+      <div class="card">
+        <h3>Remote Wash Control</h3>
 
-<div class="card">
-<h3>Top Codes</h3>
-<div id="topCodesList"></div>
-</div>
-</div>
+        <div class="control-grid">
+          <div class="control-box">
+            <strong id="washEnabledText">Enabled</strong>
+            <span>Wash Status</span>
+            <div style="margin-top:10px">
+              <span id="washEnabledPill" class="status-pill status-on">Wash Enabled</span>
+            </div>
+          </div>
 
-<div class="grid-2">
-<div class="card">
-<h3>Department Usage Chart</h3>
-<div class="chart-wrap"><canvas id="departmentChart"></canvas></div>
-</div>
+          <div class="control-box">
+            <strong id="estopText">Clear</strong>
+            <span>E-STOP Status</span>
+            <div style="margin-top:10px">
+              <span id="estopPill" class="status-pill status-on">No Active E-STOP</span>
+            </div>
+          </div>
 
-<div class="card">
-<h3>Daily Activity Chart</h3>
-<div class="chart-wrap"><canvas id="dailyChart"></canvas></div>
-</div>
-</div>
+          <div class="control-box">
+            <strong id="lockoutText">Off</strong>
+            <span>Scheduled Lockout</span>
+            <div style="margin-top:10px">
+              <span id="lockoutPill" class="status-pill status-off">No Schedule</span>
+            </div>
+          </div>
 
-<div class="grid-2">
-<div class="card">
-<h3>System Snapshot</h3>
-<div class="list-row"><span>Total Activity Records</span><span id="totalActivityRecords">0</span></div>
-<div class="list-row"><span>Total Departments</span><span id="totalDepartments">0</span></div>
-<div class="list-row"><span>Total Bays Used</span><span id="totalBays">0</span></div>
-<div class="list-row"><span>Last Updated</span><span id="lastUpdated">-</span></div>
-</div>
+          <div class="control-box">
+            <strong id="lockoutWindow">--:-- to --:--</strong>
+            <span>Lockout Window</span>
+          </div>
+        </div>
 
-<div class="card">
-<h3>Quick Links</h3>
-<div class="list-row"><span>Manage codes</span><span><a href="codes.html" style="color:#93c5fd;text-decoration:none;">Open</a></span></div>
-<div class="list-row"><span>View reports</span><span><a href="usage.html" style="color:#93c5fd;text-decoration:none;">Open</a></span></div>
-<div class="list-row"><span>Live monitor</span><span><a href="monitor.html" style="color:#93c5fd;text-decoration:none;">Open</a></span></div>
-</div>
-</div>
-</div>
+        <div class="controls">
+          <button class="success" onclick="setWashEnabled(true)">Enable Wash</button>
+          <button class="danger" onclick="setWashEnabled(false)">Disable Wash</button>
+          <button class="secondary" onclick="setEstop(false)">Clear E-STOP</button>
+          <button class="danger" onclick="setEstop(true)">Simulate E-STOP</button>
+        </div>
+
+        <div style="margin-top:20px">
+          <h3 style="margin-bottom:12px">Schedule After-Hours Lockout</h3>
+
+          <div class="checkbox-row">
+            <input type="checkbox" id="lockoutEnabled">
+            <label for="lockoutEnabled">Enable scheduled lockout</label>
+          </div>
+
+          <div class="field-grid">
+            <div class="field">
+              <label for="lockoutStart">Lockout Start</label>
+              <input type="time" id="lockoutStart">
+            </div>
+            <div class="field">
+              <label for="lockoutEnd">Lockout End</label>
+              <input type="time" id="lockoutEnd">
+            </div>
+          </div>
+
+          <div class="controls">
+            <button onclick="saveSchedule()">Save Schedule</button>
+          </div>
+
+          <div id="controlStatus" class="status-message"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>System Snapshot</h3>
+        <div class="list-row"><span>Total Activity Records</span><span id="totalActivityRecords">0</span></div>
+        <div class="list-row"><span>Total Departments</span><span id="totalDepartments">0</span></div>
+        <div class="list-row"><span>Total Bays Used</span><span id="totalBays">0</span></div>
+        <div class="list-row"><span>Last Updated</span><span id="lastUpdated">-</span></div>
+        <div class="note">
+          Remote Wash Control can be used for after-hours protection, scheduled lockout windows, and E-STOP visibility.
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Recent Activity</h3>
+        <div id="recentActivity"></div>
+        <div class="note">This feed updates automatically when new activity is logged.</div>
+      </div>
+
+      <div class="card">
+        <h3>Top Codes</h3>
+        <div id="topCodesList"></div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Department Usage Chart</h3>
+        <div class="chart-wrap"><canvas id="departmentChart"></canvas></div>
+      </div>
+
+      <div class="card">
+        <h3>Daily Activity Chart</h3>
+        <div class="chart-wrap"><canvas id="dailyChart"></canvas></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -163,6 +485,7 @@ const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let departmentChartInstance = null;
 let dailyChartInstance = null;
+let controlRowId = null;
 
 function toggleMenu(){
   const menu = document.getElementById("mobileMenu");
@@ -178,6 +501,11 @@ function closeMenu(){
 function logout(){
   localStorage.removeItem("washtracLoggedIn");
   window.location.href = "login.html";
+}
+function setControlStatus(message){
+  const box = document.getElementById("controlStatus");
+  box.innerText = message;
+  box.classList.add("show");
 }
 
 async function fetchCodes(){
@@ -196,6 +524,12 @@ async function fetchAllActivity(){
   const { data, error } = await client.from("activity").select("*").order("event_time", { ascending:false });
   if(error){ console.log(error); return []; }
   return data || [];
+}
+
+async function fetchSystemControl(){
+  const { data, error } = await client.from("system_control").select("*").limit(1).single();
+  if(error){ console.log(error); return null; }
+  return data;
 }
 
 function buildDepartmentData(codes){
@@ -297,10 +631,95 @@ function renderDailyChart(daily){
   });
 }
 
+function renderSystemControl(control){
+  if(!control) return;
+  controlRowId = control.id;
+
+  document.getElementById("washEnabledText").innerText = control.wash_enabled ? "Enabled" : "Disabled";
+  document.getElementById("washEnabledPill").className = `status-pill ${control.wash_enabled ? "status-on" : "status-off"}`;
+  document.getElementById("washEnabledPill").innerText = control.wash_enabled ? "Wash Enabled" : "Wash Disabled";
+
+  document.getElementById("estopText").innerText = control.estop_active ? "Active" : "Clear";
+  document.getElementById("estopPill").className = `status-pill ${control.estop_active ? "status-warn" : "status-on"}`;
+  document.getElementById("estopPill").innerText = control.estop_active ? "E-STOP Active" : "No Active E-STOP";
+
+  document.getElementById("lockoutText").innerText = control.lockout_enabled ? "On" : "Off";
+  document.getElementById("lockoutPill").className = `status-pill ${control.lockout_enabled ? "status-warn" : "status-off"}`;
+  document.getElementById("lockoutPill").innerText = control.lockout_enabled ? "Schedule Enabled" : "No Schedule";
+
+  const start = control.lockout_start || "--:--";
+  const end = control.lockout_end || "--:--";
+  document.getElementById("lockoutWindow").innerText = `${start} to ${end}`;
+
+  document.getElementById("lockoutEnabled").checked = !!control.lockout_enabled;
+  document.getElementById("lockoutStart").value = control.lockout_start || "";
+  document.getElementById("lockoutEnd").value = control.lockout_end || "";
+}
+
+async function setWashEnabled(enabled){
+  if(!controlRowId) return;
+  const { error } = await client
+    .from("system_control")
+    .update({ wash_enabled: enabled, updated_at: new Date().toISOString() })
+    .eq("id", controlRowId);
+
+  if(error){
+    console.log(error);
+    setControlStatus("Could not update wash status.");
+    return;
+  }
+  setControlStatus(enabled ? "Wash enabled." : "Wash disabled.");
+  loadDashboard();
+}
+
+async function setEstop(active){
+  if(!controlRowId) return;
+  const { error } = await client
+    .from("system_control")
+    .update({ estop_active: active, updated_at: new Date().toISOString() })
+    .eq("id", controlRowId);
+
+  if(error){
+    console.log(error);
+    setControlStatus("Could not update E-STOP status.");
+    return;
+  }
+  setControlStatus(active ? "E-STOP marked active." : "E-STOP cleared.");
+  loadDashboard();
+}
+
+async function saveSchedule(){
+  if(!controlRowId) return;
+
+  const lockout_enabled = document.getElementById("lockoutEnabled").checked;
+  const lockout_start = document.getElementById("lockoutStart").value;
+  const lockout_end = document.getElementById("lockoutEnd").value;
+
+  const { error } = await client
+    .from("system_control")
+    .update({
+      lockout_enabled,
+      lockout_start,
+      lockout_end,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", controlRowId);
+
+  if(error){
+    console.log(error);
+    setControlStatus("Could not save schedule.");
+    return;
+  }
+  setControlStatus("Lockout schedule saved.");
+  loadDashboard();
+}
+
 async function loadDashboard(){
   const codes = await fetchCodes();
   const recentActivity = await fetchRecentActivity();
   const allActivity = await fetchAllActivity();
+  const control = await fetchSystemControl();
+
   const departments = buildDepartmentData(codes);
   const daily = buildDailyData(allActivity);
 
@@ -317,6 +736,7 @@ async function loadDashboard(){
   renderTopCodes(codes);
   renderDepartmentChart(departments);
   renderDailyChart(daily);
+  renderSystemControl(control);
 }
 
 loadDashboard();
@@ -324,6 +744,7 @@ loadDashboard();
 client.channel("washtrac-live-dashboard")
 .on("postgres_changes", { event: "*", schema: "public", table: "activity" }, () => loadDashboard())
 .on("postgres_changes", { event: "*", schema: "public", table: "codes" }, () => loadDashboard())
+.on("postgres_changes", { event: "*", schema: "public", table: "system_control" }, () => loadDashboard())
 .subscribe();
 </script>
 </body>
