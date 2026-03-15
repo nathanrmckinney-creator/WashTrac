@@ -1,315 +1,404 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>WashTrac</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    *{box-sizing:border-box}
+    * { box-sizing: border-box; }
 
-    body{
-      margin:0;
-      font-family:Arial, Helvetica, sans-serif;
-      background:#020617;
-      color:#fff;
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #020617;
+      color: #fff;
+      overflow-x: hidden;
     }
 
-    a{
-      text-decoration:none;
-      color:inherit;
+    a {
+      text-decoration: none;
+      color: inherit;
     }
 
-    .logo{
-      font-size:28px;
-      font-weight:800;
-      letter-spacing:4px;
+    .logo {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 4px;
     }
 
-    .logo span{
-      color:#1ea7ff;
+    .logo span {
+      color: #1ea7ff;
     }
 
-    header{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      padding:18px 40px;
-      background:rgba(2,6,23,.9);
-      border-bottom:1px solid #1e293b;
-      position:sticky;
-      top:0;
-      z-index:1000;
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 40px;
+      background: rgba(2, 6, 23, 0.9);
+      border-bottom: 1px solid #1e293b;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
     }
 
-    .nav{
-      display:flex;
-      gap:20px;
-      align-items:center;
-      flex-wrap:wrap;
+    .nav {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      flex-wrap: wrap;
     }
 
-    .btn{
-      padding:12px 18px;
-      border-radius:8px;
-      background:#1ea7ff;
-      border:none;
-      color:white;
-      font-weight:bold;
-      cursor:pointer;
-      display:inline-block;
+    .btn {
+      padding: 12px 18px;
+      border-radius: 8px;
+      background: #1ea7ff;
+      border: none;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      display: inline-block;
     }
 
-    .btn.secondary{
-      background:#334155;
+    .btn.secondary {
+      background: #334155;
     }
 
-    .hero{
-      min-height:90vh;
-      display:flex;
-      align-items:center;
-      background:
-        linear-gradient(90deg, rgba(2,6,23,.95) 0%, rgba(2,6,23,.85) 40%, rgba(2,6,23,.35) 100%),
-        url("Carwash.png") center/cover no-repeat;
-      padding:70px 40px;
+    .hero {
+      min-height: 90vh;
+      display: flex;
+      align-items: center;
+      padding: 70px 40px;
+      position: relative;
+      overflow: hidden;
     }
 
-    .hero-inner{
-      max-width:1200px;
-      margin:auto;
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:40px;
-      align-items:center;
-      width:100%;
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: -4%;
+      background: url("Carwash.png") center center / cover no-repeat;
+      transform: scale(0.9);
+      z-index: 0;
     }
 
-    .eyebrow{
-      color:#38bdf8;
-      letter-spacing:2px;
-      font-weight:bold;
-      margin-bottom:12px;
-      font-size:15px;
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        90deg,
+        rgba(2, 6, 23, 0.95) 0%,
+        rgba(2, 6, 23, 0.86) 36%,
+        rgba(2, 6, 23, 0.45) 68%,
+        rgba(2, 6, 23, 0.18) 100%
+      );
+      z-index: 1;
     }
 
-    .hero h1{
-      font-size:72px;
-      margin:0;
-      line-height:.95;
+    .hero-inner {
+      max-width: 1200px;
+      margin: auto;
+      display: grid;
+      grid-template-columns: 1fr 0.86fr;
+      gap: 40px;
+      align-items: center;
+      width: 100%;
+      position: relative;
+      z-index: 2;
     }
 
-    .hero h2{
-      letter-spacing:5px;
-      color:#1ea7ff;
-      margin-top:14px;
-      margin-bottom:0;
-      font-size:28px;
+    .eyebrow {
+      color: #38bdf8;
+      letter-spacing: 2px;
+      font-weight: bold;
+      margin-bottom: 12px;
+      font-size: 15px;
     }
 
-    .hero p{
-      font-size:22px;
-      margin-top:20px;
-      line-height:1.6;
-      max-width:520px;
-      color:#e2e8f0;
+    .hero h1 {
+      font-size: 72px;
+      margin: 0;
+      line-height: 0.95;
     }
 
-    .features{
-      margin-top:30px;
+    .hero h2 {
+      letter-spacing: 5px;
+      color: #1ea7ff;
+      margin-top: 14px;
+      margin-bottom: 0;
+      font-size: 28px;
     }
 
-    .features div{
-      margin:12px 0;
-      font-size:18px;
+    .hero p {
+      font-size: 22px;
+      margin-top: 20px;
+      line-height: 1.6;
+      max-width: 540px;
+      color: #e2e8f0;
     }
 
-    .hero-actions{
-      display:flex;
-      gap:14px;
-      flex-wrap:wrap;
-      margin-top:28px;
+    .features {
+      margin-top: 30px;
     }
 
-    .device{
-      background:#0f172a;
-      border-radius:20px;
-      padding:25px;
-      border:1px solid #1e293b;
-      max-width:420px;
-      margin-left:auto;
-      box-shadow:0 20px 50px rgba(0,0,0,.35);
+    .features div {
+      margin: 12px 0;
+      font-size: 18px;
     }
 
-    .screen{
-      background:#020617;
-      border-radius:16px;
-      padding:20px;
-      border:1px solid #1e293b;
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 28px;
     }
 
-    .screen-title{
-      text-align:center;
-      margin-bottom:12px;
-      font-size:16px;
-      letter-spacing:1px;
+    .device {
+      background: rgba(15, 23, 42, 0.92);
+      border-radius: 22px;
+      padding: 22px;
+      border: 1px solid #1e293b;
+      width: 360px;
+      max-width: 100%;
+      margin-left: auto;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
     }
 
-    .pad{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:10px;
-      margin-top:15px;
+    .screen {
+      background: #020617;
+      border-radius: 16px;
+      padding: 18px;
+      border: 1px solid #1e293b;
     }
 
-    .pad div{
-      background:#334155;
-      padding:18px 0;
-      border-radius:10px;
-      text-align:center;
-      font-weight:bold;
-      font-size:22px;
+    .screen-title {
+      text-align: center;
+      margin-bottom: 8px;
+      font-size: 16px;
+      letter-spacing: 1px;
     }
 
-    .start{
-      margin-top:15px;
-      width:100%;
-      padding:16px;
-      background:#1ea7ff;
-      border:none;
-      border-radius:10px;
-      font-size:22px;
-      color:white;
-      font-weight:bold;
-      box-shadow:0 0 20px rgba(30,167,255,.6);
+    .estop-line {
+      text-align: center;
+      color: #ef4444;
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 12px;
+      letter-spacing: 0.4px;
     }
 
-    .section{
-      padding:70px 40px;
-      max-width:1100px;
-      margin:auto;
+    .pad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 10px;
     }
 
-    .section h2{
-      font-size:40px;
-      margin-top:0;
+    .pad div {
+      background: #334155;
+      padding: 16px 0;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 22px;
     }
 
-    .section-intro{
-      font-size:18px;
-      color:#94a3b8;
-      line-height:1.6;
-      max-width:760px;
-      margin-bottom:30px;
+    .start {
+      margin-top: 15px;
+      width: 100%;
+      padding: 16px;
+      background: #1ea7ff;
+      border: none;
+      border-radius: 10px;
+      font-size: 22px;
+      color: white;
+      font-weight: bold;
+      box-shadow: 0 0 20px rgba(30, 167, 255, 0.6);
     }
 
-    .cards{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-      gap:20px;
+    .section {
+      padding: 70px 40px;
+      max-width: 1100px;
+      margin: auto;
     }
 
-    .card{
-      background:#0f172a;
-      padding:25px;
-      border-radius:12px;
-      border:1px solid #1e293b;
+    .section h2 {
+      font-size: 40px;
+      margin-top: 0;
+      margin-bottom: 14px;
     }
 
-    .card h3{
-      margin-top:0;
-      margin-bottom:10px;
-      font-size:22px;
+    .section-intro {
+      font-size: 18px;
+      color: #94a3b8;
+      line-height: 1.6;
+      max-width: 800px;
+      margin-bottom: 30px;
     }
 
-    .card p{
-      margin:0;
-      color:#94a3b8;
-      line-height:1.6;
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
     }
 
-    .contact{
-      background:#0f172a;
-      padding:30px;
-      border-radius:12px;
-      border:1px solid #1e293b;
-      max-width:600px;
+    .card {
+      background: #0f172a;
+      padding: 25px;
+      border-radius: 12px;
+      border: 1px solid #1e293b;
     }
 
-    input, textarea{
-      width:100%;
-      padding:12px;
-      margin-top:8px;
-      margin-bottom:14px;
-      border-radius:6px;
-      border:1px solid #334155;
-      background:#020617;
-      color:white;
-      font-size:15px;
+    .card h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 22px;
     }
 
-    textarea{
-      min-height:120px;
+    .card p {
+      margin: 0;
+      color: #94a3b8;
+      line-height: 1.6;
     }
 
-    #status{
-      margin-top:14px;
-      color:#cbd5e1;
+    .graph-card {
+      background: linear-gradient(180deg, #0f172a, #111827);
     }
 
-    footer{
-      text-align:center;
-      padding:30px;
-      color:#64748b;
-      border-top:1px solid #1e293b;
-      margin-top:60px;
+    .mini-graph {
+      display: flex;
+      align-items: end;
+      gap: 10px;
+      height: 120px;
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 10px;
+      background: #020617;
+      border: 1px solid #1e293b;
     }
 
-    @media (max-width: 980px){
-      .hero-inner{
-        grid-template-columns:1fr;
+    .mini-bar {
+      flex: 1;
+      border-radius: 8px 8px 0 0;
+      background: linear-gradient(180deg, #38bdf8, #1d4ed8);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.28);
+    }
+
+    .mini-labels {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .mini-labels span {
+      flex: 1;
+      text-align: center;
+    }
+
+    .contact {
+      background: #0f172a;
+      padding: 30px;
+      border-radius: 12px;
+      border: 1px solid #1e293b;
+      max-width: 600px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      margin-bottom: 14px;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      background: #020617;
+      color: white;
+      font-size: 15px;
+    }
+
+    textarea {
+      min-height: 120px;
+    }
+
+    #status {
+      margin-top: 14px;
+      color: #cbd5e1;
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px;
+      color: #64748b;
+      border-top: 1px solid #1e293b;
+      margin-top: 60px;
+    }
+
+    @media (max-width: 980px) {
+      .hero-inner {
+        grid-template-columns: 1fr;
       }
 
-      .device{
-        margin-left:0;
+      .device {
+        margin-left: 0;
       }
 
-      .hero h1{
-        font-size:58px;
+      .hero h1 {
+        font-size: 58px;
+      }
+
+      .hero::before {
+        transform: scale(0.95);
       }
     }
 
-    @media (max-width: 700px){
-      header{
-        padding:16px 20px;
-        flex-direction:column;
-        gap:14px;
-        align-items:flex-start;
+    @media (max-width: 700px) {
+      header {
+        padding: 16px 20px;
+        flex-direction: column;
+        gap: 14px;
+        align-items: flex-start;
       }
 
-      .hero{
-        padding:50px 20px;
+      .hero {
+        padding: 50px 20px;
       }
 
-      .section{
-        padding:55px 20px;
+      .section {
+        padding: 55px 20px;
       }
 
-      .hero h1{
-        font-size:48px;
+      .hero h1 {
+        font-size: 48px;
       }
 
-      .hero h2{
-        font-size:22px;
+      .hero h2 {
+        font-size: 22px;
       }
 
-      .hero p{
-        font-size:19px;
+      .hero p {
+        font-size: 19px;
       }
 
-      .nav{
-        gap:14px;
+      .nav {
+        gap: 14px;
+      }
+
+      .device {
+        width: 320px;
+      }
+
+      .pad div {
+        padding: 14px 0;
+        font-size: 20px;
+      }
+
+      .start {
+        font-size: 20px;
       }
     }
   </style>
@@ -324,6 +413,7 @@
       <a href="#features">Features</a>
       <a href="#works">How It Works</a>
       <a href="#audit">Audit</a>
+      <a href="#monitoring">Monitoring</a>
       <a href="#contact">Contact</a>
       <a href="login.html">Login</a>
     </div>
@@ -341,8 +431,8 @@
         <p>
           Control wash access and track every activation in real time.
           WashTrac CodeBox provides secure entry codes, full audit logs,
-          and reporting tools for dealerships, service departments,
-          detail teams, and fleet operations.
+          reporting tools, and expanded monitoring for dealerships,
+          service departments, detail teams, and fleet operations.
         </p>
 
         <div class="features">
@@ -363,6 +453,7 @@
       <div class="device">
         <div class="screen">
           <div class="screen-title">ENTER ACCESS CODE</div>
+          <div class="estop-line">Emergency Stop Activated</div>
 
           <div class="pad">
             <div>1</div><div>2</div><div>3</div>
@@ -484,6 +575,70 @@
           internal review, and management reporting.
         </p>
       </div>
+
+      <div class="card graph-card">
+        <h3>Usage Graphs</h3>
+        <p>
+          Visualize code activity and department trends with clean usage graphs
+          that make patterns easier to spot.
+        </p>
+
+        <div class="mini-graph">
+          <div class="mini-bar" style="height:45%;"></div>
+          <div class="mini-bar" style="height:68%;"></div>
+          <div class="mini-bar" style="height:58%;"></div>
+          <div class="mini-bar" style="height:86%;"></div>
+        </div>
+
+        <div class="mini-labels">
+          <span>Mon</span>
+          <span>Tue</span>
+          <span>Wed</span>
+          <span>Thu</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="monitoring" class="section">
+    <h2>Real-Time Monitoring & Remote Control</h2>
+    <p class="section-intro">
+      WashTrac can be positioned as more than usage tracking. It can also support
+      live operational visibility, emergency stop awareness, and after-hours protection.
+    </p>
+
+    <div class="cards">
+      <div class="card">
+        <h3>Real-Time Monitoring</h3>
+        <p>
+          Monitor active wash events, recent code use, and operational activity live
+          from the dashboard or monitor screen.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>E-STOP Monitoring</h3>
+        <p>
+          Display emergency stop conditions so operators and managers can see when
+          an E-STOP event has been triggered.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Remote Shutdown</h3>
+        <p>
+          Add remote access options to disable wash activation when the business is closed
+          or when management needs to lock the site down.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>After-Hours Protection</h3>
+        <p>
+          Help prevent unauthorized usage after hours by combining access control,
+          monitoring visibility, and remote operational control.
+        </p>
+      </div>
     </div>
   </section>
 
@@ -493,16 +648,16 @@
     <div class="contact">
       <form onsubmit="sendContact(event)">
         <label>Name</label>
-        <input id="name" required>
+        <input id="name" required />
 
         <label>Company</label>
-        <input id="company">
+        <input id="company" />
 
         <label>Email</label>
-        <input id="email" required>
+        <input id="email" required />
 
         <label>Phone</label>
-        <input id="phone">
+        <input id="phone" />
 
         <label>Message</label>
         <textarea id="message" required></textarea>
@@ -515,7 +670,7 @@
   </section>
 
   <footer>
-    WASHTRAC © 2026<br>
+    WASHTRAC © 2026<br />
     Control. Track. Manage.
   </footer>
 
@@ -525,7 +680,7 @@
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    async function sendContact(e){
+    async function sendContact(e) {
       e.preventDefault();
 
       const name = document.getElementById("name").value;
@@ -540,7 +695,7 @@
         .from("contact_requests")
         .insert([{ name, company, email, phone, message }]);
 
-      if(error){
+      if (error) {
         document.getElementById("status").innerText = "Error sending message";
         return;
       }
