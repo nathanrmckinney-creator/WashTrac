@@ -1072,7 +1072,12 @@
         statusBox.innerText = "Saved, but email failed";
       }
     }
-
+document.addEventListener("DOMContentLoaded", function () {
+  document.getElementById("contactForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    await sendContact(e);
+  });
+});
     loadLiveSystemState();
 
     supabaseClient.channel("homepage-live-state")
