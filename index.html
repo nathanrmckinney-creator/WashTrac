@@ -1,777 +1,290 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WashTrac</title>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <style>
-    *{box-sizing:border-box;}
-
-    body{
-      margin:0;
-      font-family:Arial, Helvetica, sans-serif;
-      background:#020617;
-      color:#ffffff;
-      overflow-x:hidden;
-    }
-
-    a{
-      color:inherit;
-      text-decoration:none;
-    }
-
-    .brand-word .wash{
-      color:#ffffff;
-    }
-
-    .brand-word .trac{
-      color:#1ea7ff;
-    }
-
-    .site-header{
-      position:sticky;
-      top:0;
-      z-index:1000;
-      background:rgba(2,6,23,.88);
-      backdrop-filter:blur(10px);
-      border-bottom:1px solid #1e293b;
-    }
-
-    .header-inner{
-      max-width:1200px;
-      margin:0 auto;
-      padding:16px 20px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:16px;
-    }
-
-    .logo{
-      font-size:28px;
-      font-weight:800;
-      letter-spacing:.14em;
-    }
-
-    .nav{
-      display:flex;
-      gap:20px;
-      align-items:center;
-    }
-
-    .nav a{
-      color:#cbd5e1;
-      font-size:15px;
-    }
-
-    .nav a:hover{
-      color:#ffffff;
-    }
-
-    .header-actions{
-      display:flex;
-      gap:12px;
-      align-items:center;
-    }
-
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      padding:12px 16px;
-      border:none;
-      border-radius:10px;
-      font-weight:bold;
-      cursor:pointer;
-      background:#2563eb;
-      color:#ffffff;
-    }
-
-    .btn.secondary{
-      background:#334155;
-    }
-
-    .mobile-menu-btn{
-      display:none;
-      background:#2563eb;
-      color:#fff;
-      border:none;
-      border-radius:10px;
-      padding:10px 14px;
-      font-weight:bold;
-    }
-
-    .mobile-menu{
-      display:none;
-      position:absolute;
-      top:72px;
-      right:16px;
-      width:240px;
-      background:#0f172a;
-      border:1px solid #1e293b;
-      border-radius:12px;
-      padding:12px 16px;
-      box-shadow:0 12px 30px rgba(0,0,0,.45);
-      z-index:1100;
-    }
-
-    .mobile-menu a{
-      display:block;
-      color:#cbd5e1;
-      padding:10px 0;
-    }
-
-    .mobile-menu a:hover{
-      color:#fff;
-    }
-
-    .backdrop{
-      display:none;
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.35);
-      z-index:1050;
-    }
-
-    .hero{
-      position:relative;
-      min-height:92vh;
-      display:flex;
-      align-items:center;
-      background:
-        linear-gradient(90deg, rgba(2,6,23,.92) 0%, rgba(2,6,23,.82) 38%, rgba(2,6,23,.35) 100%),
-        url("https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1600&q=80") center/cover no-repeat;
-    }
-
-    .hero-inner{
-      max-width:1200px;
-      margin:0 auto;
-      padding:64px 20px;
-      width:100%;
-      display:grid;
-      grid-template-columns:1.05fr .95fr;
-      gap:40px;
-      align-items:center;
-    }
-
-    .eyebrow{
-      display:inline-block;
-      color:#60a5fa;
-      letter-spacing:.28em;
-      font-size:14px;
-      margin-bottom:18px;
-    }
-
-    .hero h1{
-      margin:0 0 18px 0;
-      font-size:80px;
-      line-height:.95;
-      letter-spacing:-.04em;
-    }
-
-    .hero h1 .sub{
-      display:block;
-      font-size:28px;
-      letter-spacing:.24em;
-      color:#1ea7ff;
-      margin-top:18px;
-      font-weight:500;
-    }
-
-    .hero p{
-      max-width:620px;
-      margin:0 0 28px 0;
-      font-size:23px;
-      line-height:1.45;
-      color:#e2e8f0;
-    }
-
-    .hero-actions{
-      display:flex;
-      gap:14px;
-      flex-wrap:wrap;
-      margin-bottom:30px;
-    }
-
-    .feature-list{
-      display:grid;
-      gap:14px;
-      max-width:560px;
-    }
-
-    .feature-row{
-      display:grid;
-      grid-template-columns:56px 1fr;
-      gap:16px;
-      align-items:center;
-      padding:14px 0;
-      border-bottom:1px solid rgba(148,163,184,.18);
-    }
-
-    .feature-icon{
-      width:56px;
-      height:56px;
-      border-radius:14px;
-      border:1px solid rgba(30,167,255,.6);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:#1ea7ff;
-      font-size:24px;
-      background:rgba(30,167,255,.06);
-    }
-
-    .feature-text{
-      font-size:18px;
-      color:#f8fafc;
-    }
-
-    .device-card{
-      background:linear-gradient(180deg, rgba(15,23,42,.92), rgba(15,23,42,.76));
-      border:1px solid rgba(59,130,246,.28);
-      border-radius:24px;
-      padding:24px;
-      box-shadow:0 20px 60px rgba(0,0,0,.45);
-      max-width:420px;
-      margin-left:auto;
-    }
-
-    .device-top{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:20px;
-      color:#e2e8f0;
-      font-size:14px;
-      letter-spacing:.16em;
-    }
-
-    .device-screen{
-      background:linear-gradient(180deg, #111827, #0b1220);
-      border-radius:18px;
-      padding:24px;
-      border:1px solid #1f2937;
-    }
-
-    .device-title{
-      font-size:16px;
-      color:#e5e7eb;
-      text-align:center;
-      margin-bottom:18px;
-      letter-spacing:.08em;
-    }
-
-    .pad{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:12px;
-      margin-bottom:18px;
-    }
-
-    .pad div{
-      background:#334155;
-      border-radius:12px;
-      padding:18px 0;
-      text-align:center;
-      font-size:22px;
-      font-weight:bold;
-      color:#fff;
-    }
-
-    .start-btn{
-      width:100%;
-      background:#1d9bff;
-      border:none;
-      color:#fff;
-      border-radius:12px;
-      padding:16px;
-      font-size:24px;
-      font-weight:bold;
-    }
-
-    .section{
-      max-width:1200px;
-      margin:0 auto;
-      padding:72px 20px;
-    }
-
-    .section-title{
-      font-size:42px;
-      margin:0 0 12px 0;
-    }
-
-    .section-sub{
-      margin:0 0 28px 0;
-      color:#94a3b8;
-      font-size:18px;
-      line-height:1.5;
-      max-width:760px;
-    }
-
-    .cards{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:20px;
-    }
-
-    .card{
-      background:#111827;
-      border:1px solid #1f2937;
-      border-radius:18px;
-      padding:24px;
-    }
-
-    .card h3{
-      margin:0 0 12px 0;
-      font-size:22px;
-    }
-
-    .card p{
-      margin:0;
-      color:#94a3b8;
-      line-height:1.6;
-    }
-
-    .contact-wrap{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:24px;
-      align-items:start;
-    }
-
-    .contact-card{
-      background:#111827;
-      border:1px solid #1f2937;
-      border-radius:18px;
-      padding:24px;
-    }
-
-    .contact-info{
-      display:grid;
-      gap:16px;
-    }
-
-    .contact-info-block{
-      padding:18px;
-      background:#0b1220;
-      border:1px solid #1f2937;
-      border-radius:14px;
-    }
-
-    .contact-info-block strong{
-      display:block;
-      margin-bottom:8px;
-      font-size:16px;
-    }
-
-    .contact-info-block span{
-      color:#94a3b8;
-      line-height:1.5;
-    }
-
-    .form-grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:14px;
-    }
-
-    .field{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-
-    .field.full{
-      grid-column:1 / -1;
-    }
-
-    .field label{
-      font-size:13px;
-      color:#cbd5e1;
-      font-weight:bold;
-    }
-
-    .field input,
-    .field textarea{
-      width:100%;
-      padding:14px;
-      border-radius:10px;
-      border:1px solid #334155;
-      background:#0b1220;
-      color:#ffffff;
-      font-size:15px;
-      outline:none;
-    }
-
-    .field textarea{
-      min-height:140px;
-      resize:vertical;
-    }
-
-    .field input:focus,
-    .field textarea:focus{
-      border-color:#3b82f6;
-      box-shadow:0 0 0 3px rgba(59,130,246,.16);
-    }
-
-    .status{
-      margin-top:14px;
-      padding:12px 14px;
-      border-radius:10px;
-      background:#0b1220;
-      border:1px solid #1f2937;
-      color:#cbd5e1;
-      display:none;
-      line-height:1.4;
-    }
-
-    .status.show{
-      display:block;
-    }
-
-    .footer{
-      border-top:1px solid #1e293b;
-      padding:24px 20px 40px;
-      color:#64748b;
-    }
-
-    .footer-inner{
-      max-width:1200px;
-      margin:0 auto;
-      display:flex;
-      justify-content:space-between;
-      gap:16px;
-      flex-wrap:wrap;
-    }
-
-    @media (max-width:1050px){
-      .hero-inner,
-      .contact-wrap,
-      .cards{
-        grid-template-columns:1fr;
-      }
-
-      .device-card{
-        margin-left:0;
-      }
-
-      .hero h1{
-        font-size:64px;
-      }
-    }
-
-    @media (max-width:850px){
-      .nav,
-      .header-actions{
-        display:none;
-      }
-
-      .mobile-menu-btn{
-        display:block;
-      }
-    }
-
-    @media (max-width:700px){
-      .hero{
-        min-height:auto;
-      }
-
-      .hero-inner{
-        padding:44px 20px;
-      }
-
-      .hero h1{
-        font-size:52px;
-      }
-
-      .hero h1 .sub{
-        font-size:22px;
-      }
-
-      .hero p{
-        font-size:19px;
-      }
-
-      .section{
-        padding:56px 20px;
-      }
-
-      .section-title{
-        font-size:34px;
-      }
-
-      .form-grid{
-        grid-template-columns:1fr;
-      }
-    }
-  </style>
-</head>
-<body>
-
-  <header class="site-header">
-    <div class="header-inner">
-      <div class="logo brand-word">
-        <span class="wash">WASH</span><span class="trac">TRAC</span>
-      </div>
-
-      <nav class="nav">
-        <a href="#features">Features</a>
-        <a href="#contact">Contact Us</a>
-      </nav>
-
-      <div class="header-actions">
-        <a class="btn secondary" href="login.html">Login</a>
-        <a class="btn" href="#contact">Request Demo</a>
-      </div>
-
-      <button class="mobile-menu-btn" onclick="toggleMenu()">Menu</button>
-    </div>
-
-    <div class="mobile-menu" id="mobileMenu">
-      <a href="#features" onclick="closeMenu()">Features</a>
-      <a href="#contact" onclick="closeMenu()">Contact Us</a>
-      <a href="login.html" onclick="closeMenu()">Login</a>
-    </div>
-
-    <div class="backdrop" id="backdrop" onclick="closeMenu()"></div>
-  </header>
-
-  <section class="hero">
-    <div class="hero-inner">
-      <div>
-        <div class="eyebrow brand-word">
-          <span class="wash">WASH</span><span class="trac">TRAC</span> &nbsp; CONTROL. TRACK. MANAGE.
-        </div>
-
-        <h1>
-          CodeBox
-          <span class="sub">ENTRY TERMINAL</span>
-        </h1>
-
-        <p>
-          A modern access terminal for secure code entry, wash activation, live tracking, and management visibility.
-        </p>
-
-        <div class="hero-actions">
-          <a class="btn" href="#contact">Contact Us</a>
-          <a class="btn secondary" href="login.html">Client Login</a>
-        </div>
-
-        <div class="feature-list">
-          <div class="feature-row">
-            <div class="feature-icon">🔑</div>
-            <div class="feature-text">Enter Access Code</div>
-          </div>
-
-          <div class="feature-row">
-            <div class="feature-icon">▶</div>
-            <div class="feature-text">Activate Wash</div>
-          </div>
-
-          <div class="feature-row">
-            <div class="feature-icon">⏱</div>
-            <div class="feature-text">Track Every Use</div>
-          </div>
-
-          <div class="feature-row">
-            <div class="feature-icon">📡</div>
-            <div class="feature-text">Real-Time Visibility</div>
-          </div>
-
-          <div class="feature-row">
-            <div class="feature-icon">🛡</div>
-            <div class="feature-text">Secure & Reliable</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="device-card">
-        <div class="device-top brand-word">
-          <span><span class="wash">WASH</span><span class="trac">TRAC</span></span>
-          <span>9:24 AM</span>
-        </div>
-
-        <div class="device-screen">
-          <div class="device-title">ENTER ACCESS CODE</div>
-
-          <div class="pad">
-            <div>1</div><div>2</div><div>3</div>
-            <div>4</div><div>5</div><div>6</div>
-            <div>7</div><div>8</div><div>9</div>
-            <div>*</div><div>0</div><div>←</div>
-          </div>
-
-          <button class="start-btn">START WASH</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section" id="features">
-    <h2 class="section-title">Built for modern wash operations</h2>
-    <p class="section-sub">
-      WashTrac helps operators control access, monitor usage, and manage reporting across devices with a cleaner dealership-friendly workflow.
-    </p>
-
-    <div class="cards">
-      <div class="card">
-        <h3>Secure code access</h3>
-        <p>Assign and manage access codes by department, employee, or temporary use without relying on paper logs or guesswork.</p>
-      </div>
-
-      <div class="card">
-        <h3>Live visibility</h3>
-        <p>See activity in real time across dashboard, reports, and monitoring screens so managers always know what is happening.</p>
-      </div>
-
-      <div class="card">
-        <h3>Reporting built in</h3>
-        <p>Email reports, usage charts, exports, and activity tracking are all built into the platform for daily operations and accountability.</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="section" id="contact">
-    <h2 class="section-title">Contact Us</h2>
-    <p class="section-sub">
-      Tell us about your operation and we’ll reach out to discuss WashTrac for your site.
-    </p>
-
-    <div class="contact-wrap">
-      <div class="contact-card">
-        <div class="contact-info">
-          <div class="contact-info-block">
-            <strong>Why contact us?</strong>
-            <span>Use this form for demos, pricing, deployment questions, dealership groups, or custom terminal requests.</span>
-          </div>
-
-          <div class="contact-info-block">
-            <strong>Best fit</strong>
-            <span>WashTrac works well for dealerships, fleet operations, recon teams, service departments, and managed wash access environments.</span>
-          </div>
-
-          <div class="contact-info-block">
-            <strong>What happens next</strong>
-            <span>Your contact request is saved instantly, and your team can be notified for follow-up.</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="contact-card">
-        <form onsubmit="submitContact(event)">
-          <div class="form-grid">
-            <div class="field">
-              <label for="contactName">Full Name</label>
-              <input id="contactName" type="text" placeholder="Your name" required>
-            </div>
-
-            <div class="field">
-              <label for="contactCompany">Company</label>
-              <input id="contactCompany" type="text" placeholder="Company name">
-            </div>
-
-            <div class="field">
-              <label for="contactEmail">Email</label>
-              <input id="contactEmail" type="email" placeholder="you@example.com" required>
-            </div>
-
-            <div class="field">
-              <label for="contactPhone">Phone</label>
-              <input id="contactPhone" type="text" placeholder="Phone number">
-            </div>
-
-            <div class="field full">
-              <label for="contactMessage">Message</label>
-              <textarea id="contactMessage" placeholder="Tell us what you need" required></textarea>
-            </div>
-          </div>
-
-          <div style="margin-top:16px;">
-            <button class="btn" type="submit">Send Message</button>
-          </div>
-        </form>
-
-        <div class="status" id="contactStatus"></div>
-      </div>
-    </div>
-  </section>
-
-  <footer class="footer">
-    <div class="footer-inner">
-      <div class="brand-word">
-        <span class="wash">WASH</span><span class="trac">TRAC</span> © 2026
-      </div>
-      <div>Control. Track. Manage.</div>
-    </div>
-  </footer>
-
-  <script>
-    const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
-    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    function toggleMenu(){
-      const menu = document.getElementById("mobileMenu");
-      const backdrop = document.getElementById("backdrop");
-      const isOpen = menu.style.display === "block";
-      menu.style.display = isOpen ? "none" : "block";
-      backdrop.style.display = isOpen ? "none" : "block";
-    }
-
-    function closeMenu(){
-      document.getElementById("mobileMenu").style.display = "none";
-      document.getElementById("backdrop").style.display = "none";
-    }
-
-    function setContactStatus(message){
-      const box = document.getElementById("contactStatus");
-      box.innerText = message;
-      box.classList.add("show");
-    }
-
-    async function submitContact(event){
-      event.preventDefault();
-
-      const name = document.getElementById("contactName").value.trim();
-      const company = document.getElementById("contactCompany").value.trim();
-      const email = document.getElementById("contactEmail").value.trim();
-      const phone = document.getElementById("contactPhone").value.trim();
-      const message = document.getElementById("contactMessage").value.trim();
-
-      if(!name || !email || !message){
-        setContactStatus("Please complete name, email, and message.");
-        return;
-      }
-
-      setContactStatus("Sending message...");
-
-      const { error } = await client
-        .from("contact_requests")
-        .insert([{
-          name,
-          company,
-          email,
-          phone,
-          message
-        }]);
-
-      if(error){
-        console.log(error);
-        setContactStatus("Could not send message.");
-        return;
-      }
-
-      document.getElementById("contactName").value = "";
-      document.getElementById("contactCompany").value = "";
-      document.getElementById("contactEmail").value = "";
-      document.getElementById("contactPhone").value = "";
-      document.getElementById("contactMessage").value = "";
-
-      setContactStatus("Message sent. We will be in touch.");
-    }
-  </script>
-</body>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><title>WashTrac</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>
+
+*{box-sizing:border-box}
+
+body{
+margin:0;
+font-family:Arial,Helvetica,sans-serif;
+background:#020617;
+color:white;
+}
+
+a{text-decoration:none;color:inherit}
+
+.logo{
+font-size:28px;
+font-weight:800;
+letter-spacing:4px;
+}
+
+.logo span{color:#1ea7ff}
+
+header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:18px 40px;
+background:rgba(2,6,23,.9);
+border-bottom:1px solid #1e293b;
+position:sticky;
+top:0;
+z-index:1000;
+}
+
+.nav{
+display:flex;
+gap:20px;
+}
+
+.btn{
+padding:12px 18px;
+border-radius:8px;
+background:#1ea7ff;
+border:none;
+color:white;
+font-weight:bold;
+cursor:pointer;
+}
+
+.btn.secondary{
+background:#334155;
+}
+
+.hero{
+min-height:90vh;
+display:flex;
+align-items:center;
+
+background:
+linear-gradient(90deg, rgba(2,6,23,.9) 0%, rgba(2,6,23,.7) 40%, rgba(2,6,23,.2) 100%),
+url("carwash.jpg") center/cover no-repeat;
+
+padding:70px 40px;
+}
+
+.hero-inner{
+max-width:1200px;
+margin:auto;
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:40px;
+align-items:center;
+}
+
+.hero h1{
+font-size:72px;
+margin:0;
+}
+
+.hero h2{
+letter-spacing:5px;
+color:#1ea7ff;
+margin-top:10px;
+}
+
+.hero p{
+font-size:22px;
+margin-top:20px;
+line-height:1.4;
+color:#e2e8f0;
+}
+
+.features{
+margin-top:30px;
+}
+
+.features div{
+margin:10px 0;
+font-size:18px;
+}
+
+.device{
+background:#0f172a;
+border-radius:20px;
+padding:25px;
+border:1px solid #1e293b;
+max-width:420px;
+margin-left:auto;
+}
+
+.screen{
+background:#020617;
+border-radius:16px;
+padding:20px;
+border:1px solid #1e293b;
+}
+
+.pad{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:10px;
+margin-top:15px;
+}
+
+.pad div{
+background:#334155;
+padding:18px 0;
+border-radius:10px;
+text-align:center;
+font-weight:bold;
+font-size:22px;
+}
+
+.start{
+margin-top:15px;
+width:100%;
+padding:16px;
+background:#1ea7ff;
+border:none;
+border-radius:10px;
+font-size:22px;
+color:white;
+font-weight:bold;
+}
+
+.section{
+padding:70px 40px;
+max-width:1100px;
+margin:auto;
+}
+
+.cards{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+gap:20px;
+}
+
+.card{
+background:#0f172a;
+padding:25px;
+border-radius:12px;
+border:1px solid #1e293b;
+}
+
+.contact{
+background:#0f172a;
+padding:30px;
+border-radius:12px;
+border:1px solid #1e293b;
+max-width:600px;
+}
+
+input,textarea{
+width:100%;
+padding:12px;
+margin-top:8px;
+margin-bottom:14px;
+border-radius:6px;
+border:1px solid #334155;
+background:#020617;
+color:white;
+}
+
+textarea{min-height:120px}
+
+footer{
+text-align:center;
+padding:30px;
+color:#64748b;
+border-top:1px solid #1e293b;
+margin-top:60px;
+}
+
+</style></head><body><header><div class="logo">
+WASH<span>TRAC</span>
+</div><div class="nav">
+<a href="#features">Features</a>
+<a href="#audit">Audit</a>
+<a href="#contact">Contact</a>
+<a href="login.html">Login</a>
+</div></header><section class="hero"><div class="hero-inner"><div><h1>CodeBox</h1>
+<h2>ENTRY TERMINAL</h2><p>
+Secure wash access with built-in auditing, reporting, and real-time tracking for dealerships, service departments, and fleet operations.
+</p><div class="features"><div>✔ Enter Access Code</div>
+<div>✔ Activate Wash</div>
+<div>✔ Track Every Use</div>
+<div>✔ Department Audit Logs</div>
+<div>✔ Real-Time Usage Monitoring</div>
+<div>✔ CSV & Email Reporting</div></div><br><a class="btn" href="#contact">Request Demo</a>
+<a class="btn secondary" href="login.html">Client Login</a>
+
+</div><div class="device"><div class="screen"><div style="text-align:center;margin-bottom:10px">
+ENTER ACCESS CODE
+</div><div class="pad"><div>1</div><div>2</div><div>3</div>
+<div>4</div><div>5</div><div>6</div>
+<div>7</div><div>8</div><div>9</div>
+<div>*</div><div>0</div><div>←</div></div><button class="start">START WASH</button>
+
+</div></div></div></section><section id="features" class="section"><h2>WashTrac Management System</h2><p>
+WashTrac provides full visibility into wash usage so management always knows who is using the wash and when.
+</p><div class="cards"><div class="card">
+<h3>Usage Auditing</h3>
+<p>
+Every wash activation is logged with timestamp, code, department, and user information.
+</p>
+</div><div class="card">
+<h3>Department Tracking</h3>
+<p>
+Assign codes by department such as Service, Sales, Detail, or Management.
+</p>
+</div><div class="card">
+<h3>Reporting</h3>
+<p>
+Generate CSV exports and email reports to monitor wash activity and usage trends.
+</p>
+</div></div></section><section id="contact" class="section"><h2>Contact Us</h2><div class="contact"><form onsubmit="sendContact(event)"><label>Name</label>
+<input id="name" required>
+
+<label>Company</label>
+<input id="company">
+
+<label>Email</label>
+<input id="email" required>
+
+<label>Phone</label>
+<input id="phone">
+
+<label>Message</label>
+
+<textarea id="message" required></textarea><button class="btn">Send Message</button>
+
+</form><div id="status"></div></div></section><footer>WASHTRAC © 2026
+Control. Track. Manage.
+
+</footer><script>
+
+const SUPABASE_URL="https://feqrsypiugwwdweiwvua.supabase.co"
+const SUPABASE_KEY="sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS"
+
+const supabaseClient=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
+
+async function sendContact(e){
+
+e.preventDefault()
+
+const name=document.getElementById("name").value
+const company=document.getElementById("company").value
+const email=document.getElementById("email").value
+const phone=document.getElementById("phone").value
+const message=document.getElementById("message").value
+
+document.getElementById("status").innerText="Sending..."
+
+const {error}=await supabaseClient
+.from("contact_requests")
+.insert([{name,company,email,phone,message}])
+
+if(error){
+document.getElementById("status").innerText="Error sending message"
+return
+}
+
+document.getElementById("status").innerText="Message sent. We'll be in touch."
+
+}
+
+</script></body>
 </html>
