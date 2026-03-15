@@ -437,6 +437,23 @@ setInterval(() => {
   console.log("WashTrac heartbeat");
 }, 20000);
 
+    function reconnectRealtime() {
+  client.channel("reconnect-test")
+    .subscribe((status) => {
+
+      if (status === "SUBSCRIBED") {
+        console.log("Realtime connected");
+      }
+
+      if (status === "CHANNEL_ERROR") {
+        console.log("Realtime reconnecting...");
+        setTimeout(reconnectRealtime, 2000);
+      }
+
+    });
+}
+
+reconnectRealtime();
 </script>
 </body>
 </html>
