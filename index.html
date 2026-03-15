@@ -8,549 +8,590 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    * { box-sizing: border-box; }
+    *{box-sizing:border-box}
 
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #020617;
-      color: #fff;
-      overflow-x: hidden;
+    body{
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      background:#020617;
+      color:#fff;
+      overflow-x:hidden;
     }
 
-    a {
-      text-decoration: none;
-      color: inherit;
+    a{
+      text-decoration:none;
+      color:inherit;
     }
 
-    .logo {
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: 4px;
+    .logo{
+      font-size:28px;
+      font-weight:800;
+      letter-spacing:4px;
     }
 
-    .logo span {
-      color: #1ea7ff;
+    .logo span{
+      color:#1ea7ff;
     }
 
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 18px 40px;
-      background: rgba(2, 6, 23, 0.9);
-      border-bottom: 1px solid #1e293b;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
+    header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:18px 40px;
+      background:rgba(2,6,23,.9);
+      border-bottom:1px solid #1e293b;
+      position:sticky;
+      top:0;
+      z-index:1000;
     }
 
-    .nav {
-      display: flex;
-      gap: 20px;
-      align-items: center;
-      flex-wrap: wrap;
+    .menu-btn{
+      background:#2563eb;
+      color:#fff;
+      border:none;
+      padding:12px 18px;
+      border-radius:10px;
+      font-weight:bold;
+      cursor:pointer;
     }
 
-    .btn {
-      padding: 12px 18px;
-      border-radius: 8px;
-      background: #1ea7ff;
-      border: none;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      display: inline-block;
+    .menu-panel{
+      position:fixed;
+      top:78px;
+      right:20px;
+      width:240px;
+      background:#0b1220;
+      border:1px solid #1f2937;
+      border-radius:14px;
+      padding:18px;
+      display:none;
+      flex-direction:column;
+      gap:14px;
+      z-index:1100;
+      box-shadow:0 16px 36px rgba(0,0,0,.45);
     }
 
-    .btn.secondary {
-      background: #334155;
+    .menu-panel a{
+      color:#e5e7eb;
+      font-size:16px;
     }
 
-    .hero {
-      min-height: 90vh;
-      display: flex;
-      align-items: center;
-      padding: 70px 40px;
-      position: relative;
-      overflow: hidden;
+    .menu-panel a:hover{
+      color:#fff;
     }
 
-    .hero::before {
-      content: "";
-      position: absolute;
-      inset: -4%;
-      background: url("Carwash.png") center center / cover no-repeat;
-      transform: scale(0.9);
-      z-index: 0;
+    .menu-panel .login-link{
+      color:#93c5fd;
+      font-weight:bold;
     }
 
-    .hero::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
+    .backdrop{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.35);
+      z-index:1050;
+    }
+
+    .btn{
+      padding:12px 18px;
+      border-radius:8px;
+      background:#1ea7ff;
+      border:none;
+      color:white;
+      font-weight:bold;
+      cursor:pointer;
+      display:inline-block;
+    }
+
+    .btn.secondary{
+      background:#334155;
+    }
+
+    .hero{
+      min-height:90vh;
+      display:flex;
+      align-items:center;
+      padding:70px 40px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .hero::before{
+      content:"";
+      position:absolute;
+      inset:-4%;
+      background:url("Carwash.png") center center / cover no-repeat;
+      transform:scale(0.9);
+      z-index:0;
+    }
+
+    .hero::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(
         90deg,
-        rgba(2, 6, 23, 0.95) 0%,
-        rgba(2, 6, 23, 0.86) 36%,
-        rgba(2, 6, 23, 0.45) 68%,
-        rgba(2, 6, 23, 0.18) 100%
+        rgba(2,6,23,.95) 0%,
+        rgba(2,6,23,.86) 36%,
+        rgba(2,6,23,.45) 68%,
+        rgba(2,6,23,.18) 100%
       );
-      z-index: 1;
+      z-index:1;
     }
 
-    .hero-inner {
-      max-width: 1200px;
-      margin: auto;
-      display: grid;
-      grid-template-columns: 1fr 0.86fr;
-      gap: 40px;
-      align-items: center;
-      width: 100%;
-      position: relative;
-      z-index: 2;
+    .hero-inner{
+      max-width:1200px;
+      margin:auto;
+      display:grid;
+      grid-template-columns:1fr .86fr;
+      gap:40px;
+      align-items:center;
+      width:100%;
+      position:relative;
+      z-index:2;
     }
 
-    .eyebrow {
-      color: #38bdf8;
-      letter-spacing: 2px;
-      font-weight: bold;
-      margin-bottom: 12px;
-      font-size: 15px;
+    .eyebrow{
+      color:#38bdf8;
+      letter-spacing:2px;
+      font-weight:bold;
+      margin-bottom:12px;
+      font-size:15px;
     }
 
-    .hero h1 {
-      font-size: 72px;
-      margin: 0;
-      line-height: 0.95;
+    .hero h1{
+      font-size:72px;
+      margin:0;
+      line-height:.95;
     }
 
-    .hero h2 {
-      letter-spacing: 5px;
-      color: #1ea7ff;
-      margin-top: 14px;
-      margin-bottom: 0;
-      font-size: 28px;
+    .hero h2{
+      letter-spacing:5px;
+      color:#1ea7ff;
+      margin-top:14px;
+      margin-bottom:0;
+      font-size:28px;
     }
 
-    .hero p {
-      font-size: 22px;
-      margin-top: 20px;
-      line-height: 1.6;
-      max-width: 540px;
-      color: #e2e8f0;
+    .hero p{
+      font-size:22px;
+      margin-top:20px;
+      line-height:1.6;
+      max-width:540px;
+      color:#e2e8f0;
     }
 
-    .features {
-      margin-top: 30px;
+    .features{
+      margin-top:30px;
     }
 
-    .features div {
-      margin: 12px 0;
-      font-size: 18px;
+    .features div{
+      margin:12px 0;
+      font-size:18px;
     }
 
-    .hero-actions {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-      margin-top: 28px;
+    .hero-actions{
+      display:flex;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-top:28px;
     }
 
-    .device {
-      background: rgba(15, 23, 42, 0.92);
-      border-radius: 22px;
-      padding: 22px;
-      border: 1px solid #1e293b;
-      width: 360px;
-      max-width: 100%;
-      margin-left: auto;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    .device{
+      background:rgba(15,23,42,.92);
+      border-radius:22px;
+      padding:22px;
+      border:1px solid #1e293b;
+      width:360px;
+      max-width:100%;
+      margin-left:auto;
+      box-shadow:0 20px 50px rgba(0,0,0,.35);
     }
 
-    .screen {
-      background: #020617;
-      border-radius: 16px;
-      padding: 18px;
-      border: 1px solid #1e293b;
+    .screen{
+      background:#020617;
+      border-radius:16px;
+      padding:18px;
+      border:1px solid #1e293b;
     }
 
-    .screen-title {
-      text-align: center;
-      margin-bottom: 8px;
-      font-size: 16px;
-      letter-spacing: 1px;
+    .screen-title{
+      text-align:center;
+      margin-bottom:8px;
+      font-size:16px;
+      letter-spacing:1px;
     }
 
-    .estop-line {
-      text-align: center;
-      color: #ef4444;
-      font-size: 14px;
-      font-weight: bold;
-      margin-bottom: 12px;
-      letter-spacing: 0.4px;
+    .estop-line{
+      text-align:center;
+      color:#ef4444;
+      font-size:14px;
+      font-weight:bold;
+      margin-bottom:12px;
+      letter-spacing:.4px;
     }
 
-    .pad {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-top: 10px;
+    .pad{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+      margin-top:10px;
     }
 
-    .pad div {
-      background: #334155;
-      padding: 16px 0;
-      border-radius: 10px;
-      text-align: center;
-      font-weight: bold;
-      font-size: 22px;
+    .pad div{
+      background:#334155;
+      padding:16px 0;
+      border-radius:10px;
+      text-align:center;
+      font-weight:bold;
+      font-size:22px;
     }
 
-    .start {
-      margin-top: 15px;
-      width: 100%;
-      padding: 16px;
-      background: #1ea7ff;
-      border: none;
-      border-radius: 10px;
-      font-size: 22px;
-      color: white;
-      font-weight: bold;
-      box-shadow: 0 0 20px rgba(30, 167, 255, 0.6);
+    .start{
+      margin-top:15px;
+      width:100%;
+      padding:16px;
+      background:#1ea7ff;
+      border:none;
+      border-radius:10px;
+      font-size:22px;
+      color:white;
+      font-weight:bold;
+      box-shadow:0 0 20px rgba(30,167,255,.6);
     }
 
-    .section {
-      padding: 70px 40px;
-      max-width: 1100px;
-      margin: auto;
+    .section{
+      padding:70px 40px;
+      max-width:1100px;
+      margin:auto;
     }
 
-    .section h2 {
-      font-size: 40px;
-      margin-top: 0;
-      margin-bottom: 14px;
+    .section h2{
+      font-size:40px;
+      margin-top:0;
+      margin-bottom:14px;
     }
 
-    .section-intro {
-      font-size: 18px;
-      color: #94a3b8;
-      line-height: 1.6;
-      max-width: 800px;
-      margin-bottom: 30px;
+    .section-intro{
+      font-size:18px;
+      color:#94a3b8;
+      line-height:1.6;
+      max-width:800px;
+      margin-bottom:30px;
     }
 
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
+    .cards{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+      gap:20px;
     }
 
-    .card {
-      background: #0f172a;
-      padding: 25px;
-      border-radius: 12px;
-      border: 1px solid #1e293b;
+    .card{
+      background:#0f172a;
+      padding:25px;
+      border-radius:12px;
+      border:1px solid #1e293b;
     }
 
-    .card h3 {
-      margin-top: 0;
-      margin-bottom: 10px;
-      font-size: 22px;
+    .card h3{
+      margin-top:0;
+      margin-bottom:10px;
+      font-size:22px;
     }
 
-    .card p {
-      margin: 0;
-      color: #94a3b8;
-      line-height: 1.6;
+    .card p{
+      margin:0;
+      color:#94a3b8;
+      line-height:1.6;
     }
 
-    .graph-card {
-      background: linear-gradient(180deg, #0f172a, #111827);
+    .graph-card{
+      background:linear-gradient(180deg,#0f172a,#111827);
     }
 
-    .mini-graph {
-      display: flex;
-      align-items: end;
-      gap: 10px;
-      height: 120px;
-      margin-top: 18px;
-      padding: 14px;
-      border-radius: 10px;
-      background: #020617;
-      border: 1px solid #1e293b;
+    .mini-graph{
+      display:flex;
+      align-items:end;
+      gap:10px;
+      height:120px;
+      margin-top:18px;
+      padding:14px;
+      border-radius:10px;
+      background:#020617;
+      border:1px solid #1e293b;
     }
 
-    .mini-bar {
-      flex: 1;
-      border-radius: 8px 8px 0 0;
-      background: linear-gradient(180deg, #38bdf8, #1d4ed8);
-      box-shadow: 0 0 12px rgba(56, 189, 248, 0.28);
+    .mini-bar{
+      flex:1;
+      border-radius:8px 8px 0 0;
+      background:linear-gradient(180deg,#38bdf8,#1d4ed8);
+      box-shadow:0 0 12px rgba(56,189,248,.28);
     }
 
-    .mini-labels {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-      font-size: 12px;
-      color: #94a3b8;
+    .mini-labels{
+      display:flex;
+      gap:10px;
+      margin-top:10px;
+      font-size:12px;
+      color:#94a3b8;
     }
 
-    .mini-labels span {
-      flex: 1;
-      text-align: center;
+    .mini-labels span{
+      flex:1;
+      text-align:center;
     }
 
-    .system-demo-wrap {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-      align-items: start;
+    .system-demo-wrap{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:24px;
+      align-items:start;
     }
 
-    .system-demo-card {
-      background: #111827;
-      border: 1px solid #1e293b;
-      border-radius: 16px;
-      padding: 24px;
+    .system-demo-card{
+      background:#111827;
+      border:1px solid #1e293b;
+      border-radius:16px;
+      padding:24px;
     }
 
-    .system-banner {
-      margin-bottom: 18px;
-      padding: 14px 16px;
-      border-radius: 12px;
-      font-weight: bold;
-      text-align: center;
+    .system-banner{
+      margin-bottom:18px;
+      padding:14px 16px;
+      border-radius:12px;
+      font-weight:bold;
+      text-align:center;
     }
 
-    .banner-green {
-      background: rgba(20, 83, 45, 0.28);
-      border: 1px solid rgba(34, 197, 94, 0.35);
-      color: #bbf7d0;
+    .banner-green{
+      background:rgba(20,83,45,.28);
+      border:1px solid rgba(34,197,94,.35);
+      color:#bbf7d0;
     }
 
-    .banner-yellow {
-      background: rgba(120, 53, 15, 0.28);
-      border: 1px solid rgba(245, 158, 11, 0.35);
-      color: #fde68a;
+    .banner-yellow{
+      background:rgba(120,53,15,.28);
+      border:1px solid rgba(245,158,11,.35);
+      color:#fde68a;
     }
 
-    .banner-red {
-      background: rgba(127, 29, 29, 0.28);
-      border: 1px solid rgba(239, 68, 68, 0.35);
-      color: #fecaca;
+    .banner-red{
+      background:rgba(127,29,29,.28);
+      border:1px solid rgba(239,68,68,.35);
+      color:#fecaca;
     }
 
-    .status-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-bottom: 18px;
+    .status-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+      margin-bottom:18px;
     }
 
-    .status-box {
-      background: #0b1220;
-      border: 1px solid #1f2937;
-      border-radius: 12px;
-      padding: 16px;
+    .status-box{
+      background:#0b1220;
+      border:1px solid #1f2937;
+      border-radius:12px;
+      padding:16px;
     }
 
-    .status-box strong {
-      display: block;
-      font-size: 24px;
-      margin-bottom: 6px;
+    .status-box strong{
+      display:block;
+      font-size:24px;
+      margin-bottom:6px;
     }
 
-    .status-box span {
-      color: #94a3b8;
-      font-size: 14px;
+    .status-box span{
+      color:#94a3b8;
+      font-size:14px;
     }
 
-    .status-pill {
-      display: inline-block;
-      margin-top: 10px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      font-size: 13px;
-      font-weight: bold;
+    .status-pill{
+      display:inline-block;
+      margin-top:10px;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:bold;
     }
 
-    .status-on {
-      background: rgba(34, 197, 94, 0.16);
-      color: #86efac;
+    .status-on{
+      background:rgba(34,197,94,.16);
+      color:#86efac;
     }
 
-    .status-off {
-      background: rgba(239, 68, 68, 0.16);
-      color: #fca5a5;
+    .status-off{
+      background:rgba(239,68,68,.16);
+      color:#fca5a5;
     }
 
-    .status-warn {
-      background: rgba(245, 158, 11, 0.16);
-      color: #fcd34d;
+    .status-warn{
+      background:rgba(245,158,11,.16);
+      color:#fcd34d;
     }
 
-    .bay-mini-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
+    .bay-mini-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
     }
 
-    .bay-mini {
-      background: #0b1220;
-      border: 1px solid #1f2937;
-      border-radius: 12px;
-      padding: 14px;
+    .bay-mini{
+      background:#0b1220;
+      border:1px solid #1f2937;
+      border-radius:12px;
+      padding:14px;
     }
 
-    .bay-mini strong {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 16px;
+    .bay-mini strong{
+      display:block;
+      margin-bottom:8px;
+      font-size:16px;
     }
 
-    .bay-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      display: inline-block;
-      margin-right: 8px;
-      vertical-align: middle;
+    .bay-dot{
+      width:12px;
+      height:12px;
+      border-radius:50%;
+      display:inline-block;
+      margin-right:8px;
+      vertical-align:middle;
     }
 
-    .dot-ready { background: #22c55e; box-shadow: 0 0 10px rgba(34,197,94,.45); }
-    .dot-running { background: #38bdf8; box-shadow: 0 0 10px rgba(56,189,248,.45); }
-    .dot-idle { background: #f59e0b; box-shadow: 0 0 10px rgba(245,158,11,.35); }
-    .dot-offline { background: #ef4444; box-shadow: 0 0 10px rgba(239,68,68,.35); }
+    .dot-ready{background:#22c55e;box-shadow:0 0 10px rgba(34,197,94,.45)}
+    .dot-running{background:#38bdf8;box-shadow:0 0 10px rgba(56,189,248,.45)}
+    .dot-idle{background:#f59e0b;box-shadow:0 0 10px rgba(245,158,11,.35)}
+    .dot-offline{background:#ef4444;box-shadow:0 0 10px rgba(239,68,68,.35)}
 
-    .contact {
-      background: #0f172a;
-      padding: 30px;
-      border-radius: 12px;
-      border: 1px solid #1e293b;
-      max-width: 600px;
+    .contact{
+      background:#0f172a;
+      padding:30px;
+      border-radius:12px;
+      border:1px solid #1e293b;
+      max-width:600px;
     }
 
-    input, textarea {
-      width: 100%;
-      padding: 12px;
-      margin-top: 8px;
-      margin-bottom: 14px;
-      border-radius: 6px;
-      border: 1px solid #334155;
-      background: #020617;
-      color: white;
-      font-size: 15px;
+    input,textarea{
+      width:100%;
+      padding:12px;
+      margin-top:8px;
+      margin-bottom:14px;
+      border-radius:6px;
+      border:1px solid #334155;
+      background:#020617;
+      color:white;
+      font-size:15px;
     }
 
-    textarea {
-      min-height: 120px;
+    textarea{
+      min-height:120px;
     }
 
-    #status {
-      margin-top: 14px;
-      color: #cbd5e1;
+    #status{
+      margin-top:14px;
+      color:#cbd5e1;
     }
 
-    footer {
-      text-align: center;
-      padding: 30px;
-      color: #64748b;
-      border-top: 1px solid #1e293b;
-      margin-top: 60px;
+    footer{
+      text-align:center;
+      padding:30px;
+      color:#64748b;
+      border-top:1px solid #1e293b;
+      margin-top:60px;
     }
 
-    @media (max-width: 1100px) {
+    @media (max-width:1100px){
       .hero-inner,
-      .system-demo-wrap {
-        grid-template-columns: 1fr;
+      .system-demo-wrap{
+        grid-template-columns:1fr;
       }
 
-      .device {
-        margin-left: 0;
+      .device{
+        margin-left:0;
       }
 
-      .hero h1 {
-        font-size: 58px;
+      .hero h1{
+        font-size:58px;
       }
 
-      .hero::before {
-        transform: scale(0.95);
+      .hero::before{
+        transform:scale(.95);
       }
     }
 
-    @media (max-width: 700px) {
-      header {
-        padding: 16px 20px;
-        flex-direction: column;
-        gap: 14px;
-        align-items: flex-start;
+    @media (max-width:700px){
+      header{
+        padding:16px 20px;
       }
 
-      .hero {
-        padding: 50px 20px;
+      .menu-panel{
+        top:70px;
+        right:12px;
+        width:220px;
       }
 
-      .section {
-        padding: 55px 20px;
+      .hero{
+        padding:50px 20px;
       }
 
-      .hero h1 {
-        font-size: 48px;
+      .section{
+        padding:55px 20px;
       }
 
-      .hero h2 {
-        font-size: 22px;
+      .hero h1{
+        font-size:48px;
       }
 
-      .hero p {
-        font-size: 19px;
+      .hero h2{
+        font-size:22px;
       }
 
-      .nav {
-        gap: 14px;
+      .hero p{
+        font-size:19px;
       }
 
-      .device {
-        width: 320px;
+      .device{
+        width:320px;
       }
 
-      .pad div {
-        padding: 14px 0;
-        font-size: 20px;
+      .pad div{
+        padding:14px 0;
+        font-size:20px;
       }
 
-      .start {
-        font-size: 20px;
+      .start{
+        font-size:20px;
       }
 
       .status-grid,
-      .bay-mini-grid {
-        grid-template-columns: 1fr;
+      .bay-mini-grid{
+        grid-template-columns:1fr;
       }
     }
   </style>
 </head>
 
 <body>
-
   <header>
     <div class="logo">WASH<span>TRAC</span></div>
-
-    <div class="nav">
-      <a href="#features">Features</a>
-      <a href="#works">How It Works</a>
-      <a href="#audit">Audit</a>
-      <a href="#monitoring">Monitoring</a>
-      <a href="#systemstate">Live Demo</a>
-      <a href="#contact">Contact</a>
-      <a href="login.html">Login</a>
-    </div>
+    <button class="menu-btn" onclick="toggleMenu()">Menu</button>
   </header>
+
+  <div id="menuPanel" class="menu-panel">
+    <a href="#features" onclick="closeMenu()">Features</a>
+    <a href="#works" onclick="closeMenu()">How It Works</a>
+    <a href="#audit" onclick="closeMenu()">Audit</a>
+    <a href="#monitoring" onclick="closeMenu()">Monitoring</a>
+    <a href="#systemstate" onclick="closeMenu()">Live Demo</a>
+    <a href="#contact" onclick="closeMenu()">Contact</a>
+    <a href="login.html" class="login-link" onclick="closeMenu()">Login</a>
+  </div>
+
+  <div id="backdrop" class="backdrop" onclick="closeMenu()"></div>
 
   <section class="hero">
     <div class="hero-inner">
-
       <div>
         <div class="eyebrow">CARWASH CONTROL SYSTEM</div>
 
@@ -594,7 +635,6 @@
           <button class="start">START WASH</button>
         </div>
       </div>
-
     </div>
   </section>
 
@@ -608,34 +648,22 @@
     <div class="cards">
       <div class="card">
         <h3>Usage Auditing</h3>
-        <p>
-          Every wash activation is logged with timestamp, code, department,
-          and user information for complete accountability.
-        </p>
+        <p>Every wash activation is logged with timestamp, code, department, and user information for complete accountability.</p>
       </div>
 
       <div class="card">
         <h3>Department Tracking</h3>
-        <p>
-          Assign codes by department such as Service, Sales, Detail,
-          Manager, Temporary, or any custom department you need.
-        </p>
+        <p>Assign codes by department such as Service, Sales, Detail, Manager, Temporary, or any custom department you need.</p>
       </div>
 
       <div class="card">
         <h3>Reporting</h3>
-        <p>
-          Generate CSV exports and email reports to monitor wash activity,
-          usage trends, and operational accountability.
-        </p>
+        <p>Generate CSV exports and email reports to monitor wash activity, usage trends, and operational accountability.</p>
       </div>
 
       <div class="card">
         <h3>Remote Wash Control</h3>
-        <p>
-          Control wash operation remotely with configurable time schedules and shutdown controls.
-          Automatically disable the wash after business hours or temporarily lock the system when needed.
-        </p>
+        <p>Control wash operation remotely with configurable time schedules and shutdown controls. Automatically disable the wash after business hours or temporarily lock the system when needed.</p>
       </div>
     </div>
   </section>
@@ -649,34 +677,22 @@
     <div class="cards">
       <div class="card">
         <h3>Create Access Codes</h3>
-        <p>
-          Managers assign wash access codes to departments,
-          employees, or temporary users.
-        </p>
+        <p>Managers assign wash access codes to departments, employees, or temporary users.</p>
       </div>
 
       <div class="card">
         <h3>Activate the Wash</h3>
-        <p>
-          Users enter their code on the CodeBox terminal
-          to activate the wash system quickly and securely.
-        </p>
+        <p>Users enter their code on the CodeBox terminal to activate the wash system quickly and securely.</p>
       </div>
 
       <div class="card">
         <h3>Track Every Activation</h3>
-        <p>
-          Every wash event is logged with timestamps,
-          code usage history, and department tracking.
-        </p>
+        <p>Every wash event is logged with timestamps, code usage history, and department tracking.</p>
       </div>
 
       <div class="card">
         <h3>View Reports</h3>
-        <p>
-          Managers can review dashboards, export reports,
-          and receive usage summaries by email.
-        </p>
+        <p>Managers can review dashboards, export reports, and receive usage summaries by email.</p>
       </div>
     </div>
   </section>
@@ -684,41 +700,28 @@
   <section id="audit" class="section">
     <h2>Audit & Reporting Visibility</h2>
     <p class="section-intro">
-      WashTrac is not just a terminal. It is a complete auditing and visibility system
-      built to help managers track usage, reduce abuse, and review activity in real time.
+      WashTrac is not just a terminal. It is a complete auditing and visibility system built to help managers track usage, reduce abuse, and review activity in real time.
     </p>
 
     <div class="cards">
       <div class="card">
         <h3>Timestamped Activity</h3>
-        <p>
-          Every code use can be recorded with date and time so you always know
-          exactly when the wash was activated.
-        </p>
+        <p>Every code use can be recorded with date and time so you always know exactly when the wash was activated.</p>
       </div>
 
       <div class="card">
         <h3>Live Monitoring</h3>
-        <p>
-          See activity as it happens through live dashboards,
-          usage tracking, and monitoring screens.
-        </p>
+        <p>See activity as it happens through live dashboards, usage tracking, and monitoring screens.</p>
       </div>
 
       <div class="card">
         <h3>Email & CSV Exports</h3>
-        <p>
-          Send reports by email or export usage history for accountability,
-          internal review, and management reporting.
-        </p>
+        <p>Send reports by email or export usage history for accountability, internal review, and management reporting.</p>
       </div>
 
       <div class="card graph-card">
         <h3>Usage Graphs</h3>
-        <p>
-          Visualize code activity and department trends with clean usage graphs
-          that make patterns easier to spot.
-        </p>
+        <p>Visualize code activity and department trends with clean usage graphs that make patterns easier to spot.</p>
 
         <div class="mini-graph">
           <div class="mini-bar" style="height:45%;"></div>
@@ -740,41 +743,28 @@
   <section id="monitoring" class="section">
     <h2>Real-Time Monitoring & Remote Control</h2>
     <p class="section-intro">
-      WashTrac can support live operational visibility, emergency stop awareness,
-      and remote control options for stronger after-hours protection and management oversight.
+      WashTrac can support live operational visibility, emergency stop awareness, and remote control options for stronger after-hours protection and management oversight.
     </p>
 
     <div class="cards">
       <div class="card">
         <h3>Real-Time Monitoring</h3>
-        <p>
-          Monitor active wash events, recent code use, and operational activity live
-          from the dashboard or monitor screen.
-        </p>
+        <p>Monitor active wash events, recent code use, and operational activity live from the dashboard or monitor screen.</p>
       </div>
 
       <div class="card">
         <h3>E-STOP Monitoring</h3>
-        <p>
-          Display emergency stop conditions so operators and managers can see when
-          an E-STOP event has been triggered.
-        </p>
+        <p>Display emergency stop conditions so operators and managers can see when an E-STOP event has been triggered.</p>
       </div>
 
       <div class="card">
         <h3>Remote Shutdown</h3>
-        <p>
-          Remotely disable wash activation based on business hours, configurable schedules,
-          or management control needs.
-        </p>
+        <p>Remotely disable wash activation based on business hours, configurable schedules, or management control needs.</p>
       </div>
 
       <div class="card">
         <h3>After-Hours Protection</h3>
-        <p>
-          Help prevent unauthorized usage after hours by combining access control,
-          live visibility, and remote operational shutdown capability.
-        </p>
+        <p>Help prevent unauthorized usage after hours by combining access control, live visibility, and remote operational shutdown capability.</p>
       </div>
     </div>
   </section>
@@ -859,6 +849,19 @@
     const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    function toggleMenu(){
+      const menu = document.getElementById("menuPanel");
+      const backdrop = document.getElementById("backdrop");
+      const isOpen = menu.style.display === "flex";
+      menu.style.display = isOpen ? "none" : "flex";
+      backdrop.style.display = isOpen ? "none" : "block";
+    }
+
+    function closeMenu(){
+      document.getElementById("menuPanel").style.display = "none";
+      document.getElementById("backdrop").style.display = "none";
+    }
+
     function isLockoutActive(control){
       if(!control || !control.lockout_enabled) return false;
       if(!control.lockout_start || !control.lockout_end) return false;
@@ -911,6 +914,7 @@
           `${control.lockout_start || "--:--"} to ${control.lockout_end || "--:--"}`;
 
         const banner = document.getElementById("systemBanner");
+
         if(control.estop_active){
           banner.className = "system-banner banner-red";
           banner.innerText = "🚨 EMERGENCY STOP ACTIVE";
@@ -929,7 +933,7 @@
       const { data: bays } = await supabaseClient
         .from("bay_status")
         .select("*")
-        .order("bay_name", { ascending: true });
+        .order("bay_name", { ascending:true });
 
       const wrap = document.getElementById("homepageBayGrid");
       wrap.innerHTML = "";
@@ -980,6 +984,5 @@
       .on("postgres_changes", { event:"*", schema:"public", table:"bay_status" }, () => loadLiveSystemState())
       .subscribe();
   </script>
-
 </body>
 </html>
