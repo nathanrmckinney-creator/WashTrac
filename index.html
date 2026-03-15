@@ -969,6 +969,32 @@
     return;
   }
 
+  const { data, error } = await supabaseClient.functions.invoke("rapid-task", {
+    body: {
+      name,
+      company,
+      email,
+      phone,
+      message
+    }
+  });
+
+  console.log("rapid-task response:", data, error);
+
+  if (error) {
+    statusBox.innerText = "Saved, but email failed";
+    return;
+  }
+
+  statusBox.innerText = "Message sent. We'll be in touch.";
+
+  document.getElementById("name").value = "";
+  document.getElementById("company").value = "";
+  document.getElementById("email").value = "";
+  document.getElementById("phone").value = "";
+  document.getElementById("message").value = "";
+}
+
   try {
     const response = await fetch(
       "https://feqrsypiugwwdweiwvua.supabase.co/functions/v1/rapid-task",
