@@ -994,6 +994,10 @@
   document.getElementById("phone").value = "";
   document.getElementById("message").value = "";
 }
+    document.getElementById("contactForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+  await sendContact(e);
+});
 
   try {
     const response = await fetch(
