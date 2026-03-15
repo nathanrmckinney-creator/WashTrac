@@ -1026,19 +1026,20 @@ if (saveError) {
         .subscribe();
     });
     async function generatePairCode() {
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-    const { error } = await supabaseClient
-        .from("pair_codes")
-        .insert([{ code: code }]);
+const { error } = await supabaseClient
+.from("pair_codes")
+.insert([{ code: code }]);
 
-    if (error) {
-        alert("Error creating pairing code");
-        console.error(error);
-        return;
-    }
+if (error) {
+alert("Error creating pairing code");
+console.error(error);
+return;
+}
 
-    alert("Device Pairing Code: " + code);
+document.getElementById("pairCodeDisplay").innerText = code;
+document.getElementById("pairModal").style.display = "flex";
     }
   </script>
 </body>
