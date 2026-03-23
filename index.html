@@ -40,18 +40,26 @@
       color: #1ea7ff;
     }
 
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0px 16px;
-      height:80px;
-      background: rgba(2, 6, 23, 0.92);
-      border-bottom: 2px solid #1e293b;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
+   header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  background: rgba(2, 6, 23, 0.92);
+  border-bottom: 2px solid #1e293b;
+}
+
+    .header-inner {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 28px;
+  height: 80px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+}
 
     .eyebrow-wrap {
       width: 100%;
@@ -589,11 +597,41 @@ line-height:1.6;
       margin-top: 60px;
     }
 
-    @media (max-width: 1100px) {
-      .hero-inner,
-      .system-demo-wrap {
-        grid-template-columns: 1fr;
-      }
+     .hero-inner {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 72px 28px 64px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 44px;
+  box-sizing: border-box;
+}
+
+   @media (max-width: 1100px) {
+  .hero-inner,
+  .system-demo-wrap {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .device {
+    margin-left: 0;
+  }
+
+  .hero h1 {
+    font-size: 58px;
+  }
+
+  .hero::before {
+    transform: scale(1.02);
+  }
+}
 
       .device {
         margin-left: 0;
@@ -608,31 +646,30 @@ line-height:1.6;
       }
     }
 
-    @media (max-width: 700px) {
-      header {
-        padding: 16px 20px;
-      }
+   @media (max-width: 700px) {
+  .header-inner {
+    padding: 0 20px;
+    height: 72px;
+  }
 
-      .menu-panel {
-        top: 70px;
-        right: 12px;
-        width: 220px;
-      }
+  .menu-panel {
+    top: 70px;
+    right: 12px;
+    width: 220px;
+  }
 
-      .logo {
-        margin-left: 0;
-        gap: 6px;
-      }
+  .logo {
+    margin-left: 0;
+    gap: 6px;
+  }
 
-      .logo img {
-        height: 24px;
-        margin-left: -4px;
-      }
+ .logo img {
+  margin-left: 0;
+}
 
-      .hero {
-        padding: 50px 20px;
-      }
-
+  .hero {
+    padding: 50px 20px;
+  }
       .section {
         padding: 55px 20px;
       }
