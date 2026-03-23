@@ -8,6 +8,16 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
+    .logo-container {
+  position: absolute;
+  top: 20px;
+  left: 30px;
+  z-index: 1000;
+}
+
+.logo-container img {
+  height: 60px;
+}
     * { box-sizing: border-box; }
 
    body {
@@ -19,8 +29,7 @@
   -webkit-font-smoothing: antialiased;
 }
 
-    a {
-      text-decoration: none;
+     text-decoration: none;
       color: inherit;
     }
 
@@ -674,7 +683,7 @@ textarea {
 <body>
   <header>
     <div class="logo">
-  <img src="WashTrac_logo.png" alt="WashTrac logo" />
+  <img src="WashTrac-logo.png" alt="WashTrac logo" />
 </div>
     <button class="menu-btn" onclick="toggleMenu()">&#9776;</button>
   </header>
