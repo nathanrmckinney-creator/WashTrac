@@ -8,13 +8,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
+    * { box-sizing: border-box; }
+
     body {
       margin: 0;
-      font-family: 'Inter', 'Montserrat', Arial, sans-serif;
+      font-family: Arial, Helvetica, sans-serif;
       background: #020617;
-      color: #e2e8f0;
+      color: #fff;
       overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
     }
 
     a {
@@ -22,30 +23,26 @@
       color: inherit;
     }
 
+    .logo {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: 0px;
+    }
+
+    .logo span {
+      color: #1ea7ff;
+    }
+
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px 20px;
-      background: rgba(2, 6, 23, 0.85);
-      border-bottom: 1px solid #1f2937;
+      padding: 18px 40px;
+      background: rgba(2, 6, 23, 0.92);
+      border-bottom: 1px solid #1e293b;
       position: sticky;
       top: 0;
       z-index: 1000;
-      backdrop-filter: blur(10px);
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      margin-left: 10px;
-    }
-
-    .logo img {
-      height: 50px;
-      width: auto;
-      max-height: none;
-      display: block;
     }
 
     .menu-btn {
@@ -73,18 +70,7 @@
       z-index: 1100;
       box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
     }
-  </style>
-</head>
-<body>
 
-  <header>
-    <div class="logo">
-      <img src="WashTrac-logo.png" alt="WashTrac Logo" />
-    </div>
-    <button class="menu-btn" onclick="toggleMenu()">&#9776;</button>
-  </header>
-</body>
-</html>
     .menu-panel a {
       color: #e5e7eb;
       font-size: 16px;
@@ -107,27 +93,20 @@
       z-index: 1050;
     }
 
-   .btn {
-  padding: 12px 20px;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #2F80ED, #1C4FA3);
-  border: none;
-  color: white;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  cursor: pointer;
-  display: inline-block;
-  transition: all 0.2s ease;
-}
+    .btn {
+      padding: 12px 18px;
+      border-radius: 8px;
+      background: #1ea7ff;
+      border: none;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      display: inline-block;
+    }
 
-.btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(30, 167, 255, 0.25);
-}
-
-.btn.secondary {
-  background: #334155;
-}
+    .btn.secondary {
+      background: #334155;
+    }
 
     .hero::after {
 content: "";
@@ -208,33 +187,22 @@ z-index: 1;
       font-size: 15px;
     }
 
-.hero h1 {
-  font-size: 60px;
-  font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: -1px;
-  margin-bottom: 18px;
+    .hero h1{
+font-size:56px;
+font-weight:700;
+line-height:1.1;
+margin-bottom:20px;
+    }
+.brand-accent{
+color:#38bdf8;
 }
-
-.brand-accent {
-  color: #38bdf8;
-}
-
-.hero h2 {
-  letter-spacing: 3px;
-  color: #38bdf8;
-  margin-top: 12px;
-  margin-bottom: 0;
-  font-size: 24px;
-  text-transform: uppercase;
-}
-
-.hero p {
-  font-size: 20px;
-  color: #94a3b8;
-  max-width: 700px;
-  line-height: 1.6;
-}
+    .hero h2 {
+      letter-spacing: 5px;
+      color: #1ea7ff;
+      margin-top: 14px;
+      margin-bottom: 0;
+      font-size: 28px;
+    }
 .who-for{
 background:#020617;
 padding:70px 30px;
@@ -379,30 +347,24 @@ line-height:1.6;
       gap: 20px;
     }
 
-  .card {
-  background: #0b1220;
-  padding: 26px;
-  border-radius: 14px;
-  border: 1px solid #1e293b;
-  transition: all 0.2s ease;
-}
+    .card {
+      background: #0f172a;
+      padding: 25px;
+      border-radius: 12px;
+      border: 1px solid #1e293b;
+    }
 
-.card:hover {
-  border-color: #334155;
-  transform: translateY(-4px);
-}
+    .card h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 22px;
+    }
 
-.card h3 {
-  margin-top: 0;
-  margin-bottom: 10px;
-  font-size: 22px;
-}
-
-.card p {
-  margin: 0;
-  color: #94a3b8;
-  line-height: 1.6;
-}
+    .card p {
+      margin: 0;
+      color: #94a3b8;
+      line-height: 1.6;
+    }
 
     .graph-card {
       background: linear-gradient(180deg, #0f172a, #111827);
@@ -578,26 +540,20 @@ line-height:1.6;
     }
 
     input, textarea {
-  width: 100%;
-  padding: 12px;
-  margin-top: 8px;
-  margin-bottom: 14px;
-  border-radius: 8px;
-  border: 1px solid #1e293b;
-  background: #020617;
-  color: white;
-  font-size: 15px;
-}
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      margin-bottom: 14px;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      background: #020617;
+      color: white;
+      font-size: 15px;
+    }
 
-input:focus, textarea:focus {
-  outline: none;
-  border-color: #2F80ED;
-  box-shadow: 0 0 0 1px rgba(47,128,237,0.4);
-}
-
-textarea {
-  min-height: 120px;
-}
+    textarea {
+      min-height: 120px;
+    }
 
     #status {
       margin-top: 14px;
@@ -685,9 +641,7 @@ textarea {
 
 <body>
   <header>
-    <div class="logo">
-  <img src="washtrac-logo.png" alt="WashTrac Logo" />
-</div>
+    <div class="logo">Wash<span>Trac</span></div>
     <button class="menu-btn" onclick="toggleMenu()">&#9776;</button>
   </header>
 
@@ -709,8 +663,8 @@ textarea {
       <div>
         <div class="eyebrow">Wash<span class="brand-accent">Trac</span> Control System</div>
 
-       <h1>WashTrac CodeBox</h1>
-<h2>Entry Control Terminal</h2>
+        <h1>CodeBox</h1>
+        <h2>ENTRY TERMINAL</h2>
 
         <p>
           Control wash access and track every activation in real time.
