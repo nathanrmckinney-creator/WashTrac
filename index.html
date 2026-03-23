@@ -53,10 +53,15 @@
       z-index: 1000;
     }
 
-    .eyebrow {
+    .eyebrow-wrap {
+      width: 100%;
       text-align: center;
-      margin-top: 2px;
-      margin-bottom: 0px;
+      margin-top: 4px;
+      margin-bottom: 8px;
+    }
+    
+    .eyebrow {
+      display: inline-block;
       font-size: 14px;
       color: #9ca3af;
       letter-spacing: 2px;
@@ -679,7 +684,7 @@ line-height:1.6;
 
   <section class="hero">
     <div class="hero-inner">
-      <div>
+      <div class="eyebrow-wrap">
         <div class="eyebrow">Control. Track. Manage</div>
 
         <h1>CodeBox</h1>
