@@ -629,6 +629,16 @@ line-height:1.6;
         width: 220px;
       }
 
+      .logo {
+        margin-left: 0;
+        gap: 6px;
+      }
+
+      .logo img {
+        height: 24px;
+        margin-left: -4px;
+      }
+
       .hero {
         padding: 50px 20px;
       }
@@ -666,6 +676,12 @@ line-height:1.6;
       .bay-mini-grid {
         grid-template-columns: 1fr;
       }
+      
+      @media (min-width: 769px) {
+        .hero-inner {
+          grid-template: 0.95fr 1.05fr;
+          gap: 56px;
+        }
     }
   </style>
 </head>
