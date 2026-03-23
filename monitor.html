@@ -30,11 +30,9 @@
     .logo{
       font-size:22px;
       font-weight:bold;
-      letter-spacing:0;
+      letter-spacing:2px;
     }
-.brand-accent{
-  color:#2ea8ff !important;
-}
+
     .logo span{
       color:#38bdf8;
     }
@@ -216,8 +214,6 @@
         top:70px;
         width:220px;
       }
-    .brand-accent{
-  color:#2ea8ff !important;
     }
   </style>
 </head>
@@ -225,8 +221,8 @@
 <body>
 
   <div class="header">
-    <div class="logo">Wash<span class="brand-accent">Trac</span></div>
-    <button class="menu-btn" onclick="toggleMenu()">☰</button>
+    <div class="logo">WASH<span>TRAC</span></div>
+    <button onclick="toggleMenu()" class="menu-btn">Menu</button>
   </div>
 
   <div id="menuPanel" class="menu-panel">
@@ -243,7 +239,7 @@
 
   <div class="container">
 
-    <h1>Wash<span class="brand-accent">Trac</span> System Monitor</h1>
+    <h1>WashTrac System Monitor</h1>
 
     <div id="systemBanner" class="banner green">
       SYSTEM ONLINE
