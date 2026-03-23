@@ -218,67 +218,64 @@
   </style>
 </head>
 
-<body>
+  <body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-brand">WashTrac</div>
 
-  <div class="header">
-    <div class="logo">WASH<span>TRAC</span></div>
-    <button onclick="toggleMenu()" class="menu-btn">Menu</button>
+      <nav class="sidebar-nav">
+        <a href="/dashboard.html">Dashboard</a>
+        <a href="/codes.html">Codes</a>
+        <a href="/activity.html">Activity</a>
+        <a href="/usage.html">Reports</a>
+        <a href="/monitor.html" class="active">Monitor</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="/">Back to Homepage</a>
+        <a href="/login.html" class="logout-link">Logout</a>
+      </div>
+    </aside>
+
+    <main class="app-main">
+      <h1>WashTrac System Monitor</h1>
+
+      <div id="systemBanner" class="banner green">
+        SYSTEM ONLINE
+      </div>
+
+      <div class="bay-grid" id="bayGrid"></div>
+
+      <div class="grid">
+        <div class="card">
+          <h3>Wash Status</h3>
+          <div id="washStatus"></div>
+        </div>
+
+        <div class="card">
+          <h3>E-STOP</h3>
+          <div id="estopStatus"></div>
+        </div>
+
+        <div class="card">
+          <h3>Scheduled Lockout</h3>
+          <div id="lockoutStatus"></div>
+        </div>
+
+        <div class="card">
+          <h3>Lockout Window</h3>
+          <div id="lockoutWindow"></div>
+        </div>
+
+        <div class="card card-span-full">
+          <h3>Recent Activity</h3>
+          <div id="activity"></div>
+        </div>
+      </div>
+    </main>
   </div>
 
-  <div id="menuPanel" class="menu-panel">
-    <a href="/dashboard.html" onclick="closeMenu()">Dashboard</a>
-    <a href="/codes.html" onclick="closeMenu()">Codes</a>
-    <a href="/activity.html" onclick="closeMenu()">Activity</a>
-    <a href="/usage.html" onclick="closeMenu()">Reports</a>
-    <a href="/monitor.html" onclick="closeMenu()">Monitor</a>
-    <a href="/" onclick="closeMenu()">Back to Homepage</a>
-    <a href="/login.html" class="logout" onclick="closeMenu()">Logout</a>
-  </div>
-
-  <div id="backdrop" class="backdrop" onclick="closeMenu()"></div>
-
-  <div class="container">
-
-    <h1>WashTrac System Monitor</h1>
-
-    <div id="systemBanner" class="banner green">
-      SYSTEM ONLINE
-    </div>
-
-    <div class="bay-grid" id="bayGrid"></div>
-
-    <div class="grid">
-
-      <div class="card">
-        <h3>Wash Status</h3>
-        <div id="washStatus"></div>
-      </div>
-
-      <div class="card">
-        <h3>E-STOP</h3>
-        <div id="estopStatus"></div>
-      </div>
-
-      <div class="card">
-        <h3>Scheduled Lockout</h3>
-        <div id="lockoutStatus"></div>
-      </div>
-
-      <div class="card">
-        <h3>Lockout Window</h3>
-        <div id="lockoutWindow"></div>
-      </div>
-
-    </div>
-
-    <div class="card">
-      <h3>Recent Activity</h3>
-      <div id="activity"></div>
-    </div>
-
-  </div>
-
-  <script>
+<script>
     const SUPABASE_URL="https://feqrsypiugwwdweiwvua.supabase.co";
     const SUPABASE_KEY="sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
     const client=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
