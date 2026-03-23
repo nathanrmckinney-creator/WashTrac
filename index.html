@@ -46,33 +46,31 @@
   </div>
   <button class="menu-btn" onclick="toggleMenu()">&#9776;</button>
 </header>
+  .menu-btn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+}
 
-    .menu-btn {
-      background: #2563eb;
-      color: #fff;
-      border: none;
-      padding: 12px 18px;
-      border-radius: 10px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .menu-panel {
-      position: fixed;
-      top: 78px;
-      right: 20px;
-      width: 240px;
-      background: #0b1220;
-      border: 1px solid #1f2937;
-      border-radius: 14px;
-      padding: 18px;
-      display: none;
-      flex-direction: column;
-      gap: 14px;
-      z-index: 1100;
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
-    }
-
+.menu-panel {
+  position: fixed;
+  top: 78px;
+  right: 20px;
+  width: 240px;
+  background: #0b1220;
+  border: 1px solid #1f2937;
+  border-radius: 14px;
+  padding: 18px;
+  display: none;
+  flex-direction: column;
+  gap: 14px;
+  z-index: 1100;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+}
     .menu-panel a {
       color: #e5e7eb;
       font-size: 16px;
