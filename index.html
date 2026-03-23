@@ -8,7 +8,13 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
 
     body {
       margin: 0;
@@ -23,52 +29,31 @@
       color: inherit;
     }
 
-    .logo {
-      display: flex;
-      align-items: center;
-      gap:10px;
-      margin-top: 4px;
-    }
-    
-    .logo img {
-      height: 200px;
-      width: auto;
-      display: block;
-    }
-    
-    .logo span {
-      color: #1ea7ff;
-    }
-
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0px 16px;
-      height:60px;
+      padding: 0 20px;
+      height: 72px;
       background: rgba(2, 6, 23, 0.92);
       border-bottom: 2px solid #1e293b;
       position: sticky;
       top: 0;
       z-index: 1000;
+      backdrop-filter: blur(8px);
     }
 
-    .eyebrow-wrap {
-      width: 100%;
-      text-align: center;
-      margin-top: 0px;
-      margin-bottom: 8px;
+    .logo {
+      display: flex;
+      align-items: center;
+      height: 100%;
+      min-width: 0;
     }
-    
-    .eyebrow {
-      display: inline-block;
-      font-size: 14px;
-      color: #9ca3af;
-      letter-spacing: 2px;
-    }
-    
-    .eyebrow {
-      color: #9ca3af !important;
+
+    .logo img {
+      height: 44px;
+      width: auto;
+      display: block;
     }
 
     .menu-btn {
@@ -79,11 +64,12 @@
       border-radius: 10px;
       font-weight: bold;
       cursor: pointer;
+      flex-shrink: 0;
     }
 
     .menu-panel {
       position: fixed;
-      top: 78px;
+      top: 84px;
       right: 20px;
       width: 240px;
       background: #0b1220;
@@ -134,143 +120,97 @@
       background: #334155;
     }
 
-    .hero::after {
-content: "";
-position: absolute;
-inset: 0;
-background:
-linear-gradient(
-90deg,
-rgba(2,6,23,0.95) 0%,
-rgba(2,6,23,0.85) 40%,
-rgba(2,6,23,0.45) 70%,
-rgba(2,6,23,0.2) 100%
-),
-linear-gradient(
-to bottom,
-rgba(2,6,23,0) 35%,
-rgba(2,6,23,0.55) 60%,
-rgba(2,6,23,0.85) 82%,
-rgba(2,6,23,1) 100%
-);
-z-index: 1;
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 70px 28px 80px;
+      min-height: 760px;
+      display: flex;
+      align-items: center;
+      isolation: isolate;
     }
 
     .hero::before {
       content: "";
       position: absolute;
-      top: -7%;
-left: -2%;
-right: -2%;
-bottom: -0%;
-      background: url("Carwash.png") center 8% / contain;
+      top: -4%;
+      left: -2%;
+      right: -2%;
+      bottom: 0;
+      background: url("Carwash.png") center 10% / contain no-repeat;
       filter: saturate(1.35) brightness(1.1);
       z-index: 0;
     }
 
     .hero::after {
-content: "";
-position: absolute;
-inset: 0;
-background:
-linear-gradient(
-90deg,
-rgba(2,6,23,0.95) 0%,
-rgba(2,6,23,0.85) 40%,
-rgba(2,6,23,0.45) 70%,
-rgba(2,6,23,0.2) 100%
-),
-linear-gradient(
-to bottom,
-rgba(2,6,23,0) 40%,
-rgba(2,6,23,0.65) 65%,
-rgba(2,6,23,0.9) 85%,
-rgba(2,6,23,1) 100%
-);
-z-index: 1;
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(
+          90deg,
+          rgba(2, 6, 23, 0.96) 0%,
+          rgba(2, 6, 23, 0.90) 34%,
+          rgba(2, 6, 23, 0.58) 62%,
+          rgba(2, 6, 23, 0.22) 100%
+        ),
+        linear-gradient(
+          to bottom,
+          rgba(2, 6, 23, 0) 38%,
+          rgba(2, 6, 23, 0.62) 66%,
+          rgba(2, 6, 23, 0.90) 86%,
+          rgba(2, 6, 23, 1) 100%
+        );
+      z-index: 1;
     }
 
     .hero-inner {
       max-width: 1200px;
-      margin: auto;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 40px;
-      align-items: center;
+      margin: 0 auto;
       width: 100%;
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(320px, 420px);
+      gap: 56px;
+      align-items: center;
       position: relative;
       z-index: 2;
-      min-height: 700px;
-      text-shadow: 0 0 40px rgba(56,189,248,0.15);
+      text-shadow: 0 0 40px rgba(56, 189, 248, 0.15);
     }
 
-    .hero-inner > div:last-child {
-      margin-top: 100px;
+    .hero-copy {
+      max-width: 680px;
     }
 
     .eyebrow {
-      color: #ca3af;
+      display: inline-block;
+      font-size: 14px;
+      color: #9ca3af;
       letter-spacing: 2px;
       font-weight: bold;
-      margin-top: 2px;
-      margin-bottom: 12px;
-      font-size: 15px;
-      text-align: center:
+      margin: 0 0 14px;
+      text-transform: uppercase;
     }
 
-    .hero h1{
-font-size:56px;
-font-weight:700;
-line-height:1.1;
-margin-bottom:20px;
+    .hero h1 {
+      font-size: 56px;
+      font-weight: 700;
+      line-height: 1.06;
+      margin: 0 0 14px;
     }
-.brand-accent{
-color:#38bdf8;
-}
+
     .hero h2 {
       letter-spacing: 5px;
       color: #1ea7ff;
-      margin-top: 14px;
-      margin-bottom: 0;
+      margin: 0 0 22px;
       font-size: 28px;
     }
-.who-for{
-background:#020617;
-padding:70px 30px;
-}
 
-.who-inner{
-max-width:1100px;
-margin:auto;
-}
-
-.who-title{
-text-align:center;
-font-size:22px;
-font-weight:600;
-margin-bottom:40px;
-color:white;
-}
-
-.who-grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-gap:20px;
-}
-
-.who-card{
-background:#0f172a;
-padding:22px;
-border-radius:10px;
-text-align:center;
-font-weight:500;
-border:1px solid #1e293b;
-}
-    .hero p{
-font-size:20px;
-color:#94a3b8;
-max-width:700px;
-line-height:1.6;
+    .hero p {
+      font-size: 20px;
+      color: #94a3b8;
+      max-width: 700px;
+      line-height: 1.6;
+      margin: 0;
     }
 
     .features {
@@ -289,15 +229,22 @@ line-height:1.6;
       margin-top: 28px;
     }
 
+    .device-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+    }
+
     .device {
       background: rgba(15, 23, 42, 0.92);
       border-radius: 22px;
       padding: 22px;
       border: 1px solid #1e293b;
-      width: 360px;
-      max-width: 100%;
-      margin-left: auto;
+      width: 100%;
+      max-width: 380px;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+      position: relative;
     }
 
     .screen {
@@ -350,6 +297,39 @@ line-height:1.6;
       color: white;
       font-weight: bold;
       box-shadow: 0 0 20px rgba(30, 167, 255, 0.6);
+    }
+
+    .who-for {
+      background: #020617;
+      padding: 70px 30px;
+    }
+
+    .who-inner {
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    .who-title {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 40px;
+      color: white;
+    }
+
+    .who-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .who-card {
+      background: #0f172a;
+      padding: 22px;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: 500;
+      border: 1px solid #1e293b;
     }
 
     .section {
@@ -550,10 +530,25 @@ line-height:1.6;
       vertical-align: middle;
     }
 
-    .dot-ready { background: #22c55e; box-shadow: 0 0 10px rgba(34,197,94,.45); }
-    .dot-running { background: #38bdf8; box-shadow: 0 0 10px rgba(56,189,248,.45); }
-    .dot-idle { background: #f59e0b; box-shadow: 0 0 10px rgba(245,158,11,.35); }
-    .dot-offline { background: #ef4444; box-shadow: 0 0 10px rgba(239,68,68,.35); }
+    .dot-ready {
+      background: #22c55e;
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.45);
+    }
+
+    .dot-running {
+      background: #38bdf8;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.45);
+    }
+
+    .dot-idle {
+      background: #f59e0b;
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.35);
+    }
+
+    .dot-offline {
+      background: #ef4444;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.35);
+    }
 
     .contact {
       background: #0f172a;
@@ -570,7 +565,8 @@ line-height:1.6;
       margin-bottom: 22px;
     }
 
-    input, textarea {
+    input,
+    textarea {
       width: 100%;
       padding: 12px;
       margin-top: 8px;
@@ -600,67 +596,86 @@ line-height:1.6;
     }
 
     @media (max-width: 1100px) {
+      .hero {
+        min-height: auto;
+        padding: 56px 24px 70px;
+      }
+
       .hero-inner,
       .system-demo-wrap {
         grid-template-columns: 1fr;
       }
 
-      .device {
-        margin-left: 0;
+      .hero-copy {
+        max-width: 100%;
+      }
+
+      .device-wrap {
+        justify-content: flex-start;
       }
 
       .hero h1 {
-        font-size: 58px;
+        font-size: 50px;
       }
 
       .hero::before {
-        transform: scale(0.95);
+        background-position: center top;
+        background-size: cover;
+        opacity: 0.55;
       }
     }
 
     @media (max-width: 700px) {
       header {
-        padding: 16px 20px;
+        padding: 0 16px;
+        height: 66px;
+      }
+
+      .logo img {
+        height: 34px;
+      }
+
+      .menu-btn {
+        padding: 10px 14px;
       }
 
       .menu-panel {
-        top: 70px;
+        top: 76px;
         right: 12px;
         width: 220px;
       }
 
-      .logo {
-        margin-left: 0;
-        gap: 6px;
-      }
-
-      .logo img {
-        height: 24px;
-        margin-left: -4px;
-      }
-
       .hero {
-        padding: 50px 20px;
+        padding: 42px 20px 56px;
       }
 
-      .section {
-        padding: 55px 20px;
+      .hero-inner {
+        gap: 30px;
       }
 
       .hero h1 {
-        font-size: 48px;
+        font-size: 40px;
       }
 
       .hero h2 {
-        font-size: 22px;
+        font-size: 20px;
+        letter-spacing: 3px;
       }
 
       .hero p {
-        font-size: 19px;
+        font-size: 18px;
+      }
+
+      .features div {
+        font-size: 17px;
+      }
+
+      .device-wrap {
+        justify-content: center;
       }
 
       .device {
-        width: 320px;
+        max-width: 340px;
       }
 
       .pad div {
@@ -672,44 +687,42 @@ line-height:1.6;
         font-size: 20px;
       }
 
+      .section {
+        padding: 55px 20px;
+      }
+
       .status-grid,
       .bay-mini-grid {
         grid-template-columns: 1fr;
       }
-      
-      @media (min-width: 769px) {
-        .hero-inner {
-          grid-template: 0.95fr 1.05fr;
-          gap: 56px;
-        }
     }
   </style>
 </head>
 
 <body>
- <header>
-  <div class="logo">
-    <img src="washtrac-logo.png" alt="WashTrac Logo" />
-  </div>
-  <button class="menu-btn" onclick="toggleMenu()">&#9776;</button>
-</header>
+  <header>
+    <div class="logo">
+      <img src="washtrac-logo.png" alt="WashTrac Logo" />
+    </div>
+    <button class="menu-btn" onclick="toggleMenu()">&#9776;</button>
+  </header>
 
   <div id="menuPanel" class="menu-panel">
-<a href="login.html" class="login-link" onclick="closeMenu()">Client Login</a>
-<a href="#features" onclick="closeMenu()">Features</a>
-<a href="#works" onclick="closeMenu()">How It Works</a>
-<a href="#audit" onclick="closeMenu()">Audit</a>
-<a href="#monitoring" onclick="closeMenu()">Monitoring</a>
-<a href="#systemstate" onclick="closeMenu()">Live Demo</a>
-<a href="#contact" onclick="closeMenu()">Contact</a>
-<a href="#" onclick="generatePairCode(); closeMenu()">Add Device</a>
+    <a href="login.html" class="login-link" onclick="closeMenu()">Client Login</a>
+    <a href="#features" onclick="closeMenu()">Features</a>
+    <a href="#works" onclick="closeMenu()">How It Works</a>
+    <a href="#audit" onclick="closeMenu()">Audit</a>
+    <a href="#monitoring" onclick="closeMenu()">Monitoring</a>
+    <a href="#systemstate" onclick="closeMenu()">Live Demo</a>
+    <a href="#contact" onclick="closeMenu()">Contact</a>
+    <a href="#" onclick="generatePairCode(); closeMenu()">Add Device</a>
   </div>
 
   <div id="backdrop" class="backdrop" onclick="closeMenu()"></div>
 
   <section class="hero">
     <div class="hero-inner">
-      <div>
+      <div class="hero-copy">
         <div class="eyebrow">Control. Track. Manage</div>
 
         <h1>CodeBox</h1>
@@ -736,54 +749,41 @@ line-height:1.6;
         </div>
       </div>
 
-      <div class="device">
-        <div class="screen">
-          <div class="screen-title">ENTER ACCESS CODE</div>
-          <div class="estop-line">Emergency Stop Activated</div>
+      <div class="device-wrap">
+        <div class="device">
+          <div class="screen">
+            <div class="screen-title">ENTER ACCESS CODE</div>
+            <div class="estop-line">Emergency Stop Activated</div>
 
-          <div class="pad">
-            <div>1</div><div>2</div><div>3</div>
-            <div>4</div><div>5</div><div>6</div>
-            <div>7</div><div>8</div><div>9</div>
-            <div>*</div><div>0</div><div>←</div>
+            <div class="pad">
+              <div>1</div><div>2</div><div>3</div>
+              <div>4</div><div>5</div><div>6</div>
+              <div>7</div><div>8</div><div>9</div>
+              <div>*</div><div>0</div><div>←</div>
+            </div>
+
+            <button class="start">START WASH</button>
           </div>
-
-          <button class="start">START WASH</button>
         </div>
       </div>
     </div>
   </section>
-<section class="who-for">
 
-<div class="who-inner">
+  <section class="who-for">
+    <div class="who-inner">
+      <div class="who-title">
+        Trusted by service departments and fleet operations
+      </div>
 
-<div class="who-title">
-Trusted by service departments and fleet operations
-</div>
+      <div class="who-grid">
+        <div class="who-card">Dealership Service Departments</div>
+        <div class="who-card">Auto Detail Shops</div>
+        <div class="who-card">Fleet Wash Bays</div>
+        <div class="who-card">Municipal Vehicle Maintenance</div>
+      </div>
+    </div>
+  </section>
 
-<div class="who-grid">
-
-<div class="who-card">
-Dealership Service Departments
-</div>
-
-<div class="who-card">
-Auto Detail Shops
-</div>
-
-<div class="who-card">
-Fleet Wash Bays
-</div>
-
-<div class="who-card">
-Municipal Vehicle Maintenance
-</div>
-
-</div>
-
-</div>
-
-</section>
   <section id="features" class="section">
     <h2>WashTrac Management System</h2>
     <p class="section-intro">
@@ -1053,7 +1053,7 @@ Municipal Vehicle Maintenance
         document.getElementById("demoWashPill").className = `status-pill ${control.wash_enabled ? "status-on" : "status-off"}`;
         document.getElementById("demoWashPill").innerText = control.wash_enabled ? "Wash Enabled" : "Wash Disabled";
 
-        document.getElementById("demoEstopText").innerText = control.estop_active ? "Clear" : "Active";
+        document.getElementById("demoEstopText").innerText = control.estop_active ? "Active" : "Clear";
         document.getElementById("demoEstopPill").className = `status-pill ${control.estop_active ? "status-warn" : "status-on"}`;
         document.getElementById("demoEstopPill").innerText = control.estop_active ? "E-STOP Active" : "No Active E-STOP";
 
@@ -1110,15 +1110,15 @@ Municipal Vehicle Maintenance
       statusBox.innerText = "Sending...";
 
       const { data: saved, error: saveError } = await supabaseClient
-  .from("contact_requests")
-  .insert([{ name, company, email, phone, message }]);
+        .from("contact_requests")
+        .insert([{ name, company, email, phone, message }]);
 
-console.log("DB insert:", saved, saveError);
+      console.log("DB insert:", saved, saveError);
 
-if (saveError) {
-  statusBox.innerText = saveError.message;
-  return;
-}
+      if (saveError) {
+        statusBox.innerText = saveError.message;
+        return;
+      }
 
       const { data, error } = await supabaseClient.functions.invoke("rapid-task", {
         body: {
@@ -1164,71 +1164,73 @@ if (saveError) {
         .on("postgres_changes", { event: "*", schema: "public", table: "bay_status" }, () => loadLiveSystemState())
         .subscribe();
     });
+
     async function generatePairCode() {
-const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-const { error } = await supabaseClient
-.from("pair_codes")
-.insert([{ code: code }]);
+      const { error } = await supabaseClient
+        .from("pair_codes")
+        .insert([{ code: code }]);
 
-if (error) {
-alert("Error creating pairing code");
-console.error(error);
-return;
-}
+      if (error) {
+        alert("Error creating pairing code");
+        console.error(error);
+        return;
+      }
 
-document.getElementById("pairCodeDisplay").innerText = code;
-document.getElementById("pairModal").style.display = "flex";
+      document.getElementById("pairCodeDisplay").innerText = code;
+      document.getElementById("pairModal").style.display = "flex";
     }
   </script>
+
   <div id="pairModal" style="
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.6);
-display:none;
-align-items:center;
-justify-content:center;
-z-index:2000;
-">
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.6);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:2000;
+  ">
+    <div style="
+      background:#0b1220;
+      padding:40px;
+      border-radius:16px;
+      text-align:center;
+      color:white;
+      max-width:400px;
+      width:90%;
+    ">
+      <h2>Device Pairing Code</h2>
 
-<div style="
-background:#0b1220;
-padding:40px;
-border-radius:16px;
-text-align:center;
-color:white;
-max-width:400px;
-width:90%;
-">
+      <div id="pairCodeDisplay" style="
+        font-size:48px;
+        font-weight:bold;
+        letter-spacing:6px;
+        margin:20px 0;
+        color:#2ea8ff;
+      "></div>
 
-<h2>Device Pairing Code</h2>
+      <p>Enter this code on your WashTrac terminal.</p>
 
-<div id="pairCodeDisplay" style="
-font-size:48px;
-font-weight:bold;
-letter-spacing:6px;
-margin:20px 0;
-color:#2ea8ff;
-"></div>
-
-<p>Enter this code on your WashTrac terminal.</p>
-
-<button onclick="document.getElementById('pairModal').style.display='none'" style="
-margin-top:20px;
-padding:10px 20px;
-border:none;
-border-radius:8px;
-background:#2563eb;
-color:white;
-cursor:pointer;
-">
-Close
-</button>
-
-</div>
+      <button
+        onclick="document.getElementById('pairModal').style.display='none'"
+        style="
+          margin-top:20px;
+          padding:10px 20px;
+          border:none;
+          border-radius:8px;
+          background:#2563eb;
+          color:white;
+          cursor:pointer;
+        "
+      >
+        Close
+      </button>
+    </div>
   </div>
 </body>
 </html>
