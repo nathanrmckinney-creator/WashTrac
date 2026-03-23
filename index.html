@@ -23,24 +23,24 @@
       color: inherit;
     }
 
-    .logo {
-      display: flex;
-      align-items: center;
-      gap:10px;
-      margin-top: 4px;
-    }
-    
-    .logo img {
-      height: 240px;
-      width: auto;
-      display: block;
-    }
+   .logo {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+}
+
+.logo img {
+  display: block;
+  height: 52px;
+  width: auto;
+}
     
     .logo span {
       color: #1ea7ff;
     }
 
-   header {
+ header {
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -49,15 +49,17 @@
   border-bottom: 2px solid #1e293b;
 }
 
-    .header-inner {
+.header-inner {
   width: 100%;
-  max-width: 1280px;
+  max-width: 1340px;
   margin: 0 auto;
-  padding: 0 28px;
+  padding: 0 40px;
   height: 80px;
+
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between; /* THIS is the key */
+
   box-sizing: border-box;
 }
 
@@ -79,15 +81,10 @@
       color: #9ca3af !important;
     }
 
-    .menu-btn {
-      background: #2563eb;
-      color: #fff;
-      border: none;
-      padding: 12px 18px;
-      border-radius: 10px;
-      font-weight: bold;
-      cursor: pointer;
-    }
+  .menu-btn {
+  margin-left: auto;   /* pushes it to the far right */
+  position: static;    /* IMPORTANT: removes floating behavior */
+}
 
     .menu-panel {
       position: fixed;
