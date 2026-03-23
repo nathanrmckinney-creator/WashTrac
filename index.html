@@ -8,69 +8,86 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    .logo-container {
-  position: absolute;
-  top: 20px;
-  left: 30px;
-  z-index: 1000;
-}
+    body {
+      margin: 0;
+      font-family: 'Inter', 'Montserrat', Arial, sans-serif;
+      background: #020617;
+      color: #e2e8f0;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
 
-       body {
-  margin: 0;
-  font-family: 'Inter', 'Montserrat', Arial, sans-serif;
-  background: #020617;
-  color: #e2e8f0;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-}
-
-     text-decoration: none;
+    a {
+      text-decoration: none;
       color: inherit;
     }
 
- .logo {
-  display: flex;
-  align-items: center;
-  margin-left: 10px;
-}
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 20px;
+      background: rgba(2, 6, 23, 0.85);
+      border-bottom: 1px solid #1f2937;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+    }
 
-.logo img {
-  height: 50px;
-  width: auto;
-  max-height: none;
-}
+    .logo {
+      display: flex;
+      align-items: center;
+      margin-left: 10px;
+    }
 
-<header>
-  <div class="logo">
-    <img src="WashTrac-logo.png" alt="WashTrac Logo" />
-  </div>
-  <button class="menu-btn" onclick="toggleMenu()">&#9776;</button>
-</header>
-  .menu-btn {
-  background: #2563eb;
-  color: #fff;
-  border: none;
-  padding: 12px 18px;
-  border-radius: 10px;
-  font-weight: bold;
-  cursor: pointer;
-}
+    .logo img {
+      height: 50px;
+      width: auto;
+      max-height: none;
+      display: block;
+    }
 
-.menu-panel {
-  position: fixed;
-  top: 78px;
-  right: 20px;
-  width: 240px;
-  background: #0b1220;
-  border: 1px solid #1f2937;
-  border-radius: 14px;
-  padding: 18px;
-  display: none;
-  flex-direction: column;
-  gap: 14px;
-  z-index: 1100;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
-}
+    .menu-btn {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .menu-panel {
+      position: fixed;
+      top: 78px;
+      right: 20px;
+      width: 240px;
+      background: #0b1220;
+      border: 1px solid #1f2937;
+      border-radius: 14px;
+      padding: 18px;
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+      z-index: 1100;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <img src="WashTrac-logo.png" alt="WashTrac Logo" />
+    </div>
+    <button class="menu-btn" onclick="toggleMenu()">&#9776;</button>
+  </header>
+
+  <!-- rest of your page goes here -->
+
+</body>
+</html>
     .menu-panel a {
       color: #e5e7eb;
       font-size: 16px;
