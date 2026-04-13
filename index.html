@@ -545,86 +545,84 @@ line-height:1.6;
       margin-top: 60px;
     }
 
-    @media (max-width: 1100px) {
-      .hero-inner,
-      .system-demo-wrap {
-        grid-template-columns: 1fr;
-      }
-
-      .device {
-        margin-left: 0;
-      }
-
-      .hero h1 {
-        font-size: 58px;
-      }
-
-      .hero::before {
-        transform: none;
-      }
-
-    @media (max-width: 700px) {
-      header {
-        padding: 16px 20px;
-      }
-
-      .menu-panel {
-        top: 70px;
-        right: 12px;
-        width: 220px;
-      }
-
-      .hero {
-        padding: 50px 20px;
-      }
-
-      .section {
-        padding: 55px 20px;
-      }
-
-      .hero h1 {
-        font-size: 48px;
-      }
-
-      .hero h2 {
-        font-size: 22px;
-      }
-
-      .hero p {
-        font-size: 19px;
-      }
-
-      .device {
-        width: 320px;
-      }
-
-      .pad div {
-        padding: 14px 0;
-        font-size: 20px;
-      }
-
-      .start {
-        font-size: 20px;
-      }
-
-      .status-grid,
-      .bay-mini-grid {
-        grid-template-columns: 1fr;
-     @media (max-width: 900px) {
-  .hero::before {
-    background: url("/Carwash.png") center center / 55% no-repeat !important;
+   /* ===== TABLET ===== */
+@media (max-width: 1100px) {
+  .hero-inner,
+  .system-demo-wrap {
+    grid-template-columns: 1fr;
   }
 
-      @media (max-width: 900px) {
+  .device {
+    margin-left: 0;
+  }
+
+  .hero h1 {
+    font-size: 58px;
+  }
+
   .hero::before {
-    content: "";
-    position: absolute;
-    inset: 0;
+    transform: none;
+  }
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 700px) {
+  header {
+    padding: 16px 20px;
+  }
+
+  .menu-panel {
+    top: 70px;
+    right: 12px;
+    width: 220px;
+  }
+
+  .hero {
+    padding: 50px 20px;
+  }
+
+  .section {
+    padding: 55px 20px;
+  }
+
+  .hero h1 {
+    font-size: 48px;
+  }
+
+  .hero h2 {
+    font-size: 22px;
+  }
+
+  .hero p {
+    font-size: 19px;
+  }
+
+  .device {
+    width: 320px;
+  }
+
+  .pad div {
+    padding: 14px 0;
+    font-size: 20px;
+  }
+
+  .start {
+    font-size: 20px;
+  }
+
+  .status-grid,
+  .bay-mini-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== MOBILE BACKGROUND CONTROL ===== */
+@media (max-width: 900px) {
+  .hero::before {
     background-image: url("/Carwash.png") !important;
     background-position: center top !important;
-    background-size: auto 70% !important;
+    background-size: auto 60% !important;
     background-repeat: no-repeat !important;
-    transform: none !important;
   }
 }
   </style>
