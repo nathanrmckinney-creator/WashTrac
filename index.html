@@ -615,14 +615,17 @@ line-height:1.6;
     background: url("/Carwash.png") center center / 55% no-repeat !important;
   }
 
-       @media (max-width: 900px) {
+      @media (max-width: 900px) {
   .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
     background-image: url("/Carwash.png") !important;
-    background-position: center center !important;
-    background-size: 55% !important;
+    background-position: center top !important;
+    background-size: auto 70% !important;
     background-repeat: no-repeat !important;
+    transform: none !important;
   }
-
 }
   </style>
 </head>
