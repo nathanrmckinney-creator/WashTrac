@@ -206,6 +206,23 @@ async function fetchActivity(){
   }));
 }
 
+async function initActivity(){
+  const activity = await fetchActivity();
+
+  console.log("Activity:", activity);
+
+  // ✅ Total Events
+  document.querySelector(".total-events").innerText = activity.length;
+
+  // ✅ Unique Codes
+  const uniqueCodes = new Set(activity.map(a => a.code));
+  document.querySelector(".unique-codes").innerText = uniqueCodes.size;
+
+  // (optional next step: render table)
+}
+
+initActivity();
+  
 async function renderActivity(){
   const codeFilter = document.getElementById("filterCode").value.trim().toLowerCase();
   const departmentFilter = document.getElementById("filterDepartment").value.trim().toLowerCase();
