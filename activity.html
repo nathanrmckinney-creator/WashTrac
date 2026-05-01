@@ -189,9 +189,21 @@ function logout(){
 }
 
 async function fetchActivity(){
-  const { data, error } = await client.from("activity").select("*").order("event_time", { ascending:false });
+  const { data, error } = await client
+    .from("wash_activity")
+    .select("*")
+    .order("event_time", { ascending:false });
+
   if(error){ console.log(error); return []; }
-  return data || [];
+
+  return (data || []).map(row => ({
+    event_time: row.event_time,
+    code: row.metadata?.code || "",
+    department: row.department || "",
+    name: row.metadata?.device || "",
+    bay: row.bay || "",
+    event: row.event || ""
+  }));
 }
 
 async function renderActivity(){
