@@ -206,6 +206,8 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
 <script>
 const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
 const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
+const ORGANIZATION_ID = "c9edef22-aee6-4fd5-a9c6-17e275d1588b";
+const SITE_ID = "0600ecef-9699-458a-8259-0f0876b12ae0";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let allCodes = [];
@@ -479,6 +481,8 @@ async function addCode(){
     const { error } = await client
       .from("access_codes")
       .update({
+        organization_id: ORGANIZATION_ID,
+        site_id: SITE_ID,
         department,
         name,
         is_active: true
@@ -494,6 +498,8 @@ async function addCode(){
     const { error } = await client
       .from("access_codes")
       .insert([{
+        organization_id: ORGANIZATION_ID,
+        site_id: SITE_ID,
         code,
         department,
         name,
