@@ -733,9 +733,6 @@ async function loadSites(){
   const select = document.getElementById("siteSwitcher");
   if(!select) return;
 
-  // 🔥 FORCE clear immediately (this fixes your issue)
-  select.innerHTML = `<option>Loading...</option>`;
-
   const { data, error } = await client
     .from("sites")
     .select("*")
@@ -743,19 +740,17 @@ async function loadSites(){
 
   if(error){
     console.log("Sites error:", error);
-    select.innerHTML = `<option>Error loading sites</option>`;
     return;
   }
 
-  // 🔥 FORCE overwrite AFTER data comes back
-  select.innerHTML = "";
+  // 🔥 FORCE REPLACE ENTIRE SELECT CONTENT
+  let html = "";
 
   data.forEach(site => {
-    const opt = document.createElement("option");
-    opt.value = site.id;
-    opt.textContent = site.name;
-    select.appendChild(opt);
+    html += `<option value="${site.id}">${site.name}</option>`;
   });
+
+  select.innerHTML = html;
 
   const saved = localStorage.getItem("activeSiteId");
 
@@ -767,10 +762,16 @@ async function loadSites(){
   }
 }
 
-  function switchSite(siteId){
+function switchSite(siteId){
   localStorage.setItem("activeSiteId", siteId);
   loadDashboard();
 }
+
+/* 🔥 THIS MUST BE THE LAST THING IN YOUR SCRIPT */
+window.onload = function(){
+  loadSites();
+  loadDashboard();
+};
       
     async function fetchCodes(){
       const { data, error } = await client
