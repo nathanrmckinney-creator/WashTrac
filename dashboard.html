@@ -1209,6 +1209,24 @@ window.onload = function(){
 
     loadDashboard();
 
+    document.addEventListener("click", function(event){
+  const dashboardMenu = document.getElementById("dashboardMenu");
+  const menuWrap = document.querySelector(".dashboard-menu-wrap");
+  const backdrop = document.getElementById("backdrop");
+
+  if(!dashboardMenu || !menuWrap) return;
+
+  const clickedInsideMenu = menuWrap.contains(event.target);
+
+  if(!clickedInsideMenu){
+    dashboardMenu.style.display = "none";
+
+    if(backdrop){
+      backdrop.style.display = "none";
+    }
+  }
+});
+
     client.channel("washtrac-live-dashboard")
       .on("postgres_changes", { event: "*", schema: "public", table: "wash_activity" }, () => loadDashboard())
       .on("postgres_changes", { event: "*", schema: "public", table: "access_codes" }, () => loadDashboard())
