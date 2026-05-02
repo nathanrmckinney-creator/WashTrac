@@ -765,11 +765,21 @@
       window.location.href = "login.html";
     }
 
-    function openAddDevice(){
+  function openAddDevice(){
   generateDeviceCode();
 
   const modal = document.getElementById("deviceModal");
   modal.classList.add("show");
+
+  const menu = document.getElementById("dashboardMenu");
+  if(menu){
+    menu.style.display = "none";
+  }
+
+  const backdrop = document.getElementById("backdrop");
+  if(backdrop){
+    backdrop.style.display = "none";
+  }
 }
 
 function closeDeviceModal(){
