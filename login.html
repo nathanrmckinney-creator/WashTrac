@@ -161,16 +161,63 @@ function setStatus(message, type = "") {
   const box = document.getElementById("statusBox");
   box.innerText = message;
   box.className = "status show";
-
-  if (type) {
-    box.classList.add(type);
-  }
+  if (type) box.classList.add(type);
 }
 
 function clearStatus() {
   const box = document.getElementById("statusBox");
   box.innerText = "";
   box.className = "status";
+}
+
+async function createFirstSiteForUser(user) {
+  const pendingOrgName = localStorage.getItem("pendingOrgName");
+  const pendingSiteName = localStorage.getItem("pendingSiteName");
+
+  if (!pendingOrgName || !pendingSiteName) {
+    return { error: "No company/site setup found. Please sign up again." };
+  }
+
+  const { data: org, error: orgError } = await client
+    .from("organizations")
+    .insert({ name: pendingOrgName })
+    .select()
+    .single();
+
+  if (orgError) return { error: orgError.message };
+
+  const { data: site, error: siteError } = await client
+    .from("sites")
+    .insert({
+      organization_id: org.id,
+      name: pendingSiteName
+    })
+    .select()
+    .single();
+
+  if (siteError) return { error: siteError.message };
+
+  const { error: linkError } = await client
+    .from("user_sites")
+    .insert({
+      user_id: user.id,
+      organization_id: org.id,
+      site_id: site.id,
+      role: "owner",
+      can_view_all_sites: true
+    });
+
+  if (linkError) return { error: linkError.message };
+
+  localStorage.removeItem("pendingOrgName");
+  localStorage.removeItem("pendingSiteName");
+
+  return { siteLinks: [{
+    site_id: site.id,
+    organization_id: org.id,
+    can_view_all_sites: true,
+    sites: site
+  }] };
 }
 
 async function login(event) {
@@ -191,8 +238,8 @@ async function login(event) {
     }
 
     const { data: loginData, error: loginError } = await client.auth.signInWithPassword({
-      email: email,
-      password: password
+      email,
+      password
     });
 
     if (loginError) {
@@ -202,7 +249,7 @@ async function login(event) {
 
     const user = loginData.user;
 
-    const { data: siteLinks, error: siteError } = await client
+    let { data: siteLinks, error: siteError } = await client
       .from("user_sites")
       .select(`
         site_id,
@@ -222,8 +269,16 @@ async function login(event) {
     }
 
     if (!siteLinks || siteLinks.length === 0) {
-      setStatus("No sites are linked to this account.", "error");
-      return;
+      setStatus("Finishing account setup...", "");
+
+      const setup = await createFirstSiteForUser(user);
+
+      if (setup.error) {
+        setStatus(setup.error, "error");
+        return;
+      }
+
+      siteLinks = setup.siteLinks;
     }
 
     const firstSite = siteLinks[0];
@@ -235,7 +290,6 @@ async function login(event) {
     localStorage.setItem("availableSites", JSON.stringify(siteLinks));
 
     setStatus("Login successful.", "success");
-
     window.location.href = "dashboard.html";
 
   } finally {
