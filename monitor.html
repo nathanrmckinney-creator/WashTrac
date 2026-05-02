@@ -279,8 +279,8 @@ function checkLockout(control){
   const now = new Date();
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
-  const start = control.lockout_start.split(":");
-  const end = control.lockout_end.split(":");
+  const start = String(control.lockout_start).split(":");
+  const end = String(control.lockout_end).split(":");
 
   const startMin = parseInt(start[0], 10) * 60 + parseInt(start[1], 10);
   const endMin = parseInt(end[0], 10) * 60 + parseInt(end[1], 10);
@@ -293,7 +293,7 @@ function checkLockout(control){
 }
 
 function getBayDotClass(status){
-  const value = (status || "").toLowerCase();
+  const value = String(status || "").toLowerCase();
   if(value === "ready") return "dot-ready";
   if(value === "running") return "dot-running";
   if(value === "offline") return "dot-offline";
@@ -317,7 +317,7 @@ function renderBays(bays){
   bays.forEach(bay => {
     wrap.innerHTML += `
       <div class="bay-card">
-        <h3>${bay.bay_name || "Bay"}</h3>
+        <h3>${bay.bay_name || bay.bay || "Bay"}</h3>
         <div class="bay-status">
           <span class="bay-dot ${getBayDotClass(bay.status)}"></span>
           ${bay.status || "Idle"}
@@ -325,6 +325,32 @@ function renderBays(bays){
       </div>
     `;
   });
+}
+
+function getActivityCode(row){
+  return (
+    row.metadata?.code ||
+    row.code ||
+    row.access_code ||
+    ""
+  );
+}
+
+function getActivityEvent(row){
+  return (
+    row.event ||
+    row.status ||
+    ""
+  );
+}
+
+function getActivityTime(row){
+  return (
+    row.event_time ||
+    row.created_at ||
+    row.timestamp ||
+    ""
+  );
 }
 
 function renderActivity(activity){
@@ -337,120 +363,138 @@ function renderActivity(activity){
   }
 
   activity.forEach(row => {
-    const timeText = row.event_time
-      ? new Date(row.event_time).toLocaleTimeString()
+    const rawTime = getActivityTime(row);
+    const timeText = rawTime
+      ? new Date(rawTime).toLocaleTimeString()
       : "--:--";
 
     wrap.innerHTML += `
       <div class="activity-row">
         <div class="activity-time">${timeText}</div>
-        <div class="activity-code">${row.code || ""}</div>
-        <div class="activity-event">${row.event || ""}</div>
+        <div class="activity-code">${getActivityCode(row)}</div>
+        <div class="activity-event">${getActivityEvent(row)}</div>
       </div>
     `;
   });
 }
 
-async function loadMonitor(){
-  const { data: control, error: controlError } = await client
-    .from("system_control")
-    .select("*")
-    .limit(1)
-    .single();
+function renderControl(control){
+  const banner = document.getElementById("systemBanner");
 
-  if(controlError && controlError.code !== "PGRST116"){
-    console.log(controlError);
-  }
-
-  if(control){
-    document.getElementById("washStatus").innerHTML =
-      control.wash_enabled
-        ? '<span class="status-pill on">Enabled</span>'
-        : '<span class="status-pill off">Disabled</span>';
-
-    document.getElementById("estopStatus").innerHTML =
-      control.estop_active
-        ? '<span class="status-pill warn">ACTIVE</span>'
-        : '<span class="status-pill on">Clear</span>';
-
-    document.getElementById("lockoutStatus").innerHTML =
-      control.lockout_enabled
-        ? '<span class="status-pill warn">Enabled</span>'
-        : '<span class="status-pill off">Disabled</span>';
-
-    document.getElementById("lockoutWindow").innerText =
-      (control.lockout_start || "--:--") + " to " + (control.lockout_end || "--:--");
-
-    const banner = document.getElementById("systemBanner");
-
-    if(control.estop_active){
-      banner.className = "banner red";
-      banner.innerText = "🚨 EMERGENCY STOP ACTIVE";
-    } else if(!control.wash_enabled){
-      banner.className = "banner red";
-      banner.innerText = "WASH SYSTEM DISABLED";
-    } else if(checkLockout(control)){
-      banner.className = "banner yellow";
-      banner.innerText = "AFTER HOURS LOCKOUT ACTIVE";
-    } else {
-      banner.className = "banner green";
-      banner.innerText = "SYSTEM ONLINE";
-    }
-  } else {
+  if(!control){
     document.getElementById("washStatus").innerHTML = '<span class="status-pill off">Unknown</span>';
     document.getElementById("estopStatus").innerHTML = '<span class="status-pill off">Unknown</span>';
     document.getElementById("lockoutStatus").innerHTML = '<span class="status-pill off">Unknown</span>';
     document.getElementById("lockoutWindow").innerText = "--:-- to --:--";
+
+    banner.className = "banner yellow";
+    banner.innerText = "SYSTEM STATUS UNKNOWN";
+    return;
   }
 
-  const { data: bays, error: baysError } = await client
+  const washEnabled = control.wash_enabled !== false;
+  const estopActive = control.estop_active === true;
+  const lockoutEnabled = control.lockout_enabled === true;
+
+  document.getElementById("washStatus").innerHTML =
+    washEnabled
+      ? '<span class="status-pill on">Enabled</span>'
+      : '<span class="status-pill off">Disabled</span>';
+
+  document.getElementById("estopStatus").innerHTML =
+    estopActive
+      ? '<span class="status-pill warn">ACTIVE</span>'
+      : '<span class="status-pill on">Clear</span>';
+
+  document.getElementById("lockoutStatus").innerHTML =
+    lockoutEnabled
+      ? '<span class="status-pill warn">Enabled</span>'
+      : '<span class="status-pill off">Disabled</span>';
+
+  document.getElementById("lockoutWindow").innerText =
+    (control.lockout_start || "--:--") + " to " + (control.lockout_end || "--:--");
+
+  if(estopActive){
+    banner.className = "banner red";
+    banner.innerText = "🚨 EMERGENCY STOP ACTIVE";
+  } else if(!washEnabled){
+    banner.className = "banner red";
+    banner.innerText = "WASH SYSTEM DISABLED";
+  } else if(checkLockout(control)){
+    banner.className = "banner yellow";
+    banner.innerText = "AFTER HOURS LOCKOUT ACTIVE";
+  } else {
+    banner.className = "banner green";
+    banner.innerText = "SYSTEM ONLINE";
+  }
+}
+
+async function loadControl(){
+  const { data, error } = await client
+    .from("system_control")
+    .select("*")
+    .limit(1)
+    .maybeSingle();
+
+  if(error){
+    console.log("system_control error:", error);
+    renderControl(null);
+    return;
+  }
+
+  renderControl(data || null);
+}
+
+async function loadBays(){
+  const { data, error } = await client
     .from("bay_status")
     .select("*")
-    .order("bay_name", { ascending: true });
+    .order("bay_name", { ascending:true });
 
-  if(baysError){
-    console.log(baysError);
+  if(error){
+    console.log("bay_status error:", error);
+    renderBays([]);
+    return;
   }
-  renderBays(bays || []);
 
-  const { data: activity, error: activityError } = await client
-    .from("activity")
+  renderBays(data || []);
+}
+
+async function loadActivity(){
+  const { data, error } = await client
+    .from("wash_activity")
     .select("*")
-    .order("event_time", { ascending: false })
+    .order("event_time", { ascending:false })
     .limit(10);
 
-  if(activityError){
-    console.log(activityError);
+  if(error){
+    console.log("wash_activity error:", error);
+    renderActivity([]);
+    return;
   }
-  renderActivity(activity || []);
+
+  renderActivity(data || []);
+}
+
+async function loadMonitor(){
+  await Promise.all([
+    loadControl(),
+    loadBays(),
+    loadActivity()
+  ]);
 }
 
 loadMonitor();
 
 client.channel("monitor-live")
-  .on("postgres_changes", { event:"*", schema:"public", table:"activity" }, () => loadMonitor())
-  .on("postgres_changes", { event:"*", schema:"public", table:"system_control" }, () => loadMonitor())
-  .on("postgres_changes", { event:"*", schema:"public", table:"bay_status" }, () => loadMonitor())
-  .subscribe();
+  .on("postgres_changes", { event:"*", schema:"public", table:"wash_activity" }, () => loadActivity())
+  .on("postgres_changes", { event:"*", schema:"public", table:"system_control" }, () => loadControl())
+  .on("postgres_changes", { event:"*", schema:"public", table:"bay_status" }, () => loadBays())
+  .subscribe((status) => {
+    console.log("Monitor realtime:", status);
+  });
 
-setInterval(() => {
-  console.log("WashTrac heartbeat");
-}, 20000);
-
-function reconnectRealtime(){
-  client.channel("reconnect-test")
-    .subscribe((status) => {
-      if(status === "SUBSCRIBED"){
-        console.log("Realtime connected");
-      }
-      if(status === "CHANNEL_ERROR"){
-        console.log("Realtime reconnecting...");
-        setTimeout(reconnectRealtime, 2000);
-      }
-    });
-}
-
-reconnectRealtime();
+setInterval(loadMonitor, 30000);
 </script>
 </body>
 </html>
