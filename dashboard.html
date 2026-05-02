@@ -794,18 +794,29 @@ async function generateDeviceCode(){
 
   const siteId = localStorage.getItem("activeSiteId");
 
-  const { error } = await client
+  console.log("Generated pairing code:", code);
+  console.log("Active site id:", siteId);
+
+  if(!siteId){
+    alert("No active site selected. Please reload dashboard and pick a site.");
+    return;
+  }
+
+  const { data, error } = await client
     .from("device_pairing_codes")
     .insert([
       {
         code: code,
         site_id: siteId
       }
-    ]);
+    ])
+    .select();
+
+  console.log("Pairing insert data:", data);
+  console.log("Pairing insert error:", error);
 
   if(error){
-    console.log("Pairing insert error:", error);
-    alert("Error generating code");
+    alert("Error generating code: " + error.message);
     return;
   }
 
