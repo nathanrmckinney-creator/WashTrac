@@ -207,7 +207,9 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
 const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
 const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 let allCodes = [];
+let allActivity = [];
 
 function toggleMenu(){
   const menu = document.getElementById("mobileMenu");
@@ -216,27 +218,33 @@ function toggleMenu(){
   menu.style.display = isOpen ? "none" : "block";
   backdrop.style.display = isOpen ? "none" : "block";
 }
+
 function closeMenu(){
   document.getElementById("mobileMenu").style.display = "none";
   document.getElementById("backdrop").style.display = "none";
 }
+
 function logout(){
   localStorage.removeItem("washtracLoggedIn");
   window.location.href = "login.html";
 }
+
 function setStatus(message){
   const box = document.getElementById("statusBox");
   box.innerText = message;
   box.classList.add("show");
 }
+
 function clearStatus(){
   const box = document.getElementById("statusBox");
   box.innerText = "";
   box.classList.remove("show");
 }
+
 function handleDepartmentChange(){
   const select = document.getElementById("departmentSelect");
   const wrap = document.getElementById("customDepartmentWrap");
+
   if(select.value === "__custom__"){
     wrap.classList.remove("hidden");
   } else {
@@ -244,41 +252,152 @@ function handleDepartmentChange(){
     document.getElementById("customDepartmentInput").value = "";
   }
 }
+
 function getDepartmentValue(){
   const selectValue = document.getElementById("departmentSelect").value;
   const customValue = document.getElementById("customDepartmentInput").value.trim();
+
   if(selectValue === "__custom__") return customValue;
   return selectValue;
 }
+
+function cleanValue(value, fallback = ""){
+  if(value === null || value === undefined || value === "") return fallback;
+  return value;
+}
+
+function activityCode(row){
+  return cleanValue(row.code, cleanValue(row.metadata?.code, ""));
+}
+
+function activityName(row){
+  return cleanValue(row.name, cleanValue(row.metadata?.name, cleanValue(row.metadata?.device, "")));
+}
+
+function normalizeActivity(row){
+  return {
+    event_time: row.event_time,
+    code: activityCode(row),
+    department: cleanValue(row.department, "Unassigned"),
+    name: activityName(row),
+    bay: cleanValue(row.bay, ""),
+    event: cleanValue(row.event, "")
+  };
+}
+
+function getCodeId(item){
+  return item.id;
+}
+
+function getCodeValue(item){
+  return String(cleanValue(item.code, "")).trim();
+}
+
+function getCodeDepartment(item){
+  return cleanValue(item.department, "Unassigned");
+}
+
+function getCodeName(item){
+  return cleanValue(item.name, "");
+}
+
+function getIsActive(item){
+  return item.is_active !== false;
+}
+
+function getCodeStats(code){
+  const rows = allActivity.filter(row => String(row.code || "").trim() === String(code || "").trim());
+
+  const uses = rows.length;
+  const last = rows
+    .filter(row => row.event_time)
+    .sort((a,b) => new Date(b.event_time) - new Date(a.event_time))[0];
+
+  return {
+    uses,
+    lastUsed: last ? last.event_time : ""
+  };
+}
+
 async function fetchCodes(){
-  const { data, error } = await client.from("codes").select("*").order("code", { ascending:true });
+  const { data, error } = await client
+    .from("access_codes")
+    .select("*")
+    .order("created_at", { ascending:false });
+
   if(error){
     console.log(error);
     setStatus("Could not load codes.");
     return;
   }
+
   allCodes = data || [];
+}
+
+async function fetchActivity(){
+  const { data, error } = await client
+    .from("wash_activity")
+    .select("*")
+    .order("event_time", { ascending:false });
+
+  if(error){
+    console.log(error);
+    allActivity = [];
+    return;
+  }
+
+  allActivity = (data || []).map(normalizeActivity);
+}
+
+async function loadCodesPage(){
+  await fetchCodes();
+  await fetchActivity();
   renderCodes();
   renderSummary();
 }
+
 function renderSummary(){
-  document.getElementById("totalCodes").innerText = allCodes.length;
-  const departments = [...new Set(allCodes.map(item => (item.department || "").trim()).filter(Boolean))];
+  const activeCodes = allCodes.filter(getIsActive);
+
+  document.getElementById("totalCodes").innerText = activeCodes.length;
+
+  const departments = [...new Set(
+    activeCodes
+      .map(item => String(getCodeDepartment(item)).trim())
+      .filter(Boolean)
+  )];
+
   document.getElementById("activeDepartments").innerText = departments.length;
-  const totalUses = allCodes.reduce((sum, item) => sum + Number(item.uses || 0), 0);
+
+  const codeUsage = activeCodes.map(item => {
+    const code = getCodeValue(item);
+    const stats = getCodeStats(code);
+
+    return {
+      code,
+      uses: stats.uses
+    };
+  });
+
+  const totalUses = codeUsage.reduce((sum, item) => sum + Number(item.uses || 0), 0);
   document.getElementById("totalUses").innerText = totalUses;
-  const top = [...allCodes].sort((a,b) => Number(b.uses || 0) - Number(a.uses || 0))[0];
-  document.getElementById("topUsedCode").innerText = top ? top.code : "-";
+
+  const top = [...codeUsage].sort((a,b) => Number(b.uses || 0) - Number(a.uses || 0))[0];
+  document.getElementById("topUsedCode").innerText = top && top.uses > 0 ? top.code : "-";
 }
+
 function renderCodes(){
   const codeSearch = document.getElementById("searchCode").value.trim().toLowerCase();
   const deptSearch = document.getElementById("searchDepartment").value.trim().toLowerCase();
   const nameSearch = document.getElementById("searchName").value.trim().toLowerCase();
 
   const filtered = allCodes.filter(item => {
-    const code = String(item.code || "").toLowerCase();
-    const dept = String(item.department || "").toLowerCase();
-    const name = String(item.name || "").toLowerCase();
+    if(!getIsActive(item)) return false;
+
+    const code = String(getCodeValue(item)).toLowerCase();
+    const dept = String(getCodeDepartment(item)).toLowerCase();
+    const name = String(getCodeName(item)).toLowerCase();
+
     return code.includes(codeSearch) && dept.includes(deptSearch) && name.includes(nameSearch);
   });
 
@@ -291,26 +410,33 @@ function renderCodes(){
   }
 
   filtered.forEach(item => {
+    const code = getCodeValue(item);
+    const stats = getCodeStats(code);
+    const lastUsed = stats.lastUsed ? new Date(stats.lastUsed).toLocaleString() : "-";
+
     tbody.innerHTML += `
       <tr>
-        <td><strong>${item.code || ""}</strong></td>
-        <td><span class="tag">${item.department || "Unassigned"}</span></td>
-        <td>${item.name || ""}</td>
-        <td>${item.uses || 0}</td>
-        <td>${item.last_used || "-"}</td>
-        <td><button class="remove-btn" onclick="removeCode(${item.id}, '${String(item.code).replace(/'/g, "\\'")}')">Remove</button></td>
+        <td><strong>${code}</strong></td>
+        <td><span class="tag">${getCodeDepartment(item)}</span></td>
+        <td>${getCodeName(item)}</td>
+        <td>${stats.uses || 0}</td>
+        <td>${lastUsed}</td>
+        <td><button class="remove-btn" onclick="removeCode('${getCodeId(item)}', '${String(code).replace(/'/g, "\\'")}')">Remove</button></td>
       </tr>
     `;
   });
 }
+
 function clearSearch(){
   document.getElementById("searchCode").value = "";
   document.getElementById("searchDepartment").value = "";
   document.getElementById("searchName").value = "";
   renderCodes();
 }
+
 async function addCode(){
   clearStatus();
+
   const code = document.getElementById("codeInput").value.trim();
   const department = getDepartmentValue().trim();
   const name = document.getElementById("nameInput").value.trim();
@@ -319,11 +445,23 @@ async function addCode(){
   if(!department){ setStatus("Select a department or enter a custom one."); return; }
   if(!name){ setStatus("Enter a name."); return; }
 
-  const alreadyExists = allCodes.some(item => String(item.code).trim() === code);
+  const alreadyExists = allCodes.some(item => String(getCodeValue(item)).trim() === code && getIsActive(item));
   if(alreadyExists){ setStatus("That code already exists."); return; }
 
-  const { error } = await client.from("codes").insert([{ code, department, name, uses:0, last_used:"" }]);
-  if(error){ console.log(error); setStatus("Could not add code."); return; }
+  const { error } = await client
+    .from("access_codes")
+    .insert([{
+      code,
+      department,
+      name,
+      is_active: true
+    }]);
+
+  if(error){
+    console.log(error);
+    setStatus("Could not add code.");
+    return;
+  }
 
   document.getElementById("codeInput").value = "";
   document.getElementById("departmentSelect").value = "";
@@ -332,24 +470,39 @@ async function addCode(){
   document.getElementById("customDepartmentWrap").classList.add("hidden");
 
   setStatus("Code added.");
-  fetchCodes();
+  loadCodesPage();
 }
+
 async function removeCode(id, code){
   clearStatus();
+
   const confirmed = confirm(`Remove code ${code}?`);
   if(!confirmed) return;
 
-  const { error } = await client.from("codes").delete().eq("id", id);
-  if(error){ console.log(error); setStatus("Could not remove code."); return; }
+  const { error } = await client
+    .from("access_codes")
+    .update({
+      is_active: false,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", id);
+
+  if(error){
+    console.log(error);
+    setStatus("Could not remove code.");
+    return;
+  }
 
   setStatus("Code removed.");
-  fetchCodes();
+  loadCodesPage();
 }
-fetchCodes();
+
+loadCodesPage();
 
 client.channel("washtrac-live-codes")
-.on("postgres_changes", { event: "*", schema: "public", table: "codes" }, () => fetchCodes())
-.subscribe();
+  .on("postgres_changes", { event: "*", schema: "public", table: "access_codes" }, () => loadCodesPage())
+  .on("postgres_changes", { event: "*", schema: "public", table: "wash_activity" }, () => loadCodesPage())
+  .subscribe();
 </script>
 </body>
 </html>
