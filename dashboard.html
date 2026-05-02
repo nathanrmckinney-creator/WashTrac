@@ -662,6 +662,30 @@
       box.classList.add("show");
     }
 
+    function cleanValue(value, fallback = ""){
+      if(value === null || value === undefined || value === "") return fallback;
+      return value;
+    }
+
+    function activityCode(row){
+      return cleanValue(row.code, cleanValue(row.metadata?.code, ""));
+    }
+
+    function activityDevice(row){
+      return cleanValue(row.name, cleanValue(row.metadata?.device, ""));
+    }
+
+    function normalizeActivity(row){
+      return {
+        event_time: row.event_time,
+        code: activityCode(row),
+        department: cleanValue(row.department, "Unassigned"),
+        name: activityDevice(row),
+        bay: cleanValue(row.bay, ""),
+        event: cleanValue(row.event, "")
+      };
+    }
+
     function isLockoutActive(control){
       if(!control.lockout_enabled) return false;
       if(!control.lockout_start || !control.lockout_end) return false;
@@ -683,54 +707,106 @@
     }
 
     async function fetchCodes(){
-      const { data, error } = await client.from("codes").select("*").order("uses", { ascending:false });
+      const { data, error } = await client
+        .from("access_codes")
+        .select("*")
+        .order("created_at", { ascending:false });
+
       if(error){ console.log(error); return []; }
       return data || [];
     }
 
     async function fetchRecentActivity(){
-      const { data, error } = await client.from("activity").select("*").order("event_time", { ascending:false }).limit(10);
+      const { data, error } = await client
+        .from("wash_activity")
+        .select("*")
+        .order("event_time", { ascending:false })
+        .limit(10);
+
       if(error){ console.log(error); return []; }
-      return data || [];
+      return (data || []).map(normalizeActivity);
     }
 
     async function fetchAllActivity(){
-      const { data, error } = await client.from("activity").select("*").order("event_time", { ascending:false });
+      const { data, error } = await client
+        .from("wash_activity")
+        .select("*")
+        .order("event_time", { ascending:false });
+
       if(error){ console.log(error); return []; }
-      return data || [];
+      return (data || []).map(normalizeActivity);
     }
 
     async function fetchSystemControl(){
-      const { data, error } = await client.from("system_control").select("*").limit(1).single();
+      const { data, error } = await client
+        .from("system_control")
+        .select("*")
+        .limit(1)
+        .maybeSingle();
+
       if(error){ console.log(error); return null; }
       return data;
     }
 
     async function fetchBayStatus(){
-      const { data, error } = await client.from("bay_status").select("*").order("bay_name", { ascending:true });
+      const { data, error } = await client
+        .from("bay_status")
+        .select("*")
+        .order("bay_name", { ascending:true });
+
       if(error){ console.log(error); return []; }
       return data || [];
     }
 
-    function buildDepartmentData(codes){
+    function activeOnlyCodes(codes){
+      return codes.filter(code => code.is_active !== false);
+    }
+
+    function buildCodeUsageData(activity){
       const map = {};
-      codes.forEach(item => {
-        const department = item.department || "Unassigned";
-        const uses = Number(item.uses || 0);
-        if(!map[department]) map[department] = { department, totalUses:0 };
-        map[department].totalUses += uses;
+
+      activity.forEach(row => {
+        const code = row.code || "Unknown";
+        const department = row.department || "Unassigned";
+
+        if(!map[code]){
+          map[code] = { code, department, uses:0 };
+        }
+
+        map[code].uses += 1;
+
+        if(map[code].department === "Unassigned" && department !== "Unassigned"){
+          map[code].department = department;
+        }
       });
+
+      return Object.values(map).sort((a,b) => b.uses - a.uses);
+    }
+
+    function buildDepartmentData(activity){
+      const map = {};
+
+      activity.forEach(row => {
+        const department = row.department || "Unassigned";
+        if(!map[department]) map[department] = { department, totalUses:0 };
+        map[department].totalUses += 1;
+      });
+
       return Object.values(map).sort((a,b) => b.totalUses - a.totalUses);
     }
 
     function buildDailyData(activity){
       const map = {};
+
       activity.forEach(item => {
+        if(!item.event_time) return;
         const day = new Date(item.event_time).toLocaleDateString();
         if(!map[day]) map[day] = 0;
         map[day] += 1;
       });
+
       const entries = Object.entries(map).sort((a,b) => new Date(a[0]) - new Date(b[0]));
+
       return {
         labels: entries.map(e => e[0]),
         values: entries.map(e => e[1])
@@ -749,7 +825,7 @@
       rows.forEach(row => {
         wrap.innerHTML += `
           <div class="activity-row">
-            <div>${new Date(row.event_time).toLocaleString()}</div>
+            <div>${row.event_time ? new Date(row.event_time).toLocaleString() : ""}</div>
             <div>${row.code || ""} — ${row.event || ""}</div>
             <div>${row.bay || ""}</div>
           </div>
@@ -757,16 +833,16 @@
       });
     }
 
-    function renderTopCodes(codes){
+    function renderTopCodes(codeUsage){
       const wrap = document.getElementById("topCodesList");
       wrap.innerHTML = "";
 
-      if(!codes.length){
-        wrap.innerHTML = `<div class="list-row"><span>No codes yet.</span><span>0</span></div>`;
+      if(!codeUsage.length){
+        wrap.innerHTML = `<div class="list-row"><span>No code activity yet.</span><span>0</span></div>`;
         return;
       }
 
-      codes.slice(0,5).forEach(item => {
+      codeUsage.slice(0,5).forEach(item => {
         wrap.innerHTML += `
           <div class="list-row">
             <span><strong>${item.code}</strong> — ${item.department || ""}</span>
@@ -821,7 +897,12 @@
     }
 
     function renderSystemControl(control){
-      if(!control) return;
+      if(!control){
+        const banner = document.getElementById("accessBanner");
+        banner.className = "banner yellow show";
+        banner.innerText = "SYSTEM CONTROL NOT CONFIGURED";
+        return;
+      }
 
       controlRowId = control.id;
 
@@ -888,7 +969,10 @@
     }
 
     async function setWashEnabled(enabled){
-      if(!controlRowId) return;
+      if(!controlRowId){
+        setControlStatus("System control row not found.");
+        return;
+      }
 
       const { error } = await client
         .from("system_control")
@@ -906,7 +990,10 @@
     }
 
     async function setEstop(active){
-      if(!controlRowId) return;
+      if(!controlRowId){
+        setControlStatus("System control row not found.");
+        return;
+      }
 
       const { error } = await client
         .from("system_control")
@@ -924,7 +1011,10 @@
     }
 
     async function saveSchedule(){
-      if(!controlRowId) return;
+      if(!controlRowId){
+        setControlStatus("System control row not found.");
+        return;
+      }
 
       const lockout_enabled = document.getElementById("lockoutEnabled").checked;
       const lockout_start = document.getElementById("lockoutStart").value;
@@ -976,20 +1066,23 @@
       const control = await fetchSystemControl();
       const bays = await fetchBayStatus();
 
-      const departments = buildDepartmentData(codes);
+      const activeCodes = activeOnlyCodes(codes);
+      const codeUsage = buildCodeUsageData(allActivity);
+      const departments = buildDepartmentData(allActivity);
       const daily = buildDailyData(allActivity);
+      const usedBays = [...new Set(allActivity.map(row => row.bay).filter(Boolean))];
 
-      document.getElementById("activeCodes").innerText = codes.length;
+      document.getElementById("activeCodes").innerText = activeCodes.length;
       document.getElementById("todayWashes").innerText = allActivity.length;
-      document.getElementById("topCode").innerText = codes.length ? codes[0].code : "-";
+      document.getElementById("topCode").innerText = codeUsage.length ? codeUsage[0].code : "-";
       document.getElementById("topDepartment").innerText = departments.length ? departments[0].department : "-";
       document.getElementById("totalActivityRecords").innerText = allActivity.length;
       document.getElementById("totalDepartments").innerText = departments.length;
-      document.getElementById("totalBays").innerText = bays.length;
+      document.getElementById("totalBays").innerText = usedBays.length || bays.length;
       document.getElementById("lastUpdated").innerText = new Date().toLocaleTimeString();
 
       renderRecentActivity(recentActivity);
-      renderTopCodes(codes);
+      renderTopCodes(codeUsage);
       renderDepartmentChart(departments);
       renderDailyChart(daily);
       renderSystemControl(control);
@@ -999,8 +1092,8 @@
     loadDashboard();
 
     client.channel("washtrac-live-dashboard")
-      .on("postgres_changes", { event: "*", schema: "public", table: "activity" }, () => loadDashboard())
-      .on("postgres_changes", { event: "*", schema: "public", table: "codes" }, () => loadDashboard())
+      .on("postgres_changes", { event: "*", schema: "public", table: "wash_activity" }, () => loadDashboard())
+      .on("postgres_changes", { event: "*", schema: "public", table: "access_codes" }, () => loadDashboard())
       .on("postgres_changes", { event: "*", schema: "public", table: "system_control" }, () => loadDashboard())
       .on("postgres_changes", { event: "*", schema: "public", table: "bay_status" }, () => loadDashboard())
       .subscribe();
