@@ -1245,5 +1245,21 @@ function toggleDashboardMenu(){
 }
     
   </script>
+  <div id="deviceModal" class="device-modal">
+  <div class="device-box">
+    <h3>Add Device</h3>
+
+    <p style="color:#94a3b8; margin-bottom:10px;">
+      Enter this code on the CodeBox to pair device
+    </p>
+
+    <div id="deviceCodeDisplay" class="device-code">------</div>
+
+    <div class="controls">
+      <button onclick="generateDeviceCode()">New Code</button>
+      <button class="secondary" onclick="closeDeviceModal()">Close</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
