@@ -1287,6 +1287,12 @@ window.onload = function(){
   }
 });
 
+document.getElementById("deviceModal").addEventListener("click", function(e){
+  if(e.target.id === "deviceModal"){
+    closeDeviceModal();
+  }
+});
+    
     client.channel("washtrac-live-dashboard")
       .on("postgres_changes", { event: "*", schema: "public", table: "wash_activity" }, () => loadDashboard())
       .on("postgres_changes", { event: "*", schema: "public", table: "access_codes" }, () => loadDashboard())
