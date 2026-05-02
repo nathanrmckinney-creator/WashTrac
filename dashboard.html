@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WashTrac Dashboard</title>
 
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800&display=swap" rel="stylesheet">
+  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -434,6 +436,25 @@
       .summary{grid-template-columns:1fr}
       .control-grid,.field-grid,.bay-editor-grid{grid-template-columns:1fr}
     }
+    .orbitron-logo{
+  font-family:'Orbitron',Arial,Helvetica,sans-serif;
+  font-size:22px; /* keep EXACT size */
+  font-weight:800;
+  letter-spacing:0;
+}
+
+.orbitron-logo .trac{
+  background:linear-gradient(
+    180deg,
+    #67d7ff 0%,
+    #1ea7ff 45%,
+    #0b5cff 100%
+  );
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  -webkit-text-fill-color:transparent;
+}
     .brand-accent{
   color:#2ea8ff !important;
     }
@@ -447,7 +468,9 @@
   </script>
 
   <div class="mobile-topbar">
-    <div class="mobile-logo">Wash<span>Trac</span></div>
+   <div class="mobile-logo orbitron-logo">
+  Wash<span class="trac">Trac</span>
+</div>
     <button class="menu-btn" onclick="toggleMenu()">☰</button>
   </div>
 
