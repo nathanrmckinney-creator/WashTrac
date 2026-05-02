@@ -482,7 +482,7 @@ async function addCode(){
       .from("access_codes")
       .update({
         department,
-        name,
+        assigned_to: name,
         is_active: true
       })
       .eq("id", existing.id);
@@ -500,7 +500,7 @@ async function addCode(){
         site_id: SITE_ID,
         code,
         department,
-        name,
+        assigned_to: name,
         is_active: true
       }]);
 
