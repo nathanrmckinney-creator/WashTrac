@@ -128,7 +128,7 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
       <div class="form-grid">
         <div class="field">
           <label for="codeInput">Code</label>
-          <input id="codeInput" placeholder="Enter code">
+          <input id="codeInput" placeholder="Enter code" maxlength="4">
         </div>
         <div class="field">
           <label for="departmentSelect">Department</label>
@@ -267,21 +267,21 @@ function cleanValue(value, fallback = ""){
 }
 
 function activityCode(row){
-  return cleanValue(row.code, cleanValue(row.metadata?.code, ""));
+  return cleanValue(row.metadata?.code, cleanValue(row.code, cleanValue(row.access_code, "")));
 }
 
 function activityName(row){
-  return cleanValue(row.name, cleanValue(row.metadata?.name, cleanValue(row.metadata?.device, "")));
+  return cleanValue(row.metadata?.name, cleanValue(row.metadata?.device, cleanValue(row.name, "")));
 }
 
 function normalizeActivity(row){
   return {
-    event_time: row.event_time,
+    event_time: cleanValue(row.event_time, cleanValue(row.created_at, "")),
     code: activityCode(row),
-    department: cleanValue(row.department, "Unassigned"),
+    department: cleanValue(row.department, cleanValue(row.metadata?.department, "Unassigned")),
     name: activityName(row),
     bay: cleanValue(row.bay, ""),
-    event: cleanValue(row.event, "")
+    event: cleanValue(row.event, cleanValue(row.status, ""))
   };
 }
 
@@ -306,7 +306,18 @@ function getIsActive(item){
 }
 
 function getCodeStats(code){
-  const rows = allActivity.filter(row => String(row.code || "").trim() === String(code || "").trim());
+  const rows = allActivity.filter(row => {
+    const rowCode = String(row.code || "").trim();
+    const event = String(row.event || "").toLowerCase();
+
+    if(rowCode !== String(code || "").trim()) return false;
+    if(event.includes("denied")) return false;
+    if(event.includes("invalid")) return false;
+    if(event.includes("failed")) return false;
+    if(event.includes("error")) return false;
+
+    return true;
+  });
 
   const uses = rows.length;
   const last = rows
@@ -326,8 +337,9 @@ async function fetchCodes(){
     .order("created_at", { ascending:false });
 
   if(error){
-    console.log(error);
+    console.log("fetchCodes error:", error);
     setStatus("Could not load codes.");
+    allCodes = [];
     return;
   }
 
@@ -341,7 +353,7 @@ async function fetchActivity(){
     .order("event_time", { ascending:false });
 
   if(error){
-    console.log(error);
+    console.log("fetchActivity error:", error);
     allActivity = [];
     return;
   }
@@ -386,6 +398,15 @@ function renderSummary(){
   document.getElementById("topUsedCode").innerText = top && top.uses > 0 ? top.code : "-";
 }
 
+function escapeText(value){
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 function renderCodes(){
   const codeSearch = document.getElementById("searchCode").value.trim().toLowerCase();
   const deptSearch = document.getElementById("searchDepartment").value.trim().toLowerCase();
@@ -413,15 +434,16 @@ function renderCodes(){
     const code = getCodeValue(item);
     const stats = getCodeStats(code);
     const lastUsed = stats.lastUsed ? new Date(stats.lastUsed).toLocaleString() : "-";
+    const id = getCodeId(item);
 
     tbody.innerHTML += `
       <tr>
-        <td><strong>${code}</strong></td>
-        <td><span class="tag">${getCodeDepartment(item)}</span></td>
-        <td>${getCodeName(item)}</td>
+        <td><strong>${escapeText(code)}</strong></td>
+        <td><span class="tag">${escapeText(getCodeDepartment(item))}</span></td>
+        <td>${escapeText(getCodeName(item))}</td>
         <td>${stats.uses || 0}</td>
-        <td>${lastUsed}</td>
-        <td><button class="remove-btn" onclick="removeCode('${getCodeId(item)}', '${String(code).replace(/'/g, "\\'")}')">Remove</button></td>
+        <td>${escapeText(lastUsed)}</td>
+        <td><button class="remove-btn" onclick="removeCode('${escapeText(id)}', '${escapeText(code)}')">Remove</button></td>
       </tr>
     `;
   });
@@ -442,25 +464,47 @@ async function addCode(){
   const name = document.getElementById("nameInput").value.trim();
 
   if(!code){ setStatus("Enter a code."); return; }
+  if(!/^\d{4}$/.test(code)){ setStatus("Code must be 4 digits."); return; }
   if(!department){ setStatus("Select a department or enter a custom one."); return; }
   if(!name){ setStatus("Enter a name."); return; }
 
-  const alreadyExists = allCodes.some(item => String(getCodeValue(item)).trim() === code && getIsActive(item));
-  if(alreadyExists){ setStatus("That code already exists."); return; }
+  const existing = allCodes.find(item => String(getCodeValue(item)).trim() === code);
 
-  const { error } = await client
-    .from("access_codes")
-    .insert([{
-      code,
-      department,
-      name,
-      is_active: true
-    }]);
-
-  if(error){
-    console.log(error);
-    setStatus("Could not add code.");
+  if(existing && getIsActive(existing)){
+    setStatus("That code already exists.");
     return;
+  }
+
+  if(existing && !getIsActive(existing)){
+    const { error } = await client
+      .from("access_codes")
+      .update({
+        department,
+        name,
+        is_active: true
+      })
+      .eq("id", existing.id);
+
+    if(error){
+      console.log("reactivate code error:", error);
+      setStatus("Could not add code.");
+      return;
+    }
+  } else {
+    const { error } = await client
+      .from("access_codes")
+      .insert([{
+        code,
+        department,
+        name,
+        is_active: true
+      }]);
+
+    if(error){
+      console.log("add code error:", error);
+      setStatus("Could not add code.");
+      return;
+    }
   }
 
   document.getElementById("codeInput").value = "";
@@ -479,16 +523,19 @@ async function removeCode(id, code){
   const confirmed = confirm(`Remove code ${code}?`);
   if(!confirmed) return;
 
-  const { error } = await client
+  const { data, error } = await client
     .from("access_codes")
-    .update({
-      is_active: false,
-      updated_at: new Date().toISOString()
-    })
-    .eq("id", id);
+    .update({ is_active: false })
+    .eq("id", id)
+    .select();
 
   if(error){
-    console.log(error);
+    console.log("remove code error:", error);
+    setStatus("Could not remove code.");
+    return;
+  }
+
+  if(!data || !data.length){
     setStatus("Could not remove code.");
     return;
   }
