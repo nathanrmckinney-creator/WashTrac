@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WashTrac Sign Up</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <style>
+    body {
+      margin:0;
+      font-family: Arial, sans-serif;
+      background:#000814;
+      color:white;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      height:100vh;
+    }
+
+    .card {
+      background: rgba(5,20,40,0.9);
+      padding:40px;
+      border-radius:16px;
+      width:400px;
+      box-shadow:0 0 40px rgba(30,167,255,0.2);
+    }
+
+    h2 {
+      margin-bottom:20px;
+      text-align:center;
+    }
+
+    input {
+      width:100%;
+      padding:14px;
+      margin-bottom:12px;
+      border-radius:8px;
+      border:none;
+      background:#0f1e33;
+      color:white;
+      font-size:16px;
+    }
+
+    button {
+      width:100%;
+      padding:14px;
+      border:none;
+      border-radius:10px;
+      background:linear-gradient(180deg,#1ea7ff,#0066cc);
+      color:white;
+      font-size:16px;
+      font-weight:600;
+      cursor:pointer;
+    }
+
+    button:hover {
+      opacity:0.9;
+    }
+
+    .link {
+      margin-top:15px;
+      text-align:center;
+      color:#9fb3c8;
+    }
+
+    .link a {
+      color:#1ea7ff;
+      text-decoration:none;
+    }
+
+    .error {
+      color:#ef4444;
+      margin-bottom:10px;
+      text-align:center;
+    }
+
+    .success {
+      color:#22c55e;
+      margin-bottom:10px;
+      text-align:center;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+  <h2>Create Account</h2>
+
+  <div id="message"></div>
+
+  <input id="email" placeholder="Email" />
+  <input id="password" type="password" placeholder="Password" />
+
+  <input id="orgName" placeholder="Company Name" />
+  <input id="siteName" placeholder="Site Name (ex: Main Wash)" />
+
+  <button onclick="signup()">Create Account</button>
+
+  <div class="link">
+    Already have an account? <a href="login.html">Login</a>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
+const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
+
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function signup(){
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const orgName = document.getElementById("orgName").value.trim();
+  const siteName = document.getElementById("siteName").value.trim();
+
+  const msg = document.getElementById("message");
+  msg.innerHTML = "";
+
+  if(!email || !password || !orgName || !siteName){
+    msg.innerHTML = '<div class="error">Fill out all fields</div>';
+    return;
+  }
+
+  // 1. Create user
+  const { data: userData, error: signUpError } = await client.auth.signUp({
+    email,
+    password
+  });
+
+  if(signUpError){
+    msg.innerHTML = `<div class="error">${signUpError.message}</div>`;
+    return;
+  }
+
+  const user = userData.user;
+
+  // 2. Create organization
+  const { data: org, error: orgError } = await client
+    .from("organizations")
+    .insert({ name: orgName })
+    .select()
+    .single();
+
+  if(orgError){
+    msg.innerHTML = `<div class="error">${orgError.message}</div>`;
+    return;
+  }
+
+  // 3. Create site
+  const { data: site, error: siteError } = await client
+    .from("sites")
+    .insert({
+      name: siteName,
+      organization_id: org.id
+    })
+    .select()
+    .single();
+
+  if(siteError){
+    msg.innerHTML = `<div class="error">${siteError.message}</div>`;
+    return;
+  }
+
+  // 4. Link user → site
+  const { error: linkError } = await client
+    .from("user_sites")
+    .insert({
+      user_id: user.id,
+      organization_id: org.id,
+      site_id: site.id,
+      role: "owner",
+      can_view_all_sites: true
+    });
+
+  if(linkError){
+    msg.innerHTML = `<div class="error">${linkError.message}</div>`;
+    return;
+  }
+
+  msg.innerHTML = '<div class="success">Account created. Check your email to confirm.</div>';
+}
+</script>
+
+</body>
+</html>
