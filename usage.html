@@ -176,43 +176,80 @@ function setStatus(message){
 }
 
 async function loadUsage(){
-  const { data: codes, error } = await client.from("codes").select("*").order("uses", { ascending:false });
-  if(error || !codes){
+  const { data, error } = await client
+    .from("wash_activity")
+    .select("*")
+    .order("event_time", { ascending:false });
+
+  if(error || !data){
     console.log(error);
     return;
   }
 
-  cachedCodes = codes;
-  document.getElementById("totalCodes").innerText = codes.length;
+  const activity = data.map(row => ({
+    event_time: row.event_time || "",
+    code: row.metadata?.code || "",
+    department: row.department || "Unassigned",
+    name: row.metadata?.device || "",
+    bay: row.bay || "",
+    event: row.event || ""
+  }));
 
-  let totalUses = 0;
-  codes.forEach(c => totalUses += Number(c.uses || 0));
-  document.getElementById("totalUses").innerText = totalUses;
+  const washes = activity.filter(row => row.event === "granted");
 
-  document.getElementById("topCode").innerText = codes.length ? codes[0].code : "-";
+  document.getElementById("totalUses").innerText = washes.length;
 
-  const dept = {};
-  codes.forEach(c => {
-    const d = c.department || "Unassigned";
-    dept[d] = (dept[d] || 0) + Number(c.uses || 0);
+  const codeMap = {};
+  washes.forEach(row => {
+    if(!row.code) return;
+
+    if(!codeMap[row.code]){
+      codeMap[row.code] = {
+        code: row.code,
+        department: row.department || "Unassigned",
+        name: row.name || "",
+        uses: 0,
+        last_used: row.event_time || ""
+      };
+    }
+
+    codeMap[row.code].uses += 1;
+
+    if(row.event_time && (!codeMap[row.code].last_used || row.event_time > codeMap[row.code].last_used)){
+      codeMap[row.code].last_used = row.event_time;
+    }
   });
 
-  const sorted = Object.entries(dept).sort((a,b) => b[1] - a[1]);
-  cachedDepartmentData = sorted;
-  document.getElementById("topDept").innerText = sorted.length ? sorted[0][0] : "-";
+  const codeArray = Object.values(codeMap).sort((a,b) => b.uses - a.uses);
 
-  renderDepartmentChart(sorted);
-  renderTopCodesChart(codes.slice(0,10));
+  cachedCodes = codeArray;
+
+  document.getElementById("totalCodes").innerText = codeArray.length;
+  document.getElementById("topCode").innerText = codeArray.length ? codeArray[0].code : "-";
+
+  const deptMap = {};
+  washes.forEach(row => {
+    const dept = row.department || "Unassigned";
+    deptMap[dept] = (deptMap[dept] || 0) + 1;
+  });
+
+  const deptArray = Object.entries(deptMap).sort((a,b) => b[1] - a[1]);
+  cachedDepartmentData = deptArray;
+
+  document.getElementById("topDept").innerText = deptArray.length ? deptArray[0][0] : "-";
+
+  renderDepartmentChart(deptArray);
+  renderTopCodesChart(codeArray.slice(0,10));
 
   const list = document.getElementById("topCodes");
   list.innerHTML = "";
 
-  if(!codes.length){
+  if(!codeArray.length){
     list.innerHTML = `<div class="list-row"><span>No code data yet.</span><span>0</span></div>`;
     return;
   }
 
-  codes.slice(0,10).forEach(c => {
+  codeArray.slice(0,10).forEach(c => {
     list.innerHTML += `
       <div class="list-row">
         <span>${c.code}</span>
@@ -263,6 +300,11 @@ function renderTopCodesChart(codes){
   });
 }
 
+function csvSafe(value){
+  const text = String(value ?? "");
+  return `"${text.replaceAll('"', '""')}"`;
+}
+
 function exportCSV(){
   if(!cachedCodes.length){
     alert("No data to export.");
@@ -271,7 +313,13 @@ function exportCSV(){
 
   let csv = "Code,Department,Name,Uses,Last Used\n";
   cachedCodes.forEach(item => {
-    csv += `${item.code},${item.department || ""},${item.name || ""},${item.uses || 0},${item.last_used || ""}\n`;
+    csv += [
+      csvSafe(item.code),
+      csvSafe(item.department || ""),
+      csvSafe(item.name || ""),
+      csvSafe(item.uses || 0),
+      csvSafe(item.last_used || "")
+    ].join(",") + "\n";
   });
 
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -336,7 +384,7 @@ async function emailReport(){
 loadUsage();
 
 client.channel("washtrac-live-usage")
-.on("postgres_changes", { event: "*", schema: "public", table: "codes" }, () => loadUsage())
+.on("postgres_changes", { event: "*", schema: "public", table: "wash_activity" }, () => loadUsage())
 .subscribe();
 </script>
 </body>
