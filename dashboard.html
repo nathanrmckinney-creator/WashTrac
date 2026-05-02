@@ -703,9 +703,15 @@
     }
 
     function closeMenu(){
-      document.getElementById("mobileMenu").style.display = "none";
-      document.getElementById("backdrop").style.display = "none";
-    }
+  document.getElementById("mobileMenu").style.display = "none";
+
+  const dashboardMenu = document.getElementById("dashboardMenu");
+  if(dashboardMenu){
+    dashboardMenu.style.display = "none";
+  }
+
+  document.getElementById("backdrop").style.display = "none";
+}
 
     function logout(){
       localStorage.removeItem("washtracLoggedIn");
