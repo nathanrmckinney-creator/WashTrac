@@ -52,6 +52,13 @@
       padding:10px 0;
     }
 
+.dashboard-menu-wrap{
+  position:absolute;
+  top:30px;
+  right:30px;
+  z-index:1200;
+}
+    
     .nav a:hover,
     .sidebar-bottom a:hover{
       color:white;
@@ -507,6 +514,22 @@
     </div>
 
     <div class="main">
+      <div class="dashboard-menu-wrap">
+  <button class="menu-btn" onclick="toggleDashboardMenu()">☰</button>
+
+  <div class="mobile-menu" id="dashboardMenu">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="codes.html">Codes</a>
+    <a href="activity.html">Activity</a>
+    <a href="usage.html">Reports</a>
+    <a href="monitor.html">Monitor</a>
+
+    <a onclick="openAddDevice()">Add Device</a>
+
+    <a href="index.html">Back to Homepage</a>
+    <a href="#" class="logout-link" onclick="logout()">Logout</a>
+  </div>
+</div>
      <div class="page-header">
   <h1>
     Dashboard 
@@ -1189,6 +1212,17 @@ window.onload = function(){
       .on("postgres_changes", { event: "*", schema: "public", table: "system_control" }, () => loadDashboard())
       .on("postgres_changes", { event: "*", schema: "public", table: "bay_status" }, () => loadDashboard())
       .subscribe();
+  
+function toggleDashboardMenu(){
+  const menu = document.getElementById("dashboardMenu");
+  const backdrop = document.getElementById("backdrop");
+
+  const isOpen = menu.style.display === "block";
+
+  menu.style.display = isOpen ? "none" : "block";
+  backdrop.style.display = isOpen ? "none" : "block";
+}
+    
   </script>
 </body>
 </html>
