@@ -199,54 +199,94 @@ function formatTime(value){
   return date.toLocaleString();
 }
 
-function mapActivityRow(row){
+function cleanValue(value, fallback = ""){
+  if(value === null || value === undefined || value === "") return fallback;
+  return value;
+}
+
+function getActivityCode(row){
+  return String(
+    cleanValue(row.metadata?.code, cleanValue(row.code, cleanValue(row.access_code, "")))
+  ).trim();
+}
+
+function mapActivityRow(row, codeNameMap = {}){
+  const code = getActivityCode(row);
+
   return {
     id: row.id || "",
-    event_time: row.event_time || "",
-    code: row.metadata?.code || "",
-    department: row.department || "",
-    name: row.assigned_to || row.metadata?.name || row.metadata?.device || "",
-    bay: row.bay || "",
-    event: row.event || ""
+    event_time: cleanValue(row.event_time, cleanValue(row.created_at, "")),
+    code: code,
+    department: cleanValue(row.department, cleanValue(row.metadata?.department, "")),
+    name: cleanValue(codeNameMap[code], cleanValue(row.metadata?.name, cleanValue(row.assigned_to, ""))),
+    bay: cleanValue(row.bay, ""),
+    event: cleanValue(row.event, cleanValue(row.status, ""))
   };
 }
 
-async function fetchActivity(){
+async function fetchCodeNameMap(){
+  const { data, error } = await client
+    .from("access_codes")
+    .select("code,assigned_to");
 
-  const { data: activityData, error: activityError } = await client
+  if(error){
+    console.log("Codes fetch error:", error);
+    return {};
+  }
+
+  const map = {};
+
+  (data || []).forEach(item => {
+    const code = String(item.code || "").trim();
+    if(code){
+      map[code] = item.assigned_to || "";
+    }
+  });
+
+  return map;
+}
+
+async function fetchActivity(){
+  const { data, error } = await client
     .from("wash_activity")
     .select("*")
     .order("event_time", { ascending:false });
 
-  if(activityError){
-    console.log("Activity fetch error:", activityError);
+  if(error){
+    console.log("Activity fetch error:", error);
     return [];
   }
 
-  const { data: codesData, error: codesError } = await client
-    .from("access_codes")
-    .select("*");
+  const codeNameMap = await fetchCodeNameMap();
 
-  if(codesError){
-    console.log("Codes fetch error:", codesError);
-  }
+  return (data || []).map(row => mapActivityRow(row, codeNameMap));
+}
 
-  const codeNameMap = {};
+async function loadActivity(){
+  activityRows = await fetchActivity();
+  console.log("Activity:", activityRows);
+  renderActivity();
+}
 
-  (codesData || []).forEach(c => {
-    const codeValue = String(c.code || "").trim();
-    if(codeValue){
-      codeNameMap[codeValue] = c.assigned_to || c.name || "";
-    }
-  });
+function getFilteredRows(){
+  const codeFilter = document.getElementById("filterCode").value.trim().toLowerCase();
+  const departmentFilter = document.getElementById("filterDepartment").value.trim().toLowerCase();
+  const nameFilter = document.getElementById("filterName").value.trim().toLowerCase();
+  const bayFilter = document.getElementById("filterBay").value.trim().toLowerCase();
+  const eventFilter = document.getElementById("filterEvent").value.trim().toLowerCase();
 
-  return (activityData || []).map(row => {
-    const mapped = mapActivityRow(row);
-    const codeValue = String(mapped.code || "").trim();
+  return activityRows.filter(row => {
+    const code = (row.code || "").toLowerCase();
+    const department = (row.department || "").toLowerCase();
+    const name = (row.name || "").toLowerCase();
+    const bay = (row.bay || "").toLowerCase();
+    const event = (row.event || "").toLowerCase();
 
-    mapped.name = codeNameMap[codeValue] || mapped.name || "";
-
-    return mapped;
+    return code.includes(codeFilter)
+      && department.includes(departmentFilter)
+      && name.includes(nameFilter)
+      && bay.includes(bayFilter)
+      && event.includes(eventFilter);
   });
 }
 
@@ -263,6 +303,15 @@ function updateSummary(rows){
     new Set(rows.map(r => r.bay).filter(Boolean)).size;
 }
 
+function escapeText(value){
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 function renderActivity(){
   const rows = getFilteredRows();
   const tbody = document.getElementById("activityTableBody");
@@ -275,12 +324,12 @@ function renderActivity(){
     rows.forEach(row => {
       tbody.innerHTML += `
         <tr>
-          <td>${formatTime(row.event_time)}</td>
-          <td>${row.code || ""}</td>
-          <td>${row.department || ""}</td>
-          <td>${row.name || ""}</td>
-          <td>${row.bay || ""}</td>
-          <td>${row.event || ""}</td>
+          <td>${escapeText(formatTime(row.event_time))}</td>
+          <td>${escapeText(row.code || "")}</td>
+          <td>${escapeText(row.department || "")}</td>
+          <td>${escapeText(row.name || "")}</td>
+          <td>${escapeText(row.bay || "")}</td>
+          <td>${escapeText(row.event || "")}</td>
         </tr>
       `;
     });
@@ -314,6 +363,18 @@ function startLiveActivity(){
       },
       payload => {
         console.log("Live activity update:", payload);
+        loadActivity();
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "access_codes"
+      },
+      payload => {
+        console.log("Live code update:", payload);
         loadActivity();
       }
     )
