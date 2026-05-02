@@ -729,6 +729,42 @@
       }
     }
 
+async function loadSites(){
+  const { data, error } = await client
+    .from("sites")
+    .select("*")
+    .order("name", { ascending:true });
+
+  if(error){
+    console.log("Sites error:", error);
+    return;
+  }
+
+  const select = document.getElementById("siteSwitcher");
+  if(!select) return;
+
+  select.innerHTML = "";
+
+  data.forEach(site => {
+    select.innerHTML += `<option value="${site.id}">${site.name}</option>`;
+  });
+
+  const saved = localStorage.getItem("activeSiteId");
+
+  if(saved){
+    select.value = saved;
+  } else if(data.length){
+    select.value = data[0].id;
+    localStorage.setItem("activeSiteId", data[0].id);
+  }
+}
+
+    function switchSite(siteId){
+  localStorage.setItem("activeSiteId", siteId);
+  loadSites();
+  loadDashboard();
+}
+    
     async function fetchCodes(){
       const { data, error } = await client
         .from("access_codes")
