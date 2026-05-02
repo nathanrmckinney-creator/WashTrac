@@ -212,44 +212,48 @@ function mapActivityRow(row){
 }
 
 async function fetchActivity(){
-  const { data, error } = await client
+
+  // get activity
+  const { data: activityData, error: activityError } = await client
     .from("wash_activity")
     .select("*")
     .order("event_time", { ascending:false });
 
-  if(error){
-    console.log("Activity fetch error:", error);
+  if(activityError){
+    console.log("Activity fetch error:", activityError);
     return [];
   }
 
-  return (data || []).map(mapActivityRow);
-}
+  // get codes (for names)
+  const { data: codesData, error: codesError } = await client
+    .from("access_codes")
+    .select("code, assigned_to");
 
-async function loadActivity(){
-  activityRows = await fetchActivity();
-  console.log("Activity:", activityRows);
-  renderActivity();
-}
+  if(codesError){
+    console.log("Codes fetch error:", codesError);
+  }
 
-function getFilteredRows(){
-  const codeFilter = document.getElementById("filterCode").value.trim().toLowerCase();
-  const departmentFilter = document.getElementById("filterDepartment").value.trim().toLowerCase();
-  const nameFilter = document.getElementById("filterName").value.trim().toLowerCase();
-  const bayFilter = document.getElementById("filterBay").value.trim().toLowerCase();
-  const eventFilter = document.getElementById("filterEvent").value.trim().toLowerCase();
+  // build lookup map
+  const codeNameMap = {};
+  (codesData || []).forEach(c => {
+    if(c.code){
+      codeNameMap[String(c.code).trim()] = c.assigned_to || "";
+    }
+  });
 
-  return activityRows.filter(row => {
-    const code = (row.code || "").toLowerCase();
-    const department = (row.department || "").toLowerCase();
-    const name = (row.name || "").toLowerCase();
-    const bay = (row.bay || "").toLowerCase();
-    const event = (row.event || "").toLowerCase();
+  // map activity with real names
+  return (activityData || []).map(row => {
+    const code = row.metadata?.code || "";
 
-    return code.includes(codeFilter)
-      && department.includes(departmentFilter)
-      && name.includes(nameFilter)
-      && bay.includes(bayFilter)
-      && event.includes(eventFilter);
+    return {
+      id: row.id || "",
+      event_time: row.event_time || "",
+      code,
+      department: row.department || "",
+      name: codeNameMap[code] || "",
+      bay: row.bay || "",
+      event: row.event || ""
+    };
   });
 }
 
