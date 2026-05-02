@@ -1,475 +1,332 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WashTrac | Activity</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WashTrac Activity</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <style>
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #06111f;
-      color: #fff;
-    }
-
-    .app {
-      display: flex;
-      min-height: 100vh;
-    }
-
-    .sidebar {
-      width: 250px;
-      background: #081827;
-      border-right: 1px solid rgba(255,255,255,0.08);
-      padding: 24px 18px;
-      position: fixed;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      z-index: 20;
-    }
-
-    .brand {
-      font-size: 26px;
-      font-weight: 800;
-      margin-bottom: 30px;
-      color: #1ea7ff;
-    }
-
-    .nav a {
-      display: block;
-      color: #c7d7e8;
-      text-decoration: none;
-      padding: 13px 14px;
-      border-radius: 10px;
-      margin-bottom: 8px;
-      font-weight: 600;
-    }
-
-    .nav a:hover,
-    .nav a.active {
-      background: rgba(30,167,255,0.16);
-      color: #fff;
-    }
-
-    .mobile-topbar {
-      display: none;
-      height: 64px;
-      background: #081827;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 16px;
-      position: sticky;
-      top: 0;
-      z-index: 30;
-    }
-
-    .menu-btn {
-      background: #10263a;
-      color: white;
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 10px;
-      padding: 10px 13px;
-      font-size: 20px;
-      cursor: pointer;
-    }
-
-    .main {
-      margin-left: 250px;
-      width: calc(100% - 250px);
-      padding: 30px;
-    }
-
-    .page-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 34px;
-    }
-
-    .subtitle {
-      margin-top: 8px;
-      color: #9fb3c8;
-      font-size: 15px;
-    }
-
-    .refresh-btn {
-      background: linear-gradient(180deg, #1ea7ff, #0b74c9);
-      color: white;
-      border: none;
-      border-radius: 12px;
-      padding: 12px 18px;
-      font-weight: 700;
-      cursor: pointer;
-      box-shadow: 0 0 18px rgba(30,167,255,0.3);
-    }
-
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .summary-card {
-      background: rgba(10, 31, 51, 0.92);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 18px;
-      padding: 20px;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.22);
-    }
-
-    .summary-label {
-      color: #9fb3c8;
-      font-size: 14px;
-      margin-bottom: 10px;
-    }
-
-    .summary-value {
-      font-size: 34px;
-      font-weight: 800;
-      color: #fff;
-    }
-
-    .panel {
-      background: rgba(10, 31, 51, 0.92);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 18px;
-      overflow: hidden;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.22);
-    }
-
-    .panel-header {
-      padding: 18px 20px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .panel-title {
-      font-size: 20px;
-      font-weight: 800;
-    }
-
-    .status {
-      color: #9fb3c8;
-      font-size: 14px;
-    }
-
-    .table-wrap {
-      width: 100%;
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 850px;
-    }
-
-    th, td {
-      padding: 15px 18px;
-      text-align: left;
-      border-bottom: 1px solid rgba(255,255,255,0.07);
-      font-size: 14px;
-      white-space: nowrap;
-    }
-
-    th {
-      color: #9fb3c8;
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      background: rgba(255,255,255,0.025);
-    }
-
-    td {
-      color: #e8f1fb;
-    }
-
-    .event-pill {
-      display: inline-block;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(30,167,255,0.14);
-      color: #7dccff;
-      font-weight: 700;
-      font-size: 12px;
-    }
-
-    .empty {
-      padding: 28px;
-      color: #9fb3c8;
-      text-align: center;
-      display: none;
-    }
-
-    .manual-log {
-      display: none !important;
-    }
-
-    @media (max-width: 900px) {
-      .mobile-topbar {
-        display: flex;
-      }
-
-      .sidebar {
-        transform: translateX(-100%);
-        transition: transform 0.2s ease;
-      }
-
-      .sidebar.open {
-        transform: translateX(0);
-      }
-
-      .main {
-        margin-left: 0;
-        width: 100%;
-        padding: 20px;
-      }
-
-      .summary-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .page-header {
-        flex-direction: column;
-      }
-    }
-
-    @media (max-width: 520px) {
-      .summary-grid {
-        grid-template-columns: 1fr;
-      }
-
-      h1 {
-        font-size: 28px;
-      }
-    }
-  </style>
+<style>
+*{box-sizing:border-box;}
+body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:white;overflow-x:hidden;}
+.app{display:flex;min-height:100vh;}
+.sidebar{width:220px;background:#0f172a;padding:20px;flex-shrink:0;border-right:1px solid #1e293b;}
+.logo{font-size:22px;font-weight:bold;margin-bottom:32px;}
+.nav a,.sidebar-bottom a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
+.nav a:hover,.sidebar-bottom a:hover{color:white;}
+.sidebar-bottom{margin-top:40px;padding-top:20px;border-top:1px solid #1e293b;}
+.sidebar-bottom a.logout-link{color:#f87171;}
+.main{flex:1;padding:30px;}
+.mobile-topbar{display:none;align-items:center;justify-content:space-between;padding:16px 20px;background:#0f172a;border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:1000;}
+.mobile-logo{font-size:22px;font-weight:bold;}
+.brand-accent{
+  color:#2ea8ff !important;
+}
+.menu-btn{background:#2563eb;border:none;color:white;padding:10px 14px;border-radius:8px;cursor:pointer;}
+.mobile-menu{display:none;position:absolute;top:64px;right:16px;width:240px;background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:12px 16px;box-shadow:0 12px 30px rgba(0,0,0,.45);z-index:1100;}
+.mobile-menu a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
+.mobile-menu a:hover{color:white;}
+.mobile-menu a.logout-link{color:#f87171;}
+.backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1050;}
+.page-header{margin-bottom:24px;}
+.page-header h1{margin:0 0 10px 0;font-size:42px;}
+.page-header p{margin:0;color:#94a3b8;line-height:1.5;}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;}
+.summary-box{background:#111827;padding:18px;border-radius:10px;}
+.summary-box strong{display:block;font-size:30px;margin-bottom:6px;}
+.summary-box span{color:#94a3b8;font-size:14px;}
+.card{background:#111827;padding:20px;border-radius:10px;margin-bottom:20px;}
+.card h3{margin-top:0;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;gap:12px;margin-bottom:18px;}
+.filters{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:12px;margin-bottom:18px;}
+input{width:100%;padding:12px;border-radius:8px;border:1px solid #334155;background:#0b1220;color:white;}
+button{padding:12px 16px;background:#2563eb;color:white;border:none;border-radius:8px;cursor:pointer;}
+button.secondary{background:#334155;}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;min-width:700px;margin-top:10px;}
+th,td{padding:12px 8px;border-bottom:1px solid #1f2937;text-align:left;}
+th{color:#93c5fd;font-size:13px;text-transform:uppercase;letter-spacing:.5px;}
+.notice{margin-top:14px;color:#94a3b8;font-size:14px;line-height:1.5;}
+.manual-log-card{display:none;}
+@media (max-width:1100px){
+.summary{grid-template-columns:1fr 1fr;}
+.form-grid,.filters{grid-template-columns:1fr 1fr;}
+}
+@media (max-width:900px){
+.app{display:block;}
+.sidebar{display:none;}
+.mobile-topbar{display:flex;}
+.main{padding:20px;}
+.page-header h1{font-size:34px;}
+.summary{grid-template-columns:1fr;}
+.form-grid,.filters{grid-template-columns:1fr;}
+table{min-width:600px;}
+}
+</style>
 </head>
 
 <body>
-  <div class="mobile-topbar">
-    <div class="brand">WashTrac</div>
-    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-  </div>
+<script>
+if(localStorage.getItem("washtracLoggedIn") !== "yes"){
+  window.location.href = "login.html";
+}
+</script>
 
-  <div class="app">
-    <aside class="sidebar" id="sidebar">
-      <div class="brand">WashTrac</div>
-      <nav class="nav">
-        <a href="dashboard.html">Dashboard</a>
-        <a href="activity.html" class="active">Activity</a>
-        <a href="codes.html">Codes</a>
-        <a href="devices.html">Devices</a>
-        <a href="settings.html">Settings</a>
-      </nav>
-    </aside>
+<div class="mobile-topbar">
+<div class="mobile-logo">Wash<span class="brand-accent">Trac</span></div>
+<button class="menu-btn" onclick="toggleMenu()">☰</button>
+</div>
 
-    <main class="main">
-      <div class="page-header">
-        <div>
-          <h1>Activity</h1>
-          <div class="subtitle">Live wash events logged from CodeBox devices.</div>
-        </div>
-        <button class="refresh-btn" onclick="loadActivity()">Refresh</button>
-      </div>
+<div class="mobile-menu" id="mobileMenu">
+<a href="dashboard.html" onclick="closeMenu()">Dashboard</a>
+<a href="codes.html" onclick="closeMenu()">Codes</a>
+<a href="activity.html" onclick="closeMenu()">Activity</a>
+<a href="usage.html" onclick="closeMenu()">Reports</a>
+<a href="monitor.html" onclick="closeMenu()">Monitor</a>
+<a href="index.html" onclick="closeMenu()">Back to Homepage</a>
+<a href="#" class="logout-link" onclick="logout()">Logout</a>
+</div>
 
-      <section class="summary-grid">
-        <div class="summary-card">
-          <div class="summary-label">Total Events</div>
-          <div class="summary-value" id="totalEvents">0</div>
-        </div>
+<div class="backdrop" id="backdrop" onclick="closeMenu()"></div>
 
-        <div class="summary-card">
-          <div class="summary-label">Unique Codes</div>
-          <div class="summary-value" id="uniqueCodes">0</div>
-        </div>
+<div class="app">
+<div class="sidebar">
+<div class="logo">Wash<span class="brand-accent">Trac</span></div>
+<div class="nav">
+<a href="dashboard.html">Dashboard</a>
+<a href="codes.html">Codes</a>
+<a href="activity.html">Activity</a>
+<a href="usage.html">Reports</a>
+<a href="monitor.html">Monitor</a>
+</div>
+<div class="sidebar-bottom">
+<a href="index.html">Back to Homepage</a>
+<a href="#" class="logout-link" onclick="logout()">Logout</a>
+</div>
+</div>
 
-        <div class="summary-card">
-          <div class="summary-label">Departments</div>
-          <div class="summary-value" id="uniqueDepartments">0</div>
-        </div>
+<div class="main">
+<div class="page-header">
+<h1>Activity</h1>
+<p>View live activity by code, department, name, bay, and event.</p>
+</div>
 
-        <div class="summary-card">
-          <div class="summary-label">Bays</div>
-          <div class="summary-value" id="uniqueBays">0</div>
-        </div>
-      </section>
+<div class="summary">
+<div class="summary-box"><strong id="totalEvents">0</strong><span>Total Events</span></div>
+<div class="summary-box"><strong id="uniqueCodes">0</strong><span>Unique Codes</span></div>
+<div class="summary-box"><strong id="uniqueDepartments">0</strong><span>Departments</span></div>
+<div class="summary-box"><strong id="uniqueBays">0</strong><span>Bays</span></div>
+</div>
 
-      <!-- Manual Log Wash Event disabled for now -->
-      <section class="manual-log"></section>
+<div class="card manual-log-card">
+<h3>Log Wash Event</h3>
+<div class="form-grid">
+<input id="logCode" placeholder="Code">
+<input id="logDepartment" placeholder="Department">
+<input id="logName" placeholder="Name">
+<input id="logBay" placeholder="Bay">
+<input id="logEvent" placeholder="Event" value="Activated wash">
+<button onclick="logWashEvent()">Log Event</button>
+</div>
+<div class="notice">Manual logging is disabled while live CodeBox activity is active.</div>
+</div>
 
-      <section class="panel">
-        <div class="panel-header">
-          <div class="panel-title">Wash Activity</div>
-          <div class="status" id="activityStatus">Loading...</div>
-        </div>
+<div class="card">
+<h3>Search Activity</h3>
+<div class="filters">
+<input id="filterCode" placeholder="Filter by code" oninput="renderActivity()">
+<input id="filterDepartment" placeholder="Filter by department" oninput="renderActivity()">
+<input id="filterName" placeholder="Filter by name" oninput="renderActivity()">
+<input id="filterBay" placeholder="Filter by bay" oninput="renderActivity()">
+<input id="filterEvent" placeholder="Filter by event" oninput="renderActivity()">
+</div>
 
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>Code</th>
-                <th>Department</th>
-                <th>Device</th>
-                <th>Bay</th>
-                <th>Event</th>
-              </tr>
-            </thead>
-            <tbody id="activityTableBody"></tbody>
-          </table>
-        </div>
+<div class="actions">
+<button onclick="clearFilters()">Clear Filters</button>
+<button class="secondary" onclick="window.print()">Print</button>
+</div>
 
-        <div class="empty" id="emptyState">No activity found yet.</div>
-      </section>
-    </main>
-  </div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Time</th>
+<th>Code</th>
+<th>Department</th>
+<th>Name</th>
+<th>Bay</th>
+<th>Event</th>
+</tr>
+</thead>
+<tbody id="activityTableBody"></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
 
-  <script>
-    const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
+<script>
+const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
+const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let activityRows = [];
 
-    function toggleSidebar() {
-      document.getElementById("sidebar").classList.toggle("open");
-    }
+function toggleMenu(){
+  const menu = document.getElementById("mobileMenu");
+  const backdrop = document.getElementById("backdrop");
+  const isOpen = menu.style.display === "block";
+  menu.style.display = isOpen ? "none" : "block";
+  backdrop.style.display = isOpen ? "none" : "block";
+}
 
-    function formatDate(value) {
-      if (!value) return "";
+function closeMenu(){
+  document.getElementById("mobileMenu").style.display = "none";
+  document.getElementById("backdrop").style.display = "none";
+}
 
-      const date = new Date(value);
+function logout(){
+  localStorage.removeItem("washtracLoggedIn");
+  window.location.href = "login.html";
+}
 
-      if (Number.isNaN(date.getTime())) {
-        return value;
+function formatTime(value){
+  if(!value) return "";
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString();
+}
+
+function mapActivityRow(row){
+  return {
+    id: row.id || "",
+    event_time: row.event_time || "",
+    code: row.metadata?.code || "",
+    department: row.department || "",
+    name: row.metadata?.device || "",
+    bay: row.bay || "",
+    event: row.event || ""
+  };
+}
+
+async function fetchActivity(){
+  const { data, error } = await client
+    .from("wash_activity")
+    .select("*")
+    .order("event_time", { ascending:false });
+
+  if(error){
+    console.log("Activity fetch error:", error);
+    return [];
+  }
+
+  return (data || []).map(mapActivityRow);
+}
+
+async function loadActivity(){
+  activityRows = await fetchActivity();
+  console.log("Activity:", activityRows);
+  renderActivity();
+}
+
+function getFilteredRows(){
+  const codeFilter = document.getElementById("filterCode").value.trim().toLowerCase();
+  const departmentFilter = document.getElementById("filterDepartment").value.trim().toLowerCase();
+  const nameFilter = document.getElementById("filterName").value.trim().toLowerCase();
+  const bayFilter = document.getElementById("filterBay").value.trim().toLowerCase();
+  const eventFilter = document.getElementById("filterEvent").value.trim().toLowerCase();
+
+  return activityRows.filter(row => {
+    const code = (row.code || "").toLowerCase();
+    const department = (row.department || "").toLowerCase();
+    const name = (row.name || "").toLowerCase();
+    const bay = (row.bay || "").toLowerCase();
+    const event = (row.event || "").toLowerCase();
+
+    return code.includes(codeFilter)
+      && department.includes(departmentFilter)
+      && name.includes(nameFilter)
+      && bay.includes(bayFilter)
+      && event.includes(eventFilter);
+  });
+}
+
+function updateSummary(rows){
+  document.getElementById("totalEvents").innerText = rows.length;
+
+  document.getElementById("uniqueCodes").innerText =
+    new Set(rows.map(r => r.code).filter(Boolean)).size;
+
+  document.getElementById("uniqueDepartments").innerText =
+    new Set(rows.map(r => r.department).filter(Boolean)).size;
+
+  document.getElementById("uniqueBays").innerText =
+    new Set(rows.map(r => r.bay).filter(Boolean)).size;
+}
+
+function renderActivity(){
+  const rows = getFilteredRows();
+  const tbody = document.getElementById("activityTableBody");
+
+  tbody.innerHTML = "";
+
+  if(rows.length === 0){
+    tbody.innerHTML = `<tr><td colspan="6">No matching activity found.</td></tr>`;
+  } else {
+    rows.forEach(row => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${formatTime(row.event_time)}</td>
+          <td>${row.code || ""}</td>
+          <td>${row.department || ""}</td>
+          <td>${row.name || ""}</td>
+          <td>${row.bay || ""}</td>
+          <td>${row.event || ""}</td>
+        </tr>
+      `;
+    });
+  }
+
+  updateSummary(rows);
+}
+
+function clearFilters(){
+  document.getElementById("filterCode").value = "";
+  document.getElementById("filterDepartment").value = "";
+  document.getElementById("filterName").value = "";
+  document.getElementById("filterBay").value = "";
+  document.getElementById("filterEvent").value = "";
+  renderActivity();
+}
+
+async function logWashEvent(){
+  alert("Manual logging is disabled. Activity is now logged from CodeBox live events.");
+}
+
+function startLiveActivity(){
+  client
+    .channel("wash_activity_live")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "wash_activity"
+      },
+      payload => {
+        console.log("Live activity update:", payload);
+        loadActivity();
       }
+    )
+    .subscribe(status => {
+      console.log("Realtime status:", status);
+    });
+}
 
-      return date.toLocaleString();
-    }
-
-    function safeValue(value) {
-      if (value === null || value === undefined || value === "") {
-        return "—";
-      }
-
-      return String(value);
-    }
-
-    async function fetchActivity() {
-      const { data, error } = await client
-        .from("wash_activity")
-        .select("*")
-        .order("event_time", { ascending: false });
-
-      if (error) {
-        console.error("Activity fetch error:", error);
-        throw error;
-      }
-
-      return (data || []).map(row => ({
-        event_time: row.event_time,
-        code: row.metadata?.code || "",
-        department: row.department || "",
-        device: row.metadata?.device || "",
-        bay: row.bay || "",
-        event: row.event || ""
-      }));
-    }
-
-    function updateSummary(activity) {
-      const totalEvents = activity.length;
-
-      const uniqueCodes = new Set(
-        activity
-          .map(item => item.code)
-          .filter(Boolean)
-      ).size;
-
-      const uniqueDepartments = new Set(
-        activity
-          .map(item => item.department)
-          .filter(Boolean)
-      ).size;
-
-      const uniqueBays = new Set(
-        activity
-          .map(item => item.bay)
-          .filter(Boolean)
-      ).size;
-
-      document.getElementById("totalEvents").textContent = totalEvents;
-      document.getElementById("uniqueCodes").textContent = uniqueCodes;
-      document.getElementById("uniqueDepartments").textContent = uniqueDepartments;
-      document.getElementById("uniqueBays").textContent = uniqueBays;
-    }
-
-    function renderActivity(activity) {
-      const tbody = document.getElementById("activityTableBody");
-      const emptyState = document.getElementById("emptyState");
-
-      tbody.innerHTML = "";
-
-      if (!activity.length) {
-        emptyState.style.display = "block";
-        return;
-      }
-
-      emptyState.style.display = "none";
-
-      activity.forEach(item => {
-        const tr = document.createElement("tr");
-
-        tr.innerHTML = `
-          <td>${safeValue(formatDate(item.event_time))}</td>
-          <td>${safeValue(item.code)}</td>
-          <td>${safeValue(item.department)}</td>
-          <td>${safeValue(item.device)}</td>
-          <td>${safeValue(item.bay)}</td>
-          <td><span class="event-pill">${safeValue(item.event)}</span></td>
-        `;
-
-        tbody.appendChild(tr);
-      });
-    }
-
-    async function loadActivity() {
-      const status = document.getElementById("activityStatus");
-      status.textContent = "Loading...";
-
-      try {
-        const activity = await fetchActivity();
-
-        console.log("Activity:", activity);
-
-        updateSummary(activity);
-        renderActivity(activity);
-
-        status.textContent = `${activity.length} event${activity.length === 1 ? "" : "s"} loaded`;
-      } catch (error) {
-        status.textContent = "Unable to load activity";
-        document.getElementById("emptyState").style.display = "block";
-        document.getElementById("emptyState").textContent = "Activity could not be loaded. Check Supabase table access/RLS.";
-      }
-    }
-
-    loadActivity();
-  </script>
+loadActivity();
+startLiveActivity();
+</script>
 </body>
 </html>
