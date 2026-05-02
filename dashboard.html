@@ -766,9 +766,22 @@
     }
 
     function openAddDevice(){
+  generateDeviceCode();
+
+  const modal = document.getElementById("deviceModal");
+  modal.classList.add("show");
+}
+
+function closeDeviceModal(){
+  const modal = document.getElementById("deviceModal");
+  modal.classList.remove("show");
+}
+
+function generateDeviceCode(){
   const code = Math.floor(100000 + Math.random() * 900000);
 
-  alert("Add Device Code: " + code);
+  document.getElementById("deviceCodeDisplay").innerText = code;
+  localStorage.setItem("pendingDeviceCode", code);
 }
 
     function setControlStatus(message){
