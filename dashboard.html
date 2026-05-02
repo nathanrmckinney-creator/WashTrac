@@ -787,13 +787,30 @@ function closeDeviceModal(){
   modal.classList.remove("show");
 }
 
-function generateDeviceCode(){
-  const code = Math.floor(100000 + Math.random() * 900000);
+async function generateDeviceCode(){
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
 
   document.getElementById("deviceCodeDisplay").innerText = code;
+
+  const siteId = localStorage.getItem("activeSiteId");
+
+  const { error } = await client
+    .from("device_pairing_codes")
+    .insert([
+      {
+        code: code,
+        site_id: siteId
+      }
+    ]);
+
+  if(error){
+    console.log("Pairing insert error:", error);
+    alert("Error generating code");
+    return;
+  }
+
   localStorage.setItem("pendingDeviceCode", code);
 }
-
     function setControlStatus(message){
       const box = document.getElementById("controlStatus");
       box.innerText = message;
