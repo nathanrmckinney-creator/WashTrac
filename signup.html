@@ -236,73 +236,22 @@ async function signup(event) {
       return;
     }
 
-    const { data: userData, error: signUpError } = await client.auth.signUp({
+    localStorage.setItem("pendingOrgName", orgName);
+    localStorage.setItem("pendingSiteName", siteName);
+
+    const { error } = await client.auth.signUp({
       email: email,
       password: password
     });
 
-    if (signUpError) {
+    if (error) {
       statusBox.className = "status error";
-      statusBox.innerText = signUpError.message;
+      statusBox.innerText = error.message;
       return;
     }
-
-    const user = userData.user;
-
-    if (!user) {
-      statusBox.className = "status success";
-      statusBox.innerText = "Check your email to confirm your account.";
-      return;
-    }
-
-    const { data: org, error: orgError } = await client
-      .from("organizations")
-      .insert({ name: orgName })
-      .select()
-      .single();
-
-    if (orgError) {
-      statusBox.className = "status error";
-      statusBox.innerText = orgError.message;
-      return;
-    }
-
-    const { data: site, error: siteError } = await client
-      .from("sites")
-      .insert({
-        organization_id: org.id,
-        name: siteName
-      })
-      .select()
-      .single();
-
-    if (siteError) {
-      statusBox.className = "status error";
-      statusBox.innerText = siteError.message;
-      return;
-    }
-
-    const { error: linkError } = await client
-      .from("user_sites")
-      .insert({
-        user_id: user.id,
-        organization_id: org.id,
-        site_id: site.id,
-        role: "owner",
-        can_view_all_sites: true
-      });
-
-    if (linkError) {
-      statusBox.className = "status error";
-      statusBox.innerText = linkError.message;
-      return;
-    }
-
-    localStorage.setItem("selectedSiteId", site.id);
-    localStorage.setItem("selectedOrgId", org.id);
 
     statusBox.className = "status success";
-    statusBox.innerText = "Account created. Check your email to confirm.";
+    statusBox.innerText = "Account created. Check your email, confirm it, then login.";
 
   } finally {
     btn.disabled = false;
