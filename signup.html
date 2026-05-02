@@ -192,7 +192,7 @@
           <input id="siteName" type="text" placeholder="Example: Main Wash" required>
         </div>
 
-        <button type="submit" class="login-btn">Create Account</button>
+        <button id="signupBtn" type="submit" class="login-btn">Create Account</button>
       </form>
 
       <div class="link">
@@ -214,88 +214,98 @@ const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 async function signup(event) {
   event.preventDefault();
 
+  const btn = document.getElementById("signupBtn");
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
   const orgName = document.getElementById("orgName").value.trim();
   const siteName = document.getElementById("siteName").value.trim();
   const statusBox = document.getElementById("statusBox");
 
+  btn.disabled = true;
+  btn.innerText = "Creating...";
+
   statusBox.className = "status";
   statusBox.innerText = "Creating account...";
 
-  if (!email || !password || !orgName || !siteName) {
-    statusBox.className = "status error";
-    statusBox.innerText = "Please fill out all fields.";
-    return;
-  }
+  try {
+    if (!email || !password || !orgName || !siteName) {
+      statusBox.className = "status error";
+      statusBox.innerText = "Please fill out all fields.";
+      return;
+    }
 
-  const { data: userData, error: signUpError } = await client.auth.signUp({
-    email: email,
-    password: password
-  });
-
-  if (signUpError) {
-    statusBox.className = "status error";
-    statusBox.innerText = signUpError.message;
-    return;
-  }
-
-  const user = userData.user;
-
-  if (!user) {
-    statusBox.className = "status success";
-    statusBox.innerText = "Check your email to confirm your account.";
-    return;
-  }
-
-  const { data: org, error: orgError } = await client
-    .from("organizations")
-    .insert({ name: orgName })
-    .select()
-    .single();
-
-  if (orgError) {
-    statusBox.className = "status error";
-    statusBox.innerText = orgError.message;
-    return;
-  }
-
-  const { data: site, error: siteError } = await client
-    .from("sites")
-    .insert({
-      organization_id: org.id,
-      name: siteName
-    })
-    .select()
-    .single();
-
-  if (siteError) {
-    statusBox.className = "status error";
-    statusBox.innerText = siteError.message;
-    return;
-  }
-
-  const { error: linkError } = await client
-    .from("user_sites")
-    .insert({
-      user_id: user.id,
-      organization_id: org.id,
-      site_id: site.id,
-      role: "owner",
-      can_view_all_sites: true
+    const { data: userData, error: signUpError } = await client.auth.signUp({
+      email: email,
+      password: password
     });
 
-  if (linkError) {
-    statusBox.className = "status error";
-    statusBox.innerText = linkError.message;
-    return;
+    if (signUpError) {
+      statusBox.className = "status error";
+      statusBox.innerText = signUpError.message;
+      return;
+    }
+
+    const user = userData.user;
+
+    if (!user) {
+      statusBox.className = "status success";
+      statusBox.innerText = "Check your email to confirm your account.";
+      return;
+    }
+
+    const { data: org, error: orgError } = await client
+      .from("organizations")
+      .insert({ name: orgName })
+      .select()
+      .single();
+
+    if (orgError) {
+      statusBox.className = "status error";
+      statusBox.innerText = orgError.message;
+      return;
+    }
+
+    const { data: site, error: siteError } = await client
+      .from("sites")
+      .insert({
+        organization_id: org.id,
+        name: siteName
+      })
+      .select()
+      .single();
+
+    if (siteError) {
+      statusBox.className = "status error";
+      statusBox.innerText = siteError.message;
+      return;
+    }
+
+    const { error: linkError } = await client
+      .from("user_sites")
+      .insert({
+        user_id: user.id,
+        organization_id: org.id,
+        site_id: site.id,
+        role: "owner",
+        can_view_all_sites: true
+      });
+
+    if (linkError) {
+      statusBox.className = "status error";
+      statusBox.innerText = linkError.message;
+      return;
+    }
+
+    localStorage.setItem("selectedSiteId", site.id);
+    localStorage.setItem("selectedOrgId", org.id);
+
+    statusBox.className = "status success";
+    statusBox.innerText = "Account created. Check your email to confirm.";
+
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "Create Account";
   }
-
-  localStorage.setItem("selectedSiteId", site.id);
-  localStorage.setItem("selectedOrgId", org.id);
-
-  statusBox.className = "status success";
-  statusBox.innerText = "Account created. Check your email to confirm.";
 }
 </script>
 
