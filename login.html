@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WashTrac Login</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
   <style>
     *{box-sizing:border-box;}
     body{
@@ -20,24 +23,11 @@
       justify-content:center;
       padding:24px;
     }
-    .login-shell{
-      width:100%;
-      max-width:420px;
-    }
-    .brand{
-      text-align:center;
-      margin-bottom:18px;
-    }
-    .brand h1{
-      margin:0 0 8px 0;
-      font-size:42px;
-    }
-    .brand p{
-      margin:0;
-      color:#94a3b8;
-      font-size:15px;
-      letter-spacing: 2px;
-    }
+    .login-shell{width:100%;max-width:420px;}
+    .brand{text-align:center;margin-bottom:18px;}
+    .brand h1{margin:0 0 8px 0;font-size:42px;}
+    .brand p{margin:0;color:#94a3b8;font-size:15px;letter-spacing:2px;}
+    .brand-accent{color:#2ea8ff;}
     .login-card{
       background:#111827;
       border:1px solid #1f2937;
@@ -45,13 +35,8 @@
       padding:28px;
       box-shadow:0 18px 50px rgba(0,0,0,.45);
     }
-    .login-card h2{
-      margin:0 0 20px 0;
-      font-size:26px;
-    }
-    .field{
-      margin-bottom:16px;
-    }
+    .login-card h2{margin:0 0 20px 0;font-size:26px;}
+    .field{margin-bottom:16px;}
     .field label{
       display:block;
       margin-bottom:8px;
@@ -73,9 +58,7 @@
       border-color:#3b82f6;
       box-shadow:0 0 0 3px rgba(59,130,246,.18);
     }
-    .field input::placeholder{
-      color:#64748b;
-    }
+    .field input::placeholder{color:#64748b;}
     .login-btn{
       width:100%;
       padding:14px;
@@ -87,9 +70,8 @@
       font-weight:bold;
       cursor:pointer;
     }
-    .login-btn:hover{
-      background:#1d4ed8;
-    }
+    .login-btn:hover{background:#1d4ed8;}
+    .login-btn:disabled{opacity:.7;cursor:not-allowed;}
     .home-btn{
       width:100%;
       margin-top:12px;
@@ -112,9 +94,9 @@
       display:none;
       line-height:1.4;
     }
-    .status.show{
-      display:block;
-    }
+    .status.show{display:block;}
+    .status.error{color:#ef4444;}
+    .status.success{color:#22c55e;}
     .hint{
       margin-top:16px;
       text-align:center;
@@ -125,23 +107,9 @@
       .brand h1{font-size:36px;}
       .login-card{padding:22px;}
     }
-  .hint{
-  margin-top:16px;
-  text-align:center;
-  color:#64748b;
-  font-size:13px;
-}
-
-.brand-accent{
-  color:#2ea8ff;
-}
-
-@media (max-width:600px){
-  .brand h1{font-size:36px;}
-  .login-card{padding:22px;}
-}
   </style>
 </head>
+
 <body>
   <div class="login-shell">
     <div class="brand">
@@ -154,8 +122,8 @@
 
       <form onsubmit="login(event)">
         <div class="field">
-          <label for="user">Username</label>
-          <input id="user" type="text" placeholder="Enter username" autocomplete="username" required>
+          <label for="user">Email</label>
+          <input id="user" type="email" placeholder="Enter email" autocomplete="email" required>
         </div>
 
         <div class="field">
@@ -163,14 +131,14 @@
           <input id="pass" type="password" placeholder="Enter password" autocomplete="current-password" required>
         </div>
 
-        <button type="submit" class="login-btn">Login</button>
-       
+        <button id="loginBtn" type="submit" class="login-btn">Login</button>
+
         <div style="text-align:center; margin-top:20px;">
-  <span style="color:#9fb3c8;">Don't have an account?</span>
-  <a href="signup.html" style="color:#1ea7ff; margin-left:6px; text-decoration:none;">
-    Sign Up
-  </a>
-</div> 
+          <span style="color:#9fb3c8;">Don't have an account?</span>
+          <a href="signup.html" style="color:#1ea7ff; margin-left:6px; text-decoration:none;">
+            Sign Up
+          </a>
+        </div>
       </form>
 
       <button class="home-btn" onclick="window.location.href='index.html'">Back to Homepage</button>
@@ -183,34 +151,99 @@
     </div>
   </div>
 
-  <script>
-    function setStatus(message){
-      const box = document.getElementById("statusBox");
-      box.innerText = message;
-      box.classList.add("show");
+<script>
+const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
+const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
+
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function setStatus(message, type = "") {
+  const box = document.getElementById("statusBox");
+  box.innerText = message;
+  box.className = "status show";
+
+  if (type) {
+    box.classList.add(type);
+  }
+}
+
+function clearStatus() {
+  const box = document.getElementById("statusBox");
+  box.innerText = "";
+  box.className = "status";
+}
+
+async function login(event) {
+  event.preventDefault();
+  clearStatus();
+
+  const btn = document.getElementById("loginBtn");
+  const email = document.getElementById("user").value.trim();
+  const password = document.getElementById("pass").value.trim();
+
+  btn.disabled = true;
+  btn.innerText = "Logging in...";
+
+  try {
+    if (!email || !password) {
+      setStatus("Enter email and password.", "error");
+      return;
     }
 
-    function clearStatus(){
-      const box = document.getElementById("statusBox");
-      box.innerText = "";
-      box.classList.remove("show");
+    const { data: loginData, error: loginError } = await client.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+
+    if (loginError) {
+      setStatus(loginError.message, "error");
+      return;
     }
 
-    function login(event){
-      event.preventDefault();
-      clearStatus();
+    const user = loginData.user;
 
-      const user = document.getElementById("user").value.trim().toLowerCase();
-      const pass = document.getElementById("pass").value.trim();
+    const { data: siteLinks, error: siteError } = await client
+      .from("user_sites")
+      .select(`
+        site_id,
+        organization_id,
+        can_view_all_sites,
+        sites (
+          id,
+          name,
+          organization_id
+        )
+      `)
+      .eq("user_id", user.id);
 
-      if(user === "admin" && pass === "Ami2025"){
-        localStorage.setItem("washtracLoggedIn", "yes");
-        window.location.href = "dashboard.html";
-        return;
-      }
-
-      setStatus("Invalid username or password.");
+    if (siteError) {
+      setStatus(siteError.message, "error");
+      return;
     }
-  </script>
+
+    if (!siteLinks || siteLinks.length === 0) {
+      setStatus("No sites are linked to this account.", "error");
+      return;
+    }
+
+    const firstSite = siteLinks[0];
+
+    localStorage.setItem("washtracLoggedIn", "yes");
+    localStorage.setItem("selectedSiteId", firstSite.site_id);
+    localStorage.setItem("selectedOrgId", firstSite.organization_id);
+    localStorage.setItem("canViewAllSites", firstSite.can_view_all_sites ? "true" : "false");
+    localStorage.setItem("availableSites", JSON.stringify(siteLinks));
+
+    setStatus("Login successful.", "success");
+
+    window.location.href = "dashboard.html";
+
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "Login";
+  }
+}
+</script>
+
 </body>
 </html>
