@@ -213,7 +213,6 @@ function mapActivityRow(row){
 
 async function fetchActivity(){
 
-  // get activity
   const { data: activityData, error: activityError } = await client
     .from("wash_activity")
     .select("*")
@@ -224,36 +223,30 @@ async function fetchActivity(){
     return [];
   }
 
-  // get codes (for names)
   const { data: codesData, error: codesError } = await client
     .from("access_codes")
-    .select("code, assigned_to");
+    .select("*");
 
   if(codesError){
     console.log("Codes fetch error:", codesError);
   }
 
-  // build lookup map
   const codeNameMap = {};
+
   (codesData || []).forEach(c => {
-    if(c.code){
-      codeNameMap[String(c.code).trim()] = c.assigned_to || "";
+    const codeValue = String(c.code || "").trim();
+    if(codeValue){
+      codeNameMap[codeValue] = c.assigned_to || c.name || "";
     }
   });
 
-  // map activity with real names
   return (activityData || []).map(row => {
-    const code = row.metadata?.code || "";
+    const mapped = mapActivityRow(row);
+    const codeValue = String(mapped.code || "").trim();
 
-    return {
-      id: row.id || "",
-      event_time: row.event_time || "",
-      code,
-      department: row.department || "",
-      name: codeNameMap[code] || "",
-      bay: row.bay || "",
-      event: row.event || ""
-    };
+    mapped.name = codeNameMap[codeValue] || mapped.name || "";
+
+    return mapped;
   });
 }
 
