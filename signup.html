@@ -5,101 +5,205 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      margin:0;
+      margin: 0;
       font-family: Arial, sans-serif;
-      background:#000814;
-      color:white;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      height:100vh;
+      background: linear-gradient(180deg, #000814 0%, #06142d 100%);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 105px;
+    }
+
+    .page {
+      width: 450px;
+      text-align: center;
+    }
+
+    .logo {
+      font-size: 46px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      letter-spacing: -1px;
+    }
+
+    .logo span:first-child {
+      color: #ffffff;
+    }
+
+    .logo span:last-child {
+      color: #1ea7ff;
+    }
+
+    .tagline {
+      color: #9fb3c8;
+      font-size: 16px;
+      letter-spacing: 2px;
+      margin-bottom: 22px;
     }
 
     .card {
-      background: rgba(5,20,40,0.9);
-      padding:40px;
-      border-radius:16px;
-      width:400px;
-      box-shadow:0 0 40px rgba(30,167,255,0.2);
+      background: rgba(15, 25, 42, 0.95);
+      border: 1px solid rgba(159, 179, 200, 0.14);
+      border-radius: 16px;
+      padding: 28px 30px 32px;
+      text-align: left;
+      box-shadow: 0 0 35px rgba(0,0,0,0.25);
     }
 
     h2 {
-      margin-bottom:20px;
-      text-align:center;
+      margin: 0 0 24px;
+      font-size: 30px;
+      line-height: 1;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 10px;
     }
 
     input {
-      width:100%;
-      padding:14px;
-      margin-bottom:12px;
-      border-radius:8px;
-      border:none;
-      background:#0f1e33;
-      color:white;
-      font-size:16px;
+      width: 100%;
+      height: 52px;
+      border-radius: 10px;
+      border: 1px solid rgba(159, 179, 200, 0.28);
+      background: #071226;
+      color: white;
+      font-size: 16px;
+      padding: 0 14px;
+      outline: none;
     }
 
-    button {
-      width:100%;
-      padding:14px;
-      border:none;
-      border-radius:10px;
-      background:linear-gradient(180deg,#1ea7ff,#0066cc);
-      color:white;
-      font-size:16px;
-      font-weight:600;
-      cursor:pointer;
+    input::placeholder {
+      color: #7f93b0;
     }
 
-    button:hover {
-      opacity:0.9;
+    input:focus {
+      border-color: #1ea7ff;
+      box-shadow: 0 0 0 2px rgba(30,167,255,0.12);
+    }
+
+    .login-btn {
+      width: 100%;
+      height: 52px;
+      border: none;
+      border-radius: 10px;
+      background: #3167e8;
+      color: white;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 2px;
+    }
+
+    .login-btn:hover {
+      opacity: 0.95;
+    }
+
+    .home-btn {
+      width: 100%;
+      height: 50px;
+      border: none;
+      border-radius: 10px;
+      background: #3b4b63;
+      color: white;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 16px;
     }
 
     .link {
-      margin-top:15px;
-      text-align:center;
-      color:#9fb3c8;
+      text-align: center;
+      margin-top: 18px;
+      color: #9fb3c8;
+      font-size: 16px;
     }
 
     .link a {
-      color:#1ea7ff;
-      text-decoration:none;
+      color: #1ea7ff;
+      text-decoration: none;
+      margin-left: 4px;
+    }
+
+    .status {
+      text-align: center;
+      margin-top: 15px;
+      min-height: 20px;
+      font-size: 14px;
+      color: #9fb3c8;
     }
 
     .error {
-      color:#ef4444;
-      margin-bottom:10px;
-      text-align:center;
+      color: #ef4444;
     }
 
     .success {
-      color:#22c55e;
-      margin-bottom:10px;
-      text-align:center;
+      color: #22c55e;
     }
   </style>
 </head>
 
 <body>
 
-<div class="card">
-  <h2>Create Account</h2>
+  <div class="page">
+    <div class="logo">
+      <span>Wash</span><span>Trac</span>
+    </div>
 
-  <div id="message"></div>
+    <div class="tagline">Control. Track. Manage.</div>
 
-  <input id="email" placeholder="Email" />
-  <input id="password" type="password" placeholder="Password" />
+    <div class="card">
+      <h2>Create Account</h2>
 
-  <input id="orgName" placeholder="Company Name" />
-  <input id="siteName" placeholder="Site Name (ex: Main Wash)" />
+      <form onsubmit="signup(event)">
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="Enter email" autocomplete="email" required>
+        </div>
 
-  <button onclick="signup()">Create Account</button>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" type="password" placeholder="Enter password" autocomplete="new-password" required>
+        </div>
 
-  <div class="link">
-    Already have an account? <a href="login.html">Login</a>
+        <div class="field">
+          <label for="orgName">Company Name</label>
+          <input id="orgName" type="text" placeholder="Enter company name" required>
+        </div>
+
+        <div class="field">
+          <label for="siteName">Site Name</label>
+          <input id="siteName" type="text" placeholder="Example: Main Wash" required>
+        </div>
+
+        <button type="submit" class="login-btn">Create Account</button>
+      </form>
+
+      <div class="link">
+        Already have an account? <a href="login.html">Login</a>
+      </div>
+
+      <button class="home-btn" onclick="window.location.href='index.html'">Back to Homepage</button>
+
+      <div class="status" id="statusBox"></div>
+    </div>
   </div>
-</div>
 
 <script>
 const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
@@ -107,61 +211,70 @@ const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-async function signup(){
+async function signup(event) {
+  event.preventDefault();
+
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
   const orgName = document.getElementById("orgName").value.trim();
   const siteName = document.getElementById("siteName").value.trim();
+  const statusBox = document.getElementById("statusBox");
 
-  const msg = document.getElementById("message");
-  msg.innerHTML = "";
+  statusBox.className = "status";
+  statusBox.innerText = "Creating account...";
 
-  if(!email || !password || !orgName || !siteName){
-    msg.innerHTML = '<div class="error">Fill out all fields</div>';
+  if (!email || !password || !orgName || !siteName) {
+    statusBox.className = "status error";
+    statusBox.innerText = "Please fill out all fields.";
     return;
   }
 
-  // 1. Create user
   const { data: userData, error: signUpError } = await client.auth.signUp({
-    email,
-    password
+    email: email,
+    password: password
   });
 
-  if(signUpError){
-    msg.innerHTML = `<div class="error">${signUpError.message}</div>`;
+  if (signUpError) {
+    statusBox.className = "status error";
+    statusBox.innerText = signUpError.message;
     return;
   }
 
   const user = userData.user;
 
-  // 2. Create organization
+  if (!user) {
+    statusBox.className = "status success";
+    statusBox.innerText = "Check your email to confirm your account.";
+    return;
+  }
+
   const { data: org, error: orgError } = await client
     .from("organizations")
     .insert({ name: orgName })
     .select()
     .single();
 
-  if(orgError){
-    msg.innerHTML = `<div class="error">${orgError.message}</div>`;
+  if (orgError) {
+    statusBox.className = "status error";
+    statusBox.innerText = orgError.message;
     return;
   }
 
-  // 3. Create site
   const { data: site, error: siteError } = await client
     .from("sites")
     .insert({
-      name: siteName,
-      organization_id: org.id
+      organization_id: org.id,
+      name: siteName
     })
     .select()
     .single();
 
-  if(siteError){
-    msg.innerHTML = `<div class="error">${siteError.message}</div>`;
+  if (siteError) {
+    statusBox.className = "status error";
+    statusBox.innerText = siteError.message;
     return;
   }
 
-  // 4. Link user → site
   const { error: linkError } = await client
     .from("user_sites")
     .insert({
@@ -172,12 +285,17 @@ async function signup(){
       can_view_all_sites: true
     });
 
-  if(linkError){
-    msg.innerHTML = `<div class="error">${linkError.message}</div>`;
+  if (linkError) {
+    statusBox.className = "status error";
+    statusBox.innerText = linkError.message;
     return;
   }
 
-  msg.innerHTML = '<div class="success">Account created. Check your email to confirm.</div>';
+  localStorage.setItem("selectedSiteId", site.id);
+  localStorage.setItem("selectedOrgId", org.id);
+
+  statusBox.className = "status success";
+  statusBox.innerText = "Account created. Check your email to confirm.";
 }
 </script>
 
