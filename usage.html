@@ -161,18 +161,68 @@ function toggleMenu(){
   m.style.display = isOpen ? "none" : "block";
   b.style.display = isOpen ? "none" : "block";
 }
+
 function closeMenu(){
   document.getElementById("mobileMenu").style.display = "none";
   document.getElementById("backdrop").style.display = "none";
 }
+
 function logout(){
   localStorage.removeItem("washtracLoggedIn");
   window.location.href = "login.html";
 }
+
 function setStatus(message){
   const box = document.getElementById("emailStatus");
   box.innerText = message;
   box.classList.add("show");
+}
+
+function getCode(row){
+  return (
+    row.metadata?.code ||
+    row.code ||
+    row.access_code ||
+    ""
+  );
+}
+
+function getName(row){
+  return (
+    row.metadata?.name ||
+    row.metadata?.device ||
+    row.name ||
+    row.device ||
+    ""
+  );
+}
+
+function getDepartment(row){
+  return (
+    row.department ||
+    row.metadata?.department ||
+    "Unassigned"
+  );
+}
+
+function getTime(row){
+  return (
+    row.event_time ||
+    row.created_at ||
+    row.timestamp ||
+    ""
+  );
+}
+
+function isUseEvent(row){
+  const event = String(row.event || row.status || "").toLowerCase();
+
+  if(event.includes("denied")) return false;
+  if(event.includes("invalid")) return false;
+  if(event.includes("failed")) return false;
+  if(event.includes("error")) return false;
+
+  return true;
 }
 
 async function loadUsage(){
@@ -181,46 +231,50 @@ async function loadUsage(){
     .select("*")
     .order("event_time", { ascending:false });
 
-  if(error || !data){
-    console.log(error);
+  if(error){
+    console.log("Usage load error:", error);
     return;
   }
 
-  const activity = data.map(row => ({
-    event_time: row.event_time || "",
-    code: row.metadata?.code || "",
-    department: row.department || "Unassigned",
-    name: row.metadata?.device || "",
-    bay: row.bay || "",
-    event: row.event || ""
-  }));
+  const rows = data || [];
 
-  const washes = activity.filter(row => row.event === "granted");
+  const uses = rows
+    .filter(isUseEvent)
+    .map(row => ({
+      code: getCode(row),
+      department: getDepartment(row),
+      name: getName(row),
+      uses: 1,
+      last_used: getTime(row),
+      event: row.event || ""
+    }));
 
-  document.getElementById("totalUses").innerText = washes.length;
+  document.getElementById("totalUses").innerText = uses.length;
 
   const codeMap = {};
-  washes.forEach(row => {
-    if(!row.code) return;
 
-    if(!codeMap[row.code]){
-      codeMap[row.code] = {
-        code: row.code,
-        department: row.department || "Unassigned",
-        name: row.name || "",
+  uses.forEach(item => {
+    const code = item.code || "Unknown";
+
+    if(!codeMap[code]){
+      codeMap[code] = {
+        code: code,
+        department: item.department || "Unassigned",
+        name: item.name || "",
         uses: 0,
-        last_used: row.event_time || ""
+        last_used: item.last_used || ""
       };
     }
 
-    codeMap[row.code].uses += 1;
+    codeMap[code].uses += 1;
 
-    if(row.event_time && (!codeMap[row.code].last_used || row.event_time > codeMap[row.code].last_used)){
-      codeMap[row.code].last_used = row.event_time;
+    if(item.last_used && (!codeMap[code].last_used || item.last_used > codeMap[code].last_used)){
+      codeMap[code].last_used = item.last_used;
     }
   });
 
-  const codeArray = Object.values(codeMap).sort((a,b) => b.uses - a.uses);
+  const codeArray = Object.values(codeMap)
+    .sort((a,b) => b.uses - a.uses);
 
   cachedCodes = codeArray;
 
@@ -228,28 +282,34 @@ async function loadUsage(){
   document.getElementById("topCode").innerText = codeArray.length ? codeArray[0].code : "-";
 
   const deptMap = {};
-  washes.forEach(row => {
-    const dept = row.department || "Unassigned";
+
+  uses.forEach(item => {
+    const dept = item.department || "Unassigned";
     deptMap[dept] = (deptMap[dept] || 0) + 1;
   });
 
-  const deptArray = Object.entries(deptMap).sort((a,b) => b[1] - a[1]);
+  const deptArray = Object.entries(deptMap)
+    .sort((a,b) => b[1] - a[1]);
+
   cachedDepartmentData = deptArray;
 
   document.getElementById("topDept").innerText = deptArray.length ? deptArray[0][0] : "-";
 
   renderDepartmentChart(deptArray);
   renderTopCodesChart(codeArray.slice(0,10));
+  renderTopCodesList(codeArray);
+}
 
+function renderTopCodesList(codes){
   const list = document.getElementById("topCodes");
   list.innerHTML = "";
 
-  if(!codeArray.length){
+  if(!codes.length){
     list.innerHTML = `<div class="list-row"><span>No code data yet.</span><span>0</span></div>`;
     return;
   }
 
-  codeArray.slice(0,10).forEach(c => {
+  codes.slice(0,10).forEach(c => {
     list.innerHTML += `
       <div class="list-row">
         <span>${c.code}</span>
@@ -265,14 +325,20 @@ function renderDepartmentChart(sorted){
 
   departmentUsageChartInstance = new Chart(ctx,{
     type:"bar",
-    data:{ labels:sorted.map(d=>d[0]), datasets:[{ label:"Uses", data:sorted.map(d=>d[1]) }] },
+    data:{
+      labels: sorted.map(d => d[0]),
+      datasets:[{
+        label:"Uses",
+        data: sorted.map(d => d[1])
+      }]
+    },
     options:{
       responsive:true,
       maintainAspectRatio:false,
       plugins:{ legend:{ labels:{ color:"#e5e7eb" } } },
       scales:{
         x:{ ticks:{ color:"#cbd5e1" }, grid:{ color:"#1f2937" } },
-        y:{ ticks:{ color:"#cbd5e1" }, grid:{ color:"#1f2937" } }
+        y:{ ticks:{ color:"#cbd5e1" }, grid:{ color:"#1f2937" }, beginAtZero:true }
       }
     }
   });
@@ -285,8 +351,13 @@ function renderTopCodesChart(codes){
   topCodesChartInstance = new Chart(ctx,{
     type:"line",
     data:{
-      labels:codes.map(c=>c.code),
-      datasets:[{ label:"Uses", data:codes.map(c=>Number(c.uses||0)), fill:false, tension:0.3 }]
+      labels: codes.map(c => c.code),
+      datasets:[{
+        label:"Uses",
+        data: codes.map(c => Number(c.uses || 0)),
+        fill:false,
+        tension:0.3
+      }]
     },
     options:{
       responsive:true,
@@ -294,7 +365,7 @@ function renderTopCodesChart(codes){
       plugins:{ legend:{ labels:{ color:"#e5e7eb" } } },
       scales:{
         x:{ ticks:{ color:"#cbd5e1" }, grid:{ color:"#1f2937" } },
-        y:{ ticks:{ color:"#cbd5e1" }, grid:{ color:"#1f2937" } }
+        y:{ ticks:{ color:"#cbd5e1" }, grid:{ color:"#1f2937" }, beginAtZero:true }
       }
     }
   });
@@ -312,6 +383,7 @@ function exportCSV(){
   }
 
   let csv = "Code,Department,Name,Uses,Last Used\n";
+
   cachedCodes.forEach(item => {
     csv += [
       csvSafe(item.code),
