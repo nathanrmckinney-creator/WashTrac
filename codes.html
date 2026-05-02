@@ -481,8 +481,6 @@ async function addCode(){
     const { error } = await client
       .from("access_codes")
       .update({
-        organization_id: ORGANIZATION_ID,
-        site_id: SITE_ID,
         department,
         name,
         is_active: true
