@@ -712,6 +712,12 @@
       window.location.href = "login.html";
     }
 
+    function openAddDevice(){
+  const code = Math.floor(100000 + Math.random() * 900000);
+
+  alert("Add Device Code: " + code);
+}
+
     function setControlStatus(message){
       const box = document.getElementById("controlStatus");
       box.innerText = message;
