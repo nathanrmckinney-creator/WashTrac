@@ -300,7 +300,7 @@ function getCodeDepartment(item){
 }
 
 function getCodeName(item){
-  return cleanValue(item.name, "");
+  return cleanValue(item.assigned_to, cleanValue(item.name, ""));
 }
 
 function getIsActive(item){
