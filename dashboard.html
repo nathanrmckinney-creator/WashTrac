@@ -481,15 +481,11 @@
     <button class="menu-btn" onclick="toggleMenu()">☰</button>
   </div>
 
-  <div class="mobile-menu" id="mobileMenu">
-    <a href="dashboard.html" onclick="closeMenu()">Dashboard</a>
-    <a href="codes.html" onclick="closeMenu()">Codes</a>
-    <a href="activity.html" onclick="closeMenu()">Activity</a>
-    <a href="usage.html" onclick="closeMenu()">Reports</a>
-    <a href="monitor.html" onclick="closeMenu()">Monitor</a>
-    <a href="index.html" onclick="closeMenu()">Back to Homepage</a>
-    <a href="#" class="logout-link" onclick="logout()">Logout</a>
-  </div>
+  <div class="mobile-menu" id="dashboardMenu">
+  <a onclick="openAddDevice()">Add Device</a>
+  <a href="index.html">Back to Homepage</a>
+  <a href="#" class="logout-link" onclick="logout()">Logout</a>
+</div>
 
   <div class="backdrop" id="backdrop" onclick="closeMenu()"></div>
 
