@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>WashTrac</title>
 
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -23,14 +24,34 @@
       color: inherit;
     }
 
-    .logo {
-      font-size: 32px;
-      font-weight: 800;
-      letter-spacing: 0px;
+    .brand-wrap{
+      display:flex;
+      flex-direction:column;
+      line-height:1;
     }
 
-    .logo span {
-      color: #1ea7ff;
+    .logo {
+      font-family:'Orbitron', Arial, sans-serif;
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: .5px;
+    }
+
+    .logo .trac {
+      background:linear-gradient(180deg,#ffffff 0%,#66c7ff 40%,#1e9bff 72%,#0b5cff 100%);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .tagline{
+      margin-top:7px;
+      font-family:'Orbitron', Arial, sans-serif;
+      font-size:11px;
+      font-weight:700;
+      letter-spacing:1.4px;
+      color:#94a3b8;
     }
 
     header {
@@ -109,10 +130,10 @@
     }
 
     .hero {
-  position: relative;
-  min-height: 100vh;
-}
-    
+      position: relative;
+      min-height: 100vh;
+    }
+
     .hero::before {
       content: "";
       position: absolute;
@@ -121,27 +142,27 @@
       z-index: 0;
     }
 
-.hero::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(
-      90deg,
-      rgba(2,6,23,0.95) 0%,
-      rgba(2,6,23,0.85) 40%,
-      rgba(2,6,23,0.45) 70%,
-      rgba(2,6,23,0.2) 100%
-    ),
-    linear-gradient(
-      to bottom,
-      rgba(2,6,23,0) 35%,
-      rgba(2,6,23,0.55) 60%,
-      rgba(2,6,23,0.85) 82%,
-      rgba(2,6,23,1) 100%
-    );
-  z-index: 1;
-}
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(
+          90deg,
+          rgba(2,6,23,0.95) 0%,
+          rgba(2,6,23,0.85) 40%,
+          rgba(2,6,23,0.45) 70%,
+          rgba(2,6,23,0.2) 100%
+        ),
+        linear-gradient(
+          to bottom,
+          rgba(2,6,23,0) 35%,
+          rgba(2,6,23,0.55) 60%,
+          rgba(2,6,23,0.85) 82%,
+          rgba(2,6,23,1) 100%
+        );
+      z-index: 1;
+    }
 
     .hero-inner {
       max-width: 1200px;
@@ -165,14 +186,16 @@
     }
 
     .hero h1{
-font-size:56px;
-font-weight:700;
-line-height:1.1;
-margin-bottom:20px;
+      font-size:56px;
+      font-weight:700;
+      line-height:1.1;
+      margin-bottom:20px;
     }
-.brand-accent{
-color:#38bdf8;
-}
+
+    .brand-accent{
+      color:#38bdf8;
+    }
+
     .hero h2 {
       letter-spacing: 5px;
       color: #1ea7ff;
@@ -180,43 +203,45 @@ color:#38bdf8;
       margin-bottom: 0;
       font-size: 28px;
     }
-.who-for{
-background:#020617;
-padding:70px 30px;
-}
 
-.who-inner{
-max-width:1100px;
-margin:auto;
-}
+    .who-for{
+      background:#020617;
+      padding:70px 30px;
+    }
 
-.who-title{
-text-align:center;
-font-size:22px;
-font-weight:600;
-margin-bottom:40px;
-color:white;
-}
+    .who-inner{
+      max-width:1100px;
+      margin:auto;
+    }
 
-.who-grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-gap:20px;
-}
+    .who-title{
+      text-align:center;
+      font-size:22px;
+      font-weight:600;
+      margin-bottom:40px;
+      color:white;
+    }
 
-.who-card{
-background:#0f172a;
-padding:22px;
-border-radius:10px;
-text-align:center;
-font-weight:500;
-border:1px solid #1e293b;
-}
+    .who-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:20px;
+    }
+
+    .who-card{
+      background:#0f172a;
+      padding:22px;
+      border-radius:10px;
+      text-align:center;
+      font-weight:500;
+      border:1px solid #1e293b;
+    }
+
     .hero p{
-font-size:20px;
-color:#94a3b8;
-max-width:700px;
-line-height:1.6;
+      font-size:20px;
+      color:#94a3b8;
+      max-width:700px;
+      line-height:1.6;
     }
 
     .features {
@@ -545,104 +570,114 @@ line-height:1.6;
       margin-top: 60px;
     }
 
-   /* ===== TABLET ===== */
-@media (max-width: 1100px) {
-  .hero-inner,
-  .system-demo-wrap {
-    grid-template-columns: 1fr;
-  }
+    @media (max-width: 1100px) {
+      .hero-inner,
+      .system-demo-wrap {
+        grid-template-columns: 1fr;
+      }
 
-  .device {
-    margin-left: 0;
-  }
+      .device {
+        margin-left: 0;
+      }
 
-  .hero h1 {
-    font-size: 58px;
-  }
+      .hero h1 {
+        font-size: 58px;
+      }
 
-  .hero::before {
-    transform: none;
-  }
-}
+      .hero::before {
+        transform: none;
+      }
+    }
 
-/* ===== MOBILE ===== */
-@media (max-width: 700px) {
-  header {
-    padding: 16px 20px;
-  }
+    @media (max-width: 700px) {
+      header {
+        padding: 16px 20px;
+      }
 
-  .menu-panel {
-    top: 70px;
-    right: 12px;
-    width: 220px;
-  }
+      .logo {
+        font-size: 27px;
+      }
 
-  .hero {
-    padding: 50px 20px;
-  }
+      .tagline{
+        font-size:9px;
+        letter-spacing:1px;
+      }
 
-  .section {
-    padding: 55px 20px;
-  }
+      .menu-panel {
+        top: 70px;
+        right: 12px;
+        width: 220px;
+      }
 
-  .hero h1 {
-    font-size: 48px;
-  }
+      .hero {
+        padding: 50px 20px;
+      }
 
-  .hero h2 {
-    font-size: 22px;
-  }
+      .section {
+        padding: 55px 20px;
+      }
 
-  .hero p {
-    font-size: 19px;
-  }
+      .hero h1 {
+        font-size: 48px;
+      }
 
-  .device {
-    width: 320px;
-  }
+      .hero h2 {
+        font-size: 22px;
+      }
 
-  .pad div {
-    padding: 14px 0;
-    font-size: 20px;
-  }
+      .hero p {
+        font-size: 19px;
+      }
 
-  .start {
-    font-size: 20px;
-  }
+      .device {
+        width: 320px;
+      }
 
-  .status-grid,
-  .bay-mini-grid {
-    grid-template-columns: 1fr;
-  }
-}
+      .pad div {
+        padding: 14px 0;
+        font-size: 20px;
+      }
 
-/* ===== MOBILE BACKGROUND CONTROL ===== */
-@media (max-width: 900px) {
-  .hero::before {
-    background-image: url("/Carwash.png") !important;
-    background-position: center top !important;
-    background-size: auto 60% !important;
-    background-repeat: no-repeat !important;
-  }
-}
+      .start {
+        font-size: 20px;
+      }
+
+      .status-grid,
+      .bay-mini-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .hero::before {
+        background-image: url("/Carwash.png") !important;
+        background-position: center top !important;
+        background-size: auto 60% !important;
+        background-repeat: no-repeat !important;
+      }
+    }
   </style>
 </head>
 
 <body>
   <header>
-    <div class="logo">Wash<span>Trac</span></div>
+    <div class="brand-wrap">
+      <div class="logo">Wash<span class="trac">Trac</span></div>
+      <div class="tagline">Control. Track. Manage.</div>
+    </div>
+
     <button class="menu-btn" onclick="toggleMenu()">&#9776;</button>
   </header>
 
   <div id="menuPanel" class="menu-panel">
-<a href="login.html" class="login-link" onclick="closeMenu()">Client Login</a>
-<a href="#features" onclick="closeMenu()">Features</a>
-<a href="#works" onclick="closeMenu()">How It Works</a>
-<a href="#audit" onclick="closeMenu()">Audit</a>
-<a href="#monitoring" onclick="closeMenu()">Monitoring</a>
-<a href="#systemstate" onclick="closeMenu()">Live Demo</a>
-<a href="#contact" onclick="closeMenu()">Contact</a>
- </div>
+    <a href="login.html" class="login-link" onclick="closeMenu()">Client Login</a>
+    <a href="#features" onclick="closeMenu()">Features</a>
+    <a href="#works" onclick="closeMenu()">How It Works</a>
+    <a href="#audit" onclick="closeMenu()">Audit</a>
+    <a href="#monitoring" onclick="closeMenu()">Monitoring</a>
+    <a href="#systemstate" onclick="closeMenu()">Live Demo</a>
+    <a href="#contact" onclick="closeMenu()">Contact</a>
+  </div>
 
   <div id="backdrop" class="backdrop" onclick="closeMenu()"></div>
 
@@ -692,37 +727,22 @@ line-height:1.6;
       </div>
     </div>
   </section>
-<section class="who-for">
 
-<div class="who-inner">
+  <section class="who-for">
+    <div class="who-inner">
+      <div class="who-title">
+        Trusted by service departments and fleet operations
+      </div>
 
-<div class="who-title">
-Trusted by service departments and fleet operations
-</div>
+      <div class="who-grid">
+        <div class="who-card">Dealership Service Departments</div>
+        <div class="who-card">Auto Detail Shops</div>
+        <div class="who-card">Fleet Wash Bays</div>
+        <div class="who-card">Municipal Vehicle Maintenance</div>
+      </div>
+    </div>
+  </section>
 
-<div class="who-grid">
-
-<div class="who-card">
-Dealership Service Departments
-</div>
-
-<div class="who-card">
-Auto Detail Shops
-</div>
-
-<div class="who-card">
-Fleet Wash Bays
-</div>
-
-<div class="who-card">
-Municipal Vehicle Maintenance
-</div>
-
-</div>
-
-</div>
-
-</section>
   <section id="features" class="section">
     <h2>WashTrac Management System</h2>
     <p class="section-intro">
@@ -943,6 +963,7 @@ Municipal Vehicle Maintenance
       const menu = document.getElementById("menuPanel");
       const backdrop = document.getElementById("backdrop");
       const isOpen = menu.style.display === "flex";
+
       menu.style.display = isOpen ? "none" : "flex";
       backdrop.style.display = isOpen ? "none" : "block";
     }
@@ -992,7 +1013,7 @@ Municipal Vehicle Maintenance
         document.getElementById("demoWashPill").className = `status-pill ${control.wash_enabled ? "status-on" : "status-off"}`;
         document.getElementById("demoWashPill").innerText = control.wash_enabled ? "Wash Enabled" : "Wash Disabled";
 
-        document.getElementById("demoEstopText").innerText = control.estop_active ? "Clear" : "Active";
+        document.getElementById("demoEstopText").innerText = control.estop_active ? "Active" : "Clear";
         document.getElementById("demoEstopPill").className = `status-pill ${control.estop_active ? "status-warn" : "status-on"}`;
         document.getElementById("demoEstopPill").innerText = control.estop_active ? "E-STOP Active" : "No Active E-STOP";
 
@@ -1049,15 +1070,15 @@ Municipal Vehicle Maintenance
       statusBox.innerText = "Sending...";
 
       const { data: saved, error: saveError } = await supabaseClient
-  .from("contact_requests")
-  .insert([{ name, company, email, phone, message }]);
+        .from("contact_requests")
+        .insert([{ name, company, email, phone, message }]);
 
-console.log("DB insert:", saved, saveError);
+      console.log("DB insert:", saved, saveError);
 
-if (saveError) {
-  statusBox.innerText = saveError.message;
-  return;
-}
+      if (saveError) {
+        statusBox.innerText = saveError.message;
+        return;
+      }
 
       const { data, error } = await supabaseClient.functions.invoke("rapid-task", {
         body: {
@@ -1103,71 +1124,6 @@ if (saveError) {
         .on("postgres_changes", { event: "*", schema: "public", table: "bay_status" }, () => loadLiveSystemState())
         .subscribe();
     });
-    async function generatePairCode() {
-const code = Math.floor(100000 + Math.random() * 900000).toString();
-
-const { error } = await supabaseClient
-.from("pair_codes")
-.insert([{ code: code }]);
-
-if (error) {
-alert("Error creating pairing code");
-console.error(error);
-return;
-}
-
-document.getElementById("pairCodeDisplay").innerText = code;
-document.getElementById("pairModal").style.display = "flex";
-    }
   </script>
-  <div id="pairModal" style="
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.6);
-display:none;
-align-items:center;
-justify-content:center;
-z-index:2000;
-">
-
-<div style="
-background:#0b1220;
-padding:40px;
-border-radius:16px;
-text-align:center;
-color:white;
-max-width:400px;
-width:90%;
-">
-
-<h2>Device Pairing Code</h2>
-
-<div id="pairCodeDisplay" style="
-font-size:48px;
-font-weight:bold;
-letter-spacing:6px;
-margin:20px 0;
-color:#2ea8ff;
-"></div>
-
-<p>Enter this code on your WashTrac terminal.</p>
-
-<button onclick="document.getElementById('pairModal').style.display='none'" style="
-margin-top:20px;
-padding:10px 20px;
-border:none;
-border-radius:8px;
-background:#2563eb;
-color:white;
-cursor:pointer;
-">
-Close
-</button>
-
-</div>
-  </div>
 </body>
 </html>
