@@ -231,14 +231,12 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
 <script>
 const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
 const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
-
+const ORGANIZATION_ID = "c9edef22-aee6-4fd5-a9c6-17e275d1588b";
+const SITE_ID = "0600ecef-9699-458a-8259-0f0876b12ae0";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let allCodes = [];
 let allActivity = [];
-let currentUser = null;
-let currentOrgId = localStorage.getItem("washtracOrgId") || "";
-let currentSiteId = localStorage.getItem("washtracSiteId") || "";
 
 function toggleDesktopMenu(){
   const desktopMenu = document.getElementById("desktopMenu");
@@ -280,10 +278,6 @@ async function logout(event){
   }
 
   localStorage.removeItem("washtracLoggedIn");
-  localStorage.removeItem("washtracOrgId");
-  localStorage.removeItem("washtracSiteId");
-  localStorage.removeItem("washtracSiteName");
-
   window.location.href = "login.html";
 }
 
@@ -325,15 +319,6 @@ function cleanValue(value, fallback = ""){
   return value;
 }
 
-function escapeText(value){
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
 function activityCode(row){
   return cleanValue(row.metadata?.code, cleanValue(row.code, cleanValue(row.access_code, "")));
 }
@@ -362,11 +347,11 @@ function getCodeValue(item){
 }
 
 function getCodeDepartment(item){
-  return cleanValue(item.department, cleanValue(item.metadata?.department, "Unassigned"));
+  return cleanValue(item.department, "Unassigned");
 }
 
 function getCodeName(item){
-  return cleanValue(item.assigned_to, cleanValue(item.name, cleanValue(item.metadata?.name, "")));
+  return cleanValue(item.assigned_to, cleanValue(item.name, ""));
 }
 
 function getIsActive(item){
@@ -387,71 +372,22 @@ function getCodeStats(code){
     return true;
   });
 
+  const uses = rows.length;
   const last = rows
     .filter(row => row.event_time)
     .sort((a,b) => new Date(b.event_time) - new Date(a.event_time))[0];
 
   return {
-    uses: rows.length,
+    uses,
     lastUsed: last ? last.event_time : ""
   };
 }
 
-async function getSessionInfo(){
-  const { data, error } = await client.auth.getUser();
-
-  if(error || !data || !data.user){
-    console.log("get user error:", error);
-    localStorage.removeItem("washtracLoggedIn");
-    window.location.href = "login.html";
-    return false;
-  }
-
-  currentUser = data.user;
-  localStorage.setItem("washtracLoggedIn", "yes");
-
-  await loadUserSite();
-
-  return true;
-}
-
-async function loadUserSite(){
-  if(currentOrgId && currentSiteId) return;
-
-  const { data, error } = await client
-    .from("user_sites")
-    .select("organization_id, site_id")
-    .eq("user_id", currentUser.id)
-    .limit(1)
-    .maybeSingle();
-
-  if(error){
-    console.log("loadUserSite error:", error);
-    return;
-  }
-
-  if(data){
-    currentOrgId = data.organization_id || "";
-    currentSiteId = data.site_id || "";
-
-    if(currentOrgId) localStorage.setItem("washtracOrgId", currentOrgId);
-    if(currentSiteId) localStorage.setItem("washtracSiteId", currentSiteId);
-  }
-}
-
 async function fetchCodes(){
-  let query = client
+  const { data, error } = await client
     .from("access_codes")
     .select("*")
     .order("created_at", { ascending:false });
-
-  if(currentSiteId){
-    query = query.eq("site_id", currentSiteId);
-  } else if(currentOrgId){
-    query = query.eq("organization_id", currentOrgId);
-  }
-
-  const { data, error } = await query;
 
   if(error){
     console.log("fetchCodes error:", error);
@@ -464,18 +400,10 @@ async function fetchCodes(){
 }
 
 async function fetchActivity(){
-  let query = client
+  const { data, error } = await client
     .from("wash_activity")
     .select("*")
     .order("event_time", { ascending:false });
-
-  if(currentSiteId){
-    query = query.eq("site_id", currentSiteId);
-  } else if(currentOrgId){
-    query = query.eq("organization_id", currentOrgId);
-  }
-
-  const { data, error } = await query;
 
   if(error){
     console.log("fetchActivity error:", error);
@@ -521,6 +449,15 @@ function renderSummary(){
 
   const top = [...codeUsage].sort((a,b) => Number(b.uses || 0) - Number(a.uses || 0))[0];
   document.getElementById("topUsedCode").innerText = top && top.uses > 0 ? top.code : "-";
+}
+
+function escapeText(value){
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function renderCodes(){
@@ -586,11 +523,6 @@ async function addCode(){
   if(!department){ setStatus("Select a department or enter a custom one."); return; }
   if(!name){ setStatus("Enter a name."); return; }
 
-  if(!currentOrgId || !currentSiteId){
-    setStatus("No site is selected for this user.");
-    return;
-  }
-
   const existing = allCodes.find(item => String(getCodeValue(item)).trim() === code);
 
   if(existing && getIsActive(existing)){
@@ -602,7 +534,7 @@ async function addCode(){
     const { error } = await client
       .from("access_codes")
       .update({
-        department: department,
+        department,
         assigned_to: name,
         is_active: true
       })
@@ -617,10 +549,10 @@ async function addCode(){
     const { error } = await client
       .from("access_codes")
       .insert([{
-        organization_id: currentOrgId,
-        site_id: currentSiteId,
-        code: code,
-        department: department,
+        organization_id: ORGANIZATION_ID,
+        site_id: SITE_ID,
+        code,
+        department,
         assigned_to: name,
         is_active: true
       }]);
@@ -639,7 +571,7 @@ async function addCode(){
   document.getElementById("customDepartmentWrap").classList.add("hidden");
 
   setStatus("Code added.");
-  await loadCodesPage();
+  loadCodesPage();
 }
 
 async function removeCode(id, code){
@@ -666,7 +598,7 @@ async function removeCode(id, code){
   }
 
   setStatus("Code removed.");
-  await loadCodesPage();
+  loadCodesPage();
 }
 
 document.addEventListener("keydown", function(event){
@@ -679,6 +611,9 @@ document.addEventListener("click", function(event){
   const mobileTopbar = document.querySelector(".mobile-topbar");
 
   if(
+    desktopWrap &&
+    mobileMenu &&
+    mobileTopbar &&
     !desktopWrap.contains(event.target) &&
     !mobileMenu.contains(event.target) &&
     !mobileTopbar.contains(event.target)
@@ -687,19 +622,12 @@ document.addEventListener("click", function(event){
   }
 });
 
-async function init(){
-  const ok = await getSessionInfo();
-  if(!ok) return;
+loadCodesPage();
 
-  await loadCodesPage();
-
-  client.channel("washtrac-live-codes")
-    .on("postgres_changes", { event: "*", schema: "public", table: "access_codes" }, () => loadCodesPage())
-    .on("postgres_changes", { event: "*", schema: "public", table: "wash_activity" }, () => loadCodesPage())
-    .subscribe();
-}
-
-init();
+client.channel("washtrac-live-codes")
+  .on("postgres_changes", { event: "*", schema: "public", table: "access_codes" }, () => loadCodesPage())
+  .on("postgres_changes", { event: "*", schema: "public", table: "wash_activity" }, () => loadCodesPage())
+  .subscribe();
 </script>
 </body>
 </html>
