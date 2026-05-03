@@ -91,14 +91,18 @@
     }
 
     .menu-btn{
-      background:#2563eb;
-      border:none;
-      color:white;
-      padding:10px 14px;
-      border-radius:8px;
-      cursor:pointer;
-      font-weight:bold;
-    }
+  background:#2563eb;
+  border:none;
+  color:white;
+  padding:10px 14px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:bold;
+
+  height:auto;
+  line-height:normal;
+  align-self:center;   /* 🔥 THIS fixes flex stretching */
+}
 
     .mobile-menu{
       display:none;
