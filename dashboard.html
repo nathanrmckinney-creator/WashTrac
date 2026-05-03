@@ -6,12 +6,10 @@
   <title>WashTrac Dashboard</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800&display=swap" rel="stylesheet">
-  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    /* KEEP ALL YOUR CSS EXACTLY THE SAME */
     *{box-sizing:border-box}
 
     body{
@@ -35,13 +33,14 @@
       border-right:1px solid #1e293b;
     }
 
-   .logo,.mobile-logo{
+    .logo,.mobile-logo{
       font-family:'Orbitron', Arial, sans-serif;
       font-size:22px;
       font-weight:900;
       letter-spacing:.5px;
       margin-bottom:32px;
     }
+
     .logo .trac,.mobile-logo .trac{
       background:linear-gradient(180deg,#ffffff 0%,#66c7ff 40%,#1e9bff 72%,#0b5cff 100%);
       -webkit-background-clip:text;
@@ -50,39 +49,26 @@
       -webkit-text-fill-color:transparent;
     }
 
-    .nav a,
-    .sidebar-bottom a{
+    .nav a{
       display:block;
       color:#cbd5f5;
       text-decoration:none;
       padding:10px 0;
     }
 
-.dashboard-menu-wrap{
-  position:absolute;
-  top:30px;
-  right:30px;
-  z-index:1200;
-}
-    
-    .nav a:hover,
-    .sidebar-bottom a:hover{
-      color:white;
-    }
-
-    .sidebar-bottom{
-      margin-top:40px;
-      padding-top:20px;
-      border-top:1px solid #1e293b;
-    }
-
-    .sidebar-bottom a.logout-link{
-      color:#f87171;
-    }
+    .nav a:hover{color:white}
 
     .main{
       flex:1;
       padding:30px;
+      position:relative;
+    }
+
+    .dashboard-menu-wrap{
+      position:absolute;
+      top:30px;
+      right:30px;
+      z-index:1200;
     }
 
     .mobile-topbar{
@@ -101,6 +87,7 @@
       font-size:22px;
       font-weight:bold;
       letter-spacing:0;
+      margin-bottom:0;
     }
 
     .menu-btn{
@@ -116,15 +103,15 @@
     .mobile-menu{
       display:none;
       position:absolute;
-      top:64px;
-      right:16px;
+      top:46px;
+      right:0;
       width:240px;
       background:#0f172a;
       border:1px solid #1e293b;
       border-radius:12px;
       padding:12px 16px;
       box-shadow:0 12px 30px rgba(0,0,0,.45);
-      z-index:1100;
+      z-index:1300;
     }
 
     .mobile-menu a{
@@ -132,6 +119,7 @@
       color:#cbd5f5;
       text-decoration:none;
       padding:10px 0;
+      cursor:pointer;
     }
 
     .mobile-menu a:hover{color:white}
@@ -147,6 +135,7 @@
 
     .page-header{
       margin-bottom:24px;
+      padding-right:70px;
     }
 
     .page-header h1{
@@ -267,16 +256,19 @@
     }
 
     .banner.show{display:block}
+
     .banner.red{
       background:rgba(127,29,29,.28);
       border:1px solid rgba(239,68,68,.35);
       color:#fecaca;
     }
+
     .banner.yellow{
       background:rgba(120,53,15,.28);
       border:1px solid rgba(245,158,11,.35);
       color:#fde68a;
     }
+
     .banner.green{
       background:rgba(20,83,45,.28);
       border:1px solid rgba(34,197,94,.35);
@@ -426,6 +418,57 @@
       color:#94a3b8;
     }
 
+    .brand-accent{
+      color:#2ea8ff !important;
+    }
+
+    .device-modal{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(2,6,23,.72);
+      z-index:3000;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+
+    .device-modal.show{
+      display:flex;
+    }
+
+    .device-box{
+      width:100%;
+      max-width:420px;
+      background:#111827;
+      border:1px solid #1e293b;
+      border-radius:16px;
+      padding:26px;
+      box-shadow:
+        0 0 0 1px rgba(30,167,255,.18),
+        0 0 34px rgba(30,167,255,.22),
+        0 24px 70px rgba(0,0,0,.55);
+    }
+
+    .device-box h3{
+      margin:0 0 10px 0;
+      font-size:24px;
+    }
+
+    .device-code{
+      margin:18px 0;
+      padding:18px;
+      border-radius:14px;
+      background:#020617;
+      border:1px solid rgba(30,167,255,.45);
+      color:#7dd3fc;
+      font-size:42px;
+      font-weight:800;
+      letter-spacing:8px;
+      text-align:center;
+      box-shadow:inset 0 0 18px rgba(30,167,255,.12);
+    }
+
     @media (max-width:1200px){
       .bay-editor-grid{
         grid-template-columns:1fr 1fr;
@@ -443,62 +486,22 @@
       .sidebar{display:none}
       .mobile-topbar{display:flex}
       .main{padding:20px}
+      .dashboard-menu-wrap{display:none}
+      .page-header{
+        padding-right:0;
+      }
       .page-header h1{font-size:34px}
       .summary{grid-template-columns:1fr}
       .control-grid,.field-grid,.bay-editor-grid{grid-template-columns:1fr}
-    ]
-    .brand-accent{
-  color:#2ea8ff !important;
+      .mobile-menu{
+        position:absolute;
+        top:64px;
+        right:16px;
+      }
     }
-    .device-modal{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(2,6,23,.72);
-  z-index:3000;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-}
-
-.device-modal.show{
-  display:flex;
-}
-
-.device-box{
-  width:100%;
-  max-width:420px;
-  background:#111827;
-  border:1px solid #1e293b;
-  border-radius:16px;
-  padding:26px;
-  box-shadow:
-    0 0 0 1px rgba(30,167,255,.18),
-    0 0 34px rgba(30,167,255,.22),
-    0 24px 70px rgba(0,0,0,.55);
-}
-
-.device-box h3{
-  margin:0 0 10px 0;
-  font-size:24px;
-}
-
-.device-code{
-  margin:18px 0;
-  padding:18px;
-  border-radius:14px;
-  background:#020617;
-  border:1px solid rgba(30,167,255,.45);
-  color:#7dd3fc;
-  font-size:42px;
-  font-weight:800;
-  letter-spacing:8px;
-  text-align:center;
-  box-shadow:inset 0 0 18px rgba(30,167,255,.12);
-}
-    
   </style>
 </head>
+
 <body>
   <script>
     if(localStorage.getItem("washtracLoggedIn") !== "yes"){
@@ -507,27 +510,30 @@
   </script>
 
   <div class="mobile-topbar">
-   <div class="mobile-logo orbitron-logo">
-  Wash<span class="trac">Trac</span>
-</div>
-    <button class="menu-btn" onclick="toggleMenu()">☰</button>
+    <div class="mobile-logo">
+      Wash<span class="trac">Trac</span>
+    </div>
+    <button class="menu-btn" onclick="toggleMobileMenu()">☰</button>
+
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="codes.html">Codes</a>
+      <a href="activity.html">Activity</a>
+      <a href="usage.html">Reports</a>
+      <a href="monitor.html">Monitor</a>
+      <a onclick="openAddDevice()">Add Device</a>
+      <a href="index.html">Back to Homepage</a>
+      <a href="#" class="logout-link" onclick="logout()">Logout</a>
+    </div>
   </div>
 
-  <div class="mobile-menu" id="dashboardMenu">
-  <a onclick="openAddDevice()">Add Device</a>
-  <a href="index.html">Back to Homepage</a>
-  <a href="#" class="logout-link" onclick="logout()">Logout</a>
-</div>
-
-  <div class="backdrop" id="backdrop" onclick="closeMenu()"></div>
+  <div class="backdrop" id="backdrop" onclick="closeMenus()"></div>
 
   <div class="app">
     <div class="sidebar">
       <div class="logo">
-  Wash<span class="trac">Trac</span>
-</div>
-  Wash<span class="trac">Trac</span>
-</div>
+        Wash<span class="trac">Trac</span>
+      </div>
 
       <div class="nav">
         <a href="dashboard.html">Dashboard</a>
@@ -536,51 +542,49 @@
         <a href="usage.html">Reports</a>
         <a href="monitor.html">Monitor</a>
       </div>
-</div>
-    
+    </div>
+
     <div class="main">
       <div class="dashboard-menu-wrap">
-  <button class="menu-btn" onclick="toggleDashboardMenu()">☰</button>
+        <button class="menu-btn" onclick="toggleDashboardMenu()">☰</button>
 
-  <div class="mobile-menu" id="dashboardMenu">
-    <a href="dashboard.html">Dashboard</a>
-    <a href="codes.html">Codes</a>
-    <a href="activity.html">Activity</a>
-    <a href="usage.html">Reports</a>
-    <a href="monitor.html">Monitor</a>
+        <div class="mobile-menu" id="dashboardMenu">
+          <a href="dashboard.html">Dashboard</a>
+          <a href="codes.html">Codes</a>
+          <a href="activity.html">Activity</a>
+          <a href="usage.html">Reports</a>
+          <a href="monitor.html">Monitor</a>
+          <a onclick="openAddDevice()">Add Device</a>
+          <a href="index.html">Back to Homepage</a>
+          <a href="#" class="logout-link" onclick="logout()">Logout</a>
+        </div>
+      </div>
 
-    <a onclick="openAddDevice()">Add Device</a>
+      <div class="page-header">
+        <h1>
+          Dashboard
+          <span class="live-pill">LIVE</span>
+        </h1>
 
-    <a href="index.html">Back to Homepage</a>
-    <a href="#" class="logout-link" onclick="logout()">Logout</a>
-  </div>
-</div>
-     <div class="page-header">
-  <h1>
-    Dashboard 
-    <span class="live-pill">LIVE</span>
-  </h1>
+        <p>
+          Overview of wash usage, reporting, activity, bay status, and remote wash control.
+        </p>
 
-  <p>
-    Overview of wash usage, reporting, activity, bay status, and remote wash control.
-  </p>
-
-  <!-- 🔥 NEW: SITE SWITCHER -->
-  <div style="margin-top:14px; max-width:300px;">
-    <select id="siteSwitcher" onchange="switchSite(this.value)" style="
-      width:100%;
-      padding:12px;
-      border-radius:10px;
-      background:#0b1220;
-      color:white;
-      border:1px solid #334155;
-      font-size:15px;
-      font-weight:600;
-    ">
-      <option>Loading sites...</option>
-    </select>
-  </div>
-</div>
+        <div style="margin-top:14px; max-width:300px;">
+          <select id="siteSwitcher" onchange="switchSite(this.value)" style="
+            width:100%;
+            padding:12px;
+            border-radius:10px;
+            background:#0b1220;
+            color:white;
+            border:1px solid #334155;
+            font-size:15px;
+            font-weight:600;
+          ">
+            <option>Loading sites...</option>
+          </select>
+        </div>
+      </div>
 
       <div class="summary">
         <div class="summary-box">
@@ -719,6 +723,23 @@
     </div>
   </div>
 
+  <div id="deviceModal" class="device-modal">
+    <div class="device-box">
+      <h3>Add Device</h3>
+
+      <p style="color:#94a3b8; margin-bottom:10px;">
+        Enter this code on the CodeBox to pair device
+      </p>
+
+      <div id="deviceCodeDisplay" class="device-code">------</div>
+
+      <div class="controls">
+        <button onclick="generateDeviceCode()">New Code</button>
+        <button class="secondary" onclick="closeDeviceModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
     const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
@@ -728,87 +749,95 @@
     let dailyChartInstance = null;
     let controlRowId = null;
 
-    function toggleMenu(){
+    function toggleMobileMenu(){
       const menu = document.getElementById("mobileMenu");
+      const dashboardMenu = document.getElementById("dashboardMenu");
       const backdrop = document.getElementById("backdrop");
+
+      if(dashboardMenu) dashboardMenu.style.display = "none";
+
       const isOpen = menu.style.display === "block";
       menu.style.display = isOpen ? "none" : "block";
       backdrop.style.display = isOpen ? "none" : "block";
     }
 
-    function closeMenu(){
-  document.getElementById("mobileMenu").style.display = "none";
+    function toggleDashboardMenu(){
+      const menu = document.getElementById("dashboardMenu");
+      const mobileMenu = document.getElementById("mobileMenu");
+      const backdrop = document.getElementById("backdrop");
 
-  const dashboardMenu = document.getElementById("dashboardMenu");
-  if(dashboardMenu){
-    dashboardMenu.style.display = "none";
-  }
+      if(mobileMenu) mobileMenu.style.display = "none";
 
-  document.getElementById("backdrop").style.display = "none";
-}
+      const isOpen = menu.style.display === "block";
+      menu.style.display = isOpen ? "none" : "block";
+      backdrop.style.display = isOpen ? "none" : "block";
+    }
+
+    function closeMenus(){
+      const mobileMenu = document.getElementById("mobileMenu");
+      const dashboardMenu = document.getElementById("dashboardMenu");
+      const backdrop = document.getElementById("backdrop");
+
+      if(mobileMenu) mobileMenu.style.display = "none";
+      if(dashboardMenu) dashboardMenu.style.display = "none";
+      if(backdrop) backdrop.style.display = "none";
+    }
 
     function logout(){
       localStorage.removeItem("washtracLoggedIn");
       window.location.href = "login.html";
     }
 
-  function openAddDevice(){
-  generateDeviceCode();
+    function openAddDevice(){
+      generateDeviceCode();
 
-  const modal = document.getElementById("deviceModal");
-  modal.classList.add("show");
+      const modal = document.getElementById("deviceModal");
+      modal.classList.add("show");
 
-  const menu = document.getElementById("dashboardMenu");
-  if(menu){
-    menu.style.display = "none";
-  }
+      closeMenus();
+    }
 
-  const backdrop = document.getElementById("backdrop");
-  if(backdrop){
-    backdrop.style.display = "none";
-  }
-}
+    function closeDeviceModal(){
+      const modal = document.getElementById("deviceModal");
+      modal.classList.remove("show");
+    }
 
-function closeDeviceModal(){
-  const modal = document.getElementById("deviceModal");
-  modal.classList.remove("show");
-}
+    async function generateDeviceCode(){
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-async function generateDeviceCode(){
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
+      document.getElementById("deviceCodeDisplay").innerText = code;
 
-  document.getElementById("deviceCodeDisplay").innerText = code;
+      const siteId = localStorage.getItem("activeSiteId");
 
-  const siteId = localStorage.getItem("activeSiteId");
+      console.log("Generated pairing code:", code);
+      console.log("Active site id:", siteId);
 
-  console.log("Generated pairing code:", code);
-  console.log("Active site id:", siteId);
-
-  if(!siteId){
-    alert("No active site selected. Please reload dashboard and pick a site.");
-    return;
-  }
-
-  const { data, error } = await client
-    .from("device_pairing_codes")
-    .insert([
-      {
-        code: code,
-        site_id: siteId
+      if(!siteId){
+        alert("No active site selected. Please reload dashboard and pick a site.");
+        return;
       }
-    ])
-    .select();
 
-  console.log("Pairing insert data:", data);
-  console.log("Pairing insert error:", error);
+      const { data, error } = await client
+        .from("device_pairing_codes")
+        .insert([
+          {
+            code: code,
+            site_id: siteId
+          }
+        ])
+        .select();
 
-  if(error){
-    alert("Error generating code: " + error.message);
-    return;
-  }
+      console.log("Pairing insert data:", data);
+      console.log("Pairing insert error:", error);
 
-  localStorage.setItem("pendingDeviceCode", code);
-}
+      if(error){
+        alert("Error generating code: " + error.message);
+        return;
+      }
+
+      localStorage.setItem("pendingDeviceCode", code);
+    }
+
     function setControlStatus(message){
       const box = document.getElementById("controlStatus");
       box.innerText = message;
@@ -865,50 +894,43 @@ async function generateDeviceCode(){
       }
     }
 
-async function loadSites(){
-  const select = document.getElementById("siteSwitcher");
-  if(!select) return;
+    async function loadSites(){
+      const select = document.getElementById("siteSwitcher");
+      if(!select) return;
 
-  const { data, error } = await client
-    .from("sites")
-    .select("*")
-    .order("name", { ascending:true });
+      const { data, error } = await client
+        .from("sites")
+        .select("*")
+        .order("name", { ascending:true });
 
-  if(error){
-    console.log("Sites error:", error);
-    return;
-  }
+      if(error){
+        console.log("Sites error:", error);
+        return;
+      }
 
-  // 🔥 FORCE REPLACE ENTIRE SELECT CONTENT
-  let html = "";
+      let html = "";
 
-  data.forEach(site => {
-    html += `<option value="${site.id}">${site.name}</option>`;
-  });
+      data.forEach(site => {
+        html += `<option value="${site.id}">${site.name}</option>`;
+      });
 
-  select.innerHTML = html;
+      select.innerHTML = html;
 
-  const saved = localStorage.getItem("activeSiteId");
+      const saved = localStorage.getItem("activeSiteId");
 
-  if(saved){
-    select.value = saved;
-  } else if(data.length){
-    select.value = data[0].id;
-    localStorage.setItem("activeSiteId", data[0].id);
-  }
-}
+      if(saved){
+        select.value = saved;
+      } else if(data.length){
+        select.value = data[0].id;
+        localStorage.setItem("activeSiteId", data[0].id);
+      }
+    }
 
-function switchSite(siteId){
-  localStorage.setItem("activeSiteId", siteId);
-  loadDashboard();
-}
+    function switchSite(siteId){
+      localStorage.setItem("activeSiteId", siteId);
+      loadDashboard();
+    }
 
-/* 🔥 THIS MUST BE THE LAST THING IN YOUR SCRIPT */
-window.onload = function(){
-  loadSites();
-  loadDashboard();
-};
-      
     async function fetchCodes(){
       const { data, error } = await client
         .from("access_codes")
@@ -1292,65 +1314,40 @@ window.onload = function(){
       renderBayEditor(bays);
     }
 
-    loadDashboard();
-
     document.addEventListener("click", function(event){
-  const dashboardMenu = document.getElementById("dashboardMenu");
-  const menuWrap = document.querySelector(".dashboard-menu-wrap");
-  const backdrop = document.getElementById("backdrop");
+      const dashboardMenu = document.getElementById("dashboardMenu");
+      const mobileMenu = document.getElementById("mobileMenu");
+      const dashboardWrap = document.querySelector(".dashboard-menu-wrap");
+      const mobileTopbar = document.querySelector(".mobile-topbar");
+      const backdrop = document.getElementById("backdrop");
 
-  if(!dashboardMenu || !menuWrap) return;
+      const clickedDashboard = dashboardWrap && dashboardWrap.contains(event.target);
+      const clickedMobile = mobileTopbar && mobileTopbar.contains(event.target);
 
-  const clickedInsideMenu = menuWrap.contains(event.target);
+      if(!clickedDashboard && !clickedMobile){
+        if(dashboardMenu) dashboardMenu.style.display = "none";
+        if(mobileMenu) mobileMenu.style.display = "none";
+        if(backdrop) backdrop.style.display = "none";
+      }
+    });
 
-  if(!clickedInsideMenu){
-    dashboardMenu.style.display = "none";
+    document.getElementById("deviceModal").addEventListener("click", function(e){
+      if(e.target.id === "deviceModal"){
+        closeDeviceModal();
+      }
+    });
 
-    if(backdrop){
-      backdrop.style.display = "none";
-    }
-  }
-});
-
-document.getElementById("deviceModal").addEventListener("click", function(e){
-  if(e.target.id === "deviceModal"){
-    closeDeviceModal();
-  }
-});
-    
     client.channel("washtrac-live-dashboard")
       .on("postgres_changes", { event: "*", schema: "public", table: "wash_activity" }, () => loadDashboard())
       .on("postgres_changes", { event: "*", schema: "public", table: "access_codes" }, () => loadDashboard())
       .on("postgres_changes", { event: "*", schema: "public", table: "system_control" }, () => loadDashboard())
       .on("postgres_changes", { event: "*", schema: "public", table: "bay_status" }, () => loadDashboard())
       .subscribe();
-  
-function toggleDashboardMenu(){
-  const menu = document.getElementById("dashboardMenu");
-  const backdrop = document.getElementById("backdrop");
 
-  const isOpen = menu.style.display === "block";
-
-  menu.style.display = isOpen ? "none" : "block";
-  backdrop.style.display = isOpen ? "none" : "block";
-}
-    
+    window.onload = function(){
+      loadSites();
+      loadDashboard();
+    };
   </script>
-  <div id="deviceModal" class="device-modal">
-  <div class="device-box">
-    <h3>Add Device</h3>
-
-    <p style="color:#94a3b8; margin-bottom:10px;">
-      Enter this code on the CodeBox to pair device
-    </p>
-
-    <div id="deviceCodeDisplay" class="device-code">------</div>
-
-    <div class="controls">
-      <button onclick="generateDeviceCode()">New Code</button>
-      <button class="secondary" onclick="closeDeviceModal()">Close</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>
