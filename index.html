@@ -263,23 +263,27 @@
     }
 
     .device {
-      background: rgba(15, 23, 42, 0.92);
-      border-radius: 22px;
-      padding: 22px;
-      border: 1px solid #1e293b;
-      width: 360px;
-      max-width: 100%;
-      margin-left: auto;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
-    }
+  background: linear-gradient(145deg, #050b14, #111827);
+  border-radius: 28px;
+  padding: 18px;
+  border: 1px solid #1e293b;
+  width: 390px;
+  max-width: 100%;
+  margin-left: auto;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px rgba(255,255,255,.04);
+}
 
-    .screen {
-      background: #020617;
-      border-radius: 16px;
-      padding: 18px;
-      border: 1px solid #1e293b;
-    }
-
+.screen {
+  background: #000814;
+  border-radius: 20px;
+  padding: 18px;
+  border: 2px solid rgba(30,167,255,.55);
+  box-shadow:
+    0 0 22px rgba(30,167,255,.25),
+    inset 0 0 28px rgba(30,167,255,.08);
+}
     .screen-title {
       text-align: center;
       margin-bottom: 8px;
@@ -304,26 +308,31 @@
     }
 
     .pad div {
-      background: #334155;
-      padding: 16px 0;
-      border-radius: 10px;
-      text-align: center;
-      font-weight: bold;
-      font-size: 22px;
-    }
-
+  background: linear-gradient(180deg, #465c78, #263243);
+  padding: 16px 0;
+  border-radius: 14px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 24px;
+  color: #ffffff;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.12),
+    0 4px 10px rgba(0,0,0,.35);
+}
     .start {
-      margin-top: 15px;
-      width: 100%;
-      padding: 16px;
-      background: #1ea7ff;
-      border: none;
-      border-radius: 10px;
-      font-size: 22px;
-      color: white;
-      font-weight: bold;
-      box-shadow: 0 0 20px rgba(30, 167, 255, 0.6);
-    }
+  margin-top: 15px;
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(180deg, #38bdf8, #2563eb, #1d4ed8);
+  border: none;
+  border-radius: 14px;
+  font-size: 22px;
+  color: white;
+  font-weight: 800;
+  box-shadow:
+    0 0 22px rgba(30, 167, 255, 0.55),
+    inset 0 1px 0 rgba(255,255,255,.2);
+}
 
     .section {
       padding: 70px 40px;
@@ -698,14 +707,14 @@
           service departments, detail teams, and fleet operations.
         </p>
 
-        <div class="features">
-          <div>✔ Enter Access Code</div>
-          <div>✔ Activate Wash</div>
-          <div>✔ Track Every Use</div>
-          <div>✔ Department Audit Logs</div>
-          <div>✔ Real-Time Usage Monitoring</div>
-          <div>✔ CSV & Email Reporting</div>
-        </div>
+       <div class="features">
+  <div>✔ Secure Code Entry</div>
+  <div>✔ Instant Wash Activation</div>
+  <div>✔ Full Usage Tracking</div>
+  <div>✔ Department-Level Control</div>
+  <div>✔ Real-Time Monitoring</div>
+  <div>✔ Reports & Audit Logs</div>
+</div>
 
         <div class="hero-actions">
           <a class="btn" href="#contact">Request Demo</a>
@@ -714,9 +723,8 @@
 
       <div class="device">
         <div class="screen">
-          <div class="screen-title">ENTER ACCESS CODE</div>
-          <div class="estop-line">Emergency Stop Activated</div>
-
+          <div class="screen-title">ENTER CODE</div>
+          
           <div class="pad">
             <div>1</div><div>2</div><div>3</div>
             <div>4</div><div>5</div><div>6</div>
@@ -724,7 +732,7 @@
             <div>*</div><div>0</div><div>←</div>
           </div>
 
-          <button class="start">START WASH</button>
+          <button class="start">ENTER</button>
         </div>
       </div>
     </div>
