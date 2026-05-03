@@ -56,6 +56,12 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
 .hamburger-menu a:hover{color:white;}
 .hamburger-menu a.logout-link{color:#f87171;}
 
+.menu-divider{
+  border:0;
+  border-top:1px solid #1e293b;
+  margin:8px 0;
+}
+
 .mobile-topbar{display:none;align-items:center;justify-content:space-between;padding:16px 20px;background:#0f172a;border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:1200;}
 .mobile-logo{margin-bottom:0;}
 
@@ -221,6 +227,12 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
 </div>
 
 <div class="mobile-menu" id="mobileMenu">
+  <a href="dashboard.html">Dashboard</a>
+  <a href="codes.html">Codes</a>
+  <a href="activity.html">Activity</a>
+  <a href="usage.html">Reports</a>
+  <a href="monitor.html">Monitor</a>
+  <hr class="menu-divider">
   <a href="index.html">Back to Homepage</a>
   <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
 </div>
@@ -245,6 +257,12 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
       <button class="menu-btn" type="button" onclick="toggleDesktopMenu()">☰</button>
 
       <div class="hamburger-menu" id="desktopMenu">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="codes.html">Codes</a>
+        <a href="activity.html">Activity</a>
+        <a href="usage.html">Reports</a>
+        <a href="monitor.html">Monitor</a>
+        <hr class="menu-divider">
         <a href="index.html">Back to Homepage</a>
         <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
       </div>
@@ -333,7 +351,7 @@ async function logout(event){
   }
 
   localStorage.removeItem("washtracLoggedIn");
-  window.location.href = "login.html";
+  window.location.replace("login.html");
 }
 
 document.addEventListener("keydown", function(event){
