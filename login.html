@@ -5,10 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WashTrac Login</title>
 
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
   <style>
     *{box-sizing:border-box;}
+
     body{
       margin:0;
       min-height:100vh;
@@ -23,11 +25,48 @@
       justify-content:center;
       padding:24px;
     }
+
     .login-shell{width:100%;max-width:420px;}
-    .brand{text-align:center;margin-bottom:18px;}
-    .brand h1{margin:0 0 8px 0;font-size:42px;}
-    .brand p{margin:0;color:#94a3b8;font-size:15px;letter-spacing:2px;}
-    .brand-accent{color:#2ea8ff;}
+
+    /* 🔥 BRAND FIX */
+    .brand{
+      text-align:center;
+      margin-bottom:18px;
+    }
+
+    .logo{
+      font-family:'Orbitron', Arial, sans-serif;
+      font-size:42px;
+      font-weight:900;
+      letter-spacing:.5px;
+    }
+
+    .logo .trac{
+      background:linear-gradient(
+        180deg,
+        #ffffff 0%,
+        #66c7ff 40%,
+        #1e9bff 72%,
+        #0b5cff 100%
+      );
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .tagline{
+      margin-top:6px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size:14px;
+      font-weight:600;
+      letter-spacing:1.6px;
+      color:#94a3b8;
+      text-align:center;
+    }
+
+    /* ================= */
+
     .login-card{
       background:#111827;
       border:1px solid #1f2937;
@@ -35,8 +74,11 @@
       padding:28px;
       box-shadow:0 18px 50px rgba(0,0,0,.45);
     }
+
     .login-card h2{margin:0 0 20px 0;font-size:26px;}
+
     .field{margin-bottom:16px;}
+
     .field label{
       display:block;
       margin-bottom:8px;
@@ -44,6 +86,7 @@
       font-size:14px;
       font-weight:bold;
     }
+
     .field input{
       width:100%;
       padding:14px;
@@ -54,11 +97,14 @@
       font-size:15px;
       outline:none;
     }
+
     .field input:focus{
       border-color:#3b82f6;
       box-shadow:0 0 0 3px rgba(59,130,246,.18);
     }
+
     .field input::placeholder{color:#64748b;}
+
     .login-btn{
       width:100%;
       padding:14px;
@@ -70,8 +116,10 @@
       font-weight:bold;
       cursor:pointer;
     }
+
     .login-btn:hover{background:#1d4ed8;}
     .login-btn:disabled{opacity:.7;cursor:not-allowed;}
+
     .home-btn{
       width:100%;
       margin-top:12px;
@@ -84,6 +132,7 @@
       font-weight:bold;
       cursor:pointer;
     }
+
     .status{
       margin-top:16px;
       padding:12px 14px;
@@ -94,17 +143,21 @@
       display:none;
       line-height:1.4;
     }
+
     .status.show{display:block;}
     .status.error{color:#ef4444;}
     .status.success{color:#22c55e;}
+
     .hint{
       margin-top:16px;
       text-align:center;
       color:#64748b;
       font-size:13px;
     }
+
     @media (max-width:600px){
-      .brand h1{font-size:36px;}
+      .logo{font-size:36px;}
+      .tagline{font-size:12px;}
       .login-card{padding:22px;}
     }
   </style>
@@ -112,9 +165,14 @@
 
 <body>
   <div class="login-shell">
+
     <div class="brand">
-      <h1>Wash<span class="brand-accent">Trac</span></h1>
-      <p>Control. Track. Manage.</p>
+      <div class="logo">
+        Wash<span class="trac">Trac</span>
+      </div>
+      <div class="tagline">
+        Control. Track. Manage.
+      </div>
     </div>
 
     <div class="login-card">
@@ -135,7 +193,7 @@
 
         <div style="text-align:center; margin-top:20px;">
           <span style="color:#9fb3c8;">Don't have an account?</span>
-          <a href="signup.html" style="color:#1ea7ff; margin-left:6px; text-decoration:none;">
+          <a href="signup.html" style="color:#1ea7ff; margin-left:6px;">
             Sign Up
           </a>
         </div>
@@ -246,7 +304,7 @@ async function login(event) {
     }
 
     if (!siteLinks || siteLinks.length === 0) {
-      setStatus("Finishing account setup...", "");
+      setStatus("Finishing account setup...");
 
       const setup = await createFirstSiteForUser();
 
@@ -266,7 +324,7 @@ async function login(event) {
     }
 
     if (!siteLinks || siteLinks.length === 0) {
-      setStatus("Account setup failed. No site was created.", "error");
+      setStatus("Account setup failed.", "error");
       return;
     }
 
