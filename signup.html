@@ -4,49 +4,60 @@
   <title>WashTrac Sign Up</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
+
   <style>
     * {
       box-sizing: border-box;
     }
 
-  body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: linear-gradient(180deg, #000814 0%, #06142d 100%);
-  color: white;
-  min-height: 100vh;
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(180deg, #000814 0%, #06142d 100%);
+      color: white;
+      min-height: 100vh;
 
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding-top: 10px;
-}
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 10px;
+    }
 
     .page {
       width: 450px;
       text-align: center;
     }
 
-    .logo {
-      font-size: 46px;
-      font-weight: 800;
-      margin-bottom: 0px;
-      letter-spacing: -1px;
+    /* 🔥 UPDATED LOGO (matches your system) */
+    .logo{
+      font-family:'Orbitron', Arial, sans-serif;
+      font-size:28px;
+      font-weight:900;
+      letter-spacing:.5px;
+      margin-bottom:10px;
+      text-align:center;
     }
 
-    .logo span:first-child {
-      color: #ffffff;
-    }
-
-    .logo span:last-child {
-      color: #1ea7ff;
+    .logo .trac{
+      background:linear-gradient(
+        180deg,
+        #ffffff 0%,
+        #66c7ff 40%,
+        #1e9bff 72%,
+        #0b5cff 100%
+      );
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      -webkit-text-fill-color:transparent;
     }
 
     .tagline {
       color: #9fb3c8;
       font-size: 16px;
       letter-spacing: 2px;
-      margin-top: -8px; 
+      margin-top: -6px;
       margin-bottom: 14px;
     }
 
@@ -164,9 +175,9 @@
 <body>
 
   <div class="page">
-    <div class="logo">
-      <span>Wash</span><span>Trac</span>
-    </div>
+
+    <!-- 🔥 UPDATED LOGO -->
+    <div class="logo">Wash<span class="trac">Trac</span></div>
 
     <div class="tagline">Control. Track. Manage.</div>
 
@@ -175,22 +186,22 @@
 
       <form onsubmit="signup(event)">
         <div class="field">
-          <label for="email">Email</label>
-          <input id="email" type="email" placeholder="Enter email" autocomplete="email" required>
+          <label>Email</label>
+          <input id="email" type="email" placeholder="Enter email" required>
         </div>
 
         <div class="field">
-          <label for="password">Password</label>
-          <input id="password" type="password" placeholder="Enter password" autocomplete="new-password" required>
+          <label>Password</label>
+          <input id="password" type="password" placeholder="Enter password" required>
         </div>
 
         <div class="field">
-          <label for="orgName">Company Name</label>
+          <label>Company Name</label>
           <input id="orgName" type="text" placeholder="Enter company name" required>
         </div>
 
         <div class="field">
-          <label for="siteName">Site Name</label>
+          <label>Site Name</label>
           <input id="siteName" type="text" placeholder="Example: Main Wash" required>
         </div>
 
