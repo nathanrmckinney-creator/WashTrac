@@ -65,6 +65,8 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
 .mobile-menu a:hover{color:white;}
 .mobile-menu a.logout-link{color:#f87171;}
 
+.menu-divider{border:0;border-top:1px solid #1e293b;margin:8px 0;}
+
 .backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1100;}
 
 .page-header{padding-right:80px;}
@@ -92,6 +94,88 @@ button.secondary{background:#334155;}
 .status{margin-top:16px;padding:12px 14px;border-radius:8px;background:#0b1220;border:1px solid #1f2937;color:#cbd5e1;display:none;}
 .status.show{display:block;}
 
+.builder-section{
+  margin-top:18px;
+  padding-top:16px;
+  border-top:1px solid #1f2937;
+}
+
+.builder-title{
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+.column-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:16px;
+}
+
+.column-grid label{
+  color:#cbd5e1;
+  font-size:14px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.column-grid input{
+  accent-color:#2563eb;
+}
+
+.form-row{
+  margin-bottom:14px;
+}
+
+.form-row label{
+  display:block;
+  color:#cbd5e1;
+  font-size:14px;
+  margin-bottom:6px;
+  font-weight:bold;
+}
+
+.form-row input,
+.form-row select{
+  width:100%;
+  padding:11px 12px;
+  border-radius:8px;
+  border:1px solid #334155;
+  background:#020617;
+  color:white;
+  outline:none;
+}
+
+.form-row input:focus,
+.form-row select:focus{
+  border-color:#2563eb;
+}
+
+.day-grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:6px;
+  margin-top:8px;
+}
+
+.day-grid label{
+  background:#0b1220;
+  border:1px solid #1f2937;
+  border-radius:8px;
+  padding:8px 6px;
+  font-size:12px;
+  text-align:center;
+  color:#cbd5e1;
+}
+
+.day-grid input{
+  margin-right:4px;
+  accent-color:#2563eb;
+}
+
+.hidden{display:none;}
+
 @media(max-width:900px){
   .sidebar{display:none;}
   .desktop-menu-wrap{display:none;}
@@ -101,6 +185,8 @@ button.secondary{background:#334155;}
   .grid-2{grid-template-columns:1fr;}
   .main{padding:20px;}
   .page-header{padding-right:0;}
+  .column-grid{grid-template-columns:1fr;}
+  .day-grid{grid-template-columns:repeat(2,1fr);}
 }
 </style>
 </head>
@@ -118,6 +204,12 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
 </div>
 
 <div class="mobile-menu" id="mobileMenu">
+  <a href="dashboard.html">Dashboard</a>
+  <a href="codes.html">Codes</a>
+  <a href="activity.html">Activity</a>
+  <a href="usage.html">Reports</a>
+  <a href="monitor.html">Monitor</a>
+  <hr class="menu-divider">
   <a href="index.html">Back to Homepage</a>
   <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
 </div>
@@ -140,6 +232,12 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
     <div class="desktop-menu-wrap">
       <button class="menu-btn" type="button" onclick="toggleDesktopMenu()">☰</button>
       <div class="hamburger-menu" id="desktopMenu">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="codes.html">Codes</a>
+        <a href="activity.html">Activity</a>
+        <a href="usage.html">Reports</a>
+        <a href="monitor.html">Monitor</a>
+        <hr class="menu-divider">
         <a href="index.html">Back to Homepage</a>
         <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
       </div>
@@ -177,11 +275,98 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
 
       <div class="card">
         <h3>Report Actions</h3>
+
         <div class="actions">
           <button onclick="exportCSV()">Export CSV</button>
           <button class="secondary" onclick="emailReport()">Email Report</button>
         </div>
-        <div class="note">The Email Report button sends through your Supabase Edge Function named <strong>send-report</strong>.</div>
+
+        <div class="note">
+          Choose the columns you want, download a custom CSV, email a report, or save an automatic reporting schedule.
+        </div>
+
+        <div class="builder-section">
+          <div class="builder-title">Report Columns</div>
+
+          <div class="column-grid">
+            <label><input type="checkbox" class="report-column" value="code" checked> Code</label>
+            <label><input type="checkbox" class="report-column" value="department" checked> Department</label>
+            <label><input type="checkbox" class="report-column" value="name" checked> Name</label>
+            <label><input type="checkbox" class="report-column" value="uses" checked> Uses</label>
+            <label><input type="checkbox" class="report-column" value="last_used" checked> Last Used</label>
+          </div>
+
+          <div class="actions">
+            <button onclick="exportCustomCSV()">Export Selected Columns</button>
+            <button class="secondary" onclick="emailCustomReport()">Email Selected Report</button>
+          </div>
+        </div>
+
+        <div class="builder-section">
+          <div class="builder-title">Automated Report Schedule</div>
+
+          <div class="form-row">
+            <label for="scheduleEmail">Report Email</label>
+            <input id="scheduleEmail" type="email" placeholder="name@email.com">
+          </div>
+
+          <div class="form-row">
+            <label for="scheduleFrequency">Frequency</label>
+            <select id="scheduleFrequency" onchange="updateScheduleFields()">
+              <option value="off">Off</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="biweekly">Bi-weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="custom_days">Certain days of the week</option>
+              <option value="custom_month">Certain day of the month</option>
+            </select>
+          </div>
+
+          <div class="form-row hidden" id="weeklyDayRow">
+            <label for="weeklyDay">Send On</label>
+            <select id="weeklyDay">
+              <option value="monday">Monday</option>
+              <option value="tuesday">Tuesday</option>
+              <option value="wednesday">Wednesday</option>
+              <option value="thursday">Thursday</option>
+              <option value="friday">Friday</option>
+              <option value="saturday">Saturday</option>
+              <option value="sunday">Sunday</option>
+            </select>
+          </div>
+
+          <div class="form-row hidden" id="customDaysRow">
+            <label>Send On These Days</label>
+            <div class="day-grid">
+              <label><input type="checkbox" class="schedule-day" value="monday"> Mon</label>
+              <label><input type="checkbox" class="schedule-day" value="tuesday"> Tue</label>
+              <label><input type="checkbox" class="schedule-day" value="wednesday"> Wed</label>
+              <label><input type="checkbox" class="schedule-day" value="thursday"> Thu</label>
+              <label><input type="checkbox" class="schedule-day" value="friday"> Fri</label>
+              <label><input type="checkbox" class="schedule-day" value="saturday"> Sat</label>
+              <label><input type="checkbox" class="schedule-day" value="sunday"> Sun</label>
+            </div>
+          </div>
+
+          <div class="form-row hidden" id="monthDayRow">
+            <label for="monthDay">Day Of Month</label>
+            <select id="monthDay"></select>
+          </div>
+
+          <div class="form-row">
+            <label for="scheduleTime">Send Time</label>
+            <input id="scheduleTime" type="time" value="08:00">
+          </div>
+
+          <div class="actions">
+            <button onclick="saveReportSchedule()">Save Schedule</button>
+            <button class="secondary" onclick="clearReportSchedule()">Turn Off Schedule</button>
+          </div>
+
+          <div class="note" id="scheduleSummary">No automatic report schedule saved.</div>
+        </div>
+
         <div class="status" id="emailStatus"></div>
       </div>
     </div>
@@ -197,6 +382,14 @@ let departmentUsageChartInstance = null;
 let topCodesChartInstance = null;
 let cachedCodes = [];
 let cachedDepartmentData = [];
+
+const columnLabels = {
+  code: "Code",
+  department: "Department",
+  name: "Name",
+  uses: "Uses",
+  last_used: "Last Used"
+};
 
 function toggleDesktopMenu(){
   const desktopMenu = document.getElementById("desktopMenu");
@@ -238,7 +431,7 @@ async function logout(event){
   }
 
   localStorage.removeItem("washtracLoggedIn");
-  window.location.href = "login.html";
+  window.location.replace("login.html");
 }
 
 document.addEventListener("keydown", function(event){
@@ -466,47 +659,80 @@ function csvSafe(value){
   return `"${text.replaceAll('"', '""')}"`;
 }
 
+function getSelectedColumns(){
+  const checked = Array.from(document.querySelectorAll(".report-column:checked")).map(box => box.value);
+
+  if(!checked.length){
+    alert("Please select at least one report column.");
+    return [];
+  }
+
+  return checked;
+}
+
+function buildCSV(columns){
+  let csv = columns.map(col => csvSafe(columnLabels[col] || col)).join(",") + "\n";
+
+  cachedCodes.forEach(item => {
+    csv += columns.map(col => csvSafe(item[col] || "")).join(",") + "\n";
+  });
+
+  return csv;
+}
+
+function downloadCSV(csv, filename){
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 function exportCSV(){
   if(!cachedCodes.length){
     alert("No data to export.");
     return;
   }
 
-  let csv = "Code,Department,Name,Uses,Last Used\n";
-
-  cachedCodes.forEach(item => {
-    csv += [
-      csvSafe(item.code),
-      csvSafe(item.department || ""),
-      csvSafe(item.name || ""),
-      csvSafe(item.uses || 0),
-      csvSafe(item.last_used || "")
-    ].join(",") + "\n";
-  });
-
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "washtrac_report.csv";
-  link.click();
-  URL.revokeObjectURL(url);
+  const columns = ["code", "department", "name", "uses", "last_used"];
+  const csv = buildCSV(columns);
+  downloadCSV(csv, "washtrac_report.csv");
 }
 
-async function emailReport(){
-  const email = prompt("Enter the email address for this report:");
-  if(!email) return;
+function exportCustomCSV(){
+  if(!cachedCodes.length){
+    alert("No data to export.");
+    return;
+  }
 
+  const columns = getSelectedColumns();
+  if(!columns.length) return;
+
+  const csv = buildCSV(columns);
+  downloadCSV(csv, "washtrac_custom_report.csv");
+}
+
+function buildReportHtml(columns){
   const totalUses = document.getElementById("totalUses").innerText;
   const totalCodes = document.getElementById("totalCodes").innerText;
   const topCode = document.getElementById("topCode").innerText;
   const topDept = document.getElementById("topDept").innerText;
 
-  let topCodesHtml = "<ul>";
-  cachedCodes.slice(0,5).forEach(item => {
-    topCodesHtml += `<li>${item.code} — ${item.uses || 0} uses</li>`;
+  let tableHeaders = "";
+  columns.forEach(col => {
+    tableHeaders += `<th style="text-align:left;padding:8px;border-bottom:1px solid #ddd;">${columnLabels[col] || col}</th>`;
   });
-  topCodesHtml += "</ul>";
+
+  let tableRows = "";
+  cachedCodes.forEach(item => {
+    tableRows += "<tr>";
+    columns.forEach(col => {
+      tableRows += `<td style="padding:8px;border-bottom:1px solid #eee;">${item[col] || ""}</td>`;
+    });
+    tableRows += "</tr>";
+  });
 
   let deptHtml = "<ul>";
   cachedDepartmentData.slice(0,5).forEach(item => {
@@ -514,35 +740,246 @@ async function emailReport(){
   });
   deptHtml += "</ul>";
 
-  const html = `
+  return `
     <h2>WashTrac Report</h2>
     <p><strong>Total Uses:</strong> ${totalUses}</p>
     <p><strong>Total Codes:</strong> ${totalCodes}</p>
     <p><strong>Top Code:</strong> ${topCode}</p>
     <p><strong>Top Department:</strong> ${topDept}</p>
-    <h3>Top Codes</h3>
-    ${topCodesHtml}
+
+    <h3>Selected Report Columns</h3>
+    <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;">
+      <thead>
+        <tr>${tableHeaders}</tr>
+      </thead>
+      <tbody>
+        ${tableRows}
+      </tbody>
+    </table>
+
     <h3>Top Departments</h3>
     ${deptHtml}
+
     <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
   `;
+}
 
+async function sendReportToEmail(email, subject, html){
   setStatus("Sending report...");
 
   const { data, error } = await client.functions.invoke("send-report", {
-    body: { to: email, subject: "WashTrac Report", html }
+    body: { to: email, subject: subject, html: html }
   });
 
   if(error){
     console.log(error);
     setStatus("Email failed.");
-    return;
+    return false;
   }
 
   console.log(data);
   setStatus("Report sent.");
+  return true;
 }
 
+async function emailReport(){
+  const email = prompt("Enter the email address for this report:");
+  if(!email) return;
+
+  const columns = ["code", "department", "name", "uses", "last_used"];
+  const html = buildReportHtml(columns);
+
+  await sendReportToEmail(email, "WashTrac Report", html);
+}
+
+async function emailCustomReport(){
+  if(!cachedCodes.length){
+    alert("No data to email.");
+    return;
+  }
+
+  const columns = getSelectedColumns();
+  if(!columns.length) return;
+
+  const email = document.getElementById("scheduleEmail").value.trim() || prompt("Enter the email address for this report:");
+  if(!email) return;
+
+  const html = buildReportHtml(columns);
+  await sendReportToEmail(email, "WashTrac Custom Report", html);
+}
+
+function populateMonthDays(){
+  const select = document.getElementById("monthDay");
+  select.innerHTML = "";
+
+  for(let i = 1; i <= 31; i++){
+    const option = document.createElement("option");
+    option.value = String(i);
+    option.innerText = i;
+    select.appendChild(option);
+  }
+}
+
+function updateScheduleFields(){
+  const frequency = document.getElementById("scheduleFrequency").value;
+
+  document.getElementById("weeklyDayRow").classList.add("hidden");
+  document.getElementById("customDaysRow").classList.add("hidden");
+  document.getElementById("monthDayRow").classList.add("hidden");
+
+  if(frequency === "weekly" || frequency === "biweekly"){
+    document.getElementById("weeklyDayRow").classList.remove("hidden");
+  }
+
+  if(frequency === "custom_days"){
+    document.getElementById("customDaysRow").classList.remove("hidden");
+  }
+
+  if(frequency === "monthly" || frequency === "custom_month"){
+    document.getElementById("monthDayRow").classList.remove("hidden");
+  }
+}
+
+function saveReportSchedule(){
+  const email = document.getElementById("scheduleEmail").value.trim();
+  const frequency = document.getElementById("scheduleFrequency").value;
+  const weeklyDay = document.getElementById("weeklyDay").value;
+  const monthDay = document.getElementById("monthDay").value;
+  const time = document.getElementById("scheduleTime").value;
+  const columns = getSelectedColumns();
+
+  if(!columns.length) return;
+
+  if(frequency !== "off" && !email){
+    alert("Please enter an email address for automated reports.");
+    return;
+  }
+
+  const customDays = Array.from(document.querySelectorAll(".schedule-day:checked")).map(day => day.value);
+
+  if(frequency === "custom_days" && !customDays.length){
+    alert("Please choose at least one day.");
+    return;
+  }
+
+  const schedule = {
+    email,
+    frequency,
+    weeklyDay,
+    monthDay,
+    time,
+    customDays,
+    columns,
+    savedAt: new Date().toISOString()
+  };
+
+  localStorage.setItem("washtracReportSchedule", JSON.stringify(schedule));
+  renderScheduleSummary();
+
+  setStatus("Report schedule saved.");
+
+  /*
+    IMPORTANT:
+    This saves the user's schedule settings in the browser right now.
+
+    To make automatic emails send while the browser is closed, we will later connect this to:
+    1. A Supabase table such as report_schedules
+    2. A scheduled Supabase Edge Function / cron job
+    3. Your existing send-report function
+  */
+}
+
+function clearReportSchedule(){
+  localStorage.removeItem("washtracReportSchedule");
+
+  document.getElementById("scheduleFrequency").value = "off";
+  document.getElementById("scheduleEmail").value = "";
+  document.getElementById("scheduleTime").value = "08:00";
+
+  document.querySelectorAll(".schedule-day").forEach(day => day.checked = false);
+  document.querySelectorAll(".report-column").forEach(col => col.checked = true);
+
+  updateScheduleFields();
+  renderScheduleSummary();
+  setStatus("Automatic reporting turned off.");
+}
+
+function renderScheduleSummary(){
+  const box = document.getElementById("scheduleSummary");
+  const saved = localStorage.getItem("washtracReportSchedule");
+
+  if(!saved){
+    box.innerText = "No automatic report schedule saved.";
+    return;
+  }
+
+  const schedule = JSON.parse(saved);
+
+  if(schedule.frequency === "off"){
+    box.innerText = "Automatic reporting is turned off.";
+    return;
+  }
+
+  const selectedCols = (schedule.columns || []).map(col => columnLabels[col] || col).join(", ");
+
+  let details = "";
+
+  if(schedule.frequency === "daily"){
+    details = "Daily";
+  }
+
+  if(schedule.frequency === "weekly"){
+    details = `Weekly on ${schedule.weeklyDay}`;
+  }
+
+  if(schedule.frequency === "biweekly"){
+    details = `Bi-weekly on ${schedule.weeklyDay}`;
+  }
+
+  if(schedule.frequency === "monthly"){
+    details = `Monthly on day ${schedule.monthDay}`;
+  }
+
+  if(schedule.frequency === "custom_days"){
+    details = `On ${schedule.customDays.join(", ")}`;
+  }
+
+  if(schedule.frequency === "custom_month"){
+    details = `On day ${schedule.monthDay} of each month`;
+  }
+
+  box.innerText = `${details} at ${schedule.time} to ${schedule.email}. Columns: ${selectedCols}.`;
+}
+
+function loadSavedSchedule(){
+  const saved = localStorage.getItem("washtracReportSchedule");
+  if(!saved){
+    renderScheduleSummary();
+    return;
+  }
+
+  const schedule = JSON.parse(saved);
+
+  document.getElementById("scheduleEmail").value = schedule.email || "";
+  document.getElementById("scheduleFrequency").value = schedule.frequency || "off";
+  document.getElementById("weeklyDay").value = schedule.weeklyDay || "monday";
+  document.getElementById("monthDay").value = schedule.monthDay || "1";
+  document.getElementById("scheduleTime").value = schedule.time || "08:00";
+
+  document.querySelectorAll(".report-column").forEach(col => {
+    col.checked = (schedule.columns || []).includes(col.value);
+  });
+
+  document.querySelectorAll(".schedule-day").forEach(day => {
+    day.checked = (schedule.customDays || []).includes(day.value);
+  });
+
+  updateScheduleFields();
+  renderScheduleSummary();
+}
+
+populateMonthDays();
+loadSavedSchedule();
 loadUsage();
 
 client.channel("washtrac-live-usage")
