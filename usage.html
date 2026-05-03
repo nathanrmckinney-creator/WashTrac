@@ -152,6 +152,12 @@ button.secondary{background:#334155;}
   border-color:#2563eb;
 }
 
+.date-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
 .day-grid{
   display:grid;
   grid-template-columns:repeat(7,1fr);
@@ -186,6 +192,7 @@ button.secondary{background:#334155;}
   .main{padding:20px;}
   .page-header{padding-right:0;}
   .column-grid{grid-template-columns:1fr;}
+  .date-grid{grid-template-columns:1fr;}
   .day-grid{grid-template-columns:repeat(2,1fr);}
 }
 </style>
@@ -282,7 +289,40 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
         </div>
 
         <div class="note">
-          Choose the columns you want, download a custom CSV, email a report, or save an automatic reporting schedule.
+          Choose a date range, select columns, download a CSV, email a report, or save an automatic reporting schedule.
+        </div>
+
+        <div class="builder-section">
+          <div class="builder-title">Report Date Range</div>
+
+          <div class="form-row">
+            <label for="reportRange">Download / Email Range</label>
+            <select id="reportRange" onchange="updateReportRangeFields()">
+              <option value="all">All Available Data</option>
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="this_week">This Week</option>
+              <option value="last_week">Last Week</option>
+              <option value="last_14">Last 14 Days</option>
+              <option value="this_month">This Month</option>
+              <option value="last_month">Last Month</option>
+              <option value="custom">Custom Start / End Date</option>
+            </select>
+          </div>
+
+          <div class="date-grid hidden" id="customRangeFields">
+            <div class="form-row">
+              <label for="customStartDate">Start Date</label>
+              <input id="customStartDate" type="date">
+            </div>
+
+            <div class="form-row">
+              <label for="customEndDate">End Date</label>
+              <input id="customEndDate" type="date">
+            </div>
+          </div>
+
+          <div class="note" id="rangeSummary">Current export range: All Available Data.</div>
         </div>
 
         <div class="builder-section">
@@ -321,6 +361,33 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
               <option value="custom_days">Certain days of the week</option>
               <option value="custom_month">Certain day of the month</option>
             </select>
+          </div>
+
+          <div class="form-row">
+            <label for="scheduleRange">Automated Report Range</label>
+            <select id="scheduleRange" onchange="updateScheduleRangeFields()">
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="this_week">This Week</option>
+              <option value="last_week">Last Week</option>
+              <option value="last_14">Last 14 Days</option>
+              <option value="this_month">This Month</option>
+              <option value="last_month">Last Month</option>
+              <option value="custom">Custom Start / End Date</option>
+              <option value="all">All Available Data</option>
+            </select>
+          </div>
+
+          <div class="date-grid hidden" id="scheduleCustomRangeFields">
+            <div class="form-row">
+              <label for="scheduleStartDate">Schedule Start Date</label>
+              <input id="scheduleStartDate" type="date">
+            </div>
+
+            <div class="form-row">
+              <label for="scheduleEndDate">Schedule End Date</label>
+              <input id="scheduleEndDate" type="date">
+            </div>
           </div>
 
           <div class="form-row hidden" id="weeklyDayRow">
@@ -382,6 +449,7 @@ let departmentUsageChartInstance = null;
 let topCodesChartInstance = null;
 let cachedCodes = [];
 let cachedDepartmentData = [];
+let cachedRawUses = [];
 
 const columnLabels = {
   code: "Code",
@@ -508,6 +576,216 @@ function isUseEvent(row){
   return true;
 }
 
+function startOfDay(date){
+  const d = new Date(date);
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function endOfDay(date){
+  const d = new Date(date);
+  d.setHours(23,59,59,999);
+  return d;
+}
+
+function formatDateInput(date){
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function getMonday(date){
+  const d = startOfDay(date);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+function getRangeDates(rangeValue, startId, endId){
+  const now = new Date();
+  let start = null;
+  let end = null;
+  let label = "All Available Data";
+
+  if(rangeValue === "all"){
+    return { start:null, end:null, label:"All Available Data" };
+  }
+
+  if(rangeValue === "today"){
+    start = startOfDay(now);
+    end = endOfDay(now);
+    label = "Today";
+  }
+
+  if(rangeValue === "yesterday"){
+    const y = new Date(now);
+    y.setDate(y.getDate() - 1);
+    start = startOfDay(y);
+    end = endOfDay(y);
+    label = "Yesterday";
+  }
+
+  if(rangeValue === "this_week"){
+    start = getMonday(now);
+    end = endOfDay(now);
+    label = "This Week";
+  }
+
+  if(rangeValue === "last_week"){
+    const thisMonday = getMonday(now);
+    start = new Date(thisMonday);
+    start.setDate(start.getDate() - 7);
+    end = new Date(thisMonday);
+    end.setDate(end.getDate() - 1);
+    end = endOfDay(end);
+    label = "Last Week";
+  }
+
+  if(rangeValue === "last_14"){
+    start = startOfDay(now);
+    start.setDate(start.getDate() - 13);
+    end = endOfDay(now);
+    label = "Last 14 Days";
+  }
+
+  if(rangeValue === "this_month"){
+    start = new Date(now.getFullYear(), now.getMonth(), 1);
+    end = endOfDay(now);
+    label = "This Month";
+  }
+
+  if(rangeValue === "last_month"){
+    start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    end = new Date(now.getFullYear(), now.getMonth(), 0);
+    end = endOfDay(end);
+    label = "Last Month";
+  }
+
+  if(rangeValue === "custom"){
+    const startInput = document.getElementById(startId).value;
+    const endInput = document.getElementById(endId).value;
+
+    if(!startInput || !endInput){
+      alert("Please choose a start date and end date.");
+      return null;
+    }
+
+    start = startOfDay(new Date(startInput + "T00:00:00"));
+    end = endOfDay(new Date(endInput + "T00:00:00"));
+
+    if(start > end){
+      alert("Start date cannot be after end date.");
+      return null;
+    }
+
+    label = `${startInput} to ${endInput}`;
+  }
+
+  return { start, end, label };
+}
+
+function updateReportRangeFields(){
+  const range = document.getElementById("reportRange").value;
+  document.getElementById("customRangeFields").classList.toggle("hidden", range !== "custom");
+
+  const summary = document.getElementById("rangeSummary");
+  if(range === "custom"){
+    summary.innerText = "Current export range: Custom Start / End Date.";
+    return;
+  }
+
+  const info = getRangeDates(range, "customStartDate", "customEndDate");
+  if(info){
+    summary.innerText = `Current export range: ${info.label}.`;
+  }
+}
+
+function updateScheduleRangeFields(){
+  const range = document.getElementById("scheduleRange").value;
+  document.getElementById("scheduleCustomRangeFields").classList.toggle("hidden", range !== "custom");
+}
+
+function filterUsesByRange(uses, rangeValue, startId, endId){
+  const info = getRangeDates(rangeValue, startId, endId);
+  if(!info) return null;
+
+  if(!info.start || !info.end){
+    return {
+      label: info.label,
+      uses: uses
+    };
+  }
+
+  return {
+    label: info.label,
+    uses: uses.filter(item => {
+      if(!item.last_used) return false;
+      const when = new Date(item.last_used);
+      return when >= info.start && when <= info.end;
+    })
+  };
+}
+
+function aggregateUses(uses){
+  const codeMap = {};
+
+  uses.forEach(item => {
+    const code = item.code || "Unknown";
+
+    if(!codeMap[code]){
+      codeMap[code] = {
+        code: code,
+        department: item.department || "Unassigned",
+        name: item.name || "",
+        uses: 0,
+        last_used: item.last_used || ""
+      };
+    }
+
+    codeMap[code].uses += 1;
+
+    if(item.last_used && (!codeMap[code].last_used || item.last_used > codeMap[code].last_used)){
+      codeMap[code].last_used = item.last_used;
+    }
+  });
+
+  return Object.values(codeMap).sort((a,b) => b.uses - a.uses);
+}
+
+function getDepartmentDataFromUses(uses){
+  const deptMap = {};
+
+  uses.forEach(item => {
+    const dept = item.department || "Unassigned";
+    deptMap[dept] = (deptMap[dept] || 0) + 1;
+  });
+
+  return Object.entries(deptMap).sort((a,b) => b[1] - a[1]);
+}
+
+function getReportCodesForSelectedRange(){
+  if(!cachedRawUses.length){
+    return {
+      label: "No Data",
+      codes: [],
+      departments: []
+    };
+  }
+
+  const rangeValue = document.getElementById("reportRange").value;
+  const filtered = filterUsesByRange(cachedRawUses, rangeValue, "customStartDate", "customEndDate");
+
+  if(!filtered) return null;
+
+  return {
+    label: filtered.label,
+    codes: aggregateUses(filtered.uses),
+    departments: getDepartmentDataFromUses(filtered.uses)
+  };
+}
+
 async function loadUsage(){
   const { data, error } = await client
     .from("wash_activity")
@@ -532,48 +810,17 @@ async function loadUsage(){
       event: row.event || ""
     }));
 
+  cachedRawUses = uses;
+
   document.getElementById("totalUses").innerText = uses.length;
 
-  const codeMap = {};
-
-  uses.forEach(item => {
-    const code = item.code || "Unknown";
-
-    if(!codeMap[code]){
-      codeMap[code] = {
-        code: code,
-        department: item.department || "Unassigned",
-        name: item.name || "",
-        uses: 0,
-        last_used: item.last_used || ""
-      };
-    }
-
-    codeMap[code].uses += 1;
-
-    if(item.last_used && (!codeMap[code].last_used || item.last_used > codeMap[code].last_used)){
-      codeMap[code].last_used = item.last_used;
-    }
-  });
-
-  const codeArray = Object.values(codeMap)
-    .sort((a,b) => b.uses - a.uses);
-
+  const codeArray = aggregateUses(uses);
   cachedCodes = codeArray;
 
   document.getElementById("totalCodes").innerText = codeArray.length;
   document.getElementById("topCode").innerText = codeArray.length ? codeArray[0].code : "-";
 
-  const deptMap = {};
-
-  uses.forEach(item => {
-    const dept = item.department || "Unassigned";
-    deptMap[dept] = (deptMap[dept] || 0) + 1;
-  });
-
-  const deptArray = Object.entries(deptMap)
-    .sort((a,b) => b[1] - a[1]);
-
+  const deptArray = getDepartmentDataFromUses(uses);
   cachedDepartmentData = deptArray;
 
   document.getElementById("topDept").innerText = deptArray.length ? deptArray[0][0] : "-";
@@ -670,10 +917,11 @@ function getSelectedColumns(){
   return checked;
 }
 
-function buildCSV(columns){
-  let csv = columns.map(col => csvSafe(columnLabels[col] || col)).join(",") + "\n";
+function buildCSV(columns, codes, rangeLabel){
+  let csv = `WashTrac Report Range,${csvSafe(rangeLabel)}\n`;
+  csv += columns.map(col => csvSafe(columnLabels[col] || col)).join(",") + "\n";
 
-  cachedCodes.forEach(item => {
+  codes.forEach(item => {
     csv += columns.map(col => csvSafe(item[col] || "")).join(",") + "\n";
   });
 
@@ -691,34 +939,40 @@ function downloadCSV(csv, filename){
 }
 
 function exportCSV(){
-  if(!cachedCodes.length){
-    alert("No data to export.");
+  const report = getReportCodesForSelectedRange();
+  if(!report) return;
+
+  if(!report.codes.length){
+    alert("No data to export for this date range.");
     return;
   }
 
   const columns = ["code", "department", "name", "uses", "last_used"];
-  const csv = buildCSV(columns);
+  const csv = buildCSV(columns, report.codes, report.label);
   downloadCSV(csv, "washtrac_report.csv");
 }
 
 function exportCustomCSV(){
-  if(!cachedCodes.length){
-    alert("No data to export.");
+  const report = getReportCodesForSelectedRange();
+  if(!report) return;
+
+  if(!report.codes.length){
+    alert("No data to export for this date range.");
     return;
   }
 
   const columns = getSelectedColumns();
   if(!columns.length) return;
 
-  const csv = buildCSV(columns);
+  const csv = buildCSV(columns, report.codes, report.label);
   downloadCSV(csv, "washtrac_custom_report.csv");
 }
 
-function buildReportHtml(columns){
-  const totalUses = document.getElementById("totalUses").innerText;
-  const totalCodes = document.getElementById("totalCodes").innerText;
-  const topCode = document.getElementById("topCode").innerText;
-  const topDept = document.getElementById("topDept").innerText;
+function buildReportHtml(columns, codes, departments, rangeLabel){
+  const totalUses = codes.reduce((sum, item) => sum + Number(item.uses || 0), 0);
+  const totalCodes = codes.length;
+  const topCode = codes.length ? codes[0].code : "-";
+  const topDept = departments.length ? departments[0][0] : "-";
 
   let tableHeaders = "";
   columns.forEach(col => {
@@ -726,7 +980,7 @@ function buildReportHtml(columns){
   });
 
   let tableRows = "";
-  cachedCodes.forEach(item => {
+  codes.forEach(item => {
     tableRows += "<tr>";
     columns.forEach(col => {
       tableRows += `<td style="padding:8px;border-bottom:1px solid #eee;">${item[col] || ""}</td>`;
@@ -735,13 +989,14 @@ function buildReportHtml(columns){
   });
 
   let deptHtml = "<ul>";
-  cachedDepartmentData.slice(0,5).forEach(item => {
+  departments.slice(0,5).forEach(item => {
     deptHtml += `<li>${item[0]} — ${item[1]} uses</li>`;
   });
   deptHtml += "</ul>";
 
   return `
     <h2>WashTrac Report</h2>
+    <p><strong>Report Range:</strong> ${rangeLabel}</p>
     <p><strong>Total Uses:</strong> ${totalUses}</p>
     <p><strong>Total Codes:</strong> ${totalCodes}</p>
     <p><strong>Top Code:</strong> ${topCode}</p>
@@ -783,18 +1038,29 @@ async function sendReportToEmail(email, subject, html){
 }
 
 async function emailReport(){
+  const report = getReportCodesForSelectedRange();
+  if(!report) return;
+
+  if(!report.codes.length){
+    alert("No data to email for this date range.");
+    return;
+  }
+
   const email = prompt("Enter the email address for this report:");
   if(!email) return;
 
   const columns = ["code", "department", "name", "uses", "last_used"];
-  const html = buildReportHtml(columns);
+  const html = buildReportHtml(columns, report.codes, report.departments, report.label);
 
   await sendReportToEmail(email, "WashTrac Report", html);
 }
 
 async function emailCustomReport(){
-  if(!cachedCodes.length){
-    alert("No data to email.");
+  const report = getReportCodesForSelectedRange();
+  if(!report) return;
+
+  if(!report.codes.length){
+    alert("No data to email for this date range.");
     return;
   }
 
@@ -804,7 +1070,7 @@ async function emailCustomReport(){
   const email = document.getElementById("scheduleEmail").value.trim() || prompt("Enter the email address for this report:");
   if(!email) return;
 
-  const html = buildReportHtml(columns);
+  const html = buildReportHtml(columns, report.codes, report.departments, report.label);
   await sendReportToEmail(email, "WashTrac Custom Report", html);
 }
 
@@ -838,11 +1104,14 @@ function updateScheduleFields(){
   if(frequency === "monthly" || frequency === "custom_month"){
     document.getElementById("monthDayRow").classList.remove("hidden");
   }
+
+  renderScheduleSummary();
 }
 
 function saveReportSchedule(){
   const email = document.getElementById("scheduleEmail").value.trim();
   const frequency = document.getElementById("scheduleFrequency").value;
+  const scheduleRange = document.getElementById("scheduleRange").value;
   const weeklyDay = document.getElementById("weeklyDay").value;
   const monthDay = document.getElementById("monthDay").value;
   const time = document.getElementById("scheduleTime").value;
@@ -862,9 +1131,27 @@ function saveReportSchedule(){
     return;
   }
 
+  if(scheduleRange === "custom"){
+    const start = document.getElementById("scheduleStartDate").value;
+    const end = document.getElementById("scheduleEndDate").value;
+
+    if(!start || !end){
+      alert("Please choose a schedule start date and end date.");
+      return;
+    }
+
+    if(new Date(start + "T00:00:00") > new Date(end + "T00:00:00")){
+      alert("Schedule start date cannot be after schedule end date.");
+      return;
+    }
+  }
+
   const schedule = {
     email,
     frequency,
+    scheduleRange,
+    scheduleStartDate: document.getElementById("scheduleStartDate").value,
+    scheduleEndDate: document.getElementById("scheduleEndDate").value,
     weeklyDay,
     monthDay,
     time,
@@ -893,15 +1180,35 @@ function clearReportSchedule(){
   localStorage.removeItem("washtracReportSchedule");
 
   document.getElementById("scheduleFrequency").value = "off";
+  document.getElementById("scheduleRange").value = "today";
   document.getElementById("scheduleEmail").value = "";
+  document.getElementById("scheduleStartDate").value = "";
+  document.getElementById("scheduleEndDate").value = "";
   document.getElementById("scheduleTime").value = "08:00";
 
   document.querySelectorAll(".schedule-day").forEach(day => day.checked = false);
   document.querySelectorAll(".report-column").forEach(col => col.checked = true);
 
   updateScheduleFields();
+  updateScheduleRangeFields();
   renderScheduleSummary();
   setStatus("Automatic reporting turned off.");
+}
+
+function getRangeLabelOnly(range){
+  const labels = {
+    all: "All Available Data",
+    today: "Today",
+    yesterday: "Yesterday",
+    this_week: "This Week",
+    last_week: "Last Week",
+    last_14: "Last 14 Days",
+    this_month: "This Month",
+    last_month: "Last Month",
+    custom: "Custom Start / End Date"
+  };
+
+  return labels[range] || range;
 }
 
 function renderScheduleSummary(){
@@ -941,14 +1248,20 @@ function renderScheduleSummary(){
   }
 
   if(schedule.frequency === "custom_days"){
-    details = `On ${schedule.customDays.join(", ")}`;
+    details = `On ${(schedule.customDays || []).join(", ")}`;
   }
 
   if(schedule.frequency === "custom_month"){
     details = `On day ${schedule.monthDay} of each month`;
   }
 
-  box.innerText = `${details} at ${schedule.time} to ${schedule.email}. Columns: ${selectedCols}.`;
+  let rangeText = getRangeLabelOnly(schedule.scheduleRange || "today");
+
+  if(schedule.scheduleRange === "custom"){
+    rangeText = `${schedule.scheduleStartDate || "start"} to ${schedule.scheduleEndDate || "end"}`;
+  }
+
+  box.innerText = `${details} at ${schedule.time} to ${schedule.email}. Range: ${rangeText}. Columns: ${selectedCols}.`;
 }
 
 function loadSavedSchedule(){
@@ -962,6 +1275,9 @@ function loadSavedSchedule(){
 
   document.getElementById("scheduleEmail").value = schedule.email || "";
   document.getElementById("scheduleFrequency").value = schedule.frequency || "off";
+  document.getElementById("scheduleRange").value = schedule.scheduleRange || "today";
+  document.getElementById("scheduleStartDate").value = schedule.scheduleStartDate || "";
+  document.getElementById("scheduleEndDate").value = schedule.scheduleEndDate || "";
   document.getElementById("weeklyDay").value = schedule.weeklyDay || "monday";
   document.getElementById("monthDay").value = schedule.monthDay || "1";
   document.getElementById("scheduleTime").value = schedule.time || "08:00";
@@ -975,10 +1291,13 @@ function loadSavedSchedule(){
   });
 
   updateScheduleFields();
+  updateScheduleRangeFields();
   renderScheduleSummary();
 }
 
 populateMonthDays();
+updateReportRangeFields();
+updateScheduleRangeFields();
 loadSavedSchedule();
 loadUsage();
 
