@@ -14,42 +14,42 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
 .app{display:flex;min-height:100vh;}
 .sidebar{width:220px;background:#0f172a;padding:20px;flex-shrink:0;border-right:1px solid #1e293b;}
 
- .logo,.mobile-logo{
-      font-family:'Orbitron', Arial, sans-serif;
-      font-size:22px;
-      font-weight:900;
-      letter-spacing:.5px;
-      margin-bottom:32px;
-    }
-    .logo .trac,.mobile-logo .trac{
-      background:linear-gradient(180deg,#ffffff 0%,#66c7ff 40%,#1e9bff 72%,#0b5cff 100%);
-      -webkit-background-clip:text;
-      background-clip:text;
-      color:transparent;
-      -webkit-text-fill-color:transparent;
-    }
+.logo,.mobile-logo{
+  font-family:'Orbitron', Arial, sans-serif;
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:.5px;
+  margin-bottom:32px;
+}
+.logo .trac,.mobile-logo .trac{
+  background:linear-gradient(180deg,#ffffff 0%,#66c7ff 40%,#1e9bff 72%,#0b5cff 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  -webkit-text-fill-color:transparent;
+}
 
 .nav a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
 .nav a:hover{color:white;}
 
 .main{flex:1;padding:30px;position:relative;}
 
-.desktop-menu-wrap{position:absolute;top:24px;right:30px;z-index:1000;}
+.desktop-menu-wrap{position:absolute;top:24px;right:30px;z-index:1200;}
 .menu-btn{background:#2563eb;border:none;color:white;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:bold;}
-.hamburger-menu{display:none;position:absolute;top:46px;right:0;width:220px;background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:12px 16px;box-shadow:0 12px 30px rgba(0,0,0,.45);z-index:1100;}
+.hamburger-menu{display:none;position:absolute;top:46px;right:0;width:220px;background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:12px 16px;box-shadow:0 12px 30px rgba(0,0,0,.45);z-index:1300;}
 .hamburger-menu a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
 .hamburger-menu a:hover{color:white;}
 .hamburger-menu a.logout-link{color:#f87171;}
 
-.mobile-topbar{display:none;align-items:center;justify-content:space-between;padding:16px 20px;background:#0f172a;border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:1000;}
+.mobile-topbar{display:none;align-items:center;justify-content:space-between;padding:16px 20px;background:#0f172a;border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:1200;}
 .mobile-logo{margin-bottom:0;}
 
-.mobile-menu{display:none;position:absolute;top:64px;right:16px;width:240px;background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:12px 16px;box-shadow:0 12px 30px rgba(0,0,0,.45);z-index:1100;}
+.mobile-menu{display:none;position:fixed;top:64px;right:16px;width:240px;background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:12px 16px;box-shadow:0 12px 30px rgba(0,0,0,.45);z-index:1300;}
 .mobile-menu a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
 .mobile-menu a:hover{color:white;}
 .mobile-menu a.logout-link{color:#f87171;}
 
-.backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1050;}
+.backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1100;}
 
 .page-header{margin-bottom:24px;padding-right:80px;}
 .page-header h1{margin:0 0 10px 0;font-size:42px;}
@@ -109,12 +109,12 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
 
 <div class="mobile-topbar">
   <div class="mobile-logo">Wash<span class="trac">Trac</span></div>
-  <button class="menu-btn" onclick="toggleMobileMenu()">☰</button>
+  <button class="menu-btn" type="button" onclick="toggleMobileMenu()">☰</button>
 </div>
 
 <div class="mobile-menu" id="mobileMenu">
-  <a href="index.html" onclick="closeMenus()">Back to Homepage</a>
-  <a href="#" class="logout-link" onclick="logout()">Logout</a>
+  <a href="index.html">Back to Homepage</a>
+  <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
 </div>
 
 <div class="backdrop" id="backdrop" onclick="closeMenus()"></div>
@@ -133,10 +133,10 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
 
   <div class="main">
     <div class="desktop-menu-wrap">
-      <button class="menu-btn" onclick="toggleDesktopMenu()">☰</button>
+      <button class="menu-btn" type="button" onclick="toggleDesktopMenu()">☰</button>
       <div class="hamburger-menu" id="desktopMenu">
-        <a href="index.html" onclick="closeMenus()">Back to Homepage</a>
-        <a href="#" class="logout-link" onclick="logout()">Logout</a>
+        <a href="index.html">Back to Homepage</a>
+        <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
       </div>
     </div>
 
@@ -160,7 +160,7 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
         <input id="logName" placeholder="Name">
         <input id="logBay" placeholder="Bay">
         <input id="logEvent" placeholder="Event" value="Activated wash">
-        <button onclick="logWashEvent()">Log Event</button>
+        <button type="button" onclick="logWashEvent()">Log Event</button>
       </div>
       <div class="notice">Manual logging is disabled while live CodeBox activity is active.</div>
     </div>
@@ -176,8 +176,8 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
       </div>
 
       <div class="actions">
-        <button onclick="clearFilters()">Clear Filters</button>
-        <button class="secondary" onclick="window.print()">Print</button>
+        <button type="button" onclick="clearFilters()">Clear Filters</button>
+        <button class="secondary" type="button" onclick="window.print()">Print</button>
       </div>
 
       <div class="table-wrap">
@@ -205,22 +205,29 @@ const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let activityRows = [];
+let currentUser = null;
+let currentOrgId = localStorage.getItem("washtracOrgId") || "";
+let currentSiteId = localStorage.getItem("washtracSiteId") || "";
 
 function toggleDesktopMenu(){
-  const menu = document.getElementById("desktopMenu");
+  const desktopMenu = document.getElementById("desktopMenu");
+  const mobileMenu = document.getElementById("mobileMenu");
   const backdrop = document.getElementById("backdrop");
-  const isOpen = menu.style.display === "block";
+  const isOpen = desktopMenu.style.display === "block";
 
-  menu.style.display = isOpen ? "none" : "block";
+  mobileMenu.style.display = "none";
+  desktopMenu.style.display = isOpen ? "none" : "block";
   backdrop.style.display = isOpen ? "none" : "block";
 }
 
 function toggleMobileMenu(){
-  const menu = document.getElementById("mobileMenu");
+  const desktopMenu = document.getElementById("desktopMenu");
+  const mobileMenu = document.getElementById("mobileMenu");
   const backdrop = document.getElementById("backdrop");
-  const isOpen = menu.style.display === "block";
+  const isOpen = mobileMenu.style.display === "block";
 
-  menu.style.display = isOpen ? "none" : "block";
+  desktopMenu.style.display = "none";
+  mobileMenu.style.display = isOpen ? "none" : "block";
   backdrop.style.display = isOpen ? "none" : "block";
 }
 
@@ -230,8 +237,22 @@ function closeMenus(){
   document.getElementById("backdrop").style.display = "none";
 }
 
-function logout(){
+async function logout(event){
+  if(event) event.preventDefault();
+
+  closeMenus();
+
+  try{
+    await client.auth.signOut();
+  }catch(err){
+    console.log("logout error:", err);
+  }
+
   localStorage.removeItem("washtracLoggedIn");
+  localStorage.removeItem("washtracOrgId");
+  localStorage.removeItem("washtracSiteId");
+  localStorage.removeItem("washtracSiteName");
+
   window.location.href = "login.html";
 }
 
@@ -247,6 +268,15 @@ function cleanValue(value, fallback = ""){
   return value;
 }
 
+function escapeText(value){
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 function getActivityCode(row){
   return String(
     cleanValue(row.metadata?.code, cleanValue(row.code, cleanValue(row.access_code, "")))
@@ -260,17 +290,67 @@ function mapActivityRow(row, codeNameMap = {}){
     id: row.id || "",
     event_time: cleanValue(row.event_time, cleanValue(row.created_at, "")),
     code: code,
-    department: cleanValue(row.department, cleanValue(row.metadata?.department, "")),
-    name: cleanValue(codeNameMap[code], cleanValue(row.metadata?.name, cleanValue(row.assigned_to, ""))),
-    bay: cleanValue(row.bay, ""),
+    department: cleanValue(row.department, cleanValue(row.metadata?.department, cleanValue(codeNameMap[code]?.department, ""))),
+    name: cleanValue(codeNameMap[code]?.name, cleanValue(row.metadata?.name, cleanValue(row.assigned_to, ""))),
+    bay: cleanValue(row.bay, cleanValue(row.metadata?.bay, "")),
     event: cleanValue(row.event, cleanValue(row.status, ""))
   };
 }
 
-async function fetchCodeNameMap(){
+async function getSessionInfo(){
+  const { data, error } = await client.auth.getUser();
+
+  if(error || !data || !data.user){
+    console.log("get user error:", error);
+    localStorage.removeItem("washtracLoggedIn");
+    window.location.href = "login.html";
+    return false;
+  }
+
+  currentUser = data.user;
+  localStorage.setItem("washtracLoggedIn", "yes");
+
+  await loadUserSite();
+
+  return true;
+}
+
+async function loadUserSite(){
+  if(currentOrgId && currentSiteId) return;
+
   const { data, error } = await client
+    .from("user_sites")
+    .select("organization_id, site_id")
+    .eq("user_id", currentUser.id)
+    .limit(1)
+    .maybeSingle();
+
+  if(error){
+    console.log("loadUserSite error:", error);
+    return;
+  }
+
+  if(data){
+    currentOrgId = data.organization_id || "";
+    currentSiteId = data.site_id || "";
+
+    if(currentOrgId) localStorage.setItem("washtracOrgId", currentOrgId);
+    if(currentSiteId) localStorage.setItem("washtracSiteId", currentSiteId);
+  }
+}
+
+async function fetchCodeNameMap(){
+  let query = client
     .from("access_codes")
-    .select("code,assigned_to");
+    .select("code,assigned_to,department");
+
+  if(currentSiteId){
+    query = query.eq("site_id", currentSiteId);
+  } else if(currentOrgId){
+    query = query.eq("organization_id", currentOrgId);
+  }
+
+  const { data, error } = await query;
 
   if(error){
     console.log("Codes fetch error:", error);
@@ -281,8 +361,12 @@ async function fetchCodeNameMap(){
 
   (data || []).forEach(item => {
     const code = String(item.code || "").trim();
+
     if(code){
-      map[code] = item.assigned_to || "";
+      map[code] = {
+        name: item.assigned_to || "",
+        department: item.department || ""
+      };
     }
   });
 
@@ -290,10 +374,18 @@ async function fetchCodeNameMap(){
 }
 
 async function fetchActivity(){
-  const { data, error } = await client
+  let query = client
     .from("wash_activity")
     .select("*")
     .order("event_time", { ascending:false });
+
+  if(currentSiteId){
+    query = query.eq("site_id", currentSiteId);
+  } else if(currentOrgId){
+    query = query.eq("organization_id", currentOrgId);
+  }
+
+  const { data, error } = await query;
 
   if(error){
     console.log("Activity fetch error:", error);
@@ -319,11 +411,11 @@ function getFilteredRows(){
   const eventFilter = document.getElementById("filterEvent").value.trim().toLowerCase();
 
   return activityRows.filter(row => {
-    const code = (row.code || "").toLowerCase();
-    const department = (row.department || "").toLowerCase();
-    const name = (row.name || "").toLowerCase();
-    const bay = (row.bay || "").toLowerCase();
-    const event = (row.event || "").toLowerCase();
+    const code = String(row.code || "").toLowerCase();
+    const department = String(row.department || "").toLowerCase();
+    const name = String(row.name || "").toLowerCase();
+    const bay = String(row.bay || "").toLowerCase();
+    const event = String(row.event || "").toLowerCase();
 
     return code.includes(codeFilter)
       && department.includes(departmentFilter)
@@ -346,15 +438,6 @@ function updateSummary(rows){
     new Set(rows.map(r => r.bay).filter(Boolean)).size;
 }
 
-function escapeText(value){
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
 function renderActivity(){
   const rows = getFilteredRows();
   const tbody = document.getElementById("activityTableBody");
@@ -365,16 +448,18 @@ function renderActivity(){
     tbody.innerHTML = `<tr><td colspan="6">No matching activity found.</td></tr>`;
   } else {
     rows.forEach(row => {
-      tbody.innerHTML += `
-        <tr>
-          <td>${escapeText(formatTime(row.event_time))}</td>
-          <td>${escapeText(row.code || "")}</td>
-          <td>${escapeText(row.department || "")}</td>
-          <td>${escapeText(row.name || "")}</td>
-          <td>${escapeText(row.bay || "")}</td>
-          <td>${escapeText(row.event || "")}</td>
-        </tr>
+      const tr = document.createElement("tr");
+
+      tr.innerHTML = `
+        <td>${escapeText(formatTime(row.event_time))}</td>
+        <td>${escapeText(row.code || "")}</td>
+        <td>${escapeText(row.department || "")}</td>
+        <td>${escapeText(row.name || "")}</td>
+        <td>${escapeText(row.bay || "")}</td>
+        <td>${escapeText(row.event || "")}</td>
       `;
+
+      tbody.appendChild(tr);
     });
   }
 
@@ -404,10 +489,7 @@ function startLiveActivity(){
         schema: "public",
         table: "wash_activity"
       },
-      payload => {
-        console.log("Live activity update:", payload);
-        loadActivity();
-      }
+      () => loadActivity()
     )
     .on(
       "postgres_changes",
@@ -416,18 +498,40 @@ function startLiveActivity(){
         schema: "public",
         table: "access_codes"
       },
-      payload => {
-        console.log("Live code update:", payload);
-        loadActivity();
-      }
+      () => loadActivity()
     )
     .subscribe(status => {
       console.log("Realtime status:", status);
     });
 }
 
-loadActivity();
-startLiveActivity();
+document.addEventListener("keydown", function(event){
+  if(event.key === "Escape") closeMenus();
+});
+
+document.addEventListener("click", function(event){
+  const desktopWrap = document.querySelector(".desktop-menu-wrap");
+  const mobileMenu = document.getElementById("mobileMenu");
+  const mobileTopbar = document.querySelector(".mobile-topbar");
+
+  if(
+    !desktopWrap.contains(event.target) &&
+    !mobileMenu.contains(event.target) &&
+    !mobileTopbar.contains(event.target)
+  ){
+    closeMenus();
+  }
+});
+
+async function init(){
+  const ok = await getSessionInfo();
+  if(!ok) return;
+
+  await loadActivity();
+  startLiveActivity();
+}
+
+init();
 </script>
 </body>
 </html>
