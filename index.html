@@ -347,6 +347,7 @@
 
 .code-display{
   height:96px;
+  position:relative;
   display:flex;
   flex-direction:column;
   justify-content:center;
@@ -366,9 +367,12 @@
 }
 
 .code-line{
+  position:absolute;
+  bottom:12px;   /* 🔥 move line DOWN */
+  left:50%;
+  transform:translateX(-50%);
   height:2px;
   width:95%;
-  margin-top:36px;
   background:linear-gradient(
     90deg,
     transparent 0%,
