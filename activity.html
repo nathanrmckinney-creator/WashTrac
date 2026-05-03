@@ -205,9 +205,6 @@ const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let activityRows = [];
-let currentUser = null;
-let currentOrgId = localStorage.getItem("washtracOrgId") || "";
-let currentSiteId = localStorage.getItem("washtracSiteId") || "";
 
 function toggleDesktopMenu(){
   const desktopMenu = document.getElementById("desktopMenu");
@@ -249,10 +246,6 @@ async function logout(event){
   }
 
   localStorage.removeItem("washtracLoggedIn");
-  localStorage.removeItem("washtracOrgId");
-  localStorage.removeItem("washtracSiteId");
-  localStorage.removeItem("washtracSiteName");
-
   window.location.href = "login.html";
 }
 
@@ -268,15 +261,6 @@ function cleanValue(value, fallback = ""){
   return value;
 }
 
-function escapeText(value){
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
 function getActivityCode(row){
   return String(
     cleanValue(row.metadata?.code, cleanValue(row.code, cleanValue(row.access_code, "")))
@@ -290,67 +274,17 @@ function mapActivityRow(row, codeNameMap = {}){
     id: row.id || "",
     event_time: cleanValue(row.event_time, cleanValue(row.created_at, "")),
     code: code,
-    department: cleanValue(row.department, cleanValue(row.metadata?.department, cleanValue(codeNameMap[code]?.department, ""))),
-    name: cleanValue(codeNameMap[code]?.name, cleanValue(row.metadata?.name, cleanValue(row.assigned_to, ""))),
-    bay: cleanValue(row.bay, cleanValue(row.metadata?.bay, "")),
+    department: cleanValue(row.department, cleanValue(row.metadata?.department, "")),
+    name: cleanValue(codeNameMap[code], cleanValue(row.metadata?.name, cleanValue(row.assigned_to, ""))),
+    bay: cleanValue(row.bay, ""),
     event: cleanValue(row.event, cleanValue(row.status, ""))
   };
 }
 
-async function getSessionInfo(){
-  const { data, error } = await client.auth.getUser();
-
-  if(error || !data || !data.user){
-    console.log("get user error:", error);
-    localStorage.removeItem("washtracLoggedIn");
-    window.location.href = "login.html";
-    return false;
-  }
-
-  currentUser = data.user;
-  localStorage.setItem("washtracLoggedIn", "yes");
-
-  await loadUserSite();
-
-  return true;
-}
-
-async function loadUserSite(){
-  if(currentOrgId && currentSiteId) return;
-
-  const { data, error } = await client
-    .from("user_sites")
-    .select("organization_id, site_id")
-    .eq("user_id", currentUser.id)
-    .limit(1)
-    .maybeSingle();
-
-  if(error){
-    console.log("loadUserSite error:", error);
-    return;
-  }
-
-  if(data){
-    currentOrgId = data.organization_id || "";
-    currentSiteId = data.site_id || "";
-
-    if(currentOrgId) localStorage.setItem("washtracOrgId", currentOrgId);
-    if(currentSiteId) localStorage.setItem("washtracSiteId", currentSiteId);
-  }
-}
-
 async function fetchCodeNameMap(){
-  let query = client
+  const { data, error } = await client
     .from("access_codes")
-    .select("code,assigned_to,department");
-
-  if(currentSiteId){
-    query = query.eq("site_id", currentSiteId);
-  } else if(currentOrgId){
-    query = query.eq("organization_id", currentOrgId);
-  }
-
-  const { data, error } = await query;
+    .select("code,assigned_to");
 
   if(error){
     console.log("Codes fetch error:", error);
@@ -361,12 +295,8 @@ async function fetchCodeNameMap(){
 
   (data || []).forEach(item => {
     const code = String(item.code || "").trim();
-
     if(code){
-      map[code] = {
-        name: item.assigned_to || "",
-        department: item.department || ""
-      };
+      map[code] = item.assigned_to || "";
     }
   });
 
@@ -374,18 +304,10 @@ async function fetchCodeNameMap(){
 }
 
 async function fetchActivity(){
-  let query = client
+  const { data, error } = await client
     .from("wash_activity")
     .select("*")
     .order("event_time", { ascending:false });
-
-  if(currentSiteId){
-    query = query.eq("site_id", currentSiteId);
-  } else if(currentOrgId){
-    query = query.eq("organization_id", currentOrgId);
-  }
-
-  const { data, error } = await query;
 
   if(error){
     console.log("Activity fetch error:", error);
@@ -411,11 +333,11 @@ function getFilteredRows(){
   const eventFilter = document.getElementById("filterEvent").value.trim().toLowerCase();
 
   return activityRows.filter(row => {
-    const code = String(row.code || "").toLowerCase();
-    const department = String(row.department || "").toLowerCase();
-    const name = String(row.name || "").toLowerCase();
-    const bay = String(row.bay || "").toLowerCase();
-    const event = String(row.event || "").toLowerCase();
+    const code = (row.code || "").toLowerCase();
+    const department = (row.department || "").toLowerCase();
+    const name = (row.name || "").toLowerCase();
+    const bay = (row.bay || "").toLowerCase();
+    const event = (row.event || "").toLowerCase();
 
     return code.includes(codeFilter)
       && department.includes(departmentFilter)
@@ -436,6 +358,15 @@ function updateSummary(rows){
 
   document.getElementById("uniqueBays").innerText =
     new Set(rows.map(r => r.bay).filter(Boolean)).size;
+}
+
+function escapeText(value){
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function renderActivity(){
@@ -489,7 +420,10 @@ function startLiveActivity(){
         schema: "public",
         table: "wash_activity"
       },
-      () => loadActivity()
+      payload => {
+        console.log("Live activity update:", payload);
+        loadActivity();
+      }
     )
     .on(
       "postgres_changes",
@@ -498,7 +432,10 @@ function startLiveActivity(){
         schema: "public",
         table: "access_codes"
       },
-      () => loadActivity()
+      payload => {
+        console.log("Live code update:", payload);
+        loadActivity();
+      }
     )
     .subscribe(status => {
       console.log("Realtime status:", status);
@@ -515,6 +452,9 @@ document.addEventListener("click", function(event){
   const mobileTopbar = document.querySelector(".mobile-topbar");
 
   if(
+    desktopWrap &&
+    mobileMenu &&
+    mobileTopbar &&
     !desktopWrap.contains(event.target) &&
     !mobileMenu.contains(event.target) &&
     !mobileTopbar.contains(event.target)
@@ -523,15 +463,8 @@ document.addEventListener("click", function(event){
   }
 });
 
-async function init(){
-  const ok = await getSessionInfo();
-  if(!ok) return;
-
-  await loadActivity();
-  startLiveActivity();
-}
-
-init();
+loadActivity();
+startLiveActivity();
 </script>
 </body>
 </html>
