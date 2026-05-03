@@ -7,55 +7,100 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
 
 <style>
 *{box-sizing:border-box;}
 body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:white;overflow-x:hidden;}
 .app{display:flex;min-height:100vh;}
 .sidebar{width:220px;background:#0f172a;padding:20px;border-right:1px solid #1e293b;}
-.logo{font-size:22px;font-weight:bold;margin-bottom:32px;}
-.nav a,.sidebar-bottom a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
-.nav a:hover,.sidebar-bottom a:hover{color:white;}
-.sidebar-bottom{margin-top:40px;padding-top:20px;border-top:1px solid #1e293b;}
-.sidebar-bottom a.logout-link{color:#f87171;}
-.main{flex:1;padding:30px;}
-.mobile-topbar{display:none;align-items:center;justify-content:space-between;padding:16px 20px;background:#0f172a;border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:1000;}
-.mobile-logo{font-size:22px;font-weight:bold;}
-.brand-accent{
-  color:#2ea8ff !important;
+
+.logo,.mobile-logo{
+  font-family:'Orbitron', Arial, sans-serif;
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:.5px;
+  margin-bottom:32px;
 }
-  .menu-btn{background:#2563eb;border:none;color:white;padding:10px 14px;border-radius:8px;cursor:pointer;}
-.mobile-menu{display:none;position:absolute;top:64px;right:16px;width:240px;background:#0f172a;border-radius:10px;padding:14px;z-index:1000;border:1px solid #1e293b;box-shadow:0 12px 30px rgba(0,0,0,.45);}
+
+.logo .trac,.mobile-logo .trac{
+  background:linear-gradient(180deg,#ffffff 0%,#66c7ff 40%,#1e9bff 72%,#0b5cff 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  -webkit-text-fill-color:transparent;
+}
+
+.nav a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
+.nav a:hover{color:white;}
+
+.main{flex:1;padding:30px;position:relative;}
+
+.desktop-menu-wrap{position:absolute;top:24px;right:30px;z-index:1000;}
+.menu-btn{background:#2563eb;border:none;color:white;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:bold;}
+
+.hamburger-menu{
+  display:none;
+  position:absolute;
+  top:46px;
+  right:0;
+  width:220px;
+  background:#0f172a;
+  border:1px solid #1e293b;
+  border-radius:12px;
+  padding:12px 16px;
+  box-shadow:0 12px 30px rgba(0,0,0,.45);
+  z-index:1100;
+}
+
+.hamburger-menu a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
+.hamburger-menu a:hover{color:white;}
+.hamburger-menu a.logout-link{color:#f87171;}
+
+.mobile-topbar{display:none;align-items:center;justify-content:space-between;padding:16px 20px;background:#0f172a;border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:1000;}
+.mobile-logo{margin-bottom:0;}
+
+.mobile-menu{display:none;position:absolute;top:64px;right:16px;width:240px;background:#0f172a;border-radius:10px;padding:14px;z-index:1100;border:1px solid #1e293b;box-shadow:0 12px 30px rgba(0,0,0,.45);}
 .mobile-menu a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
 .mobile-menu a:hover{color:white;}
 .mobile-menu a.logout-link{color:#f87171;}
-.backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:900;}
+
+.backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1050;}
+
+.page-header{padding-right:80px;}
 .page-header h1{margin:0 0 10px 0;font-size:40px;}
 .page-header p{margin:0;color:#94a3b8;}
+
 .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:20px 0;}
 .summary-box{background:#111827;padding:18px;border-radius:10px;}
 .summary-box strong{font-size:28px;display:block;margin-bottom:6px;}
 .summary-box span{color:#94a3b8;font-size:14px;}
+
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
 .card{background:#111827;padding:20px;border-radius:10px;margin-bottom:20px;}
 .card h3{margin-top:0;margin-bottom:16px;}
+
 .chart-wrap{position:relative;height:320px;}
 .list-row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #1f2937;}
 .list-row:last-child{border-bottom:none;}
+
 .actions{display:flex;gap:12px;flex-wrap:wrap;}
 button{padding:12px 16px;background:#2563eb;border:none;border-radius:8px;color:white;cursor:pointer;font-weight:bold;}
 button.secondary{background:#334155;}
+
 .note{margin-top:14px;color:#94a3b8;font-size:14px;line-height:1.5;}
 .status{margin-top:16px;padding:12px 14px;border-radius:8px;background:#0b1220;border:1px solid #1f2937;color:#cbd5e1;display:none;}
 .status.show{display:block;}
-@media(max-width:900px){
-.sidebar{display:none;}
-.mobile-topbar{display:flex;}
-.app{display:block;}
-.summary{grid-template-columns:1fr;}
-.grid-2{grid-template-columns:1fr;}
-.main{padding:20px;}
 
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .desktop-menu-wrap{display:none;}
+  .mobile-topbar{display:flex;}
+  .app{display:block;}
+  .summary{grid-template-columns:1fr;}
+  .grid-2{grid-template-columns:1fr;}
+  .main{padding:20px;}
+  .page-header{padding-right:0;}
 }
 </style>
 </head>
@@ -68,80 +113,79 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
 </script>
 
 <div class="mobile-topbar">
-<div class="mobile-logo">Wash<span class="brand-accent">Trac</span></div>
-<button class="menu-btn" onclick="toggleMenu()">☰</button>
+  <div class="mobile-logo">Wash<span class="trac">Trac</span></div>
+  <button class="menu-btn" onclick="toggleMobileMenu()">☰</button>
 </div>
 
 <div class="mobile-menu" id="mobileMenu">
-<a href="dashboard.html" onclick="closeMenu()">Dashboard</a>
-<a href="codes.html" onclick="closeMenu()">Codes</a>
-<a href="activity.html" onclick="closeMenu()">Activity</a>
-<a href="usage.html" onclick="closeMenu()">Reports</a>
-<a href="monitor.html" onclick="closeMenu()">Monitor</a>
-<a href="index.html" onclick="closeMenu()">Back to Homepage</a>
-<a href="#" class="logout-link" onclick="logout()">Logout</a>
+  <a href="index.html" onclick="closeMenus()">Back to Homepage</a>
+  <a href="#" class="logout-link" onclick="logout()">Logout</a>
 </div>
 
-<div class="backdrop" id="backdrop" onclick="closeMenu()"></div>
+<div class="backdrop" id="backdrop" onclick="closeMenus()"></div>
 
 <div class="app">
-<div class="sidebar">
-<div class="logo">Wash<span class="brand-accent">Trac</span></div>
-<div class="nav">
-<a href="dashboard.html">Dashboard</a>
-<a href="codes.html">Codes</a>
-<a href="activity.html">Activity</a>
-<a href="usage.html">Reports</a>
-<a href="monitor.html">Monitor</a>
-</div>
-<div class="sidebar-bottom">
-<a href="index.html">Back to Homepage</a>
-<a href="#" class="logout-link" onclick="logout()">Logout</a>
-</div>
-</div>
+  <div class="sidebar">
+    <div class="logo">Wash<span class="trac">Trac</span></div>
+    <div class="nav">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="codes.html">Codes</a>
+      <a href="activity.html">Activity</a>
+      <a href="usage.html">Reports</a>
+      <a href="monitor.html">Monitor</a>
+    </div>
+  </div>
 
-<div class="main">
-<div class="page-header">
-<h1>Reports</h1>
-<p>Usage analytics and reporting.</p>
-</div>
+  <div class="main">
+    <div class="desktop-menu-wrap">
+      <button class="menu-btn" onclick="toggleDesktopMenu()">☰</button>
+      <div class="hamburger-menu" id="desktopMenu">
+        <a href="index.html" onclick="closeMenus()">Back to Homepage</a>
+        <a href="#" class="logout-link" onclick="logout()">Logout</a>
+      </div>
+    </div>
 
-<div class="summary">
-<div class="summary-box"><strong id="totalUses">0</strong><span>Total Uses</span></div>
-<div class="summary-box"><strong id="totalCodes">0</strong><span>Total Codes</span></div>
-<div class="summary-box"><strong id="topCode">-</strong><span>Top Code</span></div>
-<div class="summary-box"><strong id="topDept">-</strong><span>Top Department</span></div>
-</div>
+    <div class="page-header">
+      <h1>Reports</h1>
+      <p>Usage analytics and reporting.</p>
+    </div>
 
-<div class="grid-2">
-<div class="card">
-<h3>Department Usage Chart</h3>
-<div class="chart-wrap"><canvas id="departmentUsageChart"></canvas></div>
-</div>
+    <div class="summary">
+      <div class="summary-box"><strong id="totalUses">0</strong><span>Total Uses</span></div>
+      <div class="summary-box"><strong id="totalCodes">0</strong><span>Total Codes</span></div>
+      <div class="summary-box"><strong id="topCode">-</strong><span>Top Code</span></div>
+      <div class="summary-box"><strong id="topDept">-</strong><span>Top Department</span></div>
+    </div>
 
-<div class="card">
-<h3>Top 10 Codes Chart</h3>
-<div class="chart-wrap"><canvas id="topCodesChart"></canvas></div>
-</div>
-</div>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Department Usage Chart</h3>
+        <div class="chart-wrap"><canvas id="departmentUsageChart"></canvas></div>
+      </div>
 
-<div class="grid-2">
-<div class="card">
-<h3>Top Used Codes</h3>
-<div id="topCodes"></div>
-</div>
+      <div class="card">
+        <h3>Top 10 Codes Chart</h3>
+        <div class="chart-wrap"><canvas id="topCodesChart"></canvas></div>
+      </div>
+    </div>
 
-<div class="card">
-<h3>Report Actions</h3>
-<div class="actions">
-<button onclick="exportCSV()">Export CSV</button>
-<button class="secondary" onclick="emailReport()">Email Report</button>
-</div>
-<div class="note">The Email Report button sends through your Supabase Edge Function named <strong>send-report</strong>.</div>
-<div class="status" id="emailStatus"></div>
-</div>
-</div>
-</div>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Top Used Codes</h3>
+        <div id="topCodes"></div>
+      </div>
+
+      <div class="card">
+        <h3>Report Actions</h3>
+        <div class="actions">
+          <button onclick="exportCSV()">Export CSV</button>
+          <button class="secondary" onclick="emailReport()">Email Report</button>
+        </div>
+        <div class="note">The Email Report button sends through your Supabase Edge Function named <strong>send-report</strong>.</div>
+        <div class="status" id="emailStatus"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -154,16 +198,27 @@ let topCodesChartInstance = null;
 let cachedCodes = [];
 let cachedDepartmentData = [];
 
-function toggleMenu(){
-  const m = document.getElementById("mobileMenu");
+function toggleDesktopMenu(){
+  const m = document.getElementById("desktopMenu");
   const b = document.getElementById("backdrop");
   const isOpen = m.style.display === "block";
+
   m.style.display = isOpen ? "none" : "block";
   b.style.display = isOpen ? "none" : "block";
 }
 
-function closeMenu(){
+function toggleMobileMenu(){
+  const m = document.getElementById("mobileMenu");
+  const b = document.getElementById("backdrop");
+  const isOpen = m.style.display === "block";
+
+  m.style.display = isOpen ? "none" : "block";
+  b.style.display = isOpen ? "none" : "block";
+}
+
+function closeMenus(){
   document.getElementById("mobileMenu").style.display = "none";
+  document.getElementById("desktopMenu").style.display = "none";
   document.getElementById("backdrop").style.display = "none";
 }
 
