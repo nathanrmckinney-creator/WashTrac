@@ -504,7 +504,7 @@
 <body>
   <script>
     if(localStorage.getItem("washtracLoggedIn") !== "yes"){
-      window.location.href = "login.html";
+      window.location.replace("login.html");
     }
   </script>
 
@@ -520,9 +520,9 @@
       <a href="activity.html">Activity</a>
       <a href="usage.html">Reports</a>
       <a href="monitor.html">Monitor</a>
-      <a onclick="openAddDevice()">Add Device</a>
-      <a href="index.html">Back to Homepage</a>
-      <a href="#" class="logout-link" onclick="logout()">Logout</a>
+      <a href="#" onclick="openAddDevice(event)">Add Device</a>
+      <a href="#" onclick="goHome(event)">Back to Homepage</a>
+      <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
     </div>
   </div>
 
@@ -548,9 +548,9 @@
         <button class="menu-btn" onclick="toggleDashboardMenu()">☰</button>
 
         <div class="mobile-menu" id="dashboardMenu">
-          <a onclick="openAddDevice()">Add Device</a>
-          <a href="index.html">Back to Homepage</a>
-          <a href="#" class="logout-link" onclick="logout()">Logout</a>
+          <a href="#" onclick="openAddDevice(event)">Add Device</a>
+          <a href="#" onclick="goHome(event)">Back to Homepage</a>
+          <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
         </div>
       </div>
 
@@ -777,18 +777,35 @@
       if(backdrop) backdrop.style.display = "none";
     }
 
-    function logout(){
+    function goHome(event){
+      if(event) event.preventDefault();
+
+      closeMenus();
+
       localStorage.removeItem("washtracLoggedIn");
-      window.location.href = "login.html";
+
+      window.location.replace("index.html");
     }
 
-    function openAddDevice(){
+    function logout(event){
+      if(event) event.preventDefault();
+
+      closeMenus();
+
+      localStorage.removeItem("washtracLoggedIn");
+
+      window.location.replace("login.html");
+    }
+
+    function openAddDevice(event){
+      if(event) event.preventDefault();
+
+      closeMenus();
+
       generateDeviceCode();
 
       const modal = document.getElementById("deviceModal");
       modal.classList.add("show");
-
-      closeMenus();
     }
 
     function closeDeviceModal(){
