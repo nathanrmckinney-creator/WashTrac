@@ -1057,18 +1057,18 @@
     }
 
     async function fetchBayStatus(){
-      const activeSiteId = getActiveSiteId();
-      if(!activeSiteId) return [];
+  const { data, error } = await client
+    .from("bay_status")
+    .select("*")
+    .order("bay_name", { ascending:true });
 
-      const { data, error } = await client
-        .from("bay_status")
-        .select("*")
-        .eq("site_id", activeSiteId)
-        .order("bay_name", { ascending:true });
+  if(error){
+    console.log("Bay status error:", error);
+    return [];
+  }
 
-      if(error){ console.log(error); return []; }
-      return data || [];
-    }
+  return data || [];
+}
 
     function activeOnlyCodes(codes){
       return codes.filter(code => code.is_active !== false);
