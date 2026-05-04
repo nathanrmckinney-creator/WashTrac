@@ -1031,7 +1031,7 @@
       if(!activeSiteId) return null;
 
       const { data, error } = await client
-        .from("system_control")
+        .from("site_system_control")
         .select("*")
         .eq("site_id", activeSiteId)
         .limit(1)
