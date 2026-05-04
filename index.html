@@ -693,19 +693,22 @@
     }
 
     /* DESKTOP ONLY: keep hero text in original position, move keypad only underneath */
-   @media (min-width: 901px) {
+  @media (min-width: 901px) {
   .hero {
-    padding: 20px 30px 0;
-    min-height: auto;
+    padding: 30px 30px 0;
   }
-      .hero-inner {
-        grid-template-columns: 1fr 0.86fr;
-        grid-template-rows: auto auto;
-        align-items: start;
-        min-height: auto;
-        padding: 10px 0 0;
-      }
 
+  .who-for {
+    margin-top: -70px;
+  }
+
+  .hero-inner {
+    grid-template-columns: 1fr 0.86fr;
+    grid-template-rows: auto auto;
+    align-items: start;
+    min-height: auto;
+    padding: 10px 0 0;
+  }
       .hero-inner > div:first-child {
         grid-column: 1;
         grid-row: 1;
