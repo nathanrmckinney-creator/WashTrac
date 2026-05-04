@@ -712,7 +712,7 @@
 
         if(memberError){
           console.log("Site member insert error:", memberError);
-          setStatus("Site created, but user was not linked in site_members. Check policies/table columns.", "bad");
+          setStatus("Site created, but user was not linked in user_site_access. Check policies/table columns.", "bad");
           await loadSites();
           return;
         }
