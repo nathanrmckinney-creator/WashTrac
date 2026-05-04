@@ -129,15 +129,10 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
   <div class="main">
     <div class="desktop-menu-wrap">
       <button class="menu-btn" type="button" onclick="toggleDesktopMenu()">☰</button>
-      <div class="hamburger-menu" id="desktopMenu">
-        <a href="dashboard.html">Dashboard</a>
-        <a href="codes.html">Codes</a>
-        <a href="activity.html">Activity</a>
-        <a href="usage.html">Reports</a>
-        <a href="monitor.html">Monitor</a>
-        <a href="#" onclick="goHome(event)">Back to Homepage</a>
-        <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
-      </div>
+    <div class="hamburger-menu" id="desktopMenu">
+  <a href="#" onclick="goHome(event)">Back to Homepage</a>
+  <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
+</div>
     </div>
 
     <div class="page-header">
