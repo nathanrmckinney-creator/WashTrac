@@ -1177,7 +1177,11 @@
     function renderSystemControl(control){
       const banner = document.getElementById("accessBanner");
 
-      if(!control){
+      if(!control && lastGoodSystemControl){
+  control = lastGoodSystemControl;
+}
+
+if(!control){
         controlRowId = null;
         banner.className = "banner yellow show";
         banner.innerText = "SYSTEM CONTROL NOT CONFIGURED";
