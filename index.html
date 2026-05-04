@@ -696,31 +696,32 @@
     /* DESKTOP ONLY: move keypad only under hero text/features */
 @media (min-width: 901px) {
   .hero {
-    padding: 30px 30px 0px;
+    padding: 30px 30px 0;
   }
 
- .hero-inner {
-  grid-template-columns: 1fr 0.86fr;
-  grid-template-rows: auto auto;
-  align-items: start;
-  min-height: auto;
-  padding: 10px 0 0;
-}
+  .hero-inner {
+    grid-template-columns: 1fr 0.86fr;
+    grid-template-rows: auto auto;
+    align-items: start;
+    min-height: auto;
+    padding: 10px 0 0;
+  }
+
   .hero-inner > div:first-child {
     grid-column: 1;
     grid-row: 1;
   }
 
   .device-wrap {
-  grid-column: 1;
-  grid-row: 2;
-  justify-self: start;
-  display: flex;
-  justify-content: flex-start;   /* ⬅️ key change */
-  transform: scale(0.88);
-  transform-origin: top left;    /* ⬅️ anchor it to same left edge */
-  margin-top: 30px;
-}
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+    display: flex;
+    justify-content: flex-start;
+    transform: scale(0.88);
+    transform-origin: top left;
+    margin-top: 30px;
+  }
 
   .device {
     margin-left: 0;
@@ -728,611 +729,106 @@
   }
 }
 
+@media (max-width: 1100px) {
+  .hero-inner,
+  .system-demo-wrap {
+    grid-template-columns: 1fr;
+  }
+
+  .device {
+    margin-left: 0;
+  }
+
+  .hero h1 {
+    font-size: 58px;
+  }
+
+  .hero::before {
+    transform: none;
+  }
+}
+
 @media (max-width: 900px) {
   .cards {
     grid-template-columns: 1fr;
   }
-}
-    
-    @media (max-width: 1100px) {
-      .hero-inner,
-      .system-demo-wrap {
-        grid-template-columns: 1fr;
-      }
 
-      .device {
-        margin-left: 0;
-      }
-
-      .hero h1 {
-        font-size: 58px;
-      }
-
-      .hero::before {
-        transform: none;
-      }
-    }
-
-    @media (max-width: 700px) {
-      header {
-        padding: 16px 20px;
-      }
-
-      .logo {
-        font-size: 27px;
-      }
-
-      .tagline{
-        font-size:9px;
-        letter-spacing:1px;
-      }
-
-.hero-inner {
-  min-height: auto;
-  padding-bottom: 0;
-  gap: 10px;
+  .hero::before {
+    background-image: url("/Carwash.png") !important;
+    background-position: center top !important;
+    background-size: auto 60% !important;
+    background-repeat: no-repeat !important;
+  }
 }
 
-.device-wrap {
-  margin-top: 0;
+@media (max-width: 700px) {
+  header {
+    padding: 16px 20px;
+  }
+
+  .logo {
+    font-size: 27px;
+  }
+
+  .tagline{
+    font-size:9px;
+    letter-spacing:1px;
+  }
+
+  .menu-panel {
+    top: 70px;
+    right: 12px;
+    width: 220px;
+  }
+
+  .hero {
+    padding: 50px 20px 0;
+    min-height: auto;
+  }
+
+  .hero-inner {
+    min-height: auto;
+    padding-bottom: 0;
+    gap: 12px;
+  }
+
+  .who-for {
+    padding: 20px 30px 70px;
+  }
+
+  .section {
+    padding: 55px 20px;
+  }
+
+  .hero h1 {
+    font-size: 48px;
+  }
+
+  .hero h2 {
+    font-size: 22px;
+  }
+
+  .hero p {
+    font-size: 19px;
+  }
+
+  .device {
+    width: 320px;
+  }
+
+  .pad div {
+    padding: 14px 0;
+    font-size: 20px;
+  }
+
+  .start {
+    font-size: 20px;
+  }
+
+  .status-grid,
+  .bay-mini-grid {
+    grid-template-columns: 1fr;
+  }
 }
-      
-.hero {
-  padding: 50px 20px 0;
-}
-
-.device-wrap {
-  margin-top: 10px;
-}
-
-.who-for {
-  padding-top: 20px;
-}
-      
-      .menu-panel {
-        top: 70px;
-        right: 12px;
-        width: 220px;
-      }
-
-      .hero {
-        padding: 50px 20px;
-      }
-
-      .section {
-        padding: 55px 20px;
-      }
-
-      .hero h1 {
-        font-size: 48px;
-      }
-
-      .hero h2 {
-        font-size: 22px;
-      }
-
-      .hero p {
-        font-size: 19px;
-      }
-
-      .device {
-        width: 320px;
-      }
-
-      .pad div {
-        padding: 14px 0;
-        font-size: 20px;
-      }
-
-      .start {
-        font-size: 20px;
-      }
-
-      .status-grid,
-      .bay-mini-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 900px) {
-      .hero::before {
-        background-image: url("/Carwash.png") !important;
-        background-position: center top !important;
-        background-size: auto 60% !important;
-        background-repeat: no-repeat !important;
-      }
-    }
-  </style>
+</style>
 </head>
-
-<body>
-  <header>
-    <div class="brand-wrap">
-      <div class="logo">Wash<span class="trac">Trac</span></div>
-      <div class="tagline">Control. Track. Manage.</div>
-    </div>
-
-    <button class="menu-btn" onclick="toggleMenu()">&#9776;</button>
-  </header>
-
-  <div id="menuPanel" class="menu-panel">
-    <a href="login.html" class="login-link" onclick="closeMenu()">Client Login</a>
-    <a href="#features" onclick="closeMenu()">Features</a>
-    <a href="#works" onclick="closeMenu()">How It Works</a>
-    <a href="#audit" onclick="closeMenu()">Audit</a>
-    <a href="#monitoring" onclick="closeMenu()">Monitoring</a>
-    <a href="#systemstate" onclick="closeMenu()">Live Demo</a>
-    <a href="#contact" onclick="closeMenu()">Contact</a>
-  </div>
-
-  <div id="backdrop" class="backdrop" onclick="closeMenu()"></div>
-
-  <section class="hero">
-    <div class="hero-inner">
-      <div>
-        <div class="eyebrow">Wash<span class="brand-accent">Trac</span> Control System</div>
-
-        <h1>CodeBox</h1>
-        <h2>ENTRY TERMINAL</h2>
-
-        <p>
-          Control wash access and track every activation in real time.
-          WashTrac CodeBox provides secure entry codes, full audit logs,
-          reporting tools, and expanded monitoring for dealerships,
-          service departments, detail teams, and fleet operations.
-        </p>
-
-        <div class="features">
-          <div>✔ Secure Code Entry</div>
-          <div>✔ Instant Wash Activation</div>
-          <div>✔ Full Usage Tracking</div>
-          <div>✔ Department-Level Control</div>
-          <div>✔ Real-Time Monitoring</div>
-          <div>✔ Reports & Audit Logs</div>
-        </div>
-
-        <div class="hero-actions">
-          <a class="btn" href="#contact">Request Demo</a>
-        </div>
-      </div>
-
-      <div class="device-wrap">
-        <div class="device">
-          <div class="screen">
-
-            <div class="screen-top">
-              <div class="screen-logo-wrap">
-                <div class="screen-logo">
-                  Wash<span class="trac">Trac</span>
-                </div>
-                <div class="screen-tagline">
-                  Control. Track. Manage.
-                </div>
-              </div>
-
-              <div class="signal">
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-              </div>
-            </div>
-
-            <div class="code-display">
-              <div class="screen-title">ENTER CODE</div>
-              <div class="code-line"></div>
-            </div>
-
-            <div class="pad">
-              <div>1</div><div>2</div><div>3</div>
-              <div>4</div><div>5</div><div>6</div>
-              <div>7</div><div>8</div><div>9</div>
-              <div class="back">←</div><div>0</div><div class="clear">CLEAR</div>
-            </div>
-
-            <button class="start">ENTER</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="who-for">
-    <div class="who-inner">
-      <div class="who-title">
-        Trusted by service departments and fleet operations
-      </div>
-
-      <div class="who-grid">
-        <div class="who-card">Dealership Service Departments</div>
-        <div class="who-card">Auto Detail Shops</div>
-        <div class="who-card">Fleet Wash Bays</div>
-        <div class="who-card">Municipal Vehicle Maintenance</div>
-      </div>
-    </div>
-  </section>
-
-  <section id="features" class="section">
-    <h2>WashTrac Management System</h2>
-    <p class="section-intro">
-      WashTrac provides full visibility into wash usage so management always knows
-      who is using the wash, when it was activated, and how often each department uses it.
-    </p>
-
-    <div class="cards">
-      <div class="card">
-        <h3>Usage Auditing</h3>
-        <p>Every wash activation is logged with timestamp, code, department, and user information for complete accountability.</p>
-      </div>
-
-      <div class="card">
-        <h3>Department Tracking</h3>
-        <p>Assign codes by department such as Service, Sales, Detail, Manager, Temporary, or any custom department you need.</p>
-      </div>
-
-      <div class="card">
-        <h3>Reporting</h3>
-        <p>Generate CSV exports and email reports to monitor wash activity, usage trends, and operational accountability.</p>
-      </div>
-
-      <div class="card">
-        <h3>Remote Wash Control</h3>
-        <p>Control wash operation remotely with configurable schedules and shutdown controls. Automatically disable the wash after business hours or temporarily lock the system when needed.</p>
-      </div>
-    </div>
-  </section>
-
-  <section id="works" class="section">
-    <h2>How WashTrac Works</h2>
-    <p class="section-intro">
-      WashTrac is built to make access control simple for users and visible for management.
-    </p>
-
-    <div class="cards">
-      <div class="card">
-        <h3>Create Access Codes</h3>
-        <p>Managers assign wash access codes to departments, employees, or temporary users.</p>
-      </div>
-
-      <div class="card">
-        <h3>Activate the Wash</h3>
-        <p>Users enter their code on the CodeBox terminal to activate the wash system quickly and securely.</p>
-      </div>
-
-      <div class="card">
-        <h3>Track Every Activation</h3>
-        <p>Every wash event is logged with timestamps, code usage history, and department tracking.</p>
-      </div>
-
-      <div class="card">
-        <h3>View Reports</h3>
-        <p>Managers can review dashboards, export reports, and receive usage summaries by email.</p>
-      </div>
-    </div>
-  </section>
-
-  <section id="audit" class="section">
-    <h2>Audit & Reporting Visibility</h2>
-    <p class="section-intro">
-      WashTrac is not just a terminal. It is a complete auditing and visibility system built to help managers track usage, reduce abuse, and review activity in real time.
-    </p>
-
-    <div class="cards">
-      <div class="card">
-        <h3>Timestamped Activity</h3>
-        <p>Every code use can be recorded with date and time so you always know exactly when the wash was activated.</p>
-      </div>
-
-      <div class="card">
-        <h3>Live Monitoring</h3>
-        <p>See activity as it happens through live dashboards, usage tracking, and monitoring screens.</p>
-      </div>
-
-      <div class="card">
-        <h3>Email & CSV Exports</h3>
-        <p>Send reports by email or export usage history for accountability, internal review, and management reporting.</p>
-      </div>
-
-      <div class="card graph-card">
-        <h3>Usage Graphs</h3>
-        <p>Visualize code activity and department trends with clean usage graphs that make patterns easier to spot.</p>
-
-        <div class="mini-graph">
-          <div class="mini-bar" style="height:45%;"></div>
-          <div class="mini-bar" style="height:68%;"></div>
-          <div class="mini-bar" style="height:58%;"></div>
-          <div class="mini-bar" style="height:86%;"></div>
-        </div>
-
-        <div class="mini-labels">
-          <span>Mon</span>
-          <span>Tue</span>
-          <span>Wed</span>
-          <span>Thu</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="monitoring" class="section">
-    <h2>Real-Time Monitoring & Remote Control</h2>
-    <p class="section-intro">
-      WashTrac can support live operational visibility, emergency stop awareness, and remote control options for stronger after-hours protection and management oversight.
-    </p>
-
-    <div class="cards">
-      <div class="card">
-        <h3>Real-Time Monitoring</h3>
-        <p>Monitor active wash events, recent code use, and operational activity live from the dashboard or monitor screen.</p>
-      </div>
-
-      <div class="card">
-        <h3>E-STOP Monitoring</h3>
-        <p>Display emergency stop conditions so operators and managers can see when an E-STOP event has been triggered.</p>
-      </div>
-
-      <div class="card">
-        <h3>Remote Shutdown</h3>
-        <p>Remotely disable wash activation based on business hours, configurable schedules, or management control needs.</p>
-      </div>
-
-      <div class="card">
-        <h3>After-Hours Protection</h3>
-        <p>Help prevent unauthorized usage after hours by combining access control, live visibility, and remote operational shutdown capability.</p>
-      </div>
-    </div>
-  </section>
-
-  <section id="systemstate" class="section">
-    <h2>Live System State</h2>
-    <p class="section-intro">
-      This live demo pulls current system status from WashTrac so operators and managers can instantly see whether the wash is available, locked out, or in an E-STOP condition.
-    </p>
-
-    <div class="system-demo-wrap">
-      <div class="system-demo-card">
-        <div id="systemBanner" class="system-banner banner-green">SYSTEM AVAILABLE</div>
-
-        <div class="status-grid">
-          <div class="status-box">
-            <strong id="demoWashText">Enabled</strong>
-            <span>Wash Status</span>
-            <div><span id="demoWashPill" class="status-pill status-on">Wash Enabled</span></div>
-          </div>
-
-          <div class="status-box">
-            <strong id="demoEstopText">Clear</strong>
-            <span>E-STOP Status</span>
-            <div><span id="demoEstopPill" class="status-pill status-on">No Active E-STOP</span></div>
-          </div>
-
-          <div class="status-box">
-            <strong id="demoLockoutText">Off</strong>
-            <span>Scheduled Lockout</span>
-            <div><span id="demoLockoutPill" class="status-pill status-off">No Schedule</span></div>
-          </div>
-
-          <div class="status-box">
-            <strong id="demoLockoutWindow">--:-- to --:--</strong>
-            <span>Lockout Window</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="system-demo-card">
-        <h3 style="margin-top:0;">Live Bay Overview</h3>
-        <div class="bay-mini-grid" id="homepageBayGrid"></div>
-      </div>
-    </div>
-  </section>
-
-  <section id="contact" class="section">
-    <h2>Request Information</h2>
-
-    <div class="contact">
-      <p class="contact-copy">
-        Tell us a little about your operation and what you want to control or monitor.
-        We’ll review your request and contact you to discuss the right WashTrac setup for your location.
-      </p>
-
-      <form id="contactForm">
-        <label>Name</label>
-        <input id="name" required />
-
-        <label>Company</label>
-        <input id="company" />
-
-        <label>Email</label>
-        <input id="email" type="email" required />
-
-        <label>Phone</label>
-        <input id="phone" />
-
-        <label>Message</label>
-        <textarea id="message" required placeholder="Tell us about your wash setup, reporting needs, monitoring goals, or remote control requirements."></textarea>
-
-        <button type="submit" class="btn">Request Information</button>
-      </form>
-
-      <div id="status"></div>
-    </div>
-  </section>
-
-  <footer>
-    WASHTRAC © 2026<br />
-    Control. Track. Manage.
-  </footer>
-
-  <script>
-    const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    function toggleMenu() {
-      const menu = document.getElementById("menuPanel");
-      const backdrop = document.getElementById("backdrop");
-      const isOpen = menu.style.display === "flex";
-
-      menu.style.display = isOpen ? "none" : "flex";
-      backdrop.style.display = isOpen ? "none" : "block";
-    }
-
-    function closeMenu() {
-      document.getElementById("menuPanel").style.display = "none";
-      document.getElementById("backdrop").style.display = "none";
-    }
-
-    function isLockoutActive(control) {
-      if (!control || !control.lockout_enabled) return false;
-      if (!control.lockout_start || !control.lockout_end) return false;
-
-      const now = new Date();
-      const nowMinutes = now.getHours() * 60 + now.getMinutes();
-
-      const start = control.lockout_start.split(":");
-      const end = control.lockout_end.split(":");
-
-      const startMin = parseInt(start[0]) * 60 + parseInt(start[1]);
-      const endMin = parseInt(end[0]) * 60 + parseInt(end[1]);
-
-      if (startMin <= endMin) {
-        return nowMinutes >= startMin && nowMinutes <= endMin;
-      } else {
-        return nowMinutes >= startMin || nowMinutes <= endMin;
-      }
-    }
-
-    function bayDotClass(status) {
-      const value = (status || "").toLowerCase();
-      if (value === "ready") return "dot-ready";
-      if (value === "running") return "dot-running";
-      if (value === "offline") return "dot-offline";
-      return "dot-idle";
-    }
-
-    async function loadLiveSystemState() {
-      const { data: control } = await supabaseClient
-        .from("system_control")
-        .select("*")
-        .limit(1)
-        .single();
-
-      if (control) {
-        document.getElementById("demoWashText").innerText = control.wash_enabled ? "Enabled" : "Disabled";
-        document.getElementById("demoWashPill").className = `status-pill ${control.wash_enabled ? "status-on" : "status-off"}`;
-        document.getElementById("demoWashPill").innerText = control.wash_enabled ? "Wash Enabled" : "Wash Disabled";
-
-        document.getElementById("demoEstopText").innerText = control.estop_active ? "Active" : "Clear";
-        document.getElementById("demoEstopPill").className = `status-pill ${control.estop_active ? "status-warn" : "status-on"}`;
-        document.getElementById("demoEstopPill").innerText = control.estop_active ? "E-STOP Active" : "No Active E-STOP";
-
-        document.getElementById("demoLockoutText").innerText = control.lockout_enabled ? "On" : "Off";
-        document.getElementById("demoLockoutPill").className = `status-pill ${control.lockout_enabled ? "status-warn" : "status-off"}`;
-        document.getElementById("demoLockoutPill").innerText = control.lockout_enabled ? "Schedule Enabled" : "No Schedule";
-
-        document.getElementById("demoLockoutWindow").innerText =
-          `${control.lockout_start || "--:--"} to ${control.lockout_end || "--:--"}`;
-
-        const banner = document.getElementById("systemBanner");
-
-        if (control.estop_active) {
-          banner.className = "system-banner banner-red";
-          banner.innerText = "🚨 EMERGENCY STOP ACTIVE";
-        } else if (!control.wash_enabled) {
-          banner.className = "system-banner banner-red";
-          banner.innerText = "WASH DISABLED";
-        } else if (isLockoutActive(control)) {
-          banner.className = "system-banner banner-yellow";
-          banner.innerText = "AFTER-HOURS LOCKOUT ACTIVE";
-        } else {
-          banner.className = "system-banner banner-green";
-          banner.innerText = "SYSTEM AVAILABLE";
-        }
-      }
-
-      const { data: bays } = await supabaseClient
-        .from("bay_status")
-        .select("*")
-        .order("bay_name", { ascending: true });
-
-      const wrap = document.getElementById("homepageBayGrid");
-      wrap.innerHTML = "";
-
-      (bays || []).forEach((bay) => {
-        wrap.innerHTML += `
-          <div class="bay-mini">
-            <strong>${bay.bay_name}</strong>
-            <div><span class="bay-dot ${bayDotClass(bay.status)}"></span>${bay.status || "Idle"}</div>
-          </div>
-        `;
-      });
-    }
-
-    async function sendContact() {
-      const name = document.getElementById("name").value;
-      const company = document.getElementById("company").value;
-      const email = document.getElementById("email").value;
-      const phone = document.getElementById("phone").value;
-      const message = document.getElementById("message").value;
-      const statusBox = document.getElementById("status");
-
-      statusBox.innerText = "Sending...";
-
-      const { data: saved, error: saveError } = await supabaseClient
-        .from("contact_requests")
-        .insert([{ name, company, email, phone, message }]);
-
-      console.log("DB insert:", saved, saveError);
-
-      if (saveError) {
-        statusBox.innerText = saveError.message;
-        return;
-      }
-
-      const { data, error } = await supabaseClient.functions.invoke("rapid-task", {
-        body: {
-          name,
-          company,
-          email,
-          phone,
-          message
-        }
-      });
-
-      console.log("rapid-task response:", data, error);
-
-      if (error) {
-        statusBox.innerText = "Saved, but email failed";
-        return;
-      }
-
-      statusBox.innerText = "Request sent. We'll be in touch soon.";
-
-      document.getElementById("name").value = "";
-      document.getElementById("company").value = "";
-      document.getElementById("email").value = "";
-      document.getElementById("phone").value = "";
-      document.getElementById("message").value = "";
-    }
-
-    document.addEventListener("DOMContentLoaded", function () {
-      const contactForm = document.getElementById("contactForm");
-
-      if (contactForm) {
-        contactForm.addEventListener("submit", async function (e) {
-          e.preventDefault();
-          await sendContact();
-        });
-      }
-
-      loadLiveSystemState();
-
-      supabaseClient
-        .channel("homepage-live-state")
-        .on("postgres_changes", { event: "*", schema: "public", table: "system_control" }, () => loadLiveSystemState())
-        .on("postgres_changes", { event: "*", schema: "public", table: "bay_status" }, () => loadLiveSystemState())
-        .subscribe();
-    });
-  </script>
-</body>
-</html>
