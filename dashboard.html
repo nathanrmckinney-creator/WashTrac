@@ -1206,7 +1206,8 @@ if(!control){
       }
 
       controlRowId = control.id;
-
+      lastGoodSystemControl = control;
+      
       document.getElementById("washEnabledText").innerText = control.wash_enabled ? "Enabled" : "Disabled";
       document.getElementById("washEnabledPill").className = `status-pill ${control.wash_enabled ? "status-on" : "status-off"}`;
       document.getElementById("washEnabledPill").innerText = control.wash_enabled ? "Wash Enabled" : "Wash Disabled";
