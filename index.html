@@ -713,16 +713,15 @@
   }
 
   .device-wrap {
-    grid-column: 1;
-    grid-row: 2;
-    justify-self: start;
-    width: 780px;
-    display: flex;
-    justify-content: center;
-    transform: scale(0.88);
-    transform-origin: center top;
-    margin-top: 6px;
-  }
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: start;
+  display: flex;
+  justify-content: flex-start;   /* ⬅️ key change */
+  transform: scale(0.88);
+  transform-origin: top left;    /* ⬅️ anchor it to same left edge */
+  margin-top: 6px;
+}
 
   .device {
     margin-left: 0;
