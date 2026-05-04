@@ -1182,28 +1182,8 @@
 }
 
 if(!control){
-        controlRowId = null;
-        banner.className = "banner yellow show";
-        banner.innerText = "SYSTEM CONTROL NOT CONFIGURED";
-
-        document.getElementById("washEnabledText").innerText = "-";
-        document.getElementById("washEnabledPill").className = "status-pill status-warn";
-        document.getElementById("washEnabledPill").innerText = "Missing Setup";
-
-        document.getElementById("estopText").innerText = "-";
-        document.getElementById("estopPill").className = "status-pill status-warn";
-        document.getElementById("estopPill").innerText = "Missing Setup";
-
-        document.getElementById("lockoutText").innerText = "-";
-        document.getElementById("lockoutPill").className = "status-pill status-warn";
-        document.getElementById("lockoutPill").innerText = "Missing Setup";
-
-        document.getElementById("lockoutWindow").innerText = "--:-- to --:--";
-        document.getElementById("lockoutEnabled").checked = false;
-        document.getElementById("lockoutStart").value = "";
-        document.getElementById("lockoutEnd").value = "";
-        return;
-      }
+  return;
+}
 
       controlRowId = control.id;
       lastGoodSystemControl = control;
