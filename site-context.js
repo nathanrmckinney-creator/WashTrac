@@ -16,31 +16,34 @@ async function loadUserSites() {
   const user = await getCurrentUser();
   if (!user) return [];
 
-  const { data, error } = await client
+  const { data: accessRows, error: accessError } = await client
     .from("user_site_access")
-    .select(`
-      site_id,
-      role,
-      sites (
-        id,
-        name,
-        address,
-        organization_id
-      )
-    `)
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true });
+    .select("site_id, role")
+    .eq("user_id", user.id);
 
-  if (error) {
-    console.error("Site load error:", error);
+  if (accessError) {
+    console.error("Site access load error:", accessError);
     return [];
   }
 
-  return (data || [])
-    .map(row => row.sites)
-    .filter(Boolean);
-}
+  const siteIds = (accessRows || []).map(row => row.site_id).filter(Boolean);
 
+  if (!siteIds.length) {
+    return [];
+  }
+
+  const { data: sites, error: sitesError } = await client
+    .from("sites")
+    .select("id, name, address, organization_id")
+    .in("id", siteIds);
+
+  if (sitesError) {
+    console.error("Sites load error:", sitesError);
+    return [];
+  }
+
+  return sites || [];
+}
 function getActiveSiteId() {
   return localStorage.getItem(ACTIVE_SITE_KEY);
 }
