@@ -697,17 +697,16 @@
     /* DESKTOP ONLY: move keypad only under hero text/features */
 @media (min-width: 901px) {
   .hero {
-    padding: 70px 30px 90px;
+    padding: 30px 30px 20px;
   }
 
-  .hero-inner {
-    grid-template-columns: 1fr 0.86fr;
-    grid-template-rows: auto auto;
-    align-items: start;
-    min-height: 760px;
-    padding: 40px 0;
-  }
-
+ .hero-inner {
+  grid-template-columns: 1fr 0.86fr;
+  grid-template-rows: auto auto;
+  align-items: start;
+  min-height: auto;
+  padding: 10px 0 0;
+}
   .hero-inner > div:first-child {
     grid-column: 1;
     grid-row: 1;
