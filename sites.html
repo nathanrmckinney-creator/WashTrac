@@ -599,10 +599,10 @@
       let sites = [];
 
       if(currentUser){
-        const memberResult = await client
-          .from("site_members")
-          .select("site_id, role, sites(*)")
-          .eq("user_id", currentUser.id);
+  const memberResult = await client
+    .from("user_site_access")
+    .select("site_id, role, sites(*)")
+    .eq("user_id", currentUser.id);
 
         if(!memberResult.error && memberResult.data && memberResult.data.length){
           sites = memberResult.data.map(row => ({
