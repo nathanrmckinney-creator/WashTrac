@@ -333,7 +333,7 @@
 .signal{
   position:absolute;
   right:0;
-  top:-4px;   /* 🔥 move up */
+  top:-4px;
   display:flex;
   align-items:flex-end;
   gap:3px;
@@ -358,7 +358,7 @@
   flex-direction:column;
   justify-content:center;
   align-items:center;
-  margin-top:10px;   /* 🔥 pushes whole block down */
+  margin-top:10px;
   margin-bottom:14px;
   background:linear-gradient(145deg, #000000, #0a0a0a);
   border-radius:16px;
@@ -374,7 +374,7 @@
 
 .code-line{
   position:absolute;
-  bottom:0px;   /* 🔥 move line DOWN */
+  bottom:0px;
   left:50%;
   transform:translateX(-50%);
   height:2px;
@@ -416,10 +416,11 @@
 .pad .back{
   font-size:28px;
   display:flex;
-  align-items:flex-start;   /* 🔥 moves it up */
+  align-items:flex-start;
   justify-content:center;
-  padding-top:8px;         /* 🔥 fine tune vertical position */
+  padding-top:8px;
 }
+
 .pad .clear{
   font-size:18px;
   font-weight:800;
@@ -689,6 +690,60 @@
       color: #64748b;
       border-top: 1px solid #1e293b;
       margin-top: 60px;
+    }
+
+    /* DESKTOP ONLY: center hero text and move keypad underneath */
+    @media (min-width: 901px) {
+      .hero {
+        padding: 70px 30px 90px;
+      }
+
+      .hero-inner {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        gap: 30px;
+        max-width: 1100px;
+        min-height: 760px;
+        padding: 40px 0;
+      }
+
+      .hero-inner > div:first-child {
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      .hero p {
+        margin-left: auto;
+        margin-right: auto;
+        max-width: 850px;
+      }
+
+      .features {
+        max-width: 760px;
+        margin: 30px auto 0;
+        text-align: left;
+      }
+
+      .hero-actions {
+        justify-content: center;
+      }
+
+      .device-wrap {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        transform: scale(0.88);
+        transform-origin: center top;
+        margin-top: 6px;
+      }
+
+      .device {
+        margin-left: 0;
+        margin-right: 0;
+      }
     }
 
     @media (max-width: 1100px) {
