@@ -567,22 +567,22 @@
         Overview of wash usage, reporting, activity, bay status, and remote wash control.
       </p>
 
-     <div style="margin-top:14px; margin-bottom:24px; max-width:300px;">
-  <select id="siteSwitcher" onchange="switchSite(this.value)" style="
-    width:100%;
-    padding:12px;
-    border-radius:10px;
-    background:#0b1220;
-    color:white;
-    border:1px solid #1ea7ff;
-    box-shadow:0 0 6px rgba(30,167,255,0.4);
-    font-size:15px;
-    font-weight:600;
-    voutline:none;
-  ">
-    <option>Loading sites...</option>
-  </select>
-</div>
+      <div style="margin-top:14px; margin-bottom:24px; max-width:300px;">
+        <select id="siteSwitcher" onchange="switchSite(this.value)" style="
+          width:100%;
+          padding:12px;
+          border-radius:10px;
+          background:#0b1220;
+          color:white;
+          border:1px solid #1ea7ff;
+          box-shadow:0 0 6px rgba(30,167,255,0.4);
+          font-size:15px;
+          font-weight:600;
+          outline:none;
+        ">
+          <option>Loading sites...</option>
+        </select>
+      </div>
 
       <div class="summary">
         <div class="summary-box">
@@ -797,6 +797,7 @@
       if(event) event.preventDefault();
       closeMenus();
       localStorage.removeItem("washtracLoggedIn");
+      localStorage.removeItem("activeSiteId");
       window.location.replace("login.html");
     }
 
@@ -912,57 +913,81 @@
       }
 
       const user = userData?.user || null;
-
-      let query = client
-        .from("sites")
-        .select("*")
-        .order("name", { ascending:true });
+      let sites = [];
 
       if(user){
-        query = query.eq("user_id", user.id);
+        const membershipResult = await client
+          .from("site_members")
+          .select("site_id, sites(*)")
+          .eq("user_id", user.id);
+
+        if(!membershipResult.error && membershipResult.data && membershipResult.data.length){
+          sites = membershipResult.data
+            .map(row => row.sites)
+            .filter(Boolean);
+        }else{
+          if(membershipResult.error){
+            console.log("Site members lookup skipped/error:", membershipResult.error);
+          }
+
+          const directResult = await client
+            .from("sites")
+            .select("*")
+            .eq("user_id", user.id)
+            .order("name", { ascending:true });
+
+          if(!directResult.error && directResult.data){
+            sites = directResult.data;
+          }else{
+            console.log("Direct sites lookup error:", directResult.error);
+          }
+        }
       }
 
-      let { data, error } = await query;
-
-      if(error){
-        console.log("Sites error:", error);
-
+      if(!sites.length){
         const fallback = await client
           .from("sites")
           .select("*")
           .order("name", { ascending:true });
 
-        data = fallback.data || [];
-        error = fallback.error;
-
-        if(error){
-          console.log("Sites fallback error:", error);
+        if(fallback.error){
+          console.log("Sites fallback error:", fallback.error);
           select.innerHTML = `<option value="">No sites found</option>`;
+          currentSiteId = "";
+          localStorage.removeItem("activeSiteId");
           return "";
         }
+
+        sites = fallback.data || [];
       }
 
-      data = data || [];
+      sites = sites.filter(site => site && site.id);
 
-      if(!data.length){
+      if(!sites.length){
         select.innerHTML = `<option value="">No sites found</option>`;
         currentSiteId = "";
         localStorage.removeItem("activeSiteId");
         return "";
       }
 
-      select.innerHTML = data.map(site => {
+      sites.sort((a,b) => {
+        const aName = a.name || a.site_name || "";
+        const bName = b.name || b.site_name || "";
+        return aName.localeCompare(bName);
+      });
+
+      select.innerHTML = sites.map(site => {
         const label = site.name || site.site_name || "Unnamed Site";
         return `<option value="${site.id}">${label}</option>`;
       }).join("");
 
       const saved = localStorage.getItem("activeSiteId");
-      const savedStillExists = saved && data.some(site => String(site.id) === String(saved));
+      const savedStillExists = saved && sites.some(site => String(site.id) === String(saved));
 
       if(savedStillExists){
         currentSiteId = saved;
       }else{
-        currentSiteId = data[0].id;
+        currentSiteId = sites[0].id;
         localStorage.setItem("activeSiteId", currentSiteId);
       }
 
@@ -972,16 +997,16 @@
     }
 
     async function switchSite(siteId){
-  currentSiteId = siteId;
-  localStorage.setItem("activeSiteId", siteId);
+      currentSiteId = siteId;
+      localStorage.setItem("activeSiteId", siteId);
 
-  // 🔥 remove focus so dropdown doesn’t stay white
-  document.getElementById("siteSwitcher").blur();
+      const siteSwitcher = document.getElementById("siteSwitcher");
+      if(siteSwitcher) siteSwitcher.blur();
 
-  controlRowId = null;
+      controlRowId = null;
 
-  await loadDashboard();
-}
+      await loadDashboard();
+    }
 
     async function fetchCodes(){
       const activeSiteId = getActiveSiteId();
@@ -1026,6 +1051,33 @@
       return (data || []).map(normalizeActivity);
     }
 
+    async function createDefaultSystemControl(activeSiteId){
+      if(!activeSiteId) return null;
+
+      const { data, error } = await client
+        .from("site_system_control")
+        .insert([
+          {
+            site_id: activeSiteId,
+            wash_enabled: true,
+            estop_active: false,
+            lockout_enabled: false,
+            lockout_start: null,
+            lockout_end: null,
+            updated_at: new Date().toISOString()
+          }
+        ])
+        .select("*")
+        .maybeSingle();
+
+      if(error){
+        console.log("Create system control error:", error);
+        return null;
+      }
+
+      return data;
+    }
+
     async function fetchSystemControl(){
       const activeSiteId = getActiveSiteId();
       if(!activeSiteId) return null;
@@ -1037,8 +1089,14 @@
         .limit(1)
         .maybeSingle();
 
-      if(error){ console.log(error); return null; }
-      return data;
+      if(error){
+        console.log("Fetch system control error:", error);
+        return null;
+      }
+
+      if(data) return data;
+
+      return await createDefaultSystemControl(activeSiteId);
     }
 
     async function fetchBayStatus(){
@@ -1165,7 +1223,7 @@
           plugins: { legend: { labels: { color: "#e5e7eb" } } },
           scales: {
             x: { ticks: { color: "#cbd5e1" }, grid: { color: "#1f2937" } },
-            y: { ticks: { color: "#cbd5e1" }, grid: { color: "#1f2937" } }
+            y: { ticks: { color: "#cbd5e1" }, grid: { color: "#1f2937" }, beginAtZero:true }
           }
         }
       });
@@ -1187,7 +1245,7 @@
           plugins: { legend: { labels: { color: "#e5e7eb" } } },
           scales: {
             x: { ticks: { color: "#cbd5e1" }, grid: { color: "#1f2937" } },
-            y: { ticks: { color: "#cbd5e1" }, grid: { color: "#1f2937" } }
+            y: { ticks: { color: "#cbd5e1" }, grid: { color: "#1f2937" }, beginAtZero:true }
           }
         }
       });
@@ -1291,7 +1349,7 @@
       }
 
       const { error } = await client
-        .from("system_control")
+        .from("site_system_control")
         .update({ wash_enabled: enabled, updated_at: new Date().toISOString() })
         .eq("id", controlRowId)
         .eq("site_id", activeSiteId);
@@ -1315,7 +1373,7 @@
       }
 
       const { error } = await client
-        .from("system_control")
+        .from("site_system_control")
         .update({ estop_active: active, updated_at: new Date().toISOString() })
         .eq("id", controlRowId)
         .eq("site_id", activeSiteId);
@@ -1339,11 +1397,11 @@
       }
 
       const lockout_enabled = document.getElementById("lockoutEnabled").checked;
-      const lockout_start = document.getElementById("lockoutStart").value;
-      const lockout_end = document.getElementById("lockoutEnd").value;
+      const lockout_start = document.getElementById("lockoutStart").value || null;
+      const lockout_end = document.getElementById("lockoutEnd").value || null;
 
       const { error } = await client
-        .from("system_control")
+        .from("site_system_control")
         .update({
           lockout_enabled,
           lockout_start,
@@ -1474,7 +1532,7 @@
           loadDashboard();
         }
       })
-      .on("postgres_changes", { event: "*", schema: "public", table: "system_control" }, payload => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "site_system_control" }, payload => {
         if(payload.new?.site_id === getActiveSiteId() || payload.old?.site_id === getActiveSiteId()){
           loadDashboard();
         }
