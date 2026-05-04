@@ -701,7 +701,7 @@
 
       if(currentUser && siteData?.id){
         const { error: memberError } = await client
-          .from("site_members")
+          .from("user_site_access")
           .insert([
             {
               user_id: currentUser.id,
