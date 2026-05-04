@@ -907,48 +907,60 @@
     }
 
     async function loadSites(){
-      const select = document.getElementById("siteSwitcher");
-      if(!select) return "";
+  const select = document.getElementById("siteSwitcher");
+  if(!select) return "";
 
-      select.innerHTML = `<option>Loading sites...</option>`;
+  select.innerHTML = `<option>Loading sites...</option>`;
 
-      const { data, error } = await client
-        .from("sites")
-        .select("*")
-        .order("name", { ascending:true });
+  const { data: userData, error: userError } = await client.auth.getUser();
 
-      if(error){
-        console.log("Sites error:", error);
-        select.innerHTML = `<option value="">No sites found</option>`;
-        currentSiteId = "";
-        localStorage.removeItem("activeSiteId");
-        return "";
-      }
+  if(userError || !userData?.user){
+    console.log("User error:", userError);
+    select.innerHTML = `<option value="">No user</option>`;
+    return "";
+  }
 
-      const sites = data || [];
+  const user = userData.user;
 
-      if(!sites.length){
-        select.innerHTML = `<option value="">No sites found</option>`;
-        currentSiteId = "";
-        localStorage.removeItem("activeSiteId");
-        return "";
-      }
+  // 🔥 ONLY LOAD SITES USER BELONGS TO
+  const { data, error } = await client
+    .from("site_members")
+    .select(`
+      site_id,
+      sites (*)
+    `)
+    .eq("user_id", user.id);
 
-      select.innerHTML = sites.map(site => {
-        const label = site.name || site.site_name || "Unnamed Site";
-        return `<option value="${site.id}">${label}</option>`;
-      }).join("");
+  if(error){
+    console.log("Site members error:", error);
+    select.innerHTML = `<option value="">Error loading sites</option>`;
+    return "";
+  }
 
-      const saved = localStorage.getItem("activeSiteId");
-      const savedStillExists = saved && sites.some(site => String(site.id) === String(saved));
+  const sites = (data || [])
+    .map(row => row.sites)
+    .filter(Boolean);
 
-      currentSiteId = savedStillExists ? saved : sites[0].id;
-      localStorage.setItem("activeSiteId", currentSiteId);
+  if(!sites.length){
+    select.innerHTML = `<option value="">No sites assigned</option>`;
+    return "";
+  }
 
-      select.value = currentSiteId;
+  select.innerHTML = sites.map(site => {
+    return `<option value="${site.id}">${site.name || "Unnamed Site"}</option>`;
+  }).join("");
 
-      return currentSiteId;
-    }
+  // restore selected site
+  const saved = localStorage.getItem("activeSiteId");
+  const exists = saved && sites.some(s => s.id === saved);
+
+  const active = exists ? saved : sites[0].id;
+
+  localStorage.setItem("activeSiteId", active);
+  select.value = active;
+
+  return active;
+}
 
     async function switchSite(siteId){
       currentSiteId = siteId;
