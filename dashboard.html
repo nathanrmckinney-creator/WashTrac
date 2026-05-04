@@ -900,114 +900,71 @@
       }
     }
 
-    async function loadSites(){
-      const select = document.getElementById("siteSwitcher");
-      if(!select) return "";
+   async function loadSites(){
+  const select = document.getElementById("siteSwitcher");
+  if(!select) return "";
 
-      select.innerHTML = `<option>Loading sites...</option>`;
+  select.innerHTML = `<option>Loading sites...</option>`;
 
-      const { data: userData, error: userError } = await client.auth.getUser();
+  const { data, error } = await client
+    .from("sites")
+    .select("*")
+    .order("name", { ascending:true });
 
-      if(userError){
-        console.log("User error:", userError);
-      }
+  if(error){
+    console.log("Sites error:", error);
+    select.innerHTML = `<option value="">No sites found</option>`;
+    currentSiteId = "";
+    localStorage.removeItem("activeSiteId");
+    return "";
+  }
 
-      const user = userData?.user || null;
-      let sites = [];
+  const sites = data || [];
 
-      if(user){
-        const membershipResult = await client
-          .from("site_members")
-          .select("site_id, sites(*)")
-          .eq("user_id", user.id);
+  console.log("SITES FOUND:", sites);
 
-        if(!membershipResult.error && membershipResult.data && membershipResult.data.length){
-          sites = membershipResult.data
-            .map(row => row.sites)
-            .filter(Boolean);
-        }else{
-          if(membershipResult.error){
-            console.log("Site members lookup skipped/error:", membershipResult.error);
-          }
+  if(!sites.length){
+    select.innerHTML = `<option value="">No sites found</option>`;
+    currentSiteId = "";
+    localStorage.removeItem("activeSiteId");
+    return "";
+  }
 
-          const directResult = await client
-            .from("sites")
-            .select("*")
-            .eq("user_id", user.id)
-            .order("name", { ascending:true });
+  select.innerHTML = sites.map(site => {
+    const label = site.name || site.site_name || "Unnamed Site";
+    return `<option value="${site.id}">${label}</option>`;
+  }).join("");
 
-          if(!directResult.error && directResult.data){
-            sites = directResult.data;
-          }else{
-            console.log("Direct sites lookup error:", directResult.error);
-          }
-        }
-      }
+  const saved = localStorage.getItem("activeSiteId");
+  const savedStillExists = saved && sites.some(site => String(site.id) === String(saved));
 
-      if(!sites.length){
-        const fallback = await client
-          .from("sites")
-          .select("*")
-          .order("name", { ascending:true });
+  if(savedStillExists){
+    currentSiteId = saved;
+  }else{
+    currentSiteId = sites[0].id;
+    localStorage.setItem("activeSiteId", currentSiteId);
+  }
 
-        if(fallback.error){
-          console.log("Sites fallback error:", fallback.error);
-          select.innerHTML = `<option value="">No sites found</option>`;
-          currentSiteId = "";
-          localStorage.removeItem("activeSiteId");
-          return "";
-        }
+  select.value = currentSiteId;
 
-        sites = fallback.data || [];
-      }
+  console.log("ACTIVE SITE ID:", currentSiteId);
 
-      sites = sites.filter(site => site && site.id);
+  return currentSiteId;
+}
 
-      if(!sites.length){
-        select.innerHTML = `<option value="">No sites found</option>`;
-        currentSiteId = "";
-        localStorage.removeItem("activeSiteId");
-        return "";
-      }
+   async function switchSite(siteId){
+  currentSiteId = siteId;
+  localStorage.setItem("activeSiteId", siteId);
 
-      sites.sort((a,b) => {
-        const aName = a.name || a.site_name || "";
-        const bName = b.name || b.site_name || "";
-        return aName.localeCompare(bName);
-      });
+  console.log("SWITCHED SITE ID:", siteId);
 
-      select.innerHTML = sites.map(site => {
-        const label = site.name || site.site_name || "Unnamed Site";
-        return `<option value="${site.id}">${label}</option>`;
-      }).join("");
+  const siteSwitcher = document.getElementById("siteSwitcher");
+  if(siteSwitcher) siteSwitcher.blur();
 
-      const saved = localStorage.getItem("activeSiteId");
-      const savedStillExists = saved && sites.some(site => String(site.id) === String(saved));
+  controlRowId = null;
 
-      if(savedStillExists){
-        currentSiteId = saved;
-      }else{
-        currentSiteId = sites[0].id;
-        localStorage.setItem("activeSiteId", currentSiteId);
-      }
-
-      select.value = currentSiteId;
-
-      return currentSiteId;
-    }
-
-    async function switchSite(siteId){
-      currentSiteId = siteId;
-      localStorage.setItem("activeSiteId", siteId);
-
-      const siteSwitcher = document.getElementById("siteSwitcher");
-      if(siteSwitcher) siteSwitcher.blur();
-
-      controlRowId = null;
-
-      await loadDashboard();
-    }
-
+  await loadDashboard();
+}
     async function fetchCodes(){
       const activeSiteId = getActiveSiteId();
       if(!activeSiteId) return [];
