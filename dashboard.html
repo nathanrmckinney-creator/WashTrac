@@ -1392,8 +1392,7 @@
           status,
           updated_at: new Date().toISOString()
         })
-        .eq("id", id)
-        .eq("site_id", activeSiteId);
+        .eq("id", id);
 
       if(error){
         console.log(error);
