@@ -972,13 +972,16 @@
     }
 
     async function switchSite(siteId){
-      currentSiteId = siteId;
-      localStorage.setItem("activeSiteId", siteId);
+  currentSiteId = siteId;
+  localStorage.setItem("activeSiteId", siteId);
 
-      controlRowId = null;
+  // 🔥 remove focus so dropdown doesn’t stay white
+  document.getElementById("siteSwitcher").blur();
 
-      await loadDashboard();
-    }
+  controlRowId = null;
+
+  await loadDashboard();
+}
 
     async function fetchCodes(){
       const activeSiteId = getActiveSiteId();
