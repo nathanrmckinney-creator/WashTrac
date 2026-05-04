@@ -934,15 +934,17 @@
     }
 
     async function fetchCodes(){
-      const { data, error } = await client
-        .from("access_codes")
-        .select("*")
-        .order("created_at", { ascending:false });
+  const activeSiteId = getActiveSiteId();
 
-      if(error){ console.log(error); return []; }
-      return data || [];
-    }
+  const { data, error } = await client
+    .from("access_codes")
+    .select("*")
+    .eq("site_id", activeSiteId)
+    .order("created_at", { ascending:false });
 
+  if(error){ console.log(error); return []; }
+  return data || [];
+}
     async function fetchRecentActivity(){
       const { data, error } = await client
         .from("wash_activity")
