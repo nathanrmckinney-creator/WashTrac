@@ -794,9 +794,9 @@
         gap: 0px;
       }
 
-    .who-for {
-  padding: 0 30px 70px;
-  margin-top: -35px;
+   .who-for {
+  padding: 35px 30px 70px;
+  margin-top: 0 !important;
 }
       .section {
         padding: 55px 20px;
@@ -816,14 +816,16 @@
 
     .device {
   width: 320px;
-  transform: scale(0.85);
-  transform-origin: top center;
+  max-width: 100%;
+  transform: scale(0.85) !important;
+  transform-origin: top center !important;
 }
 
 .device-wrap {
   transform: none !important;
-  margin: 45px auto 0 auto !important;
+  margin: 55px auto -35px auto !important;
 }
+
 .hero {
   min-height: auto !important;
 }
