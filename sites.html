@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WashTrac Sites</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      background:#020617;
+      color:white;
+      overflow-x:hidden;
+    }
+
+    .app{
+      display:flex;
+      min-height:100vh;
+    }
+
+    .sidebar{
+      width:220px;
+      background:#0f172a;
+      padding:20px;
+      flex-shrink:0;
+      border-right:1px solid #1e293b;
+    }
+
+    .logo,.mobile-logo{
+      font-family:'Orbitron', Arial, sans-serif;
+      font-size:22px;
+      font-weight:900;
+      letter-spacing:.5px;
+      margin-bottom:32px;
+    }
+
+    .logo .trac,.mobile-logo .trac{
+      background:linear-gradient(180deg,#ffffff 0%,#66c7ff 40%,#1e9bff 72%,#0b5cff 100%);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .nav a{
+      display:block;
+      color:#cbd5f5;
+      text-decoration:none;
+      padding:10px 0;
+    }
+
+    .nav a:hover,
+    .nav a.active{
+      color:white;
+    }
+
+    .main{
+      flex:1;
+      padding:30px;
+      position:relative;
+    }
+
+    .dashboard-menu-wrap{
+      position:absolute;
+      top:24px;
+      right:30px;
+      z-index:1200;
+    }
+
+    .mobile-topbar{
+      display:none;
+      align-items:center;
+      justify-content:space-between;
+      padding:16px 20px;
+      background:#0f172a;
+      border-bottom:1px solid #1e293b;
+      position:sticky;
+      top:0;
+      z-index:1400;
+    }
+
+    .mobile-logo{
+      font-size:22px;
+      font-weight:bold;
+      letter-spacing:0;
+      margin-bottom:0;
+    }
+
+    .menu-btn{
+      background:#2563eb;
+      border:none;
+      color:white;
+      padding:10px 14px;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:bold;
+    }
+
+    .mobile-menu{
+      display:none;
+      position:absolute;
+      top:46px;
+      right:0;
+      width:240px;
+      background:#0f172a;
+      border:1px solid #1e293b;
+      border-radius:12px;
+      padding:12px 16px;
+      box-shadow:0 12px 30px rgba(0,0,0,.45);
+      z-index:1300;
+    }
+
+    .mobile-menu a{
+      display:block;
+      color:#cbd5f5;
+      text-decoration:none;
+      padding:10px 0;
+      cursor:pointer;
+    }
+
+    .mobile-menu a:hover{color:white}
+    .mobile-menu a.logout-link{color:#f87171}
+
+    .backdrop{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.35);
+      z-index:1050;
+    }
+
+    .page-header{
+      margin-bottom:24px;
+      padding-right:70px;
+    }
+
+    .page-header h1{
+      margin:0 0 10px 0;
+      font-size:42px;
+    }
+
+    .page-header p{
+      margin:0;
+      color:#94a3b8;
+      line-height:1.5;
+    }
+
+    .live-pill{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(30,167,255,.15);
+      color:#93c5fd;
+      font-size:12px;
+      font-weight:bold;
+      margin-left:10px;
+      vertical-align:middle;
+    }
+
+    .grid-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:20px;
+      margin-bottom:20px;
+    }
+
+    .card{
+      background:#111827;
+      padding:20px;
+      border-radius:12px;
+      border:1px solid #1f2937;
+      margin-bottom:20px;
+    }
+
+    .card h3{
+      margin:0 0 16px 0;
+    }
+
+    .note{
+      margin-top:14px;
+      color:#94a3b8;
+      font-size:14px;
+      line-height:1.5;
+    }
+
+    .site-row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:12px;
+      padding:14px 0;
+      border-bottom:1px solid #1f2937;
+      color:#dbe5fb;
+      align-items:center;
+    }
+
+    .site-row:last-child{border-bottom:none}
+
+    .site-name{
+      font-weight:bold;
+      font-size:17px;
+      margin-bottom:5px;
+    }
+
+    .site-meta{
+      color:#94a3b8;
+      font-size:14px;
+      line-height:1.4;
+    }
+
+    .pill{
+      display:inline-block;
+      padding:7px 10px;
+      border-radius:999px;
+      background:rgba(30,167,255,.14);
+      color:#93c5fd;
+      font-size:12px;
+      font-weight:bold;
+      white-space:nowrap;
+    }
+
+    .field-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-top:14px;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .field.full{
+      grid-column:1 / -1;
+    }
+
+    .field label{
+      font-size:13px;
+      color:#94a3b8;
+    }
+
+    input,select{
+      width:100%;
+      padding:12px;
+      border-radius:8px;
+      border:1px solid #334155;
+      background:#0b1220;
+      color:white;
+      font-size:15px;
+    }
+
+    .controls{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top:16px;
+    }
+
+    button{
+      padding:12px 16px;
+      background:#2563eb;
+      color:white;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:bold;
+    }
+
+    button.secondary{background:#334155}
+    button.success{background:#16a34a}
+
+    .status{
+      margin-top:14px;
+      padding:12px 14px;
+      border-radius:8px;
+      background:#0b1220;
+      border:1px solid #1f2937;
+      color:#cbd5e1;
+      display:none;
+    }
+
+    .status.show{display:block}
+
+    .status.good{
+      border-color:rgba(34,197,94,.35);
+      color:#bbf7d0;
+      background:rgba(20,83,45,.24);
+    }
+
+    .status.bad{
+      border-color:rgba(239,68,68,.35);
+      color:#fecaca;
+      background:rgba(127,29,29,.24);
+    }
+
+    @media (max-width:1100px){
+      .grid-2{grid-template-columns:1fr}
+    }
+
+    @media (max-width:900px){
+      .app{display:block}
+      .sidebar{display:none}
+      .mobile-topbar{display:flex}
+      .main{padding:20px}
+      .dashboard-menu-wrap{display:none}
+      .page-header{padding-right:0}
+      .page-header h1{font-size:34px}
+      .field-grid{grid-template-columns:1fr}
+      .mobile-menu{
+        position:absolute;
+        top:64px;
+        right:16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <script>
+    if(localStorage.getItem("washtracLoggedIn") !== "yes"){
+      window.location.replace("login.html");
+    }
+  </script>
+
+  <div class="mobile-topbar">
+    <div class="mobile-logo">
+      Wash<span class="trac">Trac</span>
+    </div>
+    <button class="menu-btn" onclick="toggleMobileMenu()">☰</button>
+
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="codes.html">Codes</a>
+      <a href="activity.html">Activity</a>
+      <a href="usage.html">Reports</a>
+      <a href="monitor.html">Monitor</a>
+      <a href="sites.html">Sites</a>
+      <a href="#" onclick="goHome(event)">Back to Homepage</a>
+      <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
+    </div>
+  </div>
+
+  <div class="backdrop" id="backdrop" onclick="closeMenus()"></div>
+
+  <div class="app">
+    <div class="sidebar">
+      <div class="logo">
+        Wash<span class="trac">Trac</span>
+      </div>
+
+      <div class="nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="codes.html">Codes</a>
+        <a href="activity.html">Activity</a>
+        <a href="usage.html">Reports</a>
+        <a href="monitor.html">Monitor</a>
+        <a class="active" href="sites.html">Sites</a>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="dashboard-menu-wrap">
+        <button class="menu-btn" onclick="toggleDashboardMenu()">☰</button>
+
+        <div class="mobile-menu" id="dashboardMenu">
+          <a href="#" onclick="goHome(event)">Back to Homepage</a>
+          <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
+        </div>
+      </div>
+
+      <div class="page-header">
+        <h1>
+          Sites
+          <span class="live-pill">LOCATIONS</span>
+        </h1>
+        <p>
+          Add and manage carwash locations connected to this WashTrac account.
+        </p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Add Site</h3>
+
+          <div class="field-grid">
+            <div class="field full">
+              <label for="organizationSelect">Organization</label>
+              <select id="organizationSelect">
+                <option value="">Loading organizations...</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="siteName">Site Name</label>
+              <input id="siteName" placeholder="Example: Scrubbles Dallas">
+            </div>
+
+            <div class="field">
+              <label for="siteCity">City</label>
+              <input id="siteCity" placeholder="Example: Dallas">
+            </div>
+
+            <div class="field">
+              <label for="siteState">State</label>
+              <input id="siteState" placeholder="Example: TX">
+            </div>
+
+            <div class="field">
+              <label for="siteAddress">Address</label>
+              <input id="siteAddress" placeholder="Optional">
+            </div>
+          </div>
+
+          <div class="controls">
+            <button onclick="addSite()">Add Site</button>
+            <button class="secondary" onclick="clearForm()">Clear</button>
+          </div>
+
+          <div id="siteStatus" class="status"></div>
+
+          <div class="note">
+            When a site is added, it will be available for the dashboard site switcher. Your database trigger should automatically create the system-control row.
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>How This Works</h3>
+
+          <div class="site-row">
+            <div>
+              <div class="site-name">Organization</div>
+              <div class="site-meta">The customer/company account.</div>
+            </div>
+            <div class="pill">Company</div>
+          </div>
+
+          <div class="site-row">
+            <div>
+              <div class="site-name">Site</div>
+              <div class="site-meta">A physical carwash location.</div>
+            </div>
+            <div class="pill">Location</div>
+          </div>
+
+          <div class="site-row">
+            <div>
+              <div class="site-name">Site Member</div>
+              <div class="site-meta">Links the logged-in user to the site.</div>
+            </div>
+            <div class="pill">Access</div>
+          </div>
+
+          <div class="note">
+            Later, this page can add users, roles, and permissions for managers with many locations.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Your Sites</h3>
+        <div id="sitesList"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let organizations = [];
+    let currentUser = null;
+
+    function toggleMobileMenu(){
+      const menu = document.getElementById("mobileMenu");
+      const dashboardMenu = document.getElementById("dashboardMenu");
+      const backdrop = document.getElementById("backdrop");
+
+      if(dashboardMenu) dashboardMenu.style.display = "none";
+
+      const isOpen = menu.style.display === "block";
+      menu.style.display = isOpen ? "none" : "block";
+      backdrop.style.display = isOpen ? "none" : "block";
+    }
+
+    function toggleDashboardMenu(){
+      const menu = document.getElementById("dashboardMenu");
+      const mobileMenu = document.getElementById("mobileMenu");
+      const backdrop = document.getElementById("backdrop");
+
+      if(mobileMenu) mobileMenu.style.display = "none";
+
+      const isOpen = menu.style.display === "block";
+      menu.style.display = isOpen ? "none" : "block";
+      backdrop.style.display = isOpen ? "none" : "block";
+    }
+
+    function closeMenus(){
+      const mobileMenu = document.getElementById("mobileMenu");
+      const dashboardMenu = document.getElementById("dashboardMenu");
+      const backdrop = document.getElementById("backdrop");
+
+      if(mobileMenu) mobileMenu.style.display = "none";
+      if(dashboardMenu) dashboardMenu.style.display = "none";
+      if(backdrop) backdrop.style.display = "none";
+    }
+
+    function goHome(event){
+      if(event) event.preventDefault();
+      closeMenus();
+      localStorage.removeItem("washtracLoggedIn");
+      window.location.replace("index.html");
+    }
+
+    function logout(event){
+      if(event) event.preventDefault();
+      closeMenus();
+      localStorage.removeItem("washtracLoggedIn");
+      localStorage.removeItem("activeSiteId");
+      window.location.replace("login.html");
+    }
+
+    function setStatus(message, type = ""){
+      const box = document.getElementById("siteStatus");
+      box.innerText = message;
+      box.className = "status show";
+      if(type) box.classList.add(type);
+    }
+
+    function clearForm(){
+      document.getElementById("siteName").value = "";
+      document.getElementById("siteCity").value = "";
+      document.getElementById("siteState").value = "";
+      document.getElementById("siteAddress").value = "";
+      setStatus("", "");
+      document.getElementById("siteStatus").className = "status";
+    }
+
+    function siteLabel(site){
+      return site.name || site.site_name || "Unnamed Site";
+    }
+
+    function organizationLabel(org){
+      return org.name || org.organization_name || org.company_name || "Unnamed Organization";
+    }
+
+    async function loadCurrentUser(){
+      const { data, error } = await client.auth.getUser();
+
+      if(error){
+        console.log("User lookup error:", error);
+      }
+
+      currentUser = data?.user || null;
+      return currentUser;
+    }
+
+    async function loadOrganizations(){
+      const select = document.getElementById("organizationSelect");
+      select.innerHTML = `<option value="">Loading organizations...</option>`;
+
+      const { data, error } = await client
+        .from("organizations")
+        .select("*")
+        .order("name", { ascending:true });
+
+      if(error){
+        console.log("Organizations error:", error);
+        select.innerHTML = `<option value="">No organizations found</option>`;
+        organizations = [];
+        return [];
+      }
+
+      organizations = data || [];
+
+      if(!organizations.length){
+        select.innerHTML = `<option value="">No organizations found</option>`;
+        return [];
+      }
+
+      select.innerHTML = organizations.map(org => {
+        return `<option value="${org.id}">${organizationLabel(org)}</option>`;
+      }).join("");
+
+      return organizations;
+    }
+
+    async function loadSites(){
+      const wrap = document.getElementById("sitesList");
+      wrap.innerHTML = `<div class="site-row"><div><div class="site-name">Loading sites...</div></div><div class="pill">...</div></div>`;
+
+      let sites = [];
+
+      if(currentUser){
+        const memberResult = await client
+          .from("site_members")
+          .select("site_id, role, sites(*)")
+          .eq("user_id", currentUser.id);
+
+        if(!memberResult.error && memberResult.data && memberResult.data.length){
+          sites = memberResult.data.map(row => ({
+            ...row.sites,
+            member_role: row.role || "member"
+          })).filter(Boolean);
+        }else{
+          if(memberResult.error){
+            console.log("Site members error:", memberResult.error);
+          }
+        }
+      }
+
+      if(!sites.length){
+        const fallback = await client
+          .from("sites")
+          .select("*")
+          .order("name", { ascending:true });
+
+        if(fallback.error){
+          console.log("Sites fallback error:", fallback.error);
+          wrap.innerHTML = `<div class="site-row"><div><div class="site-name">Could not load sites.</div></div><div class="pill">Error</div></div>`;
+          return;
+        }
+
+        sites = fallback.data || [];
+      }
+
+      if(!sites.length){
+        wrap.innerHTML = `<div class="site-row"><div><div class="site-name">No sites yet.</div><div class="site-meta">Add your first site above.</div></div><div class="pill">0</div></div>`;
+        return;
+      }
+
+      wrap.innerHTML = "";
+
+      sites.forEach(site => {
+        const city = site.city || "";
+        const state = site.state || "";
+        const address = site.address || "";
+        const location = [city, state].filter(Boolean).join(", ");
+        const metaParts = [];
+
+        if(location) metaParts.push(location);
+        if(address) metaParts.push(address);
+
+        wrap.innerHTML += `
+          <div class="site-row">
+            <div>
+              <div class="site-name">${siteLabel(site)}</div>
+              <div class="site-meta">${metaParts.length ? metaParts.join(" • ") : "No location details"}</div>
+              <div class="site-meta">Site ID: ${site.id}</div>
+            </div>
+            <div class="pill">${site.member_role || "site"}</div>
+          </div>
+        `;
+      });
+    }
+
+    async function addSite(){
+      const organization_id = document.getElementById("organizationSelect").value;
+      const name = document.getElementById("siteName").value.trim();
+      const city = document.getElementById("siteCity").value.trim();
+      const state = document.getElementById("siteState").value.trim();
+      const address = document.getElementById("siteAddress").value.trim();
+
+      if(!organization_id){
+        setStatus("Choose an organization first.", "bad");
+        return;
+      }
+
+      if(!name){
+        setStatus("Enter a site name.", "bad");
+        return;
+      }
+
+      const payload = {
+        organization_id,
+        name
+      };
+
+      if(city) payload.city = city;
+      if(state) payload.state = state;
+      if(address) payload.address = address;
+
+      const { data: siteData, error: siteError } = await client
+        .from("sites")
+        .insert([payload])
+        .select("*")
+        .maybeSingle();
+
+      if(siteError){
+        console.log("Add site error:", siteError);
+        setStatus("Could not add site: " + siteError.message, "bad");
+        return;
+      }
+
+      if(currentUser && siteData?.id){
+        const { error: memberError } = await client
+          .from("site_members")
+          .insert([
+            {
+              user_id: currentUser.id,
+              site_id: siteData.id,
+              role: "owner"
+            }
+          ]);
+
+        if(memberError){
+          console.log("Site member insert error:", memberError);
+          setStatus("Site created, but user was not linked in site_members. Check policies/table columns.", "bad");
+          await loadSites();
+          return;
+        }
+      }
+
+      localStorage.setItem("activeSiteId", siteData.id);
+
+      setStatus("Site added and selected.", "good");
+      clearForm();
+      await loadSites();
+    }
+
+    document.addEventListener("click", function(event){
+      const dashboardMenu = document.getElementById("dashboardMenu");
+      const mobileMenu = document.getElementById("mobileMenu");
+      const dashboardWrap = document.querySelector(".dashboard-menu-wrap");
+      const mobileTopbar = document.querySelector(".mobile-topbar");
+      const backdrop = document.getElementById("backdrop");
+
+      const clickedDashboard = dashboardWrap && dashboardWrap.contains(event.target);
+      const clickedMobile = mobileTopbar && mobileTopbar.contains(event.target);
+
+      if(!clickedDashboard && !clickedMobile){
+        if(dashboardMenu) dashboardMenu.style.display = "none";
+        if(mobileMenu) mobileMenu.style.display = "none";
+        if(backdrop) backdrop.style.display = "none";
+      }
+    });
+
+    window.onload = async function(){
+      await loadCurrentUser();
+      await loadOrganizations();
+      await loadSites();
+    };
+  </script>
+</body>
+</html>
