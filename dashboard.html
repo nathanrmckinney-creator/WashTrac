@@ -748,6 +748,7 @@
     let currentSiteId = null;
     let dashboardLoadToken = 0;
     let refreshTimer = null;
+    let lastGoodSystemControl = null;
 
     function getActiveSiteId(){
       return currentSiteId || localStorage.getItem("activeSiteId") || "";
