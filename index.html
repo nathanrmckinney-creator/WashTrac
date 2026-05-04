@@ -832,3 +832,162 @@
 }
 </style>
 </head>
+<body>
+  <header>
+    <div class="brand-wrap">
+      <div class="logo">Wash<span class="trac">Trac</span></div>
+      <div class="tagline">Control. Track. Manage.</div>
+    </div>
+
+    <button class="menu-btn" onclick="toggleMenu()">&#9776;</button>
+  </header>
+
+  <div id="menuPanel" class="menu-panel">
+    <a href="login.html" class="login-link" onclick="closeMenu()">Client Login</a>
+    <a href="#features" onclick="closeMenu()">Features</a>
+    <a href="#works" onclick="closeMenu()">How It Works</a>
+    <a href="#audit" onclick="closeMenu()">Audit</a>
+    <a href="#monitoring" onclick="closeMenu()">Monitoring</a>
+    <a href="#systemstate" onclick="closeMenu()">Live Demo</a>
+    <a href="#contact" onclick="closeMenu()">Contact</a>
+  </div>
+
+  <div id="backdrop" class="backdrop" onclick="closeMenu()"></div>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div>
+        <div class="eyebrow">Wash<span class="brand-accent">Trac</span> Control System</div>
+
+        <h1>CodeBox</h1>
+        <h2>ENTRY TERMINAL</h2>
+
+        <p>
+          Control wash access and track every activation in real time.
+          WashTrac CodeBox provides secure entry codes, full audit logs,
+          reporting tools, and expanded monitoring for dealerships,
+          service departments, detail teams, and fleet operations.
+        </p>
+
+        <div class="features">
+          <div>✔ Secure Code Entry</div>
+          <div>✔ Instant Wash Activation</div>
+          <div>✔ Full Usage Tracking</div>
+          <div>✔ Department-Level Control</div>
+          <div>✔ Real-Time Monitoring</div>
+          <div>✔ Reports & Audit Logs</div>
+        </div>
+
+        <div class="hero-actions">
+          <a class="btn" href="#contact">Request Demo</a>
+        </div>
+      </div>
+
+      <div class="device-wrap">
+        <div class="device">
+          <div class="screen">
+
+            <div class="screen-top">
+              <div class="screen-logo-wrap">
+                <div class="screen-logo">
+                  Wash<span class="trac">Trac</span>
+                </div>
+                <div class="screen-tagline">
+                  Control. Track. Manage.
+                </div>
+              </div>
+
+              <div class="signal">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+              </div>
+            </div>
+
+            <div class="code-display">
+              <div class="screen-title">ENTER CODE</div>
+              <div class="code-line"></div>
+            </div>
+
+            <div class="pad">
+              <div>1</div><div>2</div><div>3</div>
+              <div>4</div><div>5</div><div>6</div>
+              <div>7</div><div>8</div><div>9</div>
+              <div class="back">←</div><div>0</div><div class="clear">CLEAR</div>
+            </div>
+
+            <button class="start">ENTER</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="who-for">
+    <div class="who-inner">
+      <div class="who-title">
+        Trusted by service departments and fleet operations
+      </div>
+
+      <div class="who-grid">
+        <div class="who-card">Dealership Service Departments</div>
+        <div class="who-card">Auto Detail Shops</div>
+        <div class="who-card">Fleet Wash Bays</div>
+        <div class="who-card">Municipal Vehicle Maintenance</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features" class="section">
+    <h2>WashTrac Management System</h2>
+    <p class="section-intro">
+      WashTrac provides full visibility into wash usage so management always knows
+      who is using the wash, when it was activated, and how often each department uses it.
+    </p>
+
+    <div class="cards">
+      <div class="card">
+        <h3>Usage Auditing</h3>
+        <p>Every wash activation is logged with timestamp, code, department, and user information for complete accountability.</p>
+      </div>
+
+      <div class="card">
+        <h3>Department Tracking</h3>
+        <p>Assign codes by department such as Service, Sales, Detail, Manager, Temporary, or any custom department you need.</p>
+      </div>
+
+      <div class="card">
+        <h3>Reporting</h3>
+        <p>Generate CSV exports and email reports to monitor wash activity, usage trends, and operational accountability.</p>
+      </div>
+
+      <div class="card">
+        <h3>Remote Wash Control</h3>
+        <p>Control wash operation remotely with configurable schedules and shutdown controls.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    WASHTRAC © 2026<br />
+    Control. Track. Manage.
+  </footer>
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById("menuPanel");
+      const backdrop = document.getElementById("backdrop");
+      const isOpen = menu.style.display === "flex";
+
+      menu.style.display = isOpen ? "none" : "flex";
+      backdrop.style.display = isOpen ? "none" : "block";
+    }
+
+    function closeMenu() {
+      document.getElementById("menuPanel").style.display = "none";
+      document.getElementById("backdrop").style.display = "none";
+    }
+  </script>
+</body>
+</html>
