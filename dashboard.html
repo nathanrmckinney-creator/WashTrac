@@ -906,7 +906,7 @@
       }
     }
 
-    async function loadSites(){
+   async function loadSites(){
   const select = document.getElementById("siteSwitcher");
   if(!select) return "";
 
@@ -922,9 +922,8 @@
 
   const user = userData.user;
 
-  // 🔥 ONLY LOAD SITES USER BELONGS TO
   const { data, error } = await client
-    .from("site_members")
+    .from("user_site_access")
     .select(`
       site_id,
       sites (*)
@@ -932,7 +931,7 @@
     .eq("user_id", user.id);
 
   if(error){
-    console.log("Site members error:", error);
+    console.log("Site access error:", error);
     select.innerHTML = `<option value="">Error loading sites</option>`;
     return "";
   }
@@ -950,16 +949,15 @@
     return `<option value="${site.id}">${site.name || "Unnamed Site"}</option>`;
   }).join("");
 
-  // restore selected site
   const saved = localStorage.getItem("activeSiteId");
   const exists = saved && sites.some(s => s.id === saved);
 
-  const active = exists ? saved : sites[0].id;
+  currentSiteId = exists ? saved : sites[0].id;
+  localStorage.setItem("activeSiteId", currentSiteId);
 
-  localStorage.setItem("activeSiteId", active);
-  select.value = active;
+  select.value = currentSiteId;
 
-  return active;
+  return currentSiteId;
 }
 
     async function switchSite(siteId){
