@@ -7,7 +7,6 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="site-context.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
@@ -747,6 +746,8 @@
     let dailyChartInstance = null;
     let controlRowId = null;
     let currentSiteId = null;
+    let dashboardLoadToken = 0;
+    let refreshTimer = null;
 
     function getActiveSiteId(){
       return currentSiteId || localStorage.getItem("activeSiteId") || "";
@@ -825,12 +826,7 @@
 
       const { data, error } = await client
         .from("device_pairing_codes")
-        .insert([
-          {
-            code: code,
-            site_id: siteId
-          }
-        ])
+        .insert([{ code, site_id: siteId }])
         .select();
 
       console.log("Pairing insert data:", data);
@@ -900,175 +896,144 @@
       }
     }
 
-   async function loadSites(){
-  const select = document.getElementById("siteSwitcher");
-  if(!select) return "";
+    async function loadSites(){
+      const select = document.getElementById("siteSwitcher");
+      if(!select) return "";
 
-  select.innerHTML = `<option>Loading sites...</option>`;
+      select.innerHTML = `<option>Loading sites...</option>`;
 
-  const { data, error } = await client
-    .from("sites")
-    .select("*")
-    .order("name", { ascending:true });
+      const { data, error } = await client
+        .from("sites")
+        .select("*")
+        .order("name", { ascending:true });
 
-  if(error){
-    console.log("Sites error:", error);
-    select.innerHTML = `<option value="">No sites found</option>`;
-    currentSiteId = "";
-    localStorage.removeItem("activeSiteId");
-    return "";
-  }
+      if(error){
+        console.log("Sites error:", error);
+        select.innerHTML = `<option value="">No sites found</option>`;
+        currentSiteId = "";
+        localStorage.removeItem("activeSiteId");
+        return "";
+      }
 
-  const sites = data || [];
+      const sites = data || [];
 
-  console.log("SITES FOUND:", sites);
+      if(!sites.length){
+        select.innerHTML = `<option value="">No sites found</option>`;
+        currentSiteId = "";
+        localStorage.removeItem("activeSiteId");
+        return "";
+      }
 
-  if(!sites.length){
-    select.innerHTML = `<option value="">No sites found</option>`;
-    currentSiteId = "";
-    localStorage.removeItem("activeSiteId");
-    return "";
-  }
+      select.innerHTML = sites.map(site => {
+        const label = site.name || site.site_name || "Unnamed Site";
+        return `<option value="${site.id}">${label}</option>`;
+      }).join("");
 
-  select.innerHTML = sites.map(site => {
-    const label = site.name || site.site_name || "Unnamed Site";
-    return `<option value="${site.id}">${label}</option>`;
-  }).join("");
+      const saved = localStorage.getItem("activeSiteId");
+      const savedStillExists = saved && sites.some(site => String(site.id) === String(saved));
 
-  const saved = localStorage.getItem("activeSiteId");
-  const savedStillExists = saved && sites.some(site => String(site.id) === String(saved));
+      currentSiteId = savedStillExists ? saved : sites[0].id;
+      localStorage.setItem("activeSiteId", currentSiteId);
 
-  if(savedStillExists){
-    currentSiteId = saved;
-  }else{
-    currentSiteId = sites[0].id;
-    localStorage.setItem("activeSiteId", currentSiteId);
-  }
+      select.value = currentSiteId;
 
-  select.value = currentSiteId;
+      return currentSiteId;
+    }
 
-  console.log("ACTIVE SITE ID:", currentSiteId);
+    async function switchSite(siteId){
+      currentSiteId = siteId;
+      localStorage.setItem("activeSiteId", siteId);
 
-  return currentSiteId;
-}
+      const siteSwitcher = document.getElementById("siteSwitcher");
+      if(siteSwitcher) siteSwitcher.blur();
 
-   async function switchSite(siteId){
-  currentSiteId = siteId;
-  localStorage.setItem("activeSiteId", siteId);
+      controlRowId = null;
+      await loadDashboard();
+    }
 
-  console.log("SWITCHED SITE ID:", siteId);
-
-  const siteSwitcher = document.getElementById("siteSwitcher");
-  if(siteSwitcher) siteSwitcher.blur();
-
-  controlRowId = null;
-
-  await loadDashboard();
-}
-    async function fetchCodes(){
-      const activeSiteId = getActiveSiteId();
-      if(!activeSiteId) return [];
+    async function fetchCodes(siteId){
+      if(!siteId) return [];
 
       const { data, error } = await client
         .from("access_codes")
         .select("*")
-        .eq("site_id", activeSiteId)
+        .eq("site_id", siteId)
         .order("created_at", { ascending:false });
 
-      if(error){ console.log(error); return []; }
+      if(error){
+        console.log("Codes error:", error);
+        return [];
+      }
+
       return data || [];
     }
 
-    async function fetchRecentActivity(){
-      const activeSiteId = getActiveSiteId();
-      if(!activeSiteId) return [];
+    async function fetchRecentActivity(siteId){
+      if(!siteId) return [];
 
       const { data, error } = await client
         .from("wash_activity")
         .select("*")
-        .eq("site_id", activeSiteId)
+        .eq("site_id", siteId)
         .order("event_time", { ascending:false })
         .limit(10);
 
-      if(error){ console.log(error); return []; }
+      if(error){
+        console.log("Recent activity error:", error);
+        return [];
+      }
+
       return (data || []).map(normalizeActivity);
     }
 
-    async function fetchAllActivity(){
-      const activeSiteId = getActiveSiteId();
-      if(!activeSiteId) return [];
+    async function fetchAllActivity(siteId){
+      if(!siteId) return [];
 
       const { data, error } = await client
         .from("wash_activity")
         .select("*")
-        .eq("site_id", activeSiteId)
+        .eq("site_id", siteId)
         .order("event_time", { ascending:false });
 
-      if(error){ console.log(error); return []; }
+      if(error){
+        console.log("All activity error:", error);
+        return [];
+      }
+
       return (data || []).map(normalizeActivity);
     }
 
-    async function createDefaultSystemControl(activeSiteId){
-      if(!activeSiteId) return null;
-
-      const { data, error } = await client
-        .from("site_system_control")
-        .insert([
-          {
-            site_id: activeSiteId,
-            wash_enabled: true,
-            estop_active: false,
-            lockout_enabled: false,
-            lockout_start: null,
-            lockout_end: null,
-            updated_at: new Date().toISOString()
-          }
-        ])
-        .select("*")
-        .maybeSingle();
-
-      if(error){
-        console.log("Create system control error:", error);
-        return null;
-      }
-
-      return data;
-    }
-
-    async function fetchSystemControl(){
-      const activeSiteId = getActiveSiteId();
-      if(!activeSiteId) return null;
+    async function fetchSystemControl(siteId){
+      if(!siteId) return null;
 
       const { data, error } = await client
         .from("site_system_control")
         .select("*")
-        .eq("site_id", activeSiteId)
+        .eq("site_id", siteId)
         .limit(1)
         .maybeSingle();
 
       if(error){
-        console.log("Fetch system control error:", error);
+        console.log("System control error:", error);
         return null;
       }
 
-      if(data) return data;
-
-      return await createDefaultSystemControl(activeSiteId);
+      return data || null;
     }
 
     async function fetchBayStatus(){
-  const { data, error } = await client
-    .from("bay_status")
-    .select("*")
-    .order("bay_name", { ascending:true });
+      const { data, error } = await client
+        .from("bay_status")
+        .select("*")
+        .order("bay_name", { ascending:true });
 
-  if(error){
-    console.log("Bay status error:", error);
-    return [];
-  }
+      if(error){
+        console.log("Bay status error:", error);
+        return [];
+      }
 
-  return data || [];
-}
+      return data || [];
+    }
 
     function activeOnlyCodes(codes){
       return codes.filter(code => code.is_active !== false);
@@ -1318,7 +1283,7 @@
       }
 
       setControlStatus(enabled ? "Wash enabled." : "Wash disabled.");
-      loadDashboard();
+      scheduleDashboardRefresh();
     }
 
     async function setEstop(active){
@@ -1342,7 +1307,7 @@
       }
 
       setControlStatus(active ? "E-STOP marked active." : "E-STOP cleared.");
-      loadDashboard();
+      scheduleDashboardRefresh();
     }
 
     async function saveSchedule(){
@@ -1375,17 +1340,10 @@
       }
 
       setControlStatus("Lockout schedule saved.");
-      loadDashboard();
+      scheduleDashboardRefresh();
     }
 
     async function updateBayStatus(id, status){
-      const activeSiteId = getActiveSiteId();
-
-      if(!activeSiteId){
-        setBayStatusMessage("No active site selected.");
-        return;
-      }
-
       const { error } = await client
         .from("bay_status")
         .update({
@@ -1401,35 +1359,51 @@
       }
 
       setBayStatusMessage(`Bay updated to ${status}.`);
-      loadDashboard();
+      scheduleDashboardRefresh();
+    }
+
+    function resetDashboardEmpty(){
+      document.getElementById("activeCodes").innerText = "0";
+      document.getElementById("todayWashes").innerText = "0";
+      document.getElementById("topCode").innerText = "-";
+      document.getElementById("topDepartment").innerText = "-";
+      document.getElementById("totalActivityRecords").innerText = "0";
+      document.getElementById("totalDepartments").innerText = "0";
+      document.getElementById("totalBays").innerText = "0";
+      document.getElementById("lastUpdated").innerText = new Date().toLocaleTimeString();
+      renderRecentActivity([]);
+      renderTopCodes([]);
+      renderDepartmentChart([]);
+      renderDailyChart({ labels:[], values:[] });
+      renderSystemControl(null);
+      renderBayEditor([]);
     }
 
     async function loadDashboard(){
+      const loadToken = ++dashboardLoadToken;
       const activeSiteId = getActiveSiteId();
 
       if(!activeSiteId){
-        document.getElementById("activeCodes").innerText = "0";
-        document.getElementById("todayWashes").innerText = "0";
-        document.getElementById("topCode").innerText = "-";
-        document.getElementById("topDepartment").innerText = "-";
-        document.getElementById("totalActivityRecords").innerText = "0";
-        document.getElementById("totalDepartments").innerText = "0";
-        document.getElementById("totalBays").innerText = "0";
-        document.getElementById("lastUpdated").innerText = new Date().toLocaleTimeString();
-        renderRecentActivity([]);
-        renderTopCodes([]);
-        renderDepartmentChart([]);
-        renderDailyChart({ labels:[], values:[] });
-        renderSystemControl(null);
-        renderBayEditor([]);
+        resetDashboardEmpty();
         return;
       }
 
-      const codes = await fetchCodes();
-      const recentActivity = await fetchRecentActivity();
-      const allActivity = await fetchAllActivity();
-      const control = await fetchSystemControl();
-      const bays = await fetchBayStatus();
+      const [
+        codes,
+        recentActivity,
+        allActivity,
+        control,
+        bays
+      ] = await Promise.all([
+        fetchCodes(activeSiteId),
+        fetchRecentActivity(activeSiteId),
+        fetchAllActivity(activeSiteId),
+        fetchSystemControl(activeSiteId),
+        fetchBayStatus()
+      ]);
+
+      if(loadToken !== dashboardLoadToken) return;
+      if(activeSiteId !== getActiveSiteId()) return;
 
       const activeCodes = activeOnlyCodes(codes);
       const codeUsage = buildCodeUsageData(allActivity);
@@ -1452,6 +1426,13 @@
       renderDailyChart(daily);
       renderSystemControl(control);
       renderBayEditor(bays);
+    }
+
+    function scheduleDashboardRefresh(){
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => {
+        loadDashboard();
+      }, 200);
     }
 
     document.addEventListener("click", function(event){
@@ -1479,24 +1460,25 @@
 
     client.channel("washtrac-live-dashboard")
       .on("postgres_changes", { event: "*", schema: "public", table: "wash_activity" }, payload => {
-        if(payload.new?.site_id === getActiveSiteId() || payload.old?.site_id === getActiveSiteId()){
-          loadDashboard();
+        const siteId = getActiveSiteId();
+        if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
+          scheduleDashboardRefresh();
         }
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "access_codes" }, payload => {
-        if(payload.new?.site_id === getActiveSiteId() || payload.old?.site_id === getActiveSiteId()){
-          loadDashboard();
+        const siteId = getActiveSiteId();
+        if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
+          scheduleDashboardRefresh();
         }
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "site_system_control" }, payload => {
-        if(payload.new?.site_id === getActiveSiteId() || payload.old?.site_id === getActiveSiteId()){
-          loadDashboard();
+        const siteId = getActiveSiteId();
+        if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
+          scheduleDashboardRefresh();
         }
       })
-      .on("postgres_changes", { event: "*", schema: "public", table: "bay_status" }, payload => {
-        if(payload.new?.site_id === getActiveSiteId() || payload.old?.site_id === getActiveSiteId()){
-          loadDashboard();
-        }
+      .on("postgres_changes", { event: "*", schema: "public", table: "bay_status" }, () => {
+        scheduleDashboardRefresh();
       })
       .subscribe();
 
