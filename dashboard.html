@@ -1361,10 +1361,18 @@
       .on("postgres_changes", { event: "*", schema: "public", table: "bay_status" }, () => loadDashboard())
       .subscribe();
 
-    window.onload = function(){
-      loadSites();
-      loadDashboard();
-    };
+    window.onload = async function(){
+
+  // 🔥 initialize multi-site system
+  await renderSiteSwitcher();
+
+  const activeSiteId = await requireActiveSite();
+  if (!activeSiteId) return;
+
+  // keep your existing behavior
+  loadSites();
+  loadDashboard();
+};
   </script>
 </body>
 </html>
