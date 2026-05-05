@@ -538,6 +538,23 @@ function getActiveSiteId(){
   return localStorage.getItem("activeSiteId") || localStorage.getItem("washtracActiveSiteId") || "";
 }
 
+function applyReportUrlParams(){
+  const params = new URLSearchParams(window.location.search);
+
+  const scope = params.get("reportScope");
+  const siteId = params.get("siteId");
+
+  if(siteId){
+    localStorage.setItem("activeSiteId", siteId);
+    localStorage.setItem("washtracActiveSiteId", siteId);
+  }
+
+  const scopeSelect = document.getElementById("reportSiteScope");
+  if(scopeSelect && (scope === "current" || scope === "all")){
+    scopeSelect.value = scope;
+  }
+}
+
 function setSiteScopeSummary(message){
   const box = document.getElementById("siteScopeSummary");
   if(box) box.innerText = message;
@@ -1129,10 +1146,21 @@ function buildReportHtml(columns, codes, departments, rangeLabel, scopeLabel){
         </p>
 
         <!-- BUTTON -->
-        <a href="https://thewashtrac.com/reports"
-           style="display:inline-block;margin-top:14px;padding:10px 14px;background:#2563eb;color:white;border-radius:8px;text-decoration:none;font-size:14px;font-weight:bold;">
-          View Full Interactive Report
-        </a>
+        ${(() => {
+          const activeSiteId = getActiveSiteId();
+          const reportUrl = isAllSites
+            ? "https://www.thewashtrac.com/usage.html?reportScope=all"
+            : `https://www.thewashtrac.com/usage.html?reportScope=current&siteId=${encodeURIComponent(activeSiteId)}`;
+
+          const loginUrl = `https://www.thewashtrac.com/login.html?redirect=${encodeURIComponent(reportUrl)}`;
+
+          return `
+            <a href="${loginUrl}"
+               style="display:inline-block;margin-top:14px;padding:10px 14px;background:#2563eb;color:white;border-radius:8px;text-decoration:none;font-size:14px;font-weight:bold;">
+              View Full Interactive Report
+            </a>
+          `;
+        })()}
 
       </div>
 
@@ -1469,6 +1497,7 @@ populateMonthDays();
 updateReportRangeFields();
 updateScheduleRangeFields();
 loadSavedSchedule();
+applyReportUrlParams();
 loadUsage();
 
 client.channel("washtrac-live-usage")
