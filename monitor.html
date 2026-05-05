@@ -233,7 +233,7 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
   <a href="usage.html">Reports</a>
   <a href="monitor.html">Monitor</a>
   <hr class="menu-divider">
-  <a href="index.html">Back to Homepage</a>
+  <a href="#" onclick="goHome(event)">Back to Homepage</a>
   <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
 </div>
 
@@ -257,7 +257,7 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
       <button class="menu-btn" type="button" onclick="toggleDesktopMenu()">☰</button>
 
       <div class="hamburger-menu" id="desktopMenu">
-        <a href="index.html">Back to Homepage</a>
+        <a href="#" onclick="goHome(event)">Back to Homepage</a>
         <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
       </div>
     </div>
@@ -306,9 +306,21 @@ const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let monitorChannel = null;
+let currentSiteId = null;
+let assignedSiteIds = [];
+let refreshTimer = null;
 
 function getActiveSiteId(){
-  return localStorage.getItem("activeSiteId") || "";
+  return currentSiteId || localStorage.getItem("activeSiteId") || localStorage.getItem("washtracActiveSiteId") || "";
+}
+
+function setActiveSiteId(siteId){
+  currentSiteId = siteId || "";
+
+  if(currentSiteId){
+    localStorage.setItem("activeSiteId", currentSiteId);
+    localStorage.setItem("washtracActiveSiteId", currentSiteId);
+  }
 }
 
 function toggleDesktopMenu(){
@@ -339,6 +351,14 @@ function closeMenus(){
   document.getElementById("backdrop").style.display = "none";
 }
 
+function goHome(event){
+  if(event) event.preventDefault();
+  closeMenus();
+
+  localStorage.removeItem("washtracLoggedIn");
+  window.location.replace("index.html");
+}
+
 async function logout(event){
   if(event) event.preventDefault();
 
@@ -352,6 +372,7 @@ async function logout(event){
 
   localStorage.removeItem("washtracLoggedIn");
   localStorage.removeItem("activeSiteId");
+  localStorage.removeItem("washtracActiveSiteId");
   window.location.replace("login.html");
 }
 
@@ -404,6 +425,15 @@ function getBayDotClass(status){
   return "dot-idle";
 }
 
+function escapeText(value){
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 function renderBays(bays){
   const wrap = document.getElementById("bayGrid");
   wrap.innerHTML = "";
@@ -419,12 +449,15 @@ function renderBays(bays){
   }
 
   bays.forEach(bay => {
+    const bayName = escapeText(bay.bay_name || bay.bay || "Bay");
+    const status = escapeText(bay.status || "Idle");
+
     wrap.innerHTML += `
       <div class="bay-card">
-        <h3>${bay.bay_name || bay.bay || "Bay"}</h3>
+        <h3>${bayName}</h3>
         <div class="bay-status">
           <span class="bay-dot ${getBayDotClass(bay.status)}"></span>
-          ${bay.status || "Idle"}
+          ${status}
         </div>
       </div>
     `;
@@ -432,29 +465,15 @@ function renderBays(bays){
 }
 
 function getActivityCode(row){
-  return (
-    row.metadata?.code ||
-    row.code ||
-    row.access_code ||
-    ""
-  );
+  return row.metadata?.code || row.code || row.access_code || "";
 }
 
 function getActivityEvent(row){
-  return (
-    row.event ||
-    row.status ||
-    ""
-  );
+  return row.event || row.status || "";
 }
 
 function getActivityTime(row){
-  return (
-    row.event_time ||
-    row.created_at ||
-    row.timestamp ||
-    ""
-  );
+  return row.event_time || row.created_at || row.timestamp || "";
 }
 
 function renderActivity(activity){
@@ -468,15 +487,13 @@ function renderActivity(activity){
 
   activity.forEach(row => {
     const rawTime = getActivityTime(row);
-    const timeText = rawTime
-      ? new Date(rawTime).toLocaleTimeString()
-      : "--:--";
+    const timeText = rawTime ? new Date(rawTime).toLocaleTimeString() : "--:--";
 
     wrap.innerHTML += `
       <div class="activity-row">
-        <div class="activity-time">${timeText}</div>
-        <div class="activity-code">${getActivityCode(row)}</div>
-        <div class="activity-event">${getActivityEvent(row)}</div>
+        <div class="activity-time">${escapeText(timeText)}</div>
+        <div class="activity-code">${escapeText(getActivityCode(row))}</div>
+        <div class="activity-event">${escapeText(getActivityEvent(row))}</div>
       </div>
     `;
   });
@@ -543,10 +560,53 @@ function renderNoSite(){
   banner.innerText = "NO SITE SELECTED";
 }
 
+async function loadAssignedSites(){
+  const { data: userData, error: userError } = await client.auth.getUser();
+
+  if(userError || !userData?.user){
+    localStorage.removeItem("washtracLoggedIn");
+    window.location.replace("login.html");
+    return [];
+  }
+
+  const user = userData.user;
+
+  const { data, error } = await client
+    .from("user_site_access")
+    .select("site_id, sites(*)")
+    .eq("user_id", user.id);
+
+  if(error){
+    console.log("user_site_access error:", error);
+    return [];
+  }
+
+  const sites = (data || [])
+    .map(row => row.sites || { id: row.site_id })
+    .filter(site => site && site.id);
+
+  assignedSiteIds = sites.map(site => site.id);
+
+  const saved = getActiveSiteId();
+  const savedIsAllowed = saved && assignedSiteIds.includes(saved);
+  const nextSiteId = savedIsAllowed ? saved : (assignedSiteIds[0] || "");
+
+  if(nextSiteId){
+    setActiveSiteId(nextSiteId);
+  }
+
+  return sites;
+}
+
+function hasAccessToActiveSite(){
+  const activeSiteId = getActiveSiteId();
+  return !!activeSiteId && assignedSiteIds.includes(activeSiteId);
+}
+
 async function loadControl(){
   const activeSiteId = getActiveSiteId();
 
-  if(!activeSiteId){
+  if(!activeSiteId || !hasAccessToActiveSite()){
     renderControl(null);
     return;
   }
@@ -570,19 +630,19 @@ async function loadControl(){
 async function loadBays(){
   const activeSiteId = getActiveSiteId();
 
-  if(!activeSiteId){
+  if(!activeSiteId || !hasAccessToActiveSite()){
     renderBays([]);
     return;
   }
 
   const { data, error } = await client
-    .from("site_bay_status")
+    .from("bay_status")
     .select("*")
     .eq("site_id", activeSiteId)
     .order("bay_name", { ascending:true });
 
   if(error){
-    console.log("site_bay_status error:", error);
+    console.log("bay_status error:", error);
     renderBays([]);
     return;
   }
@@ -593,7 +653,7 @@ async function loadBays(){
 async function loadActivity(){
   const activeSiteId = getActiveSiteId();
 
-  if(!activeSiteId){
+  if(!activeSiteId || !hasAccessToActiveSite()){
     renderActivity([]);
     return;
   }
@@ -617,7 +677,7 @@ async function loadActivity(){
 async function loadMonitor(){
   const activeSiteId = getActiveSiteId();
 
-  if(!activeSiteId){
+  if(!activeSiteId || !hasAccessToActiveSite()){
     renderNoSite();
     return;
   }
@@ -629,6 +689,13 @@ async function loadMonitor(){
   ]);
 }
 
+function scheduleMonitorRefresh(){
+  clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(() => {
+    loadMonitor();
+  }, 200);
+}
+
 function setupRealtime(){
   const activeSiteId = getActiveSiteId();
 
@@ -637,7 +704,7 @@ function setupRealtime(){
     monitorChannel = null;
   }
 
-  if(!activeSiteId) return;
+  if(!activeSiteId || !hasAccessToActiveSite()) return;
 
   monitorChannel = client.channel("monitor-live-" + activeSiteId)
     .on("postgres_changes", {
@@ -657,7 +724,7 @@ function setupRealtime(){
     .on("postgres_changes", {
       event:"*",
       schema:"public",
-      table:"site_bay_status",
+      table:"bay_status",
       filter:`site_id=eq.${activeSiteId}`
     }, () => loadBays())
 
@@ -667,14 +734,7 @@ function setupRealtime(){
 }
 
 async function initMonitor(){
-  const { data, error } = await client.auth.getUser();
-
-  if(error || !data || !data.user){
-    localStorage.removeItem("washtracLoggedIn");
-    window.location.replace("login.html");
-    return;
-  }
-
+  await loadAssignedSites();
   await loadMonitor();
   setupRealtime();
 }
@@ -682,7 +742,7 @@ async function initMonitor(){
 initMonitor();
 
 setInterval(function(){
-  loadMonitor();
+  scheduleMonitorRefresh();
 }, 30000);
 </script>
 </body>
