@@ -636,7 +636,7 @@ async function loadBays(){
   }
 
   const { data, error } = await client
-    .from("bay_status")
+    .from("site_bay_status")
     .select("*")
     .eq("site_id", activeSiteId)
     .order("bay_name", { ascending:true });
