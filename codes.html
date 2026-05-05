@@ -140,6 +140,30 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
       <p>Create, organize, and remove access codes with a cleaner WashTrac admin layout.</p>
     </div>
 
+    <div style="margin-top:14px; margin-bottom:24px; max-width:520px; display:flex; gap:10px;">
+      <select id="siteSwitcher" onchange="switchSite(this.value)" style="
+        flex:1;
+        padding:12px;
+        border-radius:10px;
+        background:#0b1220;
+        color:white;
+        border:1px solid #1ea7ff;
+        box-shadow:0 0 6px rgba(30,167,255,0.4);
+        font-size:15px;
+        font-weight:600;
+        outline:none;
+      ">
+        <option>Loading sites...</option>
+      </select>
+
+      <button onclick="window.location.href='sites.html'" style="
+        white-space:nowrap;
+        padding:12px 16px;
+      ">
+        Manage Sites
+      </button>
+    </div>
+
     <div class="summary">
       <div class="summary-box"><strong id="totalCodes">0</strong><span>Total Codes</span></div>
       <div class="summary-box"><strong id="activeDepartments">0</strong><span>Departments</span></div>
@@ -236,12 +260,28 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
 <script>
 const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
 const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
-const ORGANIZATION_ID = "c9edef22-aee6-4fd5-a9c6-17e275d1588b";
-const SITE_ID = "0600ecef-9699-458a-8259-0f0876b12ae0";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let allCodes = [];
 let allActivity = [];
+let currentSiteId = null;
+let currentOrganizationId = null;
+let codesLoadToken = 0;
+let refreshTimer = null;
+
+function getActiveSiteId(){
+  return currentSiteId || localStorage.getItem("activeSiteId") || "";
+}
+
+function requireSite(){
+  const siteId = getActiveSiteId();
+
+  if(!siteId){
+    throw new Error("No active site selected.");
+  }
+
+  return siteId;
+}
 
 function toggleDesktopMenu(){
   const desktopMenu = document.getElementById("desktopMenu");
@@ -277,7 +317,6 @@ function goHome(event){
   closeMenus();
 
   localStorage.removeItem("washtracLoggedIn");
-
   window.location.replace("index.html");
 }
 
@@ -293,6 +332,8 @@ async function logout(event){
   }
 
   localStorage.removeItem("washtracLoggedIn");
+  localStorage.removeItem("activeSiteId");
+  localStorage.removeItem("activeOrganizationId");
   window.location.replace("login.html");
 }
 
@@ -398,40 +439,164 @@ function getCodeStats(code){
   };
 }
 
-async function fetchCodes(){
+async function loadSites(){
+  const select = document.getElementById("siteSwitcher");
+  if(!select) return "";
+
+  select.innerHTML = `<option>Loading sites...</option>`;
+
+  const { data: userData, error: userError } = await client.auth.getUser();
+
+  if(userError || !userData?.user){
+    console.log("User error:", userError);
+    select.innerHTML = `<option value="">No user</option>`;
+    return "";
+  }
+
+  const user = userData.user;
+
+  const { data, error } = await client
+    .from("user_site_access")
+    .select(`
+      site_id,
+      sites (*)
+    `)
+    .eq("user_id", user.id);
+
+  if(error){
+    console.log("Site access error:", error);
+    select.innerHTML = `<option value="">Error loading sites</option>`;
+    return "";
+  }
+
+  const sites = (data || [])
+    .map(row => row.sites)
+    .filter(Boolean);
+
+  if(!sites.length){
+    select.innerHTML = `<option value="">No sites assigned</option>`;
+    localStorage.removeItem("activeSiteId");
+    localStorage.removeItem("activeOrganizationId");
+    currentSiteId = null;
+    currentOrganizationId = null;
+    return "";
+  }
+
+  select.innerHTML = sites.map(site => {
+    return `<option value="${site.id}">${escapeText(site.name || "Unnamed Site")}</option>`;
+  }).join("");
+
+  const saved = localStorage.getItem("activeSiteId");
+  const exists = saved && sites.some(site => site.id === saved);
+  const activeSite = exists ? sites.find(site => site.id === saved) : sites[0];
+
+  currentSiteId = activeSite.id;
+  currentOrganizationId = activeSite.organization_id || activeSite.org_id || activeSite.company_id || null;
+
+  localStorage.setItem("activeSiteId", currentSiteId);
+
+  if(currentOrganizationId){
+    localStorage.setItem("activeOrganizationId", currentOrganizationId);
+  }
+
+  select.value = currentSiteId;
+
+  return currentSiteId;
+}
+
+async function switchSite(siteId){
+  if(!siteId) return;
+
+  currentSiteId = siteId;
+  localStorage.setItem("activeSiteId", siteId);
+
+  const siteSwitcher = document.getElementById("siteSwitcher");
+  if(siteSwitcher) siteSwitcher.blur();
+
+  const { data, error } = await client
+    .from("sites")
+    .select("*")
+    .eq("id", siteId)
+    .maybeSingle();
+
+  if(!error && data){
+    currentOrganizationId = data.organization_id || data.org_id || data.company_id || null;
+
+    if(currentOrganizationId){
+      localStorage.setItem("activeOrganizationId", currentOrganizationId);
+    }
+  }
+
+  clearStatus();
+  await loadCodesPage();
+}
+
+function resetCodesEmpty(){
+  allCodes = [];
+  allActivity = [];
+
+  document.getElementById("totalCodes").innerText = "0";
+  document.getElementById("activeDepartments").innerText = "0";
+  document.getElementById("topUsedCode").innerText = "-";
+  document.getElementById("totalUses").innerText = "0";
+  document.getElementById("codesTableBody").innerHTML = `<tr><td colspan="6" class="muted">No active site selected.</td></tr>`;
+}
+
+async function fetchCodes(siteId){
+  if(!siteId) return [];
+
   const { data, error } = await client
     .from("access_codes")
     .select("*")
+    .eq("site_id", siteId)
     .order("created_at", { ascending:false });
 
   if(error){
     console.log("fetchCodes error:", error);
     setStatus("Could not load codes.");
-    allCodes = [];
-    return;
+    return [];
   }
 
-  allCodes = data || [];
+  return data || [];
 }
 
-async function fetchActivity(){
+async function fetchActivity(siteId){
+  if(!siteId) return [];
+
   const { data, error } = await client
     .from("wash_activity")
     .select("*")
+    .eq("site_id", siteId)
     .order("event_time", { ascending:false });
 
   if(error){
     console.log("fetchActivity error:", error);
-    allActivity = [];
-    return;
+    return [];
   }
 
-  allActivity = (data || []).map(normalizeActivity);
+  return (data || []).map(normalizeActivity);
 }
 
 async function loadCodesPage(){
-  await fetchCodes();
-  await fetchActivity();
+  const loadToken = ++codesLoadToken;
+  const activeSiteId = getActiveSiteId();
+
+  if(!activeSiteId){
+    resetCodesEmpty();
+    return;
+  }
+
+  const [codes, activity] = await Promise.all([
+    fetchCodes(activeSiteId),
+    fetchActivity(activeSiteId)
+  ]);
+
+  if(loadToken !== codesLoadToken) return;
+  if(activeSiteId !== getActiveSiteId()) return;
+
+  allCodes = codes;
+  allActivity = activity;
+
   renderCodes();
   renderSummary();
 }
@@ -493,6 +658,11 @@ function renderCodes(){
   const tbody = document.getElementById("codesTableBody");
   tbody.innerHTML = "";
 
+  if(!getActiveSiteId()){
+    tbody.innerHTML = `<tr><td colspan="6" class="muted">No active site selected.</td></tr>`;
+    return;
+  }
+
   if(!filtered.length){
     tbody.innerHTML = `<tr><td colspan="6" class="muted">No matching codes found.</td></tr>`;
     return;
@@ -529,6 +699,15 @@ function clearSearch(){
 async function addCode(){
   clearStatus();
 
+  let activeSiteId = "";
+
+  try{
+    activeSiteId = requireSite();
+  }catch(err){
+    setStatus("No active site selected.");
+    return;
+  }
+
   const code = document.getElementById("codeInput").value.trim();
   const department = getDepartmentValue().trim();
   const name = document.getElementById("nameInput").value.trim();
@@ -541,7 +720,7 @@ async function addCode(){
   const existing = allCodes.find(item => String(getCodeValue(item)).trim() === code);
 
   if(existing && getIsActive(existing)){
-    setStatus("That code already exists.");
+    setStatus("That code already exists on this site.");
     return;
   }
 
@@ -551,9 +730,11 @@ async function addCode(){
       .update({
         department,
         assigned_to: name,
-        is_active: true
+        is_active: true,
+        site_id: activeSiteId
       })
-      .eq("id", existing.id);
+      .eq("id", existing.id)
+      .eq("site_id", activeSiteId);
 
     if(error){
       console.log("reactivate code error:", error);
@@ -561,16 +742,21 @@ async function addCode(){
       return;
     }
   } else {
+    const insertRow = {
+      site_id: activeSiteId,
+      code,
+      department,
+      assigned_to: name,
+      is_active: true
+    };
+
+    if(currentOrganizationId){
+      insertRow.organization_id = currentOrganizationId;
+    }
+
     const { error } = await client
       .from("access_codes")
-      .insert([{
-        organization_id: ORGANIZATION_ID,
-        site_id: SITE_ID,
-        code,
-        department,
-        assigned_to: name,
-        is_active: true
-      }]);
+      .insert([insertRow]);
 
     if(error){
       console.log("add code error:", error);
@@ -586,11 +772,20 @@ async function addCode(){
   document.getElementById("customDepartmentWrap").classList.add("hidden");
 
   setStatus("Code added.");
-  loadCodesPage();
+  await loadCodesPage();
 }
 
 async function removeCode(id, code){
   clearStatus();
+
+  let activeSiteId = "";
+
+  try{
+    activeSiteId = requireSite();
+  }catch(err){
+    setStatus("No active site selected.");
+    return;
+  }
 
   const confirmed = confirm(`Remove code ${code}?`);
   if(!confirmed) return;
@@ -599,6 +794,7 @@ async function removeCode(id, code){
     .from("access_codes")
     .update({ is_active: false })
     .eq("id", id)
+    .eq("site_id", activeSiteId)
     .select();
 
   if(error){
@@ -613,7 +809,14 @@ async function removeCode(id, code){
   }
 
   setStatus("Code removed.");
-  loadCodesPage();
+  await loadCodesPage();
+}
+
+function scheduleCodesRefresh(){
+  clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(() => {
+    loadCodesPage();
+  }, 200);
 }
 
 document.addEventListener("keydown", function(event){
@@ -637,12 +840,31 @@ document.addEventListener("click", function(event){
   }
 });
 
-loadCodesPage();
-
 client.channel("washtrac-live-codes")
-  .on("postgres_changes", { event: "*", schema: "public", table: "access_codes" }, () => loadCodesPage())
-  .on("postgres_changes", { event: "*", schema: "public", table: "wash_activity" }, () => loadCodesPage())
+  .on("postgres_changes", { event: "*", schema: "public", table: "access_codes" }, payload => {
+    const siteId = getActiveSiteId();
+    if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
+      scheduleCodesRefresh();
+    }
+  })
+  .on("postgres_changes", { event: "*", schema: "public", table: "wash_activity" }, payload => {
+    const siteId = getActiveSiteId();
+    if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
+      scheduleCodesRefresh();
+    }
+  })
   .subscribe();
+
+window.onload = async function(){
+  const siteId = await loadSites();
+
+  if(!siteId){
+    resetCodesEmpty();
+    return;
+  }
+
+  await loadCodesPage();
+};
 </script>
 </body>
 </html>
