@@ -182,6 +182,10 @@
       margin:0 0 16px 0;
     }
 
+    .card h4{
+      margin:0 0 12px 0;
+    }
+
     .note{
       margin-top:14px;
       color:#94a3b8;
@@ -222,6 +226,22 @@
       font-size:12px;
       font-weight:bold;
       white-space:nowrap;
+      text-transform:uppercase;
+    }
+
+    .pill.green{
+      background:rgba(34,197,94,.14);
+      color:#86efac;
+    }
+
+    .pill.yellow{
+      background:rgba(245,158,11,.14);
+      color:#fcd34d;
+    }
+
+    .pill.red{
+      background:rgba(239,68,68,.14);
+      color:#fca5a5;
     }
 
     .field-grid{
@@ -256,6 +276,8 @@
       font-size:15px;
     }
 
+    input::placeholder{color:#64748b}
+
     .controls{
       display:flex;
       gap:12px;
@@ -275,6 +297,7 @@
 
     button.secondary{background:#334155}
     button.success{background:#16a34a}
+    button.danger{background:#dc2626}
 
     .status{
       margin-top:14px;
@@ -300,8 +323,73 @@
       background:rgba(127,29,29,.24);
     }
 
+    .site-card{
+      background:#0b1220;
+      border:1px solid #1f2937;
+      border-radius:12px;
+      padding:18px;
+      margin-bottom:16px;
+    }
+
+    .site-card-top{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:12px;
+      align-items:start;
+      padding-bottom:14px;
+      border-bottom:1px solid #1f2937;
+      margin-bottom:14px;
+    }
+
+    .invite-box{
+      margin-top:14px;
+      padding-top:14px;
+      border-top:1px solid #1f2937;
+    }
+
+    .invite-grid{
+      display:grid;
+      grid-template-columns:1fr 150px auto;
+      gap:10px;
+      align-items:end;
+    }
+
+    .mini-list{
+      margin-top:12px;
+      background:#020617;
+      border:1px solid #1f2937;
+      border-radius:10px;
+      overflow:hidden;
+    }
+
+    .mini-row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:10px;
+      padding:10px 12px;
+      border-bottom:1px solid #1f2937;
+      color:#cbd5e1;
+      align-items:center;
+    }
+
+    .mini-row:last-child{border-bottom:none}
+
+    .mini-main{
+      min-width:0;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .mini-muted{
+      color:#94a3b8;
+      font-size:13px;
+      margin-top:3px;
+    }
+
     @media (max-width:1100px){
       .grid-2{grid-template-columns:1fr}
+      .invite-grid{grid-template-columns:1fr 1fr}
+      .invite-grid .field.full-mobile{grid-column:1 / -1}
     }
 
     @media (max-width:900px){
@@ -313,6 +401,8 @@
       .page-header{padding-right:0}
       .page-header h1{font-size:34px}
       .field-grid{grid-template-columns:1fr}
+      .site-card-top{grid-template-columns:1fr}
+      .invite-grid{grid-template-columns:1fr}
       .mobile-menu{
         position:absolute;
         top:64px;
@@ -381,7 +471,7 @@
           <span class="live-pill">LOCATIONS</span>
         </h1>
         <p>
-          Add and manage carwash locations connected to this WashTrac account.
+          Add locations, manage site access, and invite other users by email.
         </p>
       </div>
 
@@ -426,39 +516,39 @@
           <div id="siteStatus" class="status"></div>
 
           <div class="note">
-            When a site is added, it will be available for the dashboard site switcher. Your database trigger should automatically create the system-control row.
+            When a site is added, it is linked to your login in <strong>user_site_access</strong> and becomes available in the dashboard site switcher.
           </div>
         </div>
 
         <div class="card">
-          <h3>How This Works</h3>
+          <h3>How User Access Works</h3>
 
           <div class="site-row">
             <div>
-              <div class="site-name">Organization</div>
-              <div class="site-meta">The customer/company account.</div>
+              <div class="site-name">Owner / Admin</div>
+              <div class="site-meta">Can create sites and invite other users.</div>
             </div>
-            <div class="pill">Company</div>
+            <div class="pill green">Control</div>
           </div>
 
           <div class="site-row">
             <div>
-              <div class="site-name">Site</div>
-              <div class="site-meta">A physical carwash location.</div>
+              <div class="site-name">Email Invite</div>
+              <div class="site-meta">Invite a boss, manager, or tech by email. No user code needed.</div>
             </div>
-            <div class="pill">Location</div>
+            <div class="pill">Users</div>
           </div>
 
           <div class="site-row">
             <div>
-              <div class="site-name">Site Member</div>
-              <div class="site-meta">Links the logged-in user to the site.</div>
+              <div class="site-name">6-Digit Code</div>
+              <div class="site-meta">Reserved for pairing a physical CodeBox to a site.</div>
             </div>
-            <div class="pill">Access</div>
+            <div class="pill yellow">Device</div>
           </div>
 
           <div class="note">
-            Later, this page can add users, roles, and permissions for managers with many locations.
+            If the invited email already has a WashTrac login, they can be linked when they open this page. If they sign up later with the same email, the invite can be accepted then.
           </div>
         </div>
       </div>
@@ -477,6 +567,9 @@
 
     let organizations = [];
     let currentUser = null;
+    let currentSites = [];
+    let pendingInvites = [];
+    let acceptedMembers = [];
 
     function toggleMobileMenu(){
       const menu = document.getElementById("mobileMenu");
@@ -519,9 +612,16 @@
       window.location.replace("index.html");
     }
 
-    function logout(event){
+    async function logout(event){
       if(event) event.preventDefault();
       closeMenus();
+
+      try{
+        await client.auth.signOut();
+      }catch(err){
+        console.log("logout error:", err);
+      }
+
       localStorage.removeItem("washtracLoggedIn");
       localStorage.removeItem("activeSiteId");
       window.location.replace("login.html");
@@ -534,13 +634,18 @@
       if(type) box.classList.add(type);
     }
 
+    function clearStatus(){
+      const box = document.getElementById("siteStatus");
+      box.innerText = "";
+      box.className = "status";
+    }
+
     function clearForm(){
       document.getElementById("siteName").value = "";
       document.getElementById("siteCity").value = "";
       document.getElementById("siteState").value = "";
       document.getElementById("siteAddress").value = "";
-      setStatus("", "");
-      document.getElementById("siteStatus").className = "status";
+      clearStatus();
     }
 
     function siteLabel(site){
@@ -551,6 +656,38 @@
       return org.name || org.organization_name || org.company_name || "Unnamed Organization";
     }
 
+    function escapeText(value){
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function normalizeEmail(email){
+      return String(email || "").trim().toLowerCase();
+    }
+
+    function isValidEmail(email){
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim());
+    }
+
+    function generateInviteCode(){
+      const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let code = "";
+      for(let i = 0; i < 10; i++){
+        code += alphabet[Math.floor(Math.random() * alphabet.length)];
+      }
+      return code;
+    }
+
+    function addDays(date, days){
+      const d = new Date(date);
+      d.setDate(d.getDate() + days);
+      return d;
+    }
+
     async function loadCurrentUser(){
       const { data, error } = await client.auth.getUser();
 
@@ -559,6 +696,13 @@
       }
 
       currentUser = data?.user || null;
+
+      if(!currentUser){
+        localStorage.removeItem("washtracLoggedIn");
+        window.location.replace("login.html");
+        return null;
+      }
+
       return currentUser;
     }
 
@@ -586,59 +730,156 @@
       }
 
       select.innerHTML = organizations.map(org => {
-        return `<option value="${org.id}">${organizationLabel(org)}</option>`;
+        return `<option value="${escapeText(org.id)}">${escapeText(organizationLabel(org))}</option>`;
       }).join("");
 
       return organizations;
+    }
+
+    async function acceptPendingInvitesForCurrentUser(){
+      if(!currentUser?.email) return;
+
+      const email = normalizeEmail(currentUser.email);
+
+      const { data: invites, error } = await client
+        .from("site_invites")
+        .select("*")
+        .eq("email", email)
+        .is("accepted_at", null);
+
+      if(error){
+        console.log("Pending invite lookup error:", error);
+        return;
+      }
+
+      const now = new Date();
+
+      for(const invite of (invites || [])){
+        if(invite.expires_at && new Date(invite.expires_at) < now){
+          continue;
+        }
+
+        const { data: existingAccess, error: existingError } = await client
+          .from("user_site_access")
+          .select("id")
+          .eq("user_id", currentUser.id)
+          .eq("site_id", invite.site_id)
+          .limit(1);
+
+        if(existingError){
+          console.log("Existing access check error:", existingError);
+          continue;
+        }
+
+        if(!existingAccess || !existingAccess.length){
+          const { error: accessError } = await client
+            .from("user_site_access")
+            .insert([{
+              user_id: currentUser.id,
+              site_id: invite.site_id,
+              role: invite.role || "viewer"
+            }]);
+
+          if(accessError){
+            console.log("Accept invite access insert error:", accessError);
+            continue;
+          }
+        }
+
+        const { error: acceptError } = await client
+          .from("site_invites")
+          .update({ accepted_at: new Date().toISOString(), accepted_by: currentUser.id })
+          .eq("id", invite.id);
+
+        if(acceptError){
+          console.log("Mark invite accepted error:", acceptError);
+        }
+      }
     }
 
     async function loadSites(){
       const wrap = document.getElementById("sitesList");
       wrap.innerHTML = `<div class="site-row"><div><div class="site-name">Loading sites...</div></div><div class="pill">...</div></div>`;
 
-      let sites = [];
+      currentSites = [];
 
-      if(currentUser){
-  const memberResult = await client
-    .from("user_site_access")
-    .select("site_id, role, sites(*)")
-    .eq("user_id", currentUser.id);
-
-        if(!memberResult.error && memberResult.data && memberResult.data.length){
-          sites = memberResult.data.map(row => ({
-            ...row.sites,
-            member_role: row.role || "member"
-          })).filter(Boolean);
-        }else{
-          if(memberResult.error){
-            console.log("Site members error:", memberResult.error);
-          }
-        }
+      if(!currentUser){
+        wrap.innerHTML = `<div class="site-row"><div><div class="site-name">No user found.</div></div><div class="pill red">Error</div></div>`;
+        return [];
       }
 
-      if(!sites.length){
-        const fallback = await client
-          .from("sites")
-          .select("*")
-          .order("name", { ascending:true });
+      const memberResult = await client
+        .from("user_site_access")
+        .select("site_id, role, sites(*)")
+        .eq("user_id", currentUser.id);
 
-        if(fallback.error){
-          console.log("Sites fallback error:", fallback.error);
-          wrap.innerHTML = `<div class="site-row"><div><div class="site-name">Could not load sites.</div></div><div class="pill">Error</div></div>`;
-          return;
-        }
-
-        sites = fallback.data || [];
+      if(memberResult.error){
+        console.log("User site access error:", memberResult.error);
+        wrap.innerHTML = `<div class="site-row"><div><div class="site-name">Could not load site access.</div><div class="site-meta">Check user_site_access table and policies.</div></div><div class="pill red">Error</div></div>`;
+        return [];
       }
 
-      if(!sites.length){
+      currentSites = (memberResult.data || [])
+        .map(row => ({
+          ...row.sites,
+          member_role: row.role || "viewer"
+        }))
+        .filter(site => site && site.id);
+
+      if(!currentSites.length){
         wrap.innerHTML = `<div class="site-row"><div><div class="site-name">No sites yet.</div><div class="site-meta">Add your first site above.</div></div><div class="pill">0</div></div>`;
-        return;
+        return [];
       }
 
+      await loadInviteAndMemberData();
+      renderSites();
+      return currentSites;
+    }
+
+    async function loadInviteAndMemberData(){
+      const siteIds = currentSites.map(site => site.id).filter(Boolean);
+
+      pendingInvites = [];
+      acceptedMembers = [];
+
+      if(!siteIds.length) return;
+
+      const { data: invites, error: inviteError } = await client
+        .from("site_invites")
+        .select("*")
+        .in("site_id", siteIds)
+        .is("accepted_at", null)
+        .order("created_at", { ascending:false });
+
+      if(inviteError){
+        console.log("Site invites load error:", inviteError);
+      }else{
+        pendingInvites = invites || [];
+      }
+
+      const { data: members, error: memberError } = await client
+        .from("user_site_access")
+        .select("id, user_id, site_id, role, created_at")
+        .in("site_id", siteIds)
+        .order("created_at", { ascending:false });
+
+      if(memberError){
+        console.log("Site members load error:", memberError);
+      }else{
+        acceptedMembers = members || [];
+      }
+    }
+
+    function canManageSite(site){
+      const role = String(site.member_role || "").toLowerCase();
+      return role === "owner" || role === "admin";
+    }
+
+    function renderSites(){
+      const wrap = document.getElementById("sitesList");
       wrap.innerHTML = "";
 
-      sites.forEach(site => {
+      currentSites.forEach(site => {
         const city = site.city || "";
         const state = site.state || "";
         const address = site.address || "";
@@ -648,20 +889,86 @@
         if(location) metaParts.push(location);
         if(address) metaParts.push(address);
 
+        const siteInvites = pendingInvites.filter(invite => invite.site_id === site.id);
+        const siteMembers = acceptedMembers.filter(member => member.site_id === site.id);
+        const manager = canManageSite(site);
+
+        const invitesHtml = siteInvites.length
+          ? siteInvites.map(invite => `
+              <div class="mini-row">
+                <div class="mini-main">
+                  <strong>${escapeText(invite.email)}</strong>
+                  <div class="mini-muted">Pending invite • Code: ${escapeText(invite.invite_code || "")}</div>
+                </div>
+                <div class="pill yellow">${escapeText(invite.role || "viewer")}</div>
+              </div>
+            `).join("")
+          : `<div class="mini-row"><div class="mini-main"><span class="mini-muted">No pending invites.</span></div><div class="pill">0</div></div>`;
+
+        const membersHtml = siteMembers.length
+          ? siteMembers.map(member => `
+              <div class="mini-row">
+                <div class="mini-main">
+                  <strong>${member.user_id === currentUser.id ? "You" : "User"}</strong>
+                  <div class="mini-muted">${escapeText(member.user_id)}</div>
+                </div>
+                <div class="pill green">${escapeText(member.role || "viewer")}</div>
+              </div>
+            `).join("")
+          : `<div class="mini-row"><div class="mini-main"><span class="mini-muted">No linked users found.</span></div><div class="pill">0</div></div>`;
+
         wrap.innerHTML += `
-          <div class="site-row">
-            <div>
-              <div class="site-name">${siteLabel(site)}</div>
-              <div class="site-meta">${metaParts.length ? metaParts.join(" • ") : "No location details"}</div>
-              <div class="site-meta">Site ID: ${site.id}</div>
+          <div class="site-card">
+            <div class="site-card-top">
+              <div>
+                <div class="site-name">${escapeText(siteLabel(site))}</div>
+                <div class="site-meta">${metaParts.length ? escapeText(metaParts.join(" • ")) : "No location details"}</div>
+                <div class="site-meta">Site ID: ${escapeText(site.id)}</div>
+              </div>
+              <div class="pill">${escapeText(site.member_role || "site")}</div>
             </div>
-            <div class="pill">${site.member_role || "site"}</div>
+
+            <h4>Linked Users</h4>
+            <div class="mini-list">${membersHtml}</div>
+
+            <div class="invite-box">
+              <h4>Invite User</h4>
+              <div class="invite-grid">
+                <div class="field full-mobile">
+                  <label for="inviteEmail-${escapeText(site.id)}">Email Address</label>
+                  <input id="inviteEmail-${escapeText(site.id)}" type="email" placeholder="manager@company.com" ${manager ? "" : "disabled"}>
+                </div>
+
+                <div class="field">
+                  <label for="inviteRole-${escapeText(site.id)}">Role</label>
+                  <select id="inviteRole-${escapeText(site.id)}" ${manager ? "" : "disabled"}>
+                    <option value="viewer">Viewer</option>
+                    <option value="admin">Admin</option>
+                    <option value="owner">Owner</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label>&nbsp;</label>
+                  <button onclick="inviteUser('${escapeText(site.id)}')" ${manager ? "" : "disabled"}>Invite</button>
+                </div>
+              </div>
+
+              <div class="note">
+                ${manager ? "Invited users are linked by email. If they do not have an account yet, they will be linked after signing up with that email." : "Only owner/admin users can invite others to this site."}
+              </div>
+
+              <h4 style="margin-top:16px;">Pending Invites</h4>
+              <div class="mini-list">${invitesHtml}</div>
+            </div>
           </div>
         `;
       });
     }
 
     async function addSite(){
+      clearStatus();
+
       const organization_id = document.getElementById("organizationSelect").value;
       const name = document.getElementById("siteName").value.trim();
       const city = document.getElementById("siteCity").value.trim();
@@ -675,6 +982,11 @@
 
       if(!name){
         setStatus("Enter a site name.", "bad");
+        return;
+      }
+
+      if(!currentUser){
+        setStatus("No logged-in user found.", "bad");
         return;
       }
 
@@ -706,7 +1018,7 @@
             {
               user_id: currentUser.id,
               site_id: siteData.id,
-              role: "admin"
+              role: "owner"
             }
           ]);
 
@@ -720,8 +1032,79 @@
 
       localStorage.setItem("activeSiteId", siteData.id);
 
-      setStatus("Site added and selected.", "good");
       clearForm();
+      setStatus("Site added, selected, and linked to your account.", "good");
+      await loadSites();
+    }
+
+    async function inviteUser(siteId){
+      clearStatus();
+
+      const site = currentSites.find(item => item.id === siteId);
+      if(!site){
+        setStatus("Site not found.", "bad");
+        return;
+      }
+
+      if(!canManageSite(site)){
+        setStatus("Only owner/admin users can invite others.", "bad");
+        return;
+      }
+
+      const emailInput = document.getElementById(`inviteEmail-${siteId}`);
+      const roleSelect = document.getElementById(`inviteRole-${siteId}`);
+
+      const email = normalizeEmail(emailInput.value);
+      const role = roleSelect.value || "viewer";
+
+      if(!email){
+        setStatus("Enter an email address to invite.", "bad");
+        return;
+      }
+
+      if(!isValidEmail(email)){
+        setStatus("Enter a valid email address.", "bad");
+        return;
+      }
+
+      if(email === normalizeEmail(currentUser.email)){
+        setStatus("You already have access to this site.", "bad");
+        return;
+      }
+
+      const existingPending = pendingInvites.find(invite =>
+        invite.site_id === siteId && normalizeEmail(invite.email) === email
+      );
+
+      if(existingPending){
+        setStatus("That email already has a pending invite for this site.", "bad");
+        return;
+      }
+
+      const inviteCode = generateInviteCode();
+      const expiresAt = addDays(new Date(), 14).toISOString();
+
+      const { error } = await client
+        .from("site_invites")
+        .insert([{
+          site_id: siteId,
+          email,
+          role,
+          invite_code: inviteCode,
+          created_by: currentUser.id,
+          expires_at: expiresAt
+        }]);
+
+      if(error){
+        console.log("Invite insert error:", error);
+        setStatus("Could not create invite. Make sure the site_invites table exists.", "bad");
+        return;
+      }
+
+      emailInput.value = "";
+      roleSelect.value = "viewer";
+
+      setStatus(`Invite saved for ${email}.`, "good");
       await loadSites();
     }
 
@@ -744,6 +1127,7 @@
 
     window.onload = async function(){
       await loadCurrentUser();
+      await acceptPendingInvitesForCurrentUser();
       await loadOrganizations();
       await loadSites();
     };
