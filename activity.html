@@ -150,6 +150,30 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
       <p>View live activity by code, department, name, bay, and event.</p>
     </div>
 
+    <div style="margin-top:14px; margin-bottom:24px; max-width:520px; display:flex; gap:10px;">
+      <select id="siteSwitcher" onchange="switchSite(this.value)" style="
+        flex:1;
+        padding:12px;
+        border-radius:10px;
+        background:#0b1220;
+        color:white;
+        border:1px solid #1ea7ff;
+        box-shadow:0 0 6px rgba(30,167,255,0.4);
+        font-size:15px;
+        font-weight:600;
+        outline:none;
+      ">
+        <option>Loading sites...</option>
+      </select>
+
+      <button onclick="window.location.href='sites.html'" style="
+        white-space:nowrap;
+        padding:12px 16px;
+      ">
+        Manage Sites
+      </button>
+    </div>
+
     <div class="summary">
       <div class="summary-box"><strong id="totalEvents">0</strong><span>Total Events</span></div>
       <div class="summary-box"><strong id="uniqueCodes">0</strong><span>Unique Codes</span></div>
@@ -210,6 +234,23 @@ const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let activityRows = [];
+let currentSiteId = null;
+let activityLoadToken = 0;
+let refreshTimer = null;
+
+function getActiveSiteId(){
+  return currentSiteId || localStorage.getItem("activeSiteId") || "";
+}
+
+function requireSite(){
+  const siteId = getActiveSiteId();
+
+  if(!siteId){
+    throw new Error("No active site selected.");
+  }
+
+  return siteId;
+}
 
 function toggleDesktopMenu(){
   const desktopMenu = document.getElementById("desktopMenu");
@@ -245,7 +286,6 @@ function goHome(event){
   closeMenus();
 
   localStorage.removeItem("washtracLoggedIn");
-
   window.location.replace("index.html");
 }
 
@@ -261,6 +301,8 @@ async function logout(event){
   }
 
   localStorage.removeItem("washtracLoggedIn");
+  localStorage.removeItem("activeSiteId");
+  localStorage.removeItem("activeOrganizationId");
   window.location.replace("login.html");
 }
 
@@ -274,6 +316,15 @@ function formatTime(value){
 function cleanValue(value, fallback = ""){
   if(value === null || value === undefined || value === "") return fallback;
   return value;
+}
+
+function escapeText(value){
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function getActivityCode(row){
@@ -296,10 +347,110 @@ function mapActivityRow(row, codeNameMap = {}){
   };
 }
 
-async function fetchCodeNameMap(){
+async function loadSites(){
+  const select = document.getElementById("siteSwitcher");
+  if(!select) return "";
+
+  select.innerHTML = `<option>Loading sites...</option>`;
+
+  const { data: userData, error: userError } = await client.auth.getUser();
+
+  if(userError || !userData?.user){
+    console.log("User error:", userError);
+    select.innerHTML = `<option value="">No user</option>`;
+    return "";
+  }
+
+  const user = userData.user;
+
+  const { data, error } = await client
+    .from("user_site_access")
+    .select(`
+      site_id,
+      sites (*)
+    `)
+    .eq("user_id", user.id);
+
+  if(error){
+    console.log("Site access error:", error);
+    select.innerHTML = `<option value="">Error loading sites</option>`;
+    return "";
+  }
+
+  const sites = (data || [])
+    .map(row => row.sites)
+    .filter(Boolean);
+
+  if(!sites.length){
+    select.innerHTML = `<option value="">No sites assigned</option>`;
+    localStorage.removeItem("activeSiteId");
+    localStorage.removeItem("activeOrganizationId");
+    currentSiteId = null;
+    return "";
+  }
+
+  select.innerHTML = sites.map(site => {
+    return `<option value="${site.id}">${escapeText(site.name || "Unnamed Site")}</option>`;
+  }).join("");
+
+  const saved = localStorage.getItem("activeSiteId");
+  const exists = saved && sites.some(site => site.id === saved);
+  const activeSite = exists ? sites.find(site => site.id === saved) : sites[0];
+
+  currentSiteId = activeSite.id;
+  localStorage.setItem("activeSiteId", currentSiteId);
+
+  const orgId = activeSite.organization_id || activeSite.org_id || activeSite.company_id || null;
+  if(orgId){
+    localStorage.setItem("activeOrganizationId", orgId);
+  }
+
+  select.value = currentSiteId;
+
+  return currentSiteId;
+}
+
+async function switchSite(siteId){
+  if(!siteId) return;
+
+  currentSiteId = siteId;
+  localStorage.setItem("activeSiteId", siteId);
+
+  const siteSwitcher = document.getElementById("siteSwitcher");
+  if(siteSwitcher) siteSwitcher.blur();
+
+  const { data, error } = await client
+    .from("sites")
+    .select("*")
+    .eq("id", siteId)
+    .maybeSingle();
+
+  if(!error && data){
+    const orgId = data.organization_id || data.org_id || data.company_id || null;
+    if(orgId){
+      localStorage.setItem("activeOrganizationId", orgId);
+    }
+  }
+
+  await loadActivity();
+}
+
+function resetActivityEmpty(){
+  activityRows = [];
+  document.getElementById("totalEvents").innerText = "0";
+  document.getElementById("uniqueCodes").innerText = "0";
+  document.getElementById("uniqueDepartments").innerText = "0";
+  document.getElementById("uniqueBays").innerText = "0";
+  document.getElementById("activityTableBody").innerHTML = `<tr><td colspan="6">No active site selected.</td></tr>`;
+}
+
+async function fetchCodeNameMap(siteId){
+  if(!siteId) return {};
+
   const { data, error } = await client
     .from("access_codes")
-    .select("code,assigned_to");
+    .select("code,assigned_to")
+    .eq("site_id", siteId);
 
   if(error){
     console.log("Codes fetch error:", error);
@@ -318,10 +469,15 @@ async function fetchCodeNameMap(){
   return map;
 }
 
-async function fetchActivity(){
+async function fetchActivity(siteId){
+  if(!siteId) return [];
+
+  const codeNameMap = await fetchCodeNameMap(siteId);
+
   const { data, error } = await client
     .from("wash_activity")
     .select("*")
+    .eq("site_id", siteId)
     .order("event_time", { ascending:false });
 
   if(error){
@@ -329,13 +485,23 @@ async function fetchActivity(){
     return [];
   }
 
-  const codeNameMap = await fetchCodeNameMap();
-
   return (data || []).map(row => mapActivityRow(row, codeNameMap));
 }
 
 async function loadActivity(){
-  activityRows = await fetchActivity();
+  const loadToken = ++activityLoadToken;
+  const activeSiteId = getActiveSiteId();
+
+  if(!activeSiteId){
+    resetActivityEmpty();
+    return;
+  }
+
+  activityRows = await fetchActivity(activeSiteId);
+
+  if(loadToken !== activityLoadToken) return;
+  if(activeSiteId !== getActiveSiteId()) return;
+
   console.log("Activity:", activityRows);
   renderActivity();
 }
@@ -373,15 +539,6 @@ function updateSummary(rows){
 
   document.getElementById("uniqueBays").innerText =
     new Set(rows.map(r => r.bay).filter(Boolean)).size;
-}
-
-function escapeText(value){
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
 }
 
 function renderActivity(){
@@ -425,6 +582,13 @@ async function logWashEvent(){
   alert("Manual logging is disabled. Activity is now logged from CodeBox live events.");
 }
 
+function scheduleActivityRefresh(){
+  clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(() => {
+    loadActivity();
+  }, 200);
+}
+
 function startLiveActivity(){
   client
     .channel("wash_activity_live")
@@ -436,8 +600,11 @@ function startLiveActivity(){
         table: "wash_activity"
       },
       payload => {
-        console.log("Live activity update:", payload);
-        loadActivity();
+        const siteId = getActiveSiteId();
+        if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
+          console.log("Live activity update:", payload);
+          scheduleActivityRefresh();
+        }
       }
     )
     .on(
@@ -448,8 +615,11 @@ function startLiveActivity(){
         table: "access_codes"
       },
       payload => {
-        console.log("Live code update:", payload);
-        loadActivity();
+        const siteId = getActiveSiteId();
+        if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
+          console.log("Live code update:", payload);
+          scheduleActivityRefresh();
+        }
       }
     )
     .subscribe(status => {
@@ -478,8 +648,17 @@ document.addEventListener("click", function(event){
   }
 });
 
-loadActivity();
-startLiveActivity();
+window.onload = async function(){
+  const siteId = await loadSites();
+
+  if(!siteId){
+    resetActivityEmpty();
+    return;
+  }
+
+  await loadActivity();
+  startLiveActivity();
+};
 </script>
 </body>
 </html>
