@@ -1053,23 +1053,19 @@
       return data || null;
     }
 
-    async function fetchBayStatus(){
-  const siteId = localStorage.getItem("activeSiteId");
-  if(!siteId) return [];
+    async function fetchBayStatus(siteId){
+      if(!siteId) return [];
 
-  const { data, error } = await client
-    .from("site_bay_status")
-    .select("*")
-    .eq("site_id", siteId)
-    .order("bay_name", { ascending:true });
+      const { data, error } = await client
+        .from("site_bay_status")
+        .select("*")
+        .eq("site_id", siteId)
+        .order("bay_name", { ascending:true });
 
-  if(error){
-    console.log("bay_status error:", error);
-    return [];
-  }
-
-  return data || [];
-}
+      if(error){
+        console.log("site_bay_status error:", error);
+        return [];
+      }
 
       return data || [];
     }
@@ -1376,7 +1372,7 @@ if(!control){
       }
 
       const { error } = await client
-        .from("bay_status")
+        .from("site_bay_status")
         .update({
           status,
           updated_at: new Date().toISOString()
@@ -1509,7 +1505,7 @@ if(!control){
           scheduleDashboardRefresh();
         }
       })
-      .on("postgres_changes", { event: "*", schema: "public", table: "bay_status" }, payload => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "site_bay_status" }, payload => {
         const siteId = getActiveSiteId();
         if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
           scheduleDashboardRefresh();
