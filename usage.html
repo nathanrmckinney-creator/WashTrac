@@ -217,7 +217,7 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
   <a href="usage.html">Reports</a>
   <a href="monitor.html">Monitor</a>
   <hr class="menu-divider">
-  <a href="index.html">Back to Homepage</a>
+  <a href="#" onclick="goHome(event)">Back to Homepage</a>
   <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
 </div>
 
@@ -239,7 +239,7 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
   <div class="desktop-menu-wrap">
     <button class="menu-btn" type="button" onclick="toggleDesktopMenu()">☰</button>
     <div class="hamburger-menu" id="desktopMenu">
-      <a href="index.html">Back to Homepage</a>
+      <a href="#" onclick="goHome(event)">Back to Homepage</a>
       <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
     </div>
   </div>
@@ -493,6 +493,13 @@ function closeMenus(){
   document.getElementById("backdrop").style.display = "none";
 }
 
+function goHome(event){
+  if(event) event.preventDefault();
+  closeMenus();
+  localStorage.removeItem("washtracLoggedIn");
+  window.location.replace("index.html");
+}
+
 async function logout(event){
   if(event) event.preventDefault();
 
@@ -505,6 +512,8 @@ async function logout(event){
   }
 
   localStorage.removeItem("washtracLoggedIn");
+  localStorage.removeItem("activeSiteId");
+  localStorage.removeItem("washtracActiveSiteId");
   window.location.replace("login.html");
 }
 
@@ -538,15 +547,19 @@ function getActiveSiteId(){
   return localStorage.getItem("activeSiteId") || localStorage.getItem("washtracActiveSiteId") || "";
 }
 
+function setActiveSiteId(siteId){
+  if(!siteId) return;
+  localStorage.setItem("activeSiteId", siteId);
+  localStorage.setItem("washtracActiveSiteId", siteId);
+}
+
 function applyReportUrlParams(){
   const params = new URLSearchParams(window.location.search);
-
   const scope = params.get("reportScope");
   const siteId = params.get("siteId");
 
   if(siteId){
-    localStorage.setItem("activeSiteId", siteId);
-    localStorage.setItem("washtracActiveSiteId", siteId);
+    setActiveSiteId(siteId);
   }
 
   const scopeSelect = document.getElementById("reportSiteScope");
@@ -560,59 +573,104 @@ function setSiteScopeSummary(message){
   if(box) box.innerText = message;
 }
 
-async function getAssignedSiteIds(){
-  const { data: authData, error: authError } = await client.auth.getUser();
+async function getCurrentUser(){
+  const { data, error } = await client.auth.getUser();
 
-  if(authError || !authData || !authData.user){
-    console.log("User load error:", authError);
+  if(error || !data?.user){
+    console.log("User load error:", error);
+    return null;
+  }
+
+  return data.user;
+}
+
+async function getAssignedSites(){
+  const user = await getCurrentUser();
+
+  if(!user){
     return [];
   }
 
-  const userId = authData.user.id;
-
   const { data, error } = await client
-    .from("site_members")
-    .select("site_id")
-    .eq("user_id", userId);
+    .from("user_site_access")
+    .select(`
+      site_id,
+      sites (*)
+    `)
+    .eq("user_id", user.id);
 
   if(error){
-    console.log("Site member load error:", error);
+    console.log("User site access load error:", error);
     return [];
   }
 
   return (data || [])
-    .map(row => row.site_id)
-    .filter(Boolean);
+    .map(row => {
+      const site = row.sites || {};
+      return {
+        id: row.site_id || site.id || "",
+        name: site.name || "Unnamed Site"
+      };
+    })
+    .filter(site => site.id);
+}
+
+async function getAssignedSiteIds(){
+  const sites = await getAssignedSites();
+  return sites.map(site => site.id);
+}
+
+async function ensureActiveSiteIsValid(){
+  const sites = await getAssignedSites();
+
+  if(!sites.length){
+    localStorage.removeItem("activeSiteId");
+    localStorage.removeItem("washtracActiveSiteId");
+    return { activeSiteId:"", activeSiteName:"", siteIds:[], sites:[] };
+  }
+
+  const savedSiteId = getActiveSiteId();
+  const savedSite = savedSiteId ? sites.find(site => site.id === savedSiteId) : null;
+  const activeSite = savedSite || sites[0];
+
+  setActiveSiteId(activeSite.id);
+
+  return {
+    activeSiteId: activeSite.id,
+    activeSiteName: activeSite.name,
+    siteIds: sites.map(site => site.id),
+    sites
+  };
 }
 
 async function applySiteScopeToQuery(query){
   const scope = getReportSiteScope();
+  const siteInfo = await ensureActiveSiteIsValid();
 
-  if(scope === "all"){
-    const siteIds = await getAssignedSiteIds();
-    cachedSiteIds = siteIds;
-    cachedSiteScopeLabel = "All My Sites";
-
-    if(!siteIds.length){
-      setSiteScopeSummary("No assigned sites were found for this user.");
-      return { query:null, noSites:true };
-    }
-
-    setSiteScopeSummary(`Reports are using all assigned sites (${siteIds.length}).`);
-    return { query:query.in("site_id", siteIds), noSites:false };
+  if(!siteInfo.siteIds.length){
+    cachedSiteIds = [];
+    cachedSiteScopeLabel = "No Sites";
+    setSiteScopeSummary("No assigned sites were found for this user.");
+    return { query:null, noSites:true };
   }
 
-  const activeSiteId = getActiveSiteId();
-  cachedSiteIds = activeSiteId ? [activeSiteId] : [];
-  cachedSiteScopeLabel = "Current Site";
+  if(scope === "all"){
+    cachedSiteIds = siteInfo.siteIds;
+    cachedSiteScopeLabel = "All My Sites";
+    setSiteScopeSummary(`Reports are using all assigned sites (${siteInfo.siteIds.length}).`);
+    return { query:query.in("site_id", siteInfo.siteIds), noSites:false };
+  }
 
-  if(!activeSiteId){
+  cachedSiteIds = [siteInfo.activeSiteId];
+  cachedSiteScopeLabel = siteInfo.activeSiteName ? `Current Site: ${siteInfo.activeSiteName}` : "Current Site";
+
+  if(!siteInfo.activeSiteId){
     setSiteScopeSummary("No current site is selected. Choose a site on the dashboard first.");
     return { query:null, noSites:true };
   }
 
-  setSiteScopeSummary("Reports are using the current selected site.");
-  return { query:query.eq("site_id", activeSiteId), noSites:false };
+  setSiteScopeSummary(`Reports are using current site: ${siteInfo.activeSiteName || siteInfo.activeSiteId}.`);
+  return { query:query.eq("site_id", siteInfo.activeSiteId), noSites:false };
 }
 
 function setStatus(message){
@@ -1343,6 +1401,8 @@ function saveReportSchedule(){
     email,
     frequency,
     reportSiteScope,
+    activeSiteId: getActiveSiteId(),
+    siteIds: cachedSiteIds,
     scheduleRange,
     scheduleStartDate: document.getElementById("scheduleStartDate").value,
     scheduleEndDate: document.getElementById("scheduleEndDate").value,
@@ -1493,16 +1553,27 @@ function loadSavedSchedule(){
   renderScheduleSummary();
 }
 
-populateMonthDays();
-updateReportRangeFields();
-updateScheduleRangeFields();
-loadSavedSchedule();
-applyReportUrlParams();
-loadUsage();
+async function initializeReportsPage(){
+  populateMonthDays();
+  updateReportRangeFields();
+  updateScheduleRangeFields();
+  loadSavedSchedule();
+  applyReportUrlParams();
+  await loadUsage();
 
-client.channel("washtrac-live-usage")
-.on("postgres_changes", { event: "*", schema: "public", table: "wash_activity" }, () => loadUsage())
-.subscribe();
+  client.channel("washtrac-live-usage")
+    .on("postgres_changes", { event: "*", schema: "public", table: "wash_activity" }, payload => {
+      const siteIds = cachedSiteIds || [];
+      const changedSiteId = payload.new?.site_id || payload.old?.site_id || "";
+
+      if(!siteIds.length || siteIds.includes(changedSiteId)){
+        loadUsage();
+      }
+    })
+    .subscribe();
+}
+
+initializeReportsPage();
 </script>
 </body>
 </html>
