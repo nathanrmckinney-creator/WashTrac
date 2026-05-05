@@ -1074,6 +1074,13 @@ function buildReportHtml(columns, codes, departments, rangeLabel, scopeLabel){
   const topCode = codes.length ? codes[0].code : "-";
   const topDept = departments.length ? departments[0][0] : "-";
 
+  const cleanScope = scopeLabel || cachedSiteScopeLabel || "Current Site";
+  const isAllSites = cleanScope.toLowerCase().includes("all");
+
+  const scopeBadge = isAllSites
+    ? `<span style="background:#1d4ed8;color:#ffffff;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:bold;">ALL SITES</span>`
+    : `<span style="background:#065f46;color:#bbf7d0;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:bold;">CURRENT SITE</span>`;
+
   let tableHeaders = "";
   columns.forEach(col => {
     tableHeaders += `<th style="text-align:left;padding:12px;border-bottom:1px solid #1e293b;color:#93c5fd;font-size:13px;">${columnLabels[col] || col}</th>`;
@@ -1102,59 +1109,73 @@ function buildReportHtml(columns, codes, departments, rangeLabel, scopeLabel){
   <div style="margin:0;padding:0;background:#020617;font-family:Arial,Helvetica,sans-serif;color:#ffffff;">
     <div style="max-width:760px;margin:0 auto;padding:28px;">
 
+      <!-- HEADER -->
       <div style="background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:24px;margin-bottom:18px;">
-        <div style="font-size:28px;font-weight:900;letter-spacing:.5px;color:#ffffff;">
-          Wash<span style="color:#1ea7ff;">Trac</span>
+
+        <div style="font-size:28px;font-weight:900;letter-spacing:.5px;">
+          Wash<span style="background:linear-gradient(180deg,#ffffff 0%,#66c7ff 40%,#1e9bff 72%,#0b5cff 100%);
+          -webkit-background-clip:text;background-clip:text;color:transparent;">Trac</span>
         </div>
+
         <div style="margin-top:5px;color:#94a3b8;font-size:13px;letter-spacing:1.4px;">
           Control. Track. Manage.
         </div>
 
-        <h2 style="margin:26px 0 8px;color:#ffffff;font-size:26px;">Usage Report</h2>
-        <p style="margin:0;color:#94a3b8;font-size:15px;">
-          Scope: <strong style="color:#ffffff;">${scopeLabel || "Current Site"}</strong><br>
+        <h2 style="margin:24px 0 10px;font-size:24px;">Usage Report</h2>
+
+        <div style="margin-bottom:10px;">${scopeBadge}</div>
+
+        <p style="margin:0;color:#94a3b8;font-size:14px;">
           Range: <strong style="color:#ffffff;">${rangeLabel}</strong>
         </p>
 
-        <!-- 🔥 NEW LINE ADDED HERE -->
-        <p style="margin-top:12px;color:#94a3b8;font-size:13px;">
+        <p style="margin-top:10px;color:#94a3b8;font-size:13px;">
           Tip: Download the CSV report for full sorting and filtering.
         </p>
 
+        <!-- VIEW REPORT BUTTON -->
+        <a href="https://thewashtrac.com/reports"
+           style="display:inline-block;margin-top:14px;padding:10px 14px;background:#2563eb;color:white;border-radius:8px;text-decoration:none;font-size:14px;font-weight:bold;">
+          View Full Interactive Report
+        </a>
+
       </div>
 
+      <!-- SUMMARY -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;">
         <div style="background:#111827;border:1px solid #1e293b;border-radius:12px;padding:16px;">
-          <div style="font-size:26px;font-weight:bold;color:#ffffff;">${totalUses}</div>
+          <div style="font-size:24px;font-weight:bold;">${totalUses}</div>
           <div style="color:#94a3b8;font-size:12px;">Total Uses</div>
         </div>
 
         <div style="background:#111827;border:1px solid #1e293b;border-radius:12px;padding:16px;">
-          <div style="font-size:26px;font-weight:bold;color:#ffffff;">${totalCodes}</div>
+          <div style="font-size:24px;font-weight:bold;">${totalCodes}</div>
           <div style="color:#94a3b8;font-size:12px;">Total Codes</div>
         </div>
 
         <div style="background:#111827;border:1px solid #1e293b;border-radius:12px;padding:16px;">
-          <div style="font-size:26px;font-weight:bold;color:#ffffff;">${topCode}</div>
+          <div style="font-size:24px;font-weight:bold;">${topCode}</div>
           <div style="color:#94a3b8;font-size:12px;">Top Code</div>
         </div>
 
         <div style="background:#111827;border:1px solid #1e293b;border-radius:12px;padding:16px;">
-          <div style="font-size:26px;font-weight:bold;color:#ffffff;">${topDept}</div>
+          <div style="font-size:24px;font-weight:bold;">${topDept}</div>
           <div style="color:#94a3b8;font-size:12px;">Top Department</div>
         </div>
       </div>
 
+      <!-- TABLE -->
       <div style="background:#111827;border:1px solid #1e293b;border-radius:16px;padding:20px;margin-bottom:18px;">
-        <h3 style="margin:0 0 14px;color:#ffffff;">Selected Report Columns</h3>
+        <h3 style="margin:0 0 14px;">Selected Report Columns</h3>
         <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;">
           <thead><tr>${tableHeaders}</tr></thead>
           <tbody>${tableRows}</tbody>
         </table>
       </div>
 
+      <!-- DEPARTMENTS -->
       <div style="background:#111827;border:1px solid #1e293b;border-radius:16px;padding:20px;">
-        <h3 style="margin:0 0 14px;color:#ffffff;">Top Departments</h3>
+        <h3 style="margin:0 0 14px;">Top Departments</h3>
         ${deptHtml || `<div style="color:#94a3b8;">No department data.</div>`}
       </div>
 
