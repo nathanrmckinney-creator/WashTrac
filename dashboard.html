@@ -763,6 +763,15 @@
       return currentSiteId || localStorage.getItem("activeSiteId") || "";
     }
 
+    function requireSite(){
+      const siteId = getActiveSiteId();
+      if(!siteId){
+        console.log("No active site selected.");
+        return "";
+      }
+      return siteId;
+    }
+
     function toggleMobileMenu(){
       const menu = document.getElementById("mobileMenu");
       const dashboardMenu = document.getElementById("dashboardMenu");
@@ -961,6 +970,8 @@
 }
 
     async function switchSite(siteId){
+      if(!siteId) return;
+
       currentSiteId = siteId;
       localStorage.setItem("activeSiteId", siteId);
 
@@ -968,6 +979,7 @@
       if(siteSwitcher) siteSwitcher.blur();
 
       controlRowId = null;
+      lastGoodSystemControl = null;
       await loadDashboard();
     }
 
@@ -1041,10 +1053,13 @@
       return data || null;
     }
 
-    async function fetchBayStatus(){
+    async function fetchBayStatus(siteId){
+      if(!siteId) return [];
+
       const { data, error } = await client
         .from("bay_status")
         .select("*")
+        .eq("site_id", siteId)
         .order("bay_name", { ascending:true });
 
       if(error){
@@ -1349,13 +1364,21 @@ if(!control){
     }
 
     async function updateBayStatus(id, status){
+      const activeSiteId = getActiveSiteId();
+
+      if(!activeSiteId){
+        setBayStatusMessage("No active site selected.");
+        return;
+      }
+
       const { error } = await client
         .from("bay_status")
         .update({
           status,
           updated_at: new Date().toISOString()
         })
-        .eq("id", id);
+        .eq("id", id)
+        .eq("site_id", activeSiteId);
 
       if(error){
         console.log(error);
@@ -1404,7 +1427,7 @@ if(!control){
         fetchRecentActivity(activeSiteId),
         fetchAllActivity(activeSiteId),
         fetchSystemControl(activeSiteId),
-        fetchBayStatus()
+        fetchBayStatus(activeSiteId)
       ]);
 
       if(loadToken !== dashboardLoadToken) return;
@@ -1482,13 +1505,22 @@ if(!control){
           scheduleDashboardRefresh();
         }
       })
-      .on("postgres_changes", { event: "*", schema: "public", table: "bay_status" }, () => {
-        scheduleDashboardRefresh();
+      .on("postgres_changes", { event: "*", schema: "public", table: "bay_status" }, payload => {
+        const siteId = getActiveSiteId();
+        if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
+          scheduleDashboardRefresh();
+        }
       })
       .subscribe();
 
     window.onload = async function(){
-      await loadSites();
+      const siteId = await loadSites();
+
+      if(!siteId){
+        resetDashboardEmpty();
+        return;
+      }
+
       await loadDashboard();
     };
   </script>
