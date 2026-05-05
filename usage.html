@@ -277,6 +277,16 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
       <div class="card">
         <h3>Report Actions</h3>
 
+        <div class="form-row">
+          <label for="reportSiteScope">Report Site Scope</label>
+          <select id="reportSiteScope" onchange="loadUsage()">
+            <option value="current">Current Site</option>
+            <option value="all">All My Sites</option>
+          </select>
+        </div>
+
+        <div class="note" id="siteScopeSummary">Reports are using the current selected site.</div>
+
         <div class="actions">
           <button onclick="exportCSV()">Export CSV</button>
           <button class="secondary" onclick="emailReport()">Email Report</button>
@@ -444,6 +454,8 @@ let topCodesChartInstance = null;
 let cachedCodes = [];
 let cachedDepartmentData = [];
 let cachedRawUses = [];
+let cachedSiteScopeLabel = "Current Site";
+let cachedSiteIds = [];
 
 const columnLabels = {
   code: "Code",
@@ -516,6 +528,75 @@ document.addEventListener("click", function(event){
     closeMenus();
   }
 });
+
+function getReportSiteScope(){
+  const select = document.getElementById("reportSiteScope");
+  return select ? select.value : "current";
+}
+
+function getActiveSiteId(){
+  return localStorage.getItem("activeSiteId") || localStorage.getItem("washtracActiveSiteId") || "";
+}
+
+function setSiteScopeSummary(message){
+  const box = document.getElementById("siteScopeSummary");
+  if(box) box.innerText = message;
+}
+
+async function getAssignedSiteIds(){
+  const { data: authData, error: authError } = await client.auth.getUser();
+
+  if(authError || !authData || !authData.user){
+    console.log("User load error:", authError);
+    return [];
+  }
+
+  const userId = authData.user.id;
+
+  const { data, error } = await client
+    .from("site_members")
+    .select("site_id")
+    .eq("user_id", userId);
+
+  if(error){
+    console.log("Site member load error:", error);
+    return [];
+  }
+
+  return (data || [])
+    .map(row => row.site_id)
+    .filter(Boolean);
+}
+
+async function applySiteScopeToQuery(query){
+  const scope = getReportSiteScope();
+
+  if(scope === "all"){
+    const siteIds = await getAssignedSiteIds();
+    cachedSiteIds = siteIds;
+    cachedSiteScopeLabel = "All My Sites";
+
+    if(!siteIds.length){
+      setSiteScopeSummary("No assigned sites were found for this user.");
+      return { query:null, noSites:true };
+    }
+
+    setSiteScopeSummary(`Reports are using all assigned sites (${siteIds.length}).`);
+    return { query:query.in("site_id", siteIds), noSites:false };
+  }
+
+  const activeSiteId = getActiveSiteId();
+  cachedSiteIds = activeSiteId ? [activeSiteId] : [];
+  cachedSiteScopeLabel = "Current Site";
+
+  if(!activeSiteId){
+    setSiteScopeSummary("No current site is selected. Choose a site on the dashboard first.");
+    return { query:null, noSites:true };
+  }
+
+  setSiteScopeSummary("Reports are using the current selected site.");
+  return { query:query.eq("site_id", activeSiteId), noSites:false };
+}
 
 function setStatus(message){
   const box = document.getElementById("emailStatus");
@@ -763,6 +844,7 @@ function getReportCodesForSelectedRange(){
   if(!cachedRawUses.length){
     return {
       label: "No Data",
+      scopeLabel: cachedSiteScopeLabel,
       codes: [],
       departments: []
     };
@@ -775,19 +857,41 @@ function getReportCodesForSelectedRange(){
 
   return {
     label: filtered.label,
+    scopeLabel: cachedSiteScopeLabel,
     codes: aggregateUses(filtered.uses),
     departments: getDepartmentDataFromUses(filtered.uses)
   };
 }
 
 async function loadUsage(){
-  const { data, error } = await client
+  let query = client
     .from("wash_activity")
     .select("*")
     .order("event_time", { ascending:false });
 
+  const scoped = await applySiteScopeToQuery(query);
+
+  if(scoped.noSites || !scoped.query){
+    cachedRawUses = [];
+    cachedCodes = [];
+    cachedDepartmentData = [];
+
+    document.getElementById("totalUses").innerText = "0";
+    document.getElementById("totalCodes").innerText = "0";
+    document.getElementById("topCode").innerText = "-";
+    document.getElementById("topDept").innerText = "-";
+
+    renderDepartmentChart([]);
+    renderTopCodesChart([]);
+    renderTopCodesList([]);
+    return;
+  }
+
+  const { data, error } = await scoped.query;
+
   if(error){
     console.log("Usage load error:", error);
+    setSiteScopeSummary("Report data could not load. Make sure wash_activity has a site_id column and your user has access to the selected site.");
     return;
   }
 
@@ -801,6 +905,7 @@ async function loadUsage(){
       name: getName(row),
       uses: 1,
       last_used: getTime(row),
+      site_id: row.site_id || "",
       event: row.event || ""
     }));
 
@@ -911,8 +1016,9 @@ function getSelectedColumns(){
   return checked;
 }
 
-function buildCSV(columns, codes, rangeLabel){
-  let csv = `WashTrac Report Range,${csvSafe(rangeLabel)}\n`;
+function buildCSV(columns, codes, rangeLabel, scopeLabel){
+  let csv = `WashTrac Site Scope,${csvSafe(scopeLabel || cachedSiteScopeLabel)}\n`;
+  csv += `WashTrac Report Range,${csvSafe(rangeLabel)}\n`;
   csv += columns.map(col => csvSafe(columnLabels[col] || col)).join(",") + "\n";
 
   codes.forEach(item => {
@@ -942,7 +1048,7 @@ function exportCSV(){
   }
 
   const columns = ["code", "department", "name", "uses", "last_used"];
-  const csv = buildCSV(columns, report.codes, report.label);
+  const csv = buildCSV(columns, report.codes, report.label, report.scopeLabel);
   downloadCSV(csv, "washtrac_report.csv");
 }
 
@@ -958,11 +1064,11 @@ function exportCustomCSV(){
   const columns = getSelectedColumns();
   if(!columns.length) return;
 
-  const csv = buildCSV(columns, report.codes, report.label);
+  const csv = buildCSV(columns, report.codes, report.label, report.scopeLabel);
   downloadCSV(csv, "washtrac_custom_report.csv");
 }
 
-function buildReportHtml(columns, codes, departments, rangeLabel){
+function buildReportHtml(columns, codes, departments, rangeLabel, scopeLabel){
   const totalUses = codes.reduce((sum, item) => sum + Number(item.uses || 0), 0);
   const totalCodes = codes.length;
   const topCode = codes.length ? codes[0].code : "-";
@@ -990,6 +1096,7 @@ function buildReportHtml(columns, codes, departments, rangeLabel){
 
   return `
     <h2>WashTrac Report</h2>
+    <p><strong>Site Scope:</strong> ${scopeLabel || cachedSiteScopeLabel}</p>
     <p><strong>Report Range:</strong> ${rangeLabel}</p>
     <p><strong>Total Uses:</strong> ${totalUses}</p>
     <p><strong>Total Codes:</strong> ${totalCodes}</p>
@@ -1044,7 +1151,7 @@ async function emailReport(){
   if(!email) return;
 
   const columns = ["code", "department", "name", "uses", "last_used"];
-  const html = buildReportHtml(columns, report.codes, report.departments, report.label);
+  const html = buildReportHtml(columns, report.codes, report.departments, report.label, report.scopeLabel);
 
   await sendReportToEmail(email, "WashTrac Report", html);
 }
@@ -1064,7 +1171,7 @@ async function emailCustomReport(){
   const email = document.getElementById("scheduleEmail").value.trim() || prompt("Enter the email address for this report:");
   if(!email) return;
 
-  const html = buildReportHtml(columns, report.codes, report.departments, report.label);
+  const html = buildReportHtml(columns, report.codes, report.departments, report.label, report.scopeLabel);
   await sendReportToEmail(email, "WashTrac Custom Report", html);
 }
 
@@ -1105,6 +1212,7 @@ function updateScheduleFields(){
 function saveReportSchedule(){
   const email = document.getElementById("scheduleEmail").value.trim();
   const frequency = document.getElementById("scheduleFrequency").value;
+  const reportSiteScope = getReportSiteScope();
   const scheduleRange = document.getElementById("scheduleRange").value;
   const weeklyDay = document.getElementById("weeklyDay").value;
   const monthDay = document.getElementById("monthDay").value;
@@ -1143,6 +1251,7 @@ function saveReportSchedule(){
   const schedule = {
     email,
     frequency,
+    reportSiteScope,
     scheduleRange,
     scheduleStartDate: document.getElementById("scheduleStartDate").value,
     scheduleEndDate: document.getElementById("scheduleEndDate").value,
@@ -1174,6 +1283,7 @@ function clearReportSchedule(){
   localStorage.removeItem("washtracReportSchedule");
 
   document.getElementById("scheduleFrequency").value = "off";
+  document.getElementById("reportSiteScope").value = "current";
   document.getElementById("scheduleRange").value = "today";
   document.getElementById("scheduleEmail").value = "";
   document.getElementById("scheduleStartDate").value = "";
@@ -1255,7 +1365,9 @@ function renderScheduleSummary(){
     rangeText = `${schedule.scheduleStartDate || "start"} to ${schedule.scheduleEndDate || "end"}`;
   }
 
-  box.innerText = `${details} at ${schedule.time} to ${schedule.email}. Range: ${rangeText}. Columns: ${selectedCols}.`;
+  const scopeText = schedule.reportSiteScope === "all" ? "All My Sites" : "Current Site";
+
+  box.innerText = `${details} at ${schedule.time} to ${schedule.email}. Scope: ${scopeText}. Range: ${rangeText}. Columns: ${selectedCols}.`;
 }
 
 function loadSavedSchedule(){
@@ -1269,6 +1381,7 @@ function loadSavedSchedule(){
 
   document.getElementById("scheduleEmail").value = schedule.email || "";
   document.getElementById("scheduleFrequency").value = schedule.frequency || "off";
+  document.getElementById("reportSiteScope").value = schedule.reportSiteScope || "current";
   document.getElementById("scheduleRange").value = schedule.scheduleRange || "today";
   document.getElementById("scheduleStartDate").value = schedule.scheduleStartDate || "";
   document.getElementById("scheduleEndDate").value = schedule.scheduleEndDate || "";
