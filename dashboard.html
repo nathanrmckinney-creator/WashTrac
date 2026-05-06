@@ -1298,7 +1298,17 @@
         const name = device.name || device.device_name || device.label || "CodeBox";
         const identifier = device.device_id || device.serial_number || device.serial || device.id || "Unknown";
         const pairedDate = device.created_at ? new Date(device.created_at).toLocaleDateString() : "Unknown date";
-        const status = (device.status || "paired").toString().toUpperCase();
+        const lastSeen = device.last_seen ? new Date(device.last_seen) : null;
+const now = new Date();
+
+let isOnline = false;
+
+if (lastSeen) {
+  const diffMinutes = (now - lastSeen) / 60000;
+  isOnline = diffMinutes < 5;
+}
+
+const status = isOnline ? "ONLINE" : "OFFLINE";
 
         wrap.innerHTML += `
           <div class="paired-device-row">
