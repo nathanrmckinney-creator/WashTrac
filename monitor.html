@@ -600,7 +600,7 @@ function renderDevices(devices){
   });
 }
 
-function renderControl(control){
+function renderControl(control, hasOnlineDevice = false, hasPairedDevice = false){
   const banner = document.getElementById("systemBanner");
 
   if(!control){
@@ -636,7 +636,13 @@ function renderControl(control){
   document.getElementById("lockoutWindow").innerText =
     (control.lockout_start || "--:--") + " to " + (control.lockout_end || "--:--");
 
-  if(estopActive){
+  if(!hasPairedDevice){
+    banner.className = "banner red";
+    banner.innerText = "SYSTEM OFFLINE — NO CODEBOX PAIRED";
+  } else if(!hasOnlineDevice){
+    banner.className = "banner red";
+    banner.innerText = "SYSTEM OFFLINE — CODEBOX HEARTBEAT LOST";
+  } else if(estopActive){
     banner.className = "banner red";
     banner.innerText = "🚨 EMERGENCY STOP ACTIVE";
   } else if(!washEnabled){
@@ -647,7 +653,7 @@ function renderControl(control){
     banner.innerText = "AFTER HOURS LOCKOUT ACTIVE";
   } else {
     banner.className = "banner green";
-    banner.innerText = "SYSTEM ONLINE";
+    banner.innerText = "SYSTEM ONLINE AND READY";
   }
 }
 
@@ -705,12 +711,11 @@ function hasAccessToActiveSite(){
   return !!activeSiteId && assignedSiteIds.includes(activeSiteId);
 }
 
-async function loadControl(){
+async function fetchControl(){
   const activeSiteId = getActiveSiteId();
 
   if(!activeSiteId || !hasAccessToActiveSite()){
-    renderControl(null);
-    return;
+    return null;
   }
 
   const { data, error } = await client
@@ -722,11 +727,10 @@ async function loadControl(){
 
   if(error){
     console.log("site_system_control error:", error);
-    renderControl(null);
-    return;
+    return null;
   }
 
-  renderControl(data || null);
+  return data || null;
 }
 
 async function loadBays(){
@@ -752,12 +756,11 @@ async function loadBays(){
   renderBays(data || []);
 }
 
-async function loadDevices(){
+async function fetchDevices(){
   const activeSiteId = getActiveSiteId();
 
   if(!activeSiteId || !hasAccessToActiveSite()){
-    renderDevices([]);
-    return;
+    return [];
   }
 
   const { data, error } = await client
@@ -768,11 +771,10 @@ async function loadDevices(){
 
   if(error){
     console.log("devices error:", error);
-    renderDevices([]);
-    return;
+    return [];
   }
 
-  renderDevices(data || []);
+  return data || [];
 }
 
 async function loadActivity(){
@@ -807,12 +809,18 @@ async function loadMonitor(){
     return;
   }
 
-  await Promise.all([
-    loadControl(),
+  const [control, devices] = await Promise.all([
+    fetchControl(),
+    fetchDevices(),
     loadBays(),
-    loadDevices(),
     loadActivity()
   ]);
+
+  const hasPairedDevice = Array.isArray(devices) && devices.length > 0;
+  const hasOnlineDevice = hasPairedDevice && devices.some(device => deviceOnlineFromLastSeen(device.last_seen));
+
+  renderDevices(devices || []);
+  renderControl(control, hasOnlineDevice, hasPairedDevice);
 }
 
 function scheduleMonitorRefresh(){
@@ -845,7 +853,7 @@ function setupRealtime(){
       schema:"public",
       table:"site_system_control",
       filter:`site_id=eq.${activeSiteId}`
-    }, () => loadControl())
+    }, () => loadMonitor())
 
     .on("postgres_changes", {
       event:"*",
@@ -859,7 +867,7 @@ function setupRealtime(){
       schema:"public",
       table:"devices",
       filter:`site_id=eq.${activeSiteId}`
-    }, () => loadDevices())
+    }, () => loadMonitor())
 
     .subscribe((status) => {
       console.log("Monitor realtime:", status);
