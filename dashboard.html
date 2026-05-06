@@ -469,6 +469,49 @@
       box-shadow:inset 0 0 18px rgba(30,167,255,.12);
     }
 
+
+    .paired-devices-list{
+      display:grid;
+      gap:12px;
+    }
+
+    .paired-device-row{
+      display:flex;
+      justify-content:space-between;
+      gap:14px;
+      align-items:center;
+      padding:14px 0;
+      border-bottom:1px solid #1f2937;
+      color:#dbe5fb;
+    }
+
+    .paired-device-row:last-child{
+      border-bottom:none;
+    }
+
+    .paired-device-name{
+      font-weight:800;
+      color:white;
+      margin-bottom:5px;
+    }
+
+    .paired-device-meta{
+      color:#94a3b8;
+      font-size:13px;
+      line-height:1.45;
+    }
+
+    .paired-device-status{
+      flex-shrink:0;
+      padding:7px 11px;
+      border-radius:999px;
+      background:rgba(34,197,94,.16);
+      color:#86efac;
+      font-size:12px;
+      font-weight:800;
+      border:1px solid rgba(34,197,94,.28);
+    }
+
     @media (max-width:1200px){
       .bay-editor-grid{
         grid-template-columns:1fr 1fr;
@@ -612,6 +655,14 @@
           <strong id="topDepartment">-</strong>
           <span>Top Department</span>
         </div>
+      </div>
+
+      <div class="card">
+        <h3>Paired Devices</h3>
+        <div id="pairedDevicesList" class="paired-devices-list">
+          <div class="list-row"><span>Loading paired devices...</span><span>-</span></div>
+        </div>
+        <div class="note">CodeBox units currently linked to this active site.</div>
       </div>
 
       <div class="card">
@@ -1217,6 +1268,54 @@
       return data || [];
     }
 
+
+    async function fetchPairedDevices(siteId){
+      if(!siteId) return [];
+
+      const { data, error } = await client
+        .from("devices")
+        .select("*")
+        .eq("site_id", siteId)
+        .order("created_at", { ascending:false });
+
+      if(error){
+        console.log("Paired devices error:", error);
+        return [];
+      }
+
+      return data || [];
+    }
+
+    function renderPairedDevices(devices){
+      const wrap = document.getElementById("pairedDevicesList");
+      if(!wrap) return;
+
+      wrap.innerHTML = "";
+
+      if(!devices.length){
+        wrap.innerHTML = `<div class="list-row"><span>No devices paired to this site yet.</span><span>-</span></div>`;
+        return;
+      }
+
+      devices.forEach(device => {
+        const name = device.name || device.device_name || device.label || "CodeBox";
+        const identifier = device.device_id || device.serial_number || device.serial || device.id || "Unknown";
+        const pairedDate = device.created_at ? new Date(device.created_at).toLocaleDateString() : "Unknown date";
+        const status = (device.status || "paired").toString().toUpperCase();
+
+        wrap.innerHTML += `
+          <div class="paired-device-row">
+            <div>
+              <div class="paired-device-name">${name}</div>
+              <div class="paired-device-meta">ID: ${identifier}</div>
+              <div class="paired-device-meta">Paired: ${pairedDate}</div>
+            </div>
+            <div class="paired-device-status">${status}</div>
+          </div>
+        `;
+      });
+    }
+
     function activeOnlyCodes(codes){
       return codes.filter(code => code.is_active !== false);
     }
@@ -1552,6 +1651,7 @@ if(!control){
       renderDailyChart({ labels:[], values:[] });
       renderSystemControl(null);
       renderBayEditor([]);
+      renderPairedDevices([]);
     }
 
     async function loadDashboard(){
@@ -1568,13 +1668,15 @@ if(!control){
         recentActivity,
         allActivity,
         control,
-        bays
+        bays,
+        pairedDevices
       ] = await Promise.all([
         fetchCodes(activeSiteId),
         fetchRecentActivity(activeSiteId),
         fetchAllActivity(activeSiteId),
         fetchSystemControl(activeSiteId),
-        fetchBayStatus(activeSiteId)
+        fetchBayStatus(activeSiteId),
+        fetchPairedDevices(activeSiteId)
       ]);
 
       if(loadToken !== dashboardLoadToken) return;
@@ -1601,6 +1703,7 @@ if(!control){
       renderDailyChart(daily);
       renderSystemControl(control);
       renderBayEditor(bays);
+      renderPairedDevices(pairedDevices);
     }
 
     function scheduleDashboardRefresh(){
@@ -1654,6 +1757,12 @@ if(!control){
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "site_bay_status" }, () => {
         scheduleDashboardRefresh();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "devices" }, payload => {
+        const siteId = getActiveSiteId();
+        if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
+          scheduleDashboardRefresh();
+        }
       })
       .subscribe();
 
