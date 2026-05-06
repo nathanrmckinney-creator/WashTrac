@@ -734,13 +734,14 @@
       <h3>Add Device</h3>
 
       <p style="color:#94a3b8; margin-bottom:10px;">
-        Enter this code on the CodeBox to pair device
+        Enter this code on the CodeBox to pair device. A site can only have one active pending code at a time.
       </p>
 
       <div id="deviceCodeDisplay" class="device-code">------</div>
+      <div id="deviceCodeNote" class="note" style="margin-top:0;">Loading pairing code...</div>
 
       <div class="controls">
-        <button onclick="generateDeviceCode()">New Code</button>
+        <button class="danger" onclick="cancelCurrentPairingCode()">Cancel Current Code</button>
         <button class="secondary" onclick="closeDeviceModal()">Close</button>
       </div>
     </div>
@@ -755,6 +756,7 @@
     let dailyChartInstance = null;
     let controlRowId = null;
     let currentSiteId = null;
+    let currentOrganizationId = null;
     let dashboardLoadToken = 0;
     let refreshTimer = null;
     let lastGoodSystemControl = null;
@@ -763,13 +765,8 @@
       return currentSiteId || localStorage.getItem("activeSiteId") || "";
     }
 
-    function requireSite(){
-      const siteId = getActiveSiteId();
-      if(!siteId){
-        console.log("No active site selected.");
-        return "";
-      }
-      return siteId;
+    function getActiveOrganizationId(){
+      return currentOrganizationId || localStorage.getItem("activeOrganizationId") || "";
     }
 
     function toggleMobileMenu(){
@@ -824,39 +821,176 @@
     function openAddDevice(event){
       if(event) event.preventDefault();
       closeMenus();
-      generateDeviceCode();
       document.getElementById("deviceModal").classList.add("show");
+      loadOrCreatePairingCode();
     }
 
     function closeDeviceModal(){
       document.getElementById("deviceModal").classList.remove("show");
     }
 
-    async function generateDeviceCode(){
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      document.getElementById("deviceCodeDisplay").innerText = code;
+    function setDeviceCodeDisplay(code, message){
+      const display = document.getElementById("deviceCodeDisplay");
+      const note = document.getElementById("deviceCodeNote");
 
-      const siteId = getActiveSiteId();
+      if(display) display.innerText = code || "------";
+      if(note) note.innerText = message || "";
+    }
 
-      if(!siteId){
-        alert("No active site selected. Please reload dashboard and pick a site.");
-        return;
+    async function cleanupExpiredPairingCodes(siteId){
+      const nowIso = new Date().toISOString();
+
+      const { error } = await client
+        .from("device_pairing_codes")
+        .delete()
+        .eq("site_id", siteId)
+        .eq("status", "pending")
+        .lt("expires_at", nowIso);
+
+      if(error){
+        console.log("Expired pairing cleanup error:", error);
       }
+    }
+
+    async function getActivePendingPairingCode(siteId){
+      const nowIso = new Date().toISOString();
 
       const { data, error } = await client
         .from("device_pairing_codes")
-        .insert([{ code, site_id: siteId }])
-        .select();
+        .select("*")
+        .eq("site_id", siteId)
+        .eq("status", "pending")
+        .gt("expires_at", nowIso)
+        .order("created_at", { ascending:false })
+        .limit(1)
+        .maybeSingle();
+
+      if(error){
+        console.log("Active pairing lookup error:", error);
+        return null;
+      }
+
+      return data || null;
+    }
+
+    function minutesRemaining(expiresAt){
+      if(!expiresAt) return "15 minutes";
+
+      const expires = new Date(expiresAt).getTime();
+      const now = Date.now();
+      const remainingMs = Math.max(0, expires - now);
+      const minutes = Math.max(1, Math.ceil(remainingMs / 60000));
+
+      return `${minutes} minute${minutes === 1 ? "" : "s"}`;
+    }
+
+    async function createPairingCode(siteId, organizationId){
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
+
+      const payload = {
+        code: code,
+        site_id: siteId,
+        organization_id: organizationId,
+        status: "pending",
+        expires_at: expiresAt,
+        used_at: null
+      };
+
+      const { data, error } = await client
+        .from("device_pairing_codes")
+        .insert([payload])
+        .select()
+        .maybeSingle();
 
       console.log("Pairing insert data:", data);
       console.log("Pairing insert error:", error);
 
       if(error){
         alert("Error generating code: " + error.message);
+        setDeviceCodeDisplay("------", "Could not create pairing code.");
+        return null;
+      }
+
+      return data;
+    }
+
+    async function loadOrCreatePairingCode(){
+      setDeviceCodeDisplay("------", "Checking for an active pending code...");
+
+      const siteId = getActiveSiteId();
+      const organizationId = getActiveOrganizationId();
+
+      if(!siteId){
+        alert("No active site selected. Please reload dashboard and pick a site.");
+        setDeviceCodeDisplay("------", "No active site selected.");
         return;
       }
 
-      localStorage.setItem("pendingDeviceCode", code);
+      if(!organizationId){
+        alert("No organization found for this site. Please check the site record.");
+        setDeviceCodeDisplay("------", "No organization found for this site.");
+        return;
+      }
+
+      await cleanupExpiredPairingCodes(siteId);
+
+      const existing = await getActivePendingPairingCode(siteId);
+
+      if(existing && existing.code){
+        setDeviceCodeDisplay(
+          existing.code,
+          `Existing pending code. Expires in about ${minutesRemaining(existing.expires_at)}.`
+        );
+        localStorage.setItem("pendingDeviceCode", existing.code);
+        return;
+      }
+
+      const created = await createPairingCode(siteId, organizationId);
+
+      if(created && created.code){
+        setDeviceCodeDisplay(
+          created.code,
+          "New pairing code created. It expires in 15 minutes."
+        );
+        localStorage.setItem("pendingDeviceCode", created.code);
+      }
+    }
+
+    async function cancelCurrentPairingCode(){
+      const siteId = getActiveSiteId();
+
+      if(!siteId){
+        alert("No active site selected.");
+        return;
+      }
+
+      const existing = await getActivePendingPairingCode(siteId);
+
+      if(!existing){
+        setDeviceCodeDisplay("------", "No active pending code to cancel.");
+        return;
+      }
+
+      const confirmed = confirm("Cancel this active pairing code? You can create a new one by opening Add Device again.");
+      if(!confirmed) return;
+
+      const { error } = await client
+        .from("device_pairing_codes")
+        .delete()
+        .eq("id", existing.id)
+        .eq("site_id", siteId)
+        .eq("status", "pending");
+
+      if(error){
+        console.log("Cancel pairing code error:", error);
+        alert("Could not cancel pairing code: " + error.message);
+        return;
+      }
+
+      localStorage.removeItem("pendingDeviceCode");
+      setDeviceCodeDisplay("------", "Pairing code canceled. Close and reopen Add Device to create a new code.");
     }
 
     function setControlStatus(message){
@@ -955,14 +1089,20 @@
   }
 
   select.innerHTML = sites.map(site => {
-    return `<option value="${site.id}">${site.name || "Unnamed Site"}</option>`;
+    return `<option value="${site.id}" data-org="${site.organization_id || ""}">${site.name || "Unnamed Site"}</option>`;
   }).join("");
 
   const saved = localStorage.getItem("activeSiteId");
   const exists = saved && sites.some(s => s.id === saved);
 
   currentSiteId = exists ? saved : sites[0].id;
+  const selectedSite = sites.find(s => s.id === currentSiteId) || sites[0];
+  currentOrganizationId = selectedSite.organization_id || "";
+
   localStorage.setItem("activeSiteId", currentSiteId);
+  if(currentOrganizationId){
+    localStorage.setItem("activeOrganizationId", currentOrganizationId);
+  }
 
   select.value = currentSiteId;
 
@@ -970,13 +1110,20 @@
 }
 
     async function switchSite(siteId){
-      if(!siteId) return;
-
       currentSiteId = siteId;
       localStorage.setItem("activeSiteId", siteId);
 
       const siteSwitcher = document.getElementById("siteSwitcher");
-      if(siteSwitcher) siteSwitcher.blur();
+      if(siteSwitcher){
+        const selectedOption = siteSwitcher.options[siteSwitcher.selectedIndex];
+        currentOrganizationId = selectedOption ? (selectedOption.dataset.org || "") : "";
+        if(currentOrganizationId){
+          localStorage.setItem("activeOrganizationId", currentOrganizationId);
+        }else{
+          localStorage.removeItem("activeOrganizationId");
+        }
+        siteSwitcher.blur();
+      }
 
       controlRowId = null;
       lastGoodSystemControl = null;
@@ -1505,22 +1652,13 @@ if(!control){
           scheduleDashboardRefresh();
         }
       })
-      .on("postgres_changes", { event: "*", schema: "public", table: "site_bay_status" }, payload => {
-        const siteId = getActiveSiteId();
-        if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
-          scheduleDashboardRefresh();
-        }
+      .on("postgres_changes", { event: "*", schema: "public", table: "site_bay_status" }, () => {
+        scheduleDashboardRefresh();
       })
       .subscribe();
 
     window.onload = async function(){
-      const siteId = await loadSites();
-
-      if(!siteId){
-        resetDashboardEmpty();
-        return;
-      }
-
+      await loadSites();
       await loadDashboard();
     };
   </script>
