@@ -418,57 +418,6 @@
       color:#94a3b8;
     }
 
-
-    .device-list-grid{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:16px;
-    }
-
-    .device-list-card{
-      background:#0b1220;
-      border:1px solid #1f2937;
-      border-radius:12px;
-      padding:16px;
-    }
-
-    .device-list-card h4{
-      margin:0 0 10px 0;
-      font-size:18px;
-    }
-
-    .device-meta{
-      color:#94a3b8;
-      font-size:13px;
-      line-height:1.5;
-      margin-top:8px;
-      word-break:break-word;
-    }
-
-    .device-status-pill{
-      display:inline-block;
-      padding:7px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:bold;
-      margin-top:6px;
-    }
-
-    .device-online{
-      background:rgba(34,197,94,.16);
-      color:#86efac;
-    }
-
-    .device-offline{
-      background:rgba(239,68,68,.16);
-      color:#fca5a5;
-    }
-
-    .device-unknown{
-      background:rgba(245,158,11,.16);
-      color:#fcd34d;
-    }
-
     .brand-accent{
       color:#2ea8ff !important;
     }
@@ -521,8 +470,7 @@
     }
 
     @media (max-width:1200px){
-      .bay-editor-grid,
-      .device-list-grid{
+      .bay-editor-grid{
         grid-template-columns:1fr 1fr;
       }
     }
@@ -544,7 +492,7 @@
       }
       .page-header h1{font-size:34px}
       .summary{grid-template-columns:1fr}
-      .control-grid,.field-grid,.bay-editor-grid,.device-list-grid{grid-template-columns:1fr}
+      .control-grid,.field-grid,.bay-editor-grid{grid-template-columns:1fr}
       .mobile-menu{
         position:absolute;
         top:64px;
@@ -735,12 +683,6 @@
         <h3>Bay Status Editor</h3>
         <div class="bay-editor-grid" id="bayEditorGrid"></div>
         <div id="bayStatusMessage" class="control-status"></div>
-      </div>
-
-      <div class="card">
-        <h3>Paired Devices</h3>
-        <div class="device-list-grid" id="devicesList"></div>
-        <div class="note">Devices shown here are linked to the currently selected site.</div>
       </div>
 
       <div class="grid-2">
@@ -1275,23 +1217,6 @@
       return data || [];
     }
 
-    async function fetchDevices(siteId){
-      if(!siteId) return [];
-
-      const { data, error } = await client
-        .from("devices")
-        .select("*")
-        .eq("site_id", siteId)
-        .order("created_at", { ascending:false });
-
-      if(error){
-        console.log("Devices error:", error);
-        return [];
-      }
-
-      return data || [];
-    }
-
     function activeOnlyCodes(codes){
       return codes.filter(code => code.is_active !== false);
     }
@@ -1504,58 +1429,6 @@ if(!control){
       });
     }
 
-    function getDeviceStatusClass(status){
-      const value = String(status || "").toLowerCase();
-      if(value === "online") return "device-online";
-      if(value === "offline") return "device-offline";
-      return "device-unknown";
-    }
-
-    function getDeviceStatusLabel(device){
-      const explicitStatus = String(device.status || "").trim();
-      if(explicitStatus) return explicitStatus;
-
-      const lastSeen = device.last_seen_at || device.last_seen || "";
-      if(!lastSeen) return "Unknown";
-
-      const lastSeenMs = new Date(lastSeen).getTime();
-      if(Number.isNaN(lastSeenMs)) return "Unknown";
-
-      const minutesAgo = (Date.now() - lastSeenMs) / 60000;
-      return minutesAgo <= 5 ? "online" : "offline";
-    }
-
-    function renderDevices(devices){
-      const wrap = document.getElementById("devicesList");
-      if(!wrap) return;
-
-      wrap.innerHTML = "";
-
-      if(!devices.length){
-        wrap.innerHTML = `<div class="device-list-card"><h4>No devices paired</h4><div class="device-meta">Use Add Device to pair a CodeBox to this site.</div></div>`;
-        return;
-      }
-
-      devices.forEach(device => {
-        const name = device.device_name || "CodeBox";
-        const serial = device.serial_number || device.device_uid || device.device_id || "No serial";
-        const status = getDeviceStatusLabel(device);
-        const statusClass = getDeviceStatusClass(status);
-        const pairedAt = device.paired_at ? new Date(device.paired_at).toLocaleString() : "Not recorded";
-        const lastSeen = (device.last_seen_at || device.last_seen) ? new Date(device.last_seen_at || device.last_seen).toLocaleString() : "Not seen yet";
-
-        wrap.innerHTML += `
-          <div class="device-list-card">
-            <h4>${name}</h4>
-            <span class="device-status-pill ${statusClass}">${status}</span>
-            <div class="device-meta">Serial: ${serial}</div>
-            <div class="device-meta">Paired: ${pairedAt}</div>
-            <div class="device-meta">Last seen: ${lastSeen}</div>
-          </div>
-        `;
-      });
-    }
-
     async function setWashEnabled(enabled){
       const activeSiteId = getActiveSiteId();
 
@@ -1679,7 +1552,6 @@ if(!control){
       renderDailyChart({ labels:[], values:[] });
       renderSystemControl(null);
       renderBayEditor([]);
-      renderDevices([]);
     }
 
     async function loadDashboard(){
@@ -1696,15 +1568,13 @@ if(!control){
         recentActivity,
         allActivity,
         control,
-        bays,
-        devices
-      ] = await Promise.all(
+        bays
+      ] = await Promise.all([
         fetchCodes(activeSiteId),
         fetchRecentActivity(activeSiteId),
         fetchAllActivity(activeSiteId),
         fetchSystemControl(activeSiteId),
-        fetchBayStatus(activeSiteId),
-        fetchDevices(activeSiteId)
+        fetchBayStatus(activeSiteId)
       ]);
 
       if(loadToken !== dashboardLoadToken) return;
@@ -1731,7 +1601,6 @@ if(!control){
       renderDailyChart(daily);
       renderSystemControl(control);
       renderBayEditor(bays);
-      renderDevices(devices);
     }
 
     function scheduleDashboardRefresh(){
@@ -1785,12 +1654,6 @@ if(!control){
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "site_bay_status" }, () => {
         scheduleDashboardRefresh();
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "devices" }, payload => {
-        const siteId = getActiveSiteId();
-        if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
-          scheduleDashboardRefresh();
-        }
       })
       .subscribe();
 
