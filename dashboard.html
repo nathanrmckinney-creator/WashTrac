@@ -345,6 +345,12 @@
     button.success{background:#16a34a}
     button.danger{background:#dc2626}
 
+    button:disabled{
+      opacity:.45;
+      cursor:not-allowed;
+      filter:grayscale(.25);
+    }
+
     .field-grid{
       display:grid;
       grid-template-columns:1fr 1fr;
@@ -694,8 +700,8 @@
         </div>
 
         <div class="controls">
-          <button class="success" onclick="setWashEnabled(true)">Enable Wash</button>
-          <button class="danger" onclick="setWashEnabled(false)">Disable Wash</button>
+          <button id="enableWashBtn" class="success" onclick="setWashEnabled(true)">Enable Wash</button>
+          <button id="disableWashBtn" class="danger" onclick="setWashEnabled(false)">Disable Wash</button>
         </div>
 
         <div class="note">
@@ -1285,6 +1291,56 @@
       return data || [];
     }
 
+    function getLastSeenDate(device){
+      const rawLastSeen = device.last_seen || device.last_heartbeat || device.heartbeat_at || device.updated_at || null;
+      return rawLastSeen ? new Date(rawLastSeen) : null;
+    }
+
+    function deviceIsOnline(device){
+      const lastSeen = getLastSeenDate(device);
+      if(!lastSeen || isNaN(lastSeen.getTime())) return false;
+
+      const diffMinutes = (Date.now() - lastSeen.getTime()) / 60000;
+      return diffMinutes < 5;
+    }
+
+    function getDeviceHealth(devices){
+      const list = devices || [];
+      const onlineDevices = list.filter(deviceIsOnline);
+      const newestLastSeen = list
+        .map(getLastSeenDate)
+        .filter(date => date && !isNaN(date.getTime()))
+        .sort((a,b) => b.getTime() - a.getTime())[0] || null;
+
+      return {
+        hasDevices: list.length > 0,
+        onlineCount: onlineDevices.length,
+        totalCount: list.length,
+        isOnline: onlineDevices.length > 0,
+        newestLastSeen
+      };
+    }
+
+    function formatLastSeen(date){
+      if(!date || isNaN(date.getTime())) return "Never";
+
+      const diffMinutes = Math.max(0, Math.round((Date.now() - date.getTime()) / 60000));
+
+      if(diffMinutes < 1) return "Just now";
+      if(diffMinutes === 1) return "1 minute ago";
+      if(diffMinutes < 60) return `${diffMinutes} minutes ago`;
+
+      return date.toLocaleString();
+    }
+
+    function setRemoteWashButtonsEnabled(enabled){
+      const enableBtn = document.getElementById("enableWashBtn");
+      const disableBtn = document.getElementById("disableWashBtn");
+
+      if(enableBtn) enableBtn.disabled = !enabled;
+      if(disableBtn) disableBtn.disabled = !enabled;
+    }
+
     function renderPairedDevices(devices){
       const wrap = document.getElementById("pairedDevicesList");
       if(!wrap) return;
@@ -1292,7 +1348,7 @@
       wrap.innerHTML = "";
 
       if(!devices.length){
-        wrap.innerHTML = `<div class="list-row"><span>No devices paired to this site yet.</span><span>-</span></div>`;
+        wrap.innerHTML = `<div class="list-row"><span>No devices paired to this site yet.</span><span>OFFLINE</span></div>`;
         return;
       }
 
@@ -1300,17 +1356,10 @@
         const name = device.name || device.device_name || device.label || "CodeBox";
         const identifier = device.device_id || device.serial_number || device.serial || device.id || "Unknown";
         const pairedDate = device.created_at ? new Date(device.created_at).toLocaleDateString() : "Unknown date";
-        const lastSeen = device.last_seen ? new Date(device.last_seen) : null;
-const now = new Date();
-
-let isOnline = false;
-
-if (lastSeen) {
-  const diffMinutes = (now - lastSeen) / 60000;
-  isOnline = diffMinutes < 5;
-}
-
-const status = isOnline ? "ONLINE" : "OFFLINE";
+        const lastSeen = getLastSeenDate(device);
+        const isOnline = deviceIsOnline(device);
+        const status = isOnline ? "ONLINE" : "OFFLINE";
+        const statusClass = isOnline ? "status-on" : "status-off";
 
         wrap.innerHTML += `
           <div class="paired-device-row">
@@ -1318,8 +1367,9 @@ const status = isOnline ? "ONLINE" : "OFFLINE";
               <div class="paired-device-name">${name}</div>
               <div class="paired-device-meta">ID: ${identifier}</div>
               <div class="paired-device-meta">Paired: ${pairedDate}</div>
+              <div class="paired-device-meta">Last seen: ${formatLastSeen(lastSeen)}</div>
             </div>
-            <div class="paired-device-status">${status}</div>
+            <div class="paired-device-status ${statusClass}">${status}</div>
           </div>
         `;
       });
@@ -1463,20 +1513,26 @@ const status = isOnline ? "ONLINE" : "OFFLINE";
       });
     }
 
-    function renderSystemControl(control){
+    function renderSystemControl(control, pairedDevices = []){
       const banner = document.getElementById("accessBanner");
+      const deviceHealth = getDeviceHealth(pairedDevices);
 
       if(!control && lastGoodSystemControl){
-  control = lastGoodSystemControl;
-}
+        control = lastGoodSystemControl;
+      }
 
-if(!control){
-  return;
-}
+      if(!control){
+        setRemoteWashButtonsEnabled(false);
+        if(banner){
+          banner.className = "banner red show";
+          banner.innerText = "SYSTEM OFFLINE — NO CONTROL DATA";
+        }
+        return;
+      }
 
       controlRowId = control.id;
       lastGoodSystemControl = control;
-      
+
       document.getElementById("washEnabledText").innerText = control.wash_enabled ? "Enabled" : "Disabled";
       document.getElementById("washEnabledPill").className = `status-pill ${control.wash_enabled ? "status-on" : "status-off"}`;
       document.getElementById("washEnabledPill").innerText = control.wash_enabled ? "Wash Enabled" : "Wash Disabled";
@@ -1494,6 +1550,21 @@ if(!control){
       document.getElementById("lockoutStart").value = control.lockout_start || "";
       document.getElementById("lockoutEnd").value = control.lockout_end || "";
 
+      if(!deviceHealth.isOnline){
+        setRemoteWashButtonsEnabled(false);
+        banner.className = "banner red show";
+
+        if(deviceHealth.hasDevices){
+          banner.innerText = `SYSTEM OFFLINE — NO CODEBOX HEARTBEAT. LAST SEEN: ${formatLastSeen(deviceHealth.newestLastSeen)}`;
+        }else{
+          banner.innerText = "SYSTEM OFFLINE — NO CODEBOX PAIRED";
+        }
+
+        return;
+      }
+
+      setRemoteWashButtonsEnabled(true);
+
       if(control.estop_active){
         banner.className = "banner red show";
         banner.innerText = "🚨 EMERGENCY STOP ACTIVE";
@@ -1505,7 +1576,7 @@ if(!control){
         banner.innerText = "AFTER-HOURS LOCKOUT ACTIVE";
       } else {
         banner.className = "banner green show";
-        banner.innerText = "SYSTEM AVAILABLE";
+        banner.innerText = `SYSTEM READY — ${deviceHealth.onlineCount}/${deviceHealth.totalCount} CODEBOX ONLINE`;
       }
     }
 
@@ -1634,7 +1705,7 @@ if(!control){
       renderTopCodes([]);
       renderDepartmentChart([]);
       renderDailyChart({ labels:[], values:[] });
-      renderSystemControl(null);
+      renderSystemControl(null, []);
       renderBayEditor([]);
       renderPairedDevices([]);
     }
@@ -1686,9 +1757,9 @@ if(!control){
       renderTopCodes(codeUsage);
       renderDepartmentChart(departments);
       renderDailyChart(daily);
-      renderSystemControl(control);
-      renderBayEditor(bays);
       renderPairedDevices(pairedDevices);
+      renderSystemControl(control, pairedDevices);
+      renderBayEditor(bays);
     }
 
     function scheduleDashboardRefresh(){
