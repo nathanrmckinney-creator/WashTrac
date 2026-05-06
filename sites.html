@@ -506,6 +506,16 @@
               <label for="siteAddress">Address</label>
               <input id="siteAddress" placeholder="Optional">
             </div>
+
+            <div class="field">
+              <label for="siteBayCount">Number of Bays</label>
+              <select id="siteBayCount">
+                <option value="1" selected>1 Bay</option>
+                <option value="2">2 Bays</option>
+                <option value="3">3 Bays</option>
+                <option value="4">4 Bays</option>
+              </select>
+            </div>
           </div>
 
           <div class="controls">
@@ -516,7 +526,7 @@
           <div id="siteStatus" class="status"></div>
 
           <div class="note">
-            When a site is added, it is linked to your login in <strong>user_site_access</strong> and becomes available in the dashboard site switcher.
+            When a site is added, it is linked to your login, becomes available in the dashboard site switcher, and creates the selected number of bay records.
           </div>
         </div>
 
@@ -570,6 +580,7 @@
     let currentSites = [];
     let pendingInvites = [];
     let acceptedMembers = [];
+    let siteBayCounts = {};
 
     function toggleMobileMenu(){
       const menu = document.getElementById("mobileMenu");
@@ -645,6 +656,7 @@
       document.getElementById("siteCity").value = "";
       document.getElementById("siteState").value = "";
       document.getElementById("siteAddress").value = "";
+      document.getElementById("siteBayCount").value = "1";
       clearStatus();
     }
 
@@ -686,6 +698,157 @@
       const d = new Date(date);
       d.setDate(d.getDate() + days);
       return d;
+    }
+
+
+    function normalizeBayName(value){
+      return String(value || "").trim().toUpperCase();
+    }
+
+    function getBayNumberFromName(value){
+      const match = normalizeBayName(value).match(/^BAY\s*(\d+)$/);
+      return match ? parseInt(match[1], 10) : null;
+    }
+
+    function clampBayCount(value){
+      const count = parseInt(value, 10);
+      if(Number.isNaN(count)) return 1;
+      return Math.min(4, Math.max(1, count));
+    }
+
+    async function loadBayCountsForSites(){
+      siteBayCounts = {};
+      const siteIds = currentSites.map(site => site.id).filter(Boolean);
+
+      if(!siteIds.length) return;
+
+      const { data, error } = await client
+        .from("site_bay_status")
+        .select("site_id,bay_name")
+        .in("site_id", siteIds);
+
+      if(error){
+        console.log("Bay count load error:", error);
+        return;
+      }
+
+      (data || []).forEach(row => {
+        if(!row.site_id) return;
+        siteBayCounts[row.site_id] = (siteBayCounts[row.site_id] || 0) + 1;
+      });
+    }
+
+    async function syncSiteBays(site, requestedCount){
+      const siteId = typeof site === "string" ? site : site?.id;
+      const organizationId = typeof site === "string" ? "" : (site?.organization_id || "");
+      const count = clampBayCount(requestedCount);
+
+      if(!siteId){
+        throw new Error("No site id provided for bay sync.");
+      }
+
+      const { data: existingRows, error: loadError } = await client
+        .from("site_bay_status")
+        .select("*")
+        .eq("site_id", siteId);
+
+      if(loadError){
+        console.log("Bay sync load error:", loadError);
+        throw loadError;
+      }
+
+      const existing = existingRows || [];
+      const byBayNumber = {};
+
+      existing.forEach(row => {
+        const bayNumber = getBayNumberFromName(row.bay_name);
+        if(bayNumber) byBayNumber[bayNumber] = row;
+      });
+
+      const rowsToInsert = [];
+      for(let i = 1; i <= count; i++){
+        if(!byBayNumber[i]){
+          const row = {
+            site_id: siteId,
+            bay_name: `BAY ${i}`,
+            status: "Ready",
+            updated_at: new Date().toISOString()
+          };
+
+          if(organizationId) row.organization_id = organizationId;
+          rowsToInsert.push(row);
+        }
+      }
+
+      if(rowsToInsert.length){
+        const { error: insertError } = await client
+          .from("site_bay_status")
+          .insert(rowsToInsert);
+
+        if(insertError){
+          console.log("Bay sync insert error:", insertError);
+          throw insertError;
+        }
+      }
+
+      const rowsToDelete = existing.filter(row => {
+        const bayNumber = getBayNumberFromName(row.bay_name);
+        return bayNumber && bayNumber > count;
+      });
+
+      if(rowsToDelete.length){
+        const deleteIds = rowsToDelete.map(row => row.id).filter(Boolean);
+
+        if(deleteIds.length){
+          const { error: deleteError } = await client
+            .from("site_bay_status")
+            .delete()
+            .in("id", deleteIds);
+
+          if(deleteError){
+            console.log("Bay sync delete error:", deleteError);
+            throw deleteError;
+          }
+        }
+      }
+
+      siteBayCounts[siteId] = count;
+      return count;
+    }
+
+    async function updateSiteBayCount(siteId, countValue){
+      clearStatus();
+
+      const site = currentSites.find(item => item.id === siteId);
+      if(!site){
+        setStatus("Site not found.", "bad");
+        return;
+      }
+
+      if(!canManageSite(site)){
+        setStatus("Only owner/admin users can change bay setup.", "bad");
+        await loadSites();
+        return;
+      }
+
+      const count = clampBayCount(countValue);
+      const confirmText = `Set ${siteLabel(site)} to ${count} bay${count === 1 ? "" : "s"}? This will remove extra BAY rows from this site.`;
+      const confirmed = confirm(confirmText);
+
+      if(!confirmed){
+        await loadSites();
+        return;
+      }
+
+      try{
+        await syncSiteBays(site, count);
+        setStatus(`Bay setup saved: ${count} bay${count === 1 ? "" : "s"}.`, "good");
+        await loadSites();
+      }catch(err){
+        console.log("Update bay count error:", err);
+        setStatus("Could not update bay setup: " + (err.message || "Unknown error"), "bad");
+        await loadSites();
+      }
     }
 
     async function loadCurrentUser(){
@@ -832,6 +995,7 @@
       }
 
       await loadInviteAndMemberData();
+      await loadBayCountsForSites();
       renderSites();
       return currentSites;
     }
@@ -928,6 +1092,28 @@
               <div class="pill">${escapeText(site.member_role || "site")}</div>
             </div>
 
+            <div class="invite-box" style="margin-top:0; padding-top:0; border-top:none; margin-bottom:16px;">
+              <h4>Bay Setup</h4>
+              <div class="invite-grid">
+                <div class="field full-mobile">
+                  <label for="bayCount-${escapeText(site.id)}">Number of Bays For This Site</label>
+                  <select id="bayCount-${escapeText(site.id)}" onchange="updateSiteBayCount('${escapeText(site.id)}', this.value)" ${manager ? "" : "disabled"}>
+                    <option value="1" ${clampBayCount(siteBayCounts[site.id] || 1) === 1 ? "selected" : ""}>1 Bay</option>
+                    <option value="2" ${clampBayCount(siteBayCounts[site.id] || 1) === 2 ? "selected" : ""}>2 Bays</option>
+                    <option value="3" ${clampBayCount(siteBayCounts[site.id] || 1) === 3 ? "selected" : ""}>3 Bays</option>
+                    <option value="4" ${clampBayCount(siteBayCounts[site.id] || 1) === 4 ? "selected" : ""}>4 Bays</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Current</label>
+                  <div class="pill green">${clampBayCount(siteBayCounts[site.id] || 1)} BAY${clampBayCount(siteBayCounts[site.id] || 1) === 1 ? "" : "S"}</div>
+                </div>
+              </div>
+              <div class="note">
+                ${manager ? "Changing this updates the bay rows used by Dashboard and Monitor." : "Only owner/admin users can change bay setup."}
+              </div>
+            </div>
+
             <h4>Linked Users</h4>
             <div class="mini-list">${membersHtml}</div>
 
@@ -974,6 +1160,7 @@
       const city = document.getElementById("siteCity").value.trim();
       const state = document.getElementById("siteState").value.trim();
       const address = document.getElementById("siteAddress").value.trim();
+      const bayCount = clampBayCount(document.getElementById("siteBayCount").value);
 
       if(!organization_id){
         setStatus("Choose an organization first.", "bad");
@@ -1030,10 +1217,19 @@
         }
       }
 
+      try{
+        await syncSiteBays(siteData, bayCount);
+      }catch(err){
+        console.log("Initial bay setup error:", err);
+        setStatus("Site created, but bay setup failed. You can set the bay count below.", "bad");
+        await loadSites();
+        return;
+      }
+
       localStorage.setItem("activeSiteId", siteData.id);
 
       clearForm();
-      setStatus("Site added, selected, and linked to your account.", "good");
+      setStatus(`Site added with ${bayCount} bay${bayCount === 1 ? "" : "s"}, selected, and linked to your account.`, "good");
       await loadSites();
     }
 
