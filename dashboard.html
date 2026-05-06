@@ -941,13 +941,12 @@
       const expiresAt = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
 
       const payload = {
-        code: code,
-        site_id: siteId,
-        organization_id: organizationId,
-        status: "pending",
-        expires_at: expiresAt,
-        used_at: null
-      };
+  code: code,
+  site_id: siteId,
+  status: "pending",
+  expires_at: expiresAt,
+  used_at: null
+};
 
       const { data, error } = await client
         .from("device_pairing_codes")
