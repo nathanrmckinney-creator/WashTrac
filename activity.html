@@ -80,6 +80,38 @@ th{color:#93c5fd;font-size:13px;text-transform:uppercase;letter-spacing:.5px;}
 .notice{margin-top:14px;color:#94a3b8;font-size:14px;line-height:1.5;}
 .manual-log-card{display:none;}
 
+.system-banner{
+  display:none;
+  margin-bottom:18px;
+  padding:14px 16px;
+  border-radius:10px;
+  font-weight:bold;
+  line-height:1.45;
+}
+.system-banner.show{display:block;}
+.system-banner.online{
+  background:rgba(20,83,45,.28);
+  border:1px solid rgba(34,197,94,.35);
+  color:#bbf7d0;
+}
+.system-banner.offline{
+  background:rgba(127,29,29,.28);
+  border:1px solid rgba(239,68,68,.35);
+  color:#fecaca;
+}
+.system-banner.warn{
+  background:rgba(120,53,15,.28);
+  border:1px solid rgba(245,158,11,.35);
+  color:#fde68a;
+}
+.system-banner small{
+  display:block;
+  margin-top:4px;
+  color:inherit;
+  opacity:.9;
+  font-weight:normal;
+}
+
 @media (max-width:1100px){
   .summary{grid-template-columns:1fr 1fr;}
   .form-grid,.filters{grid-template-columns:1fr 1fr;}
@@ -174,6 +206,11 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
       </button>
     </div>
 
+    <div id="systemHeartbeatBanner" class="system-banner warn show">
+      Checking CodeBox heartbeat...
+      <small>Activity history remains available even if the active CodeBox is offline.</small>
+    </div>
+
     <div class="summary">
       <div class="summary-box"><strong id="totalEvents">0</strong><span>Total Events</span></div>
       <div class="summary-box"><strong id="uniqueCodes">0</strong><span>Unique Codes</span></div>
@@ -237,6 +274,9 @@ let activityRows = [];
 let currentSiteId = null;
 let activityLoadToken = 0;
 let refreshTimer = null;
+let deviceHeartbeatRows = [];
+let systemOnline = false;
+const HEARTBEAT_ONLINE_MINUTES = 5;
 
 function getActiveSiteId(){
   return currentSiteId || localStorage.getItem("activeSiteId") || "";
@@ -250,6 +290,94 @@ function requireSite(){
   }
 
   return siteId;
+}
+
+function getDeviceLastSeen(device){
+  return device.last_seen || device.last_heartbeat || device.updated_at || device.created_at || null;
+}
+
+function getHeartbeatStatus(devices){
+  const now = Date.now();
+
+  if(!devices || !devices.length){
+    return {
+      online:false,
+      state:"none",
+      title:"SYSTEM OFFLINE",
+      detail:"No CodeBox is paired to this active site yet. Activity history is still available."
+    };
+  }
+
+  let newest = null;
+  let onlineCount = 0;
+
+  devices.forEach(device => {
+    const lastSeenValue = getDeviceLastSeen(device);
+    if(!lastSeenValue) return;
+
+    const lastSeen = new Date(lastSeenValue);
+    if(Number.isNaN(lastSeen.getTime())) return;
+
+    if(!newest || lastSeen > newest) newest = lastSeen;
+
+    const diffMinutes = (now - lastSeen.getTime()) / 60000;
+    if(diffMinutes <= HEARTBEAT_ONLINE_MINUTES){
+      onlineCount += 1;
+    }
+  });
+
+  if(onlineCount > 0){
+    return {
+      online:true,
+      state:"online",
+      title:"CODEBOX ONLINE",
+      detail:`${onlineCount} active CodeBox heartbeat${onlineCount === 1 ? "" : "s"}. Live activity should update within seconds.`
+    };
+  }
+
+  return {
+    online:false,
+    state:"offline",
+    title:"SYSTEM OFFLINE",
+    detail:newest
+      ? `Last CodeBox heartbeat: ${newest.toLocaleString()}. Activity history is still available.`
+      : "No heartbeat has been received from the paired CodeBox yet. Activity history is still available."
+  };
+}
+
+function renderHeartbeatBanner(devices){
+  const banner = document.getElementById("systemHeartbeatBanner");
+  if(!banner) return;
+
+  const status = getHeartbeatStatus(devices || []);
+  systemOnline = status.online;
+
+  banner.className = `system-banner show ${status.online ? "online" : "offline"}`;
+  banner.innerHTML = `${escapeText(status.title)}<small>${escapeText(status.detail)}</small>`;
+}
+
+async function fetchDevices(siteId){
+  if(!siteId) return [];
+
+  const { data, error } = await client
+    .from("devices")
+    .select("*")
+    .eq("site_id", siteId)
+    .order("created_at", { ascending:false });
+
+  if(error){
+    console.log("Devices fetch error:", error);
+    return [];
+  }
+
+  return data || [];
+}
+
+function scheduleHeartbeatRefresh(){
+  clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(() => {
+    loadActivity();
+  }, 200);
 }
 
 function toggleDesktopMenu(){
@@ -437,6 +565,9 @@ async function switchSite(siteId){
 
 function resetActivityEmpty(){
   activityRows = [];
+  deviceHeartbeatRows = [];
+  systemOnline = false;
+  renderHeartbeatBanner([]);
   document.getElementById("totalEvents").innerText = "0";
   document.getElementById("uniqueCodes").innerText = "0";
   document.getElementById("uniqueDepartments").innerText = "0";
@@ -497,12 +628,19 @@ async function loadActivity(){
     return;
   }
 
-  activityRows = await fetchActivity(activeSiteId);
+  const [activity, devices] = await Promise.all([
+    fetchActivity(activeSiteId),
+    fetchDevices(activeSiteId)
+  ]);
 
   if(loadToken !== activityLoadToken) return;
   if(activeSiteId !== getActiveSiteId()) return;
 
+  activityRows = activity;
+  deviceHeartbeatRows = devices;
+
   console.log("Activity:", activityRows);
+  renderHeartbeatBanner(deviceHeartbeatRows);
   renderActivity();
 }
 
@@ -619,6 +757,21 @@ function startLiveActivity(){
         if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
           console.log("Live code update:", payload);
           scheduleActivityRefresh();
+        }
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "devices"
+      },
+      payload => {
+        const siteId = getActiveSiteId();
+        if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
+          console.log("Live device heartbeat update:", payload);
+          scheduleHeartbeatRefresh();
         }
       }
     )
