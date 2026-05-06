@@ -164,6 +164,42 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
 .off{background:#7f1d1d;color:#fca5a5;}
 .warn{background:#78350f;color:#fcd34d;}
 
+.device-monitor-list{
+  display:grid;
+  gap:12px;
+}
+
+.device-monitor-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+  padding:14px 16px;
+  background:#0b1220;
+  border:1px solid #1f2937;
+  border-radius:12px;
+}
+
+.device-monitor-name{
+  font-weight:800;
+  color:white;
+  margin-bottom:5px;
+}
+
+.device-monitor-meta{
+  color:#94a3b8;
+  font-size:13px;
+  line-height:1.45;
+}
+
+.device-monitor-status{
+  flex-shrink:0;
+  font-size:13px;
+  font-weight:800;
+  padding:8px 12px;
+  border-radius:999px;
+}
+
 .activity-row{
   display:flex;
   justify-content:space-between;
@@ -290,6 +326,11 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
       <div class="card">
         <h3>Lockout Window</h3>
         <div id="lockoutWindow"></div>
+      </div>
+
+      <div class="card card-span-full">
+        <h3>Device Status</h3>
+        <div id="deviceStatus" class="device-monitor-list"></div>
       </div>
 
       <div class="card card-span-full">
@@ -499,6 +540,66 @@ function renderActivity(activity){
   });
 }
 
+
+function deviceOnlineFromLastSeen(lastSeenValue){
+  if(!lastSeenValue) return false;
+
+  const lastSeen = new Date(lastSeenValue);
+  if(Number.isNaN(lastSeen.getTime())) return false;
+
+  const diffMinutes = (Date.now() - lastSeen.getTime()) / 60000;
+  return diffMinutes < 5;
+}
+
+function formatLastSeen(lastSeenValue){
+  if(!lastSeenValue) return "Never seen";
+
+  const lastSeen = new Date(lastSeenValue);
+  if(Number.isNaN(lastSeen.getTime())) return "Unknown";
+
+  const diffSeconds = Math.max(0, Math.floor((Date.now() - lastSeen.getTime()) / 1000));
+
+  if(diffSeconds < 60) return `${diffSeconds}s ago`;
+
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  if(diffMinutes < 60) return `${diffMinutes}m ago`;
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  return `${diffHours}h ago`;
+}
+
+function renderDevices(devices){
+  const wrap = document.getElementById("deviceStatus");
+  if(!wrap) return;
+
+  wrap.innerHTML = "";
+
+  if(!devices || !devices.length){
+    wrap.innerHTML = `<div class="empty-state">No devices paired to selected site.</div>`;
+    return;
+  }
+
+  devices.forEach(device => {
+    const name = escapeText(device.device_name || device.name || "CodeBox");
+    const serial = escapeText(device.serial_number || device.device_id || device.id || "Unknown");
+    const isOnline = deviceOnlineFromLastSeen(device.last_seen);
+    const statusClass = isOnline ? "on" : "off";
+    const statusText = isOnline ? "ONLINE" : "OFFLINE";
+    const lastSeenText = escapeText(formatLastSeen(device.last_seen));
+
+    wrap.innerHTML += `
+      <div class="device-monitor-row">
+        <div>
+          <div class="device-monitor-name">${name}</div>
+          <div class="device-monitor-meta">ID: ${serial}</div>
+          <div class="device-monitor-meta">Last seen: ${lastSeenText}</div>
+        </div>
+        <div class="device-monitor-status ${statusClass}">${statusText}</div>
+      </div>
+    `;
+  });
+}
+
 function renderControl(control){
   const banner = document.getElementById("systemBanner");
 
@@ -553,6 +654,7 @@ function renderControl(control){
 function renderNoSite(){
   renderControl(null);
   renderBays([]);
+  renderDevices([]);
   renderActivity([]);
 
   const banner = document.getElementById("systemBanner");
@@ -650,6 +752,29 @@ async function loadBays(){
   renderBays(data || []);
 }
 
+async function loadDevices(){
+  const activeSiteId = getActiveSiteId();
+
+  if(!activeSiteId || !hasAccessToActiveSite()){
+    renderDevices([]);
+    return;
+  }
+
+  const { data, error } = await client
+    .from("devices")
+    .select("*")
+    .eq("site_id", activeSiteId)
+    .order("created_at", { ascending:false });
+
+  if(error){
+    console.log("devices error:", error);
+    renderDevices([]);
+    return;
+  }
+
+  renderDevices(data || []);
+}
+
 async function loadActivity(){
   const activeSiteId = getActiveSiteId();
 
@@ -685,6 +810,7 @@ async function loadMonitor(){
   await Promise.all([
     loadControl(),
     loadBays(),
+    loadDevices(),
     loadActivity()
   ]);
 }
@@ -724,9 +850,16 @@ function setupRealtime(){
     .on("postgres_changes", {
       event:"*",
       schema:"public",
-      table:"bay_status",
+      table:"site_bay_status",
       filter:`site_id=eq.${activeSiteId}`
     }, () => loadBays())
+
+    .on("postgres_changes", {
+      event:"*",
+      schema:"public",
+      table:"devices",
+      filter:`site_id=eq.${activeSiteId}`
+    }, () => loadDevices())
 
     .subscribe((status) => {
       console.log("Monitor realtime:", status);
