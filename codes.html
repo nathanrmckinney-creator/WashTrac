@@ -71,9 +71,130 @@
     .status{margin-top:14px;padding:12px 14px;border-radius:8px;background:#0b1220;border:1px solid #1f2937;color:#cbd5e1;display:none;}
     .status.show{display:block;}
 
+
+    .view-btn{background:#334155;padding:10px 14px;}
+    .view-btn:hover{background:#475569;}
+
+    .activity-modal{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(2,6,23,.78);
+      z-index:3000;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+
+    .activity-modal.show{display:flex;}
+
+    .activity-box{
+      width:100%;
+      max-width:980px;
+      max-height:88vh;
+      overflow:auto;
+      background:#111827;
+      border:1px solid #1e293b;
+      border-radius:16px;
+      padding:22px;
+      box-shadow:
+        0 0 0 1px rgba(30,167,255,.14),
+        0 22px 70px rgba(0,0,0,.6);
+    }
+
+    .activity-modal-header{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:16px;
+    }
+
+    .activity-modal-header h3{
+      margin:0 0 6px 0;
+      font-size:24px;
+    }
+
+    .close-modal-btn{
+      background:#334155;
+      padding:10px 13px;
+      border-radius:8px;
+      line-height:1;
+    }
+
+    .activity-summary-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+      margin:16px 0;
+    }
+
+    .activity-summary-box{
+      background:#0b1220;
+      border:1px solid #1f2937;
+      border-radius:12px;
+      padding:14px;
+    }
+
+    .activity-summary-box strong{
+      display:block;
+      font-size:24px;
+      margin-bottom:4px;
+    }
+
+    .activity-summary-box span{
+      color:#94a3b8;
+      font-size:13px;
+    }
+
+    .activity-filter-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr 1fr;
+      gap:12px;
+      margin:16px 0;
+    }
+
+    .activity-detail-table{
+      min-width:860px;
+    }
+
+    .pill-granted{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(34,197,94,.16);
+      color:#86efac;
+      font-size:12px;
+      font-weight:bold;
+      white-space:nowrap;
+    }
+
+    .pill-denied{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(239,68,68,.16);
+      color:#fca5a5;
+      font-size:12px;
+      font-weight:bold;
+      white-space:nowrap;
+    }
+
+    .pill-neutral{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background:#1e293b;
+      color:#cbd5e1;
+      font-size:12px;
+      font-weight:bold;
+      white-space:nowrap;
+    }
+
     @media (max-width:1100px){
       .summary{grid-template-columns:1fr 1fr;}
       .form-grid,.search-grid{grid-template-columns:1fr 1fr;}
+      .activity-summary-grid,.activity-filter-grid{grid-template-columns:1fr 1fr;}
     }
 
     @media (max-width:900px){
@@ -86,6 +207,7 @@
       .page-header h1{font-size:34px;}
       .summary{grid-template-columns:1fr;}
       .form-grid,.search-grid{grid-template-columns:1fr;}
+      .activity-summary-grid,.activity-filter-grid{grid-template-columns:1fr;}
     }
   </style>
 </head>
@@ -247,6 +369,7 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
               <th>Name</th>
               <th>Uses</th>
               <th>Last Used</th>
+              <th>Activity</th>
               <th>Remove</th>
             </tr>
           </thead>
@@ -256,6 +379,84 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
     </div>
   </div>
 </div>
+
+<div id="codeActivityModal" class="activity-modal">
+  <div class="activity-box">
+    <div class="activity-modal-header">
+      <div>
+        <h3 id="activityModalTitle">Code Activity</h3>
+        <div id="activityModalSubtitle" class="muted">Breakdown of usage for this code.</div>
+      </div>
+      <button class="close-modal-btn" type="button" onclick="closeCodeActivity()">✕</button>
+    </div>
+
+    <div class="activity-summary-grid">
+      <div class="activity-summary-box">
+        <strong id="modalTotalEvents">0</strong>
+        <span>Total Events</span>
+      </div>
+      <div class="activity-summary-box">
+        <strong id="modalGrantedEvents">0</strong>
+        <span>Granted Uses</span>
+      </div>
+      <div class="activity-summary-box">
+        <strong id="modalDeniedEvents">0</strong>
+        <span>Denied Events</span>
+      </div>
+      <div class="activity-summary-box">
+        <strong id="modalLastEvent">-</strong>
+        <span>Last Event</span>
+      </div>
+    </div>
+
+    <div class="activity-filter-grid">
+      <div class="field">
+        <label for="activityEventFilter">Event type</label>
+        <select id="activityEventFilter" onchange="renderCodeActivityDetails()">
+          <option value="">All events</option>
+          <option value="granted">Granted only</option>
+          <option value="denied">Denied only</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="activityBayFilter">Bay</label>
+        <input id="activityBayFilter" placeholder="Bay" oninput="renderCodeActivityDetails()">
+      </div>
+
+      <div class="field">
+        <label for="activityStartDate">Start date</label>
+        <input id="activityStartDate" type="date" onchange="renderCodeActivityDetails()">
+      </div>
+
+      <div class="field">
+        <label for="activityEndDate">End date</label>
+        <input id="activityEndDate" type="date" onchange="renderCodeActivityDetails()">
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="secondary" type="button" onclick="clearActivityFilters()">Clear Activity Filters</button>
+    </div>
+
+    <div class="table-wrap" style="margin-top:14px;">
+      <table class="activity-detail-table">
+        <thead>
+          <tr>
+            <th>Date / Time</th>
+            <th>Code</th>
+            <th>Department</th>
+            <th>Bay</th>
+            <th>Event</th>
+            <th>Device</th>
+          </tr>
+        </thead>
+        <tbody id="codeActivityTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 
 <script>
 const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
@@ -268,6 +469,7 @@ let currentSiteId = null;
 let currentOrganizationId = null;
 let codesLoadToken = 0;
 let refreshTimer = null;
+let selectedActivityCode = "";
 
 function getActiveSiteId(){
   return currentSiteId || localStorage.getItem("activeSiteId") || "";
@@ -415,19 +617,7 @@ function getIsActive(item){
 }
 
 function getCodeStats(code){
-  const rows = allActivity.filter(row => {
-    const rowCode = String(row.code || "").trim();
-    const event = String(row.event || "").toLowerCase();
-
-    if(rowCode !== String(code || "").trim()) return false;
-    if(event.includes("denied")) return false;
-    if(event.includes("invalid")) return false;
-    if(event.includes("failed")) return false;
-    if(event.includes("error")) return false;
-
-    return true;
-  });
-
+  const rows = getActivityRowsForCode(code).filter(isGrantedActivity);
   const uses = rows.length;
   const last = rows
     .filter(row => row.event_time)
@@ -438,6 +628,136 @@ function getCodeStats(code){
     lastUsed: last ? last.event_time : ""
   };
 }
+
+
+function isGrantedActivity(row){
+  const event = String(row.event || "").toLowerCase();
+  const status = String(row.status || "").toLowerCase();
+
+  if(event.includes("denied") || event.includes("invalid") || event.includes("failed") || event.includes("error")) return false;
+  if(status.includes("denied") || status.includes("invalid") || status.includes("failed") || status.includes("error")) return false;
+
+  return true;
+}
+
+function getActivityDevice(row){
+  return cleanValue(row.name, cleanValue(row.metadata?.device, cleanValue(row.device, "")));
+}
+
+function formatDateTime(value){
+  if(!value) return "-";
+  return new Date(value).toLocaleString();
+}
+
+function getActivityRowsForCode(code){
+  const target = String(code || "").trim();
+
+  return allActivity
+    .filter(row => String(row.code || "").trim() === target)
+    .sort((a,b) => new Date(b.event_time || 0) - new Date(a.event_time || 0));
+}
+
+function openCodeActivity(code){
+  selectedActivityCode = String(code || "").trim();
+
+  const matchingCode = allCodes.find(item => String(getCodeValue(item)).trim() === selectedActivityCode);
+  const department = matchingCode ? getCodeDepartment(matchingCode) : "Unassigned";
+  const name = matchingCode ? getCodeName(matchingCode) : "";
+
+  document.getElementById("activityModalTitle").innerText = `Code ${selectedActivityCode}`;
+  document.getElementById("activityModalSubtitle").innerText =
+    `${department}${name ? " • " + name : ""}`;
+
+  document.getElementById("activityEventFilter").value = "";
+  document.getElementById("activityBayFilter").value = "";
+  document.getElementById("activityStartDate").value = "";
+  document.getElementById("activityEndDate").value = "";
+
+  document.getElementById("codeActivityModal").classList.add("show");
+  renderCodeActivityDetails();
+}
+
+function closeCodeActivity(){
+  selectedActivityCode = "";
+  document.getElementById("codeActivityModal").classList.remove("show");
+}
+
+function clearActivityFilters(){
+  document.getElementById("activityEventFilter").value = "";
+  document.getElementById("activityBayFilter").value = "";
+  document.getElementById("activityStartDate").value = "";
+  document.getElementById("activityEndDate").value = "";
+  renderCodeActivityDetails();
+}
+
+function renderCodeActivityDetails(){
+  const tbody = document.getElementById("codeActivityTableBody");
+  if(!tbody) return;
+
+  const eventFilter = document.getElementById("activityEventFilter").value;
+  const bayFilter = document.getElementById("activityBayFilter").value.trim().toLowerCase();
+  const startDate = document.getElementById("activityStartDate").value;
+  const endDate = document.getElementById("activityEndDate").value;
+
+  const allRows = getActivityRowsForCode(selectedActivityCode);
+  const grantedRows = allRows.filter(isGrantedActivity);
+  const deniedRows = allRows.filter(row => !isGrantedActivity(row));
+  const lastRow = allRows[0];
+
+  document.getElementById("modalTotalEvents").innerText = allRows.length;
+  document.getElementById("modalGrantedEvents").innerText = grantedRows.length;
+  document.getElementById("modalDeniedEvents").innerText = deniedRows.length;
+  document.getElementById("modalLastEvent").innerText = lastRow?.event_time ? new Date(lastRow.event_time).toLocaleDateString() : "-";
+
+  let rows = [...allRows];
+
+  if(eventFilter === "granted"){
+    rows = rows.filter(isGrantedActivity);
+  }
+
+  if(eventFilter === "denied"){
+    rows = rows.filter(row => !isGrantedActivity(row));
+  }
+
+  if(bayFilter){
+    rows = rows.filter(row => String(row.bay || "").toLowerCase().includes(bayFilter));
+  }
+
+  if(startDate){
+    const start = new Date(startDate + "T00:00:00");
+    rows = rows.filter(row => row.event_time && new Date(row.event_time) >= start);
+  }
+
+  if(endDate){
+    const end = new Date(endDate + "T23:59:59");
+    rows = rows.filter(row => row.event_time && new Date(row.event_time) <= end);
+  }
+
+  tbody.innerHTML = "";
+
+  if(!rows.length){
+    tbody.innerHTML = `<tr><td colspan="6" class="muted">No activity found for these filters.</td></tr>`;
+    return;
+  }
+
+  rows.forEach(row => {
+    const granted = isGrantedActivity(row);
+    const pillClass = granted ? "pill-granted" : "pill-denied";
+    const eventText = row.event || (granted ? "Granted" : "Denied");
+
+    tbody.innerHTML += `
+      <tr>
+        <td>${escapeText(formatDateTime(row.event_time))}</td>
+        <td><strong>${escapeText(row.code || selectedActivityCode)}</strong></td>
+        <td>${escapeText(row.department || "Unassigned")}</td>
+        <td>${escapeText(row.bay || "-")}</td>
+        <td><span class="${pillClass}">${escapeText(eventText)}</span></td>
+        <td>${escapeText(getActivityDevice(row) || "-")}</td>
+      </tr>
+    `;
+  });
+}
+
 
 async function loadSites(){
   const select = document.getElementById("siteSwitcher");
@@ -539,7 +859,7 @@ function resetCodesEmpty(){
   document.getElementById("activeDepartments").innerText = "0";
   document.getElementById("topUsedCode").innerText = "-";
   document.getElementById("totalUses").innerText = "0";
-  document.getElementById("codesTableBody").innerHTML = `<tr><td colspan="6" class="muted">No active site selected.</td></tr>`;
+  document.getElementById("codesTableBody").innerHTML = `<tr><td colspan="7" class="muted">No active site selected.</td></tr>`;
 }
 
 async function fetchCodes(siteId){
@@ -659,12 +979,12 @@ function renderCodes(){
   tbody.innerHTML = "";
 
   if(!getActiveSiteId()){
-    tbody.innerHTML = `<tr><td colspan="6" class="muted">No active site selected.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="muted">No active site selected.</td></tr>`;
     return;
   }
 
   if(!filtered.length){
-    tbody.innerHTML = `<tr><td colspan="6" class="muted">No matching codes found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="muted">No matching codes found.</td></tr>`;
     return;
   }
 
@@ -681,9 +1001,11 @@ function renderCodes(){
       <td>${escapeText(getCodeName(item))}</td>
       <td>${stats.uses || 0}</td>
       <td>${escapeText(lastUsed)}</td>
+      <td><button class="view-btn" type="button">View Activity</button></td>
       <td><button class="remove-btn" type="button">Remove</button></td>
     `;
 
+    tr.querySelector(".view-btn").addEventListener("click", () => openCodeActivity(code));
     tr.querySelector(".remove-btn").addEventListener("click", () => removeCode(id, code));
     tbody.appendChild(tr);
   });
@@ -820,7 +1142,16 @@ function scheduleCodesRefresh(){
 }
 
 document.addEventListener("keydown", function(event){
-  if(event.key === "Escape") closeMenus();
+  if(event.key === "Escape"){
+    closeMenus();
+    closeCodeActivity();
+  }
+});
+
+document.getElementById("codeActivityModal").addEventListener("click", function(event){
+  if(event.target.id === "codeActivityModal"){
+    closeCodeActivity();
+  }
 });
 
 document.addEventListener("click", function(event){
