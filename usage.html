@@ -182,6 +182,56 @@ button.secondary{background:#334155;}
 
 .hidden{display:none;}
 
+
+.heartbeat-banner{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin:20px 0 0;
+  padding:14px 16px;
+  border-radius:10px;
+  background:#0b1220;
+  border:1px solid #1f2937;
+}
+
+.heartbeat-banner strong{
+  display:block;
+  margin-bottom:3px;
+}
+
+.heartbeat-banner span{
+  color:#94a3b8;
+  font-size:14px;
+}
+
+.heartbeat-pill{
+  display:inline-block;
+  padding:8px 12px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:bold;
+  white-space:nowrap;
+}
+
+.heartbeat-online{
+  background:rgba(34,197,94,.16);
+  color:#86efac;
+  border:1px solid rgba(34,197,94,.35);
+}
+
+.heartbeat-offline{
+  background:rgba(239,68,68,.16);
+  color:#fca5a5;
+  border:1px solid rgba(239,68,68,.35);
+}
+
+.heartbeat-warn{
+  background:rgba(245,158,11,.16);
+  color:#fcd34d;
+  border:1px solid rgba(245,158,11,.35);
+}
+
 @media(max-width:900px){
   .sidebar{display:none;}
   .desktop-menu-wrap{display:none;}
@@ -194,7 +244,9 @@ button.secondary{background:#334155;}
   .column-grid{grid-template-columns:1fr;}
   .date-grid{grid-template-columns:1fr;}
   .day-grid{grid-template-columns:repeat(2,1fr);}
+  .heartbeat-banner{align-items:flex-start;flex-direction:column;}
 }
+
 </style>
 </head>
 
@@ -249,6 +301,14 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
       <p>Usage analytics and reporting.</p>
     </div>
 
+    <div class="heartbeat-banner" id="heartbeatBanner">
+      <div>
+        <strong id="heartbeatTitle">Checking CodeBox status...</strong>
+        <span id="heartbeatDetail">Reports stay available even while a CodeBox is offline.</span>
+      </div>
+      <div><span id="heartbeatPill" class="heartbeat-pill heartbeat-warn">Checking</span></div>
+    </div>
+
     <div class="summary">
       <div class="summary-box"><strong id="totalUses">0</strong><span>Total Uses</span></div>
       <div class="summary-box"><strong id="totalCodes">0</strong><span>Total Codes</span></div>
@@ -279,7 +339,7 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
 
         <div class="form-row">
           <label for="reportSiteScope">Report Site Scope</label>
-          <select id="reportSiteScope" onchange="loadUsage()">
+          <select id="reportSiteScope" onchange="loadUsage(); loadHeartbeatStatus();">
             <option value="current">Current Site</option>
             <option value="all">All My Sites</option>
           </select>
@@ -456,6 +516,8 @@ let cachedDepartmentData = [];
 let cachedRawUses = [];
 let cachedSiteScopeLabel = "Current Site";
 let cachedSiteIds = [];
+let reportHeartbeatTimer = null;
+let lastHeartbeatDevices = [];
 
 const columnLabels = {
   code: "Code",
@@ -936,6 +998,92 @@ function getReportCodesForSelectedRange(){
     codes: aggregateUses(filtered.uses),
     departments: getDepartmentDataFromUses(filtered.uses)
   };
+}
+
+
+function isDeviceOnline(device){
+  if(!device || !device.last_seen) return false;
+
+  const lastSeen = new Date(device.last_seen);
+  if(Number.isNaN(lastSeen.getTime())) return false;
+
+  const diffMinutes = (Date.now() - lastSeen.getTime()) / 60000;
+  return diffMinutes < 5;
+}
+
+function formatLastSeen(value){
+  if(!value) return "Never";
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return "Unknown";
+  return date.toLocaleString();
+}
+
+function renderHeartbeatStatus(devices){
+  const title = document.getElementById("heartbeatTitle");
+  const detail = document.getElementById("heartbeatDetail");
+  const pill = document.getElementById("heartbeatPill");
+
+  if(!title || !detail || !pill) return;
+
+  lastHeartbeatDevices = devices || [];
+
+  if(!devices || !devices.length){
+    title.innerText = "No CodeBox paired";
+    detail.innerText = "Reports are showing cloud data only. Pair a CodeBox from the dashboard to enable live device status.";
+    pill.className = "heartbeat-pill heartbeat-offline";
+    pill.innerText = "OFFLINE";
+    return;
+  }
+
+  const onlineDevices = devices.filter(isDeviceOnline);
+  const newestSeen = devices
+    .map(device => device.last_seen)
+    .filter(Boolean)
+    .sort((a,b) => new Date(b) - new Date(a))[0];
+
+  if(onlineDevices.length){
+    title.innerText = onlineDevices.length === 1 ? "CodeBox Online" : `${onlineDevices.length} CodeBox units online`;
+    detail.innerText = `Reports are live. Last heartbeat: ${formatLastSeen(newestSeen)}.`;
+    pill.className = "heartbeat-pill heartbeat-online";
+    pill.innerText = "ONLINE";
+    return;
+  }
+
+  title.innerText = "CodeBox Offline";
+  detail.innerText = `Showing last synced cloud data. Last heartbeat: ${formatLastSeen(newestSeen)}.`;
+  pill.className = "heartbeat-pill heartbeat-offline";
+  pill.innerText = "OFFLINE";
+}
+
+async function loadHeartbeatStatus(){
+  const siteInfo = await ensureActiveSiteIsValid();
+  const scope = getReportSiteScope();
+  const siteIds = scope === "all" ? siteInfo.siteIds : [siteInfo.activeSiteId].filter(Boolean);
+
+  if(!siteIds.length){
+    renderHeartbeatStatus([]);
+    return;
+  }
+
+  const { data, error } = await client
+    .from("devices")
+    .select("*")
+    .in("site_id", siteIds);
+
+  if(error){
+    console.log("Device heartbeat load error:", error);
+    renderHeartbeatStatus([]);
+    return;
+  }
+
+  renderHeartbeatStatus(data || []);
+}
+
+function scheduleHeartbeatRefresh(){
+  clearTimeout(reportHeartbeatTimer);
+  reportHeartbeatTimer = setTimeout(() => {
+    loadHeartbeatStatus();
+  }, 200);
 }
 
 async function loadUsage(){
@@ -1560,6 +1708,7 @@ async function initializeReportsPage(){
   loadSavedSchedule();
   applyReportUrlParams();
   await loadUsage();
+  await loadHeartbeatStatus();
 
   client.channel("washtrac-live-usage")
     .on("postgres_changes", { event: "*", schema: "public", table: "wash_activity" }, payload => {
@@ -1570,7 +1719,17 @@ async function initializeReportsPage(){
         loadUsage();
       }
     })
+    .on("postgres_changes", { event: "*", schema: "public", table: "devices" }, payload => {
+      const siteIds = cachedSiteIds || [];
+      const changedSiteId = payload.new?.site_id || payload.old?.site_id || "";
+
+      if(!siteIds.length || siteIds.includes(changedSiteId)){
+        scheduleHeartbeatRefresh();
+      }
+    })
     .subscribe();
+
+  setInterval(loadHeartbeatStatus, 30000);
 }
 
 initializeReportsPage();
