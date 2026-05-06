@@ -72,6 +72,38 @@
     .status.show{display:block;}
 
 
+    .system-banner{
+      display:none;
+      margin-bottom:20px;
+      padding:14px 16px;
+      border-radius:12px;
+      font-weight:bold;
+      letter-spacing:.2px;
+      line-height:1.45;
+    }
+
+    .system-banner.show{display:block;}
+
+    .system-banner.offline{
+      background:rgba(127,29,29,.28);
+      border:1px solid rgba(239,68,68,.35);
+      color:#fecaca;
+    }
+
+    .system-banner.online{
+      background:rgba(20,83,45,.28);
+      border:1px solid rgba(34,197,94,.35);
+      color:#bbf7d0;
+    }
+
+    button:disabled,
+    button.disabled-btn{
+      opacity:.45;
+      cursor:not-allowed;
+      filter:grayscale(.35);
+    }
+
+
     .view-btn{background:#334155;padding:10px 14px;}
     .view-btn:hover{background:#475569;}
 
@@ -286,6 +318,10 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
       </button>
     </div>
 
+    <div id="systemHeartbeatBanner" class="system-banner offline">
+      SYSTEM OFFLINE — No recent CodeBox heartbeat detected. Viewing and searching still work, but code changes are paused until the device is online.
+    </div>
+
     <div class="summary">
       <div class="summary-box"><strong id="totalCodes">0</strong><span>Total Codes</span></div>
       <div class="summary-box"><strong id="activeDepartments">0</strong><span>Departments</span></div>
@@ -322,7 +358,7 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
         </div>
 
         <div class="field">
-          <button type="button" onclick="addCode()">Add Code</button>
+          <button id="addCodeButton" type="button" onclick="addCode()">Add Code</button>
         </div>
       </div>
 
@@ -470,6 +506,9 @@ let currentOrganizationId = null;
 let codesLoadToken = 0;
 let refreshTimer = null;
 let selectedActivityCode = "";
+let systemOnline = false;
+let systemOnlineReason = "No recent CodeBox heartbeat detected.";
+const HEARTBEAT_ONLINE_MINUTES = 5;
 
 function getActiveSiteId(){
   return currentSiteId || localStorage.getItem("activeSiteId") || "";
@@ -483,6 +522,80 @@ function requireSite(){
   }
 
   return siteId;
+}
+
+
+function getHeartbeatTimestamp(device){
+  return device?.last_seen || device?.last_heartbeat || device?.heartbeat_at || device?.updated_at || "";
+}
+
+function getOnlineDevices(devices){
+  const now = new Date();
+
+  return (devices || []).filter(device => {
+    const heartbeat = getHeartbeatTimestamp(device);
+    if(!heartbeat) return false;
+
+    const seen = new Date(heartbeat);
+    if(Number.isNaN(seen.getTime())) return false;
+
+    const diffMinutes = (now - seen) / 60000;
+    return diffMinutes <= HEARTBEAT_ONLINE_MINUTES;
+  });
+}
+
+function renderSystemHeartbeat(devices){
+  const banner = document.getElementById("systemHeartbeatBanner");
+  const addBtn = document.getElementById("addCodeButton");
+  const onlineDevices = getOnlineDevices(devices);
+
+  systemOnline = onlineDevices.length > 0;
+
+  if(!devices || !devices.length){
+    systemOnlineReason = "No CodeBox is paired to this site yet.";
+  } else if(!systemOnline){
+    systemOnlineReason = "No recent CodeBox heartbeat detected.";
+  } else {
+    systemOnlineReason = `${onlineDevices.length} CodeBox device${onlineDevices.length === 1 ? "" : "s"} online.`;
+  }
+
+  if(banner){
+    banner.className = `system-banner show ${systemOnline ? "online" : "offline"}`;
+    banner.innerText = systemOnline
+      ? `SYSTEM ONLINE — ${systemOnlineReason} Code changes are available.`
+      : `SYSTEM OFFLINE — ${systemOnlineReason} Viewing and searching still work, but code changes are paused until the device is online.`;
+  }
+
+  if(addBtn){
+    addBtn.disabled = !systemOnline;
+    addBtn.title = systemOnline ? "" : "CodeBox is offline. Code changes are paused until heartbeat returns.";
+  }
+}
+
+async function fetchPairedDevices(siteId){
+  if(!siteId) return [];
+
+  const { data, error } = await client
+    .from("devices")
+    .select("*")
+    .eq("site_id", siteId)
+    .order("created_at", { ascending:false });
+
+  if(error){
+    console.log("fetchPairedDevices error:", error);
+    systemOnline = false;
+    systemOnlineReason = "Could not load CodeBox heartbeat status.";
+    return [];
+  }
+
+  return data || [];
+}
+
+function ensureSystemOnlineForCodeChanges(){
+  if(systemOnline) return true;
+
+  setStatus("Code changes are paused because the CodeBox is offline. Viewing/searching still works.");
+  return false;
 }
 
 function toggleDesktopMenu(){
@@ -860,6 +973,7 @@ function resetCodesEmpty(){
   document.getElementById("topUsedCode").innerText = "-";
   document.getElementById("totalUses").innerText = "0";
   document.getElementById("codesTableBody").innerHTML = `<tr><td colspan="7" class="muted">No active site selected.</td></tr>`;
+  renderSystemHeartbeat([]);
 }
 
 async function fetchCodes(siteId){
@@ -906,9 +1020,10 @@ async function loadCodesPage(){
     return;
   }
 
-  const [codes, activity] = await Promise.all([
+  const [codes, activity, devices] = await Promise.all([
     fetchCodes(activeSiteId),
-    fetchActivity(activeSiteId)
+    fetchActivity(activeSiteId),
+    fetchPairedDevices(activeSiteId)
   ]);
 
   if(loadToken !== codesLoadToken) return;
@@ -917,6 +1032,7 @@ async function loadCodesPage(){
   allCodes = codes;
   allActivity = activity;
 
+  renderSystemHeartbeat(devices);
   renderCodes();
   renderSummary();
 }
@@ -1002,7 +1118,7 @@ function renderCodes(){
       <td>${stats.uses || 0}</td>
       <td>${escapeText(lastUsed)}</td>
       <td><button class="view-btn" type="button">View Activity</button></td>
-      <td><button class="remove-btn" type="button">Remove</button></td>
+      <td><button class="remove-btn" type="button" ${systemOnline ? "" : "disabled title='CodeBox is offline. Code changes are paused until heartbeat returns.'"}>Remove</button></td>
     `;
 
     tr.querySelector(".view-btn").addEventListener("click", () => openCodeActivity(code));
@@ -1020,6 +1136,8 @@ function clearSearch(){
 
 async function addCode(){
   clearStatus();
+
+  if(!ensureSystemOnlineForCodeChanges()) return;
 
   let activeSiteId = "";
 
@@ -1100,6 +1218,8 @@ async function addCode(){
 async function removeCode(id, code){
   clearStatus();
 
+  if(!ensureSystemOnlineForCodeChanges()) return;
+
   let activeSiteId = "";
 
   try{
@@ -1179,6 +1299,12 @@ client.channel("washtrac-live-codes")
     }
   })
   .on("postgres_changes", { event: "*", schema: "public", table: "wash_activity" }, payload => {
+    const siteId = getActiveSiteId();
+    if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
+      scheduleCodesRefresh();
+    }
+  })
+  .on("postgres_changes", { event: "*", schema: "public", table: "devices" }, payload => {
     const siteId = getActiveSiteId();
     if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
       scheduleCodesRefresh();
