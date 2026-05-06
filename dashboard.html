@@ -696,8 +696,10 @@
         <div class="controls">
           <button class="success" onclick="setWashEnabled(true)">Enable Wash</button>
           <button class="danger" onclick="setWashEnabled(false)">Disable Wash</button>
-          <button class="secondary" onclick="setEstop(false)">Clear E-STOP</button>
-          <button class="danger" onclick="setEstop(true)">Simulate E-STOP</button>
+        </div>
+
+        <div class="note">
+          E-STOP is monitor-only. Its status is read from the connected CodeBox/ESP32 input and cannot be changed from the dashboard.
         </div>
 
         <div class="checkbox-row">
@@ -1556,30 +1558,6 @@ if(!control){
       }
 
       setControlStatus(enabled ? "Wash enabled." : "Wash disabled.");
-      scheduleDashboardRefresh();
-    }
-
-    async function setEstop(active){
-      const activeSiteId = getActiveSiteId();
-
-      if(!controlRowId || !activeSiteId){
-        setControlStatus("System control row not found.");
-        return;
-      }
-
-      const { error } = await client
-        .from("site_system_control")
-        .update({ estop_active: active, updated_at: new Date().toISOString() })
-        .eq("id", controlRowId)
-        .eq("site_id", activeSiteId);
-
-      if(error){
-        console.log(error);
-        setControlStatus("Could not update E-STOP status.");
-        return;
-      }
-
-      setControlStatus(active ? "E-STOP marked active." : "E-STOP cleared.");
       scheduleDashboardRefresh();
     }
 
