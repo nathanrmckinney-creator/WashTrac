@@ -464,117 +464,123 @@ function renderHeartbeatBanner(devices){
 
 async function fetchDevices(siteId){
   if(!siteId) return [];
-  const { data, error } = await client
-    .from("devices")
-    .select("id,name,site_id,last_seen,last_heartbeat,updated_at,created_at")
-    .eq("site_id", siteId)
-    .order("created_at", { ascending:false })
-    .limit(20);
 
-  if(error){
-    console.log("Devices fetch error:", error);
+  try{
+    const { data, error } = await client
+      .from("devices")
+      .select("*")
+      .eq("site_id", siteId)
+      .limit(20);
+
+    if(error){
+      console.log("Devices fetch error:", error);
+      return [];
+    }
+
+    return data || [];
+  }catch(err){
+    console.log("Devices fetch exception:", err);
     return [];
   }
-  return data || [];
 }
-
 async function loadSites(){
   const select = document.getElementById("siteSwitcher");
   if(!select) return "";
+
   select.innerHTML = `<option>Loading sites...</option>`;
 
-  const { data: userData, error: userError } = await client.auth.getUser();
-  if(userError || !userData?.user){
-    console.log("User error:", userError);
-    select.innerHTML = `<option value="">No user</option>`;
-    return "";
-  }
+  try{
+    const { data: userData, error: userError } = await client.auth.getUser();
 
-  const userId = userData.user.id;
-  let membershipRows = [];
-  let membershipError = null;
+    if(userError || !userData?.user){
+      console.log("User error:", userError);
+      const saved = localStorage.getItem("activeSiteId") || "";
+      if(saved){
+        currentSiteId = saved;
+        select.innerHTML = `<option value="${escapeText(saved)}">Current Site</option>`;
+        select.value = saved;
+        return saved;
+      }
+      select.innerHTML = `<option value="">No user</option>`;
+      return "";
+    }
 
-  /*
-    Safer site loading:
-    1) Read site IDs from site_members without asking Supabase for an embedded join.
-    2) Then fetch the sites table directly.
-    This avoids the "Error loading sites" problem when the foreign-key relationship
-    name/cache is not available to the browser client.
-  */
-  let result = await client
-    .from("site_members")
-    .select("site_id, role")
-    .eq("user_id", userId);
+    const userId = userData.user.id;
 
-  if(result.error){
-    console.log("site_members lookup error:", result.error);
-
-    // Fallback for older builds that used user_site_access.
-    result = await client
-      .from("user_site_access")
+    const memberResult = await client
+      .from("site_members")
       .select("site_id")
       .eq("user_id", userId);
-  }
 
-  membershipRows = result.data || [];
-  membershipError = result.error || null;
+    if(memberResult.error){
+      console.log("Site member error:", memberResult.error);
+      select.innerHTML = `<option value="">Error loading sites</option>`;
+      return "";
+    }
 
-  if(membershipError){
-    console.log("Site access error:", membershipError);
+    const siteIds = (memberResult.data || [])
+      .map(row => row.site_id)
+      .filter(Boolean);
+
+    if(!siteIds.length){
+      const saved = localStorage.getItem("activeSiteId") || "";
+      if(saved){
+        currentSiteId = saved;
+        select.innerHTML = `<option value="${escapeText(saved)}">Current Site</option>`;
+        select.value = saved;
+        return saved;
+      }
+
+      select.innerHTML = `<option value="">No sites assigned</option>`;
+      localStorage.removeItem("activeSiteId");
+      localStorage.removeItem("activeOrganizationId");
+      currentSiteId = null;
+      return "";
+    }
+
+    const sitesResult = await client
+      .from("sites")
+      .select("*")
+      .in("id", siteIds);
+
+    if(sitesResult.error){
+      console.log("Sites fetch error:", sitesResult.error);
+
+      currentSiteId = localStorage.getItem("activeSiteId") || siteIds[0];
+      localStorage.setItem("activeSiteId", currentSiteId);
+
+      select.innerHTML = siteIds.map(id => {
+        return `<option value="${escapeText(id)}">${escapeText(id === currentSiteId ? "Current Site" : "Site")}</option>`;
+      }).join("");
+
+      select.value = currentSiteId;
+      return currentSiteId;
+    }
+
+    const sites = sitesResult.data || [];
+
+    select.innerHTML = sites.map(site => {
+      return `<option value="${escapeText(site.id)}">${escapeText(site.name || "Unnamed Site")}</option>`;
+    }).join("");
+
+    const saved = localStorage.getItem("activeSiteId");
+    const exists = saved && sites.some(site => site.id === saved);
+    const activeSite = exists ? sites.find(site => site.id === saved) : sites[0];
+
+    currentSiteId = activeSite.id;
+    localStorage.setItem("activeSiteId", currentSiteId);
+
+    const orgId = activeSite.organization_id || activeSite.org_id || activeSite.company_id || null;
+    if(orgId) localStorage.setItem("activeOrganizationId", orgId);
+
+    select.value = currentSiteId;
+    return currentSiteId;
+  }catch(err){
+    console.log("Load sites exception:", err);
     select.innerHTML = `<option value="">Error loading sites</option>`;
     return "";
   }
-
-  const siteIds = [...new Set(membershipRows.map(row => row.site_id).filter(Boolean))];
-
-  if(!siteIds.length){
-    select.innerHTML = `<option value="">No sites assigned</option>`;
-    localStorage.removeItem("activeSiteId");
-    localStorage.removeItem("activeOrganizationId");
-    currentSiteId = null;
-    return "";
-  }
-
-  const { data: sitesData, error: sitesError } = await client
-    .from("sites")
-    .select("*")
-    .in("id", siteIds)
-    .order("name", { ascending:true });
-
-  if(sitesError){
-    console.log("Sites fetch error:", sitesError);
-    select.innerHTML = `<option value="">Error loading sites</option>`;
-    return "";
-  }
-
-  const sites = sitesData || [];
-
-  if(!sites.length){
-    select.innerHTML = `<option value="">No sites found</option>`;
-    localStorage.removeItem("activeSiteId");
-    localStorage.removeItem("activeOrganizationId");
-    currentSiteId = null;
-    return "";
-  }
-
-  select.innerHTML = sites.map(site => {
-    return `<option value="${escapeText(site.id)}">${escapeText(site.name || "Unnamed Site")}</option>`;
-  }).join("");
-
-  const saved = localStorage.getItem("activeSiteId");
-  const exists = saved && sites.some(site => site.id === saved);
-  const activeSite = exists ? sites.find(site => site.id === saved) : sites[0];
-
-  currentSiteId = activeSite.id;
-  localStorage.setItem("activeSiteId", currentSiteId);
-
-  const orgId = activeSite.organization_id || activeSite.org_id || activeSite.company_id || null;
-  if(orgId) localStorage.setItem("activeOrganizationId", orgId);
-
-  select.value = currentSiteId;
-  return currentSiteId;
 }
-
 async function switchSite(siteId){
   if(!siteId) return;
   currentSiteId = siteId;
@@ -605,7 +611,7 @@ function mapActivityRow(row){
   const code = getActivityCode(row);
   return {
     id: row.id || "",
-    event_time: cleanValue(row.event_time, cleanValue(row.created_at, "")),
+    event_time: cleanValue(getRowTimeValue(row), ""),
     code,
     department: cleanValue(row.department, cleanValue(row.metadata?.department, "")),
     name: cleanValue(row.metadata?.name, cleanValue(row.assigned_to, "")),
@@ -655,6 +661,47 @@ function renderRows(rows){
   updateSummary(rows);
 }
 
+function getRowTimeValue(row){
+  return row.event_time || row.created_at || row.timestamp || row.time || row.inserted_at || "";
+}
+
+function rowIsInsideSelectedDate(row){
+  const { start, end } = getDateRange();
+  const raw = getRowTimeValue(row);
+  if(!raw) return true;
+
+  const date = new Date(raw);
+  if(Number.isNaN(date.getTime())) return true;
+
+  if(start && date < start) return false;
+  if(end && date > end) return false;
+  return true;
+}
+
+async function runActivityQuery(siteId, limit){
+  const attempts = [
+    () => client.from("wash_activity").select("*").eq("site_id", siteId).order("created_at", { ascending:false }).limit(limit),
+    () => client.from("wash_activity").select("*").eq("site_id", siteId).order("event_time", { ascending:false }).limit(limit),
+    () => client.from("wash_activity").select("*").eq("site_id", siteId).limit(limit),
+    () => client.from("wash_activity").select("*").limit(limit)
+  ];
+
+  let lastError = null;
+
+  for(const attempt of attempts){
+    const result = await attempt();
+
+    if(!result.error){
+      return result;
+    }
+
+    lastError = result.error;
+    console.log("Activity query attempt failed:", result.error);
+  }
+
+  return { data: [], error: lastError };
+}
+
 async function loadActivity(){
   const token = ++activityLoadToken;
   const siteId = getActiveSiteId();
@@ -672,19 +719,11 @@ async function loadActivity(){
 
   try{
     const limit = Number(document.getElementById("rowLimit").value || 250);
-    const { start, end } = getDateRange();
 
-    let query = client
-      .from("wash_activity")
-      .select("*")
-      .eq("site_id", siteId)
-      .order("created_at", { ascending:false })
-      .limit(limit);
-
-    if(start) query = query.gte("created_at", start.toISOString());
-    if(end) query = query.lte("created_at", end.toISOString());
-
-    const [activityResult, devices] = await Promise.all([query, fetchDevices(siteId)]);
+    const [activityResult, devices] = await Promise.all([
+      runActivityQuery(siteId, limit),
+      fetchDevices(siteId)
+    ]);
 
     if(token !== activityLoadToken || siteId !== getActiveSiteId()) return;
 
@@ -698,8 +737,17 @@ async function loadActivity(){
     }
 
     const rawRows = activityResult.data || [];
-    const mappedRows = rawRows.map(mapActivityRow);
+
+    let scopedRows = rawRows.filter(row => {
+      if(row.site_id === undefined || row.site_id === null) return true;
+      return String(row.site_id) === String(siteId);
+    });
+
+    scopedRows = scopedRows.filter(rowIsInsideSelectedDate);
+
+    const mappedRows = scopedRows.map(mapActivityRow);
     const filteredRows = applyTextFilters(mappedRows);
+
     renderRows(filteredRows);
 
     const nowText = new Date().toLocaleTimeString();
@@ -712,7 +760,6 @@ async function loadActivity(){
     if(token === activityLoadToken) setLoading(false);
   }
 }
-
 function applyTextFilters(rows){
   const codeFilter = document.getElementById("filterCode").value.trim().toLowerCase();
   const departmentFilter = document.getElementById("filterDepartment").value.trim().toLowerCase();
@@ -742,10 +789,9 @@ function clearFilters(){
 }
 
 ["filterCode","filterDepartment","filterName","filterBay","filterEvent"].forEach(id => {
-  document.addEventListener("input", event => {
-    if(event.target && event.target.id === id){
-      clearTimeout(window.__activityFilterTimer);
-      window.__activityFilterTimer = setTimeout(loadActivity, 350);
+  document.addEventListener("keydown", event => {
+    if(event.target && event.target.id === id && event.key === "Enter"){
+      loadActivity();
     }
   });
 });
