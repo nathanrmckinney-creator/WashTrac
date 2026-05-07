@@ -319,7 +319,7 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
     </div>
 
     <div id="systemHeartbeatBanner" class="system-banner offline">
-      SYSTEM OFFLINE — No recent CodeBox heartbeat detected. Viewing and searching still work, but code changes are paused until the device is online.
+      Code changes require an active CodeBox connection.
     </div>
 
     <div class="summary">
@@ -391,6 +391,7 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
 
       <div class="actions">
         <button class="secondary" type="button" onclick="clearSearch()">Clear Search</button>
+        <button class="secondary" type="button" onclick="loadCodesPage()">Refresh</button>
       </div>
     </div>
 
@@ -889,7 +890,7 @@ async function loadSites(){
   const user = userData.user;
 
   const { data, error } = await client
-    .from("user_site_access")
+    .from("site_members")
     .select(`
       site_id,
       sites (*)
@@ -997,18 +998,29 @@ async function fetchCodes(siteId){
 async function fetchActivity(siteId){
   if(!siteId) return [];
 
-  const { data, error } = await client
+  let result = await client
     .from("wash_activity")
     .select("*")
     .eq("site_id", siteId)
-    .order("event_time", { ascending:false });
+    .order("created_at", { ascending:false })
+    .limit(500);
 
-  if(error){
-    console.log("fetchActivity error:", error);
+  if(result.error){
+    console.log("created_at query failed:", result.error);
+
+    result = await client
+      .from("wash_activity")
+      .select("*")
+      .eq("site_id", siteId)
+      .limit(500);
+  }
+
+  if(result.error){
+    console.log("fetchActivity error:", result.error);
     return [];
   }
 
-  return (data || []).map(normalizeActivity);
+  return (result.data || []).map(normalizeActivity);
 }
 
 async function loadCodesPage(){
@@ -1255,10 +1267,7 @@ async function removeCode(id, code){
 }
 
 function scheduleCodesRefresh(){
-  clearTimeout(refreshTimer);
-  refreshTimer = setTimeout(() => {
-    loadCodesPage();
-  }, 200);
+  return;
 }
 
 document.addEventListener("keydown", function(event){
@@ -1291,26 +1300,8 @@ document.addEventListener("click", function(event){
   }
 });
 
-client.channel("washtrac-live-codes")
-  .on("postgres_changes", { event: "*", schema: "public", table: "access_codes" }, payload => {
-    const siteId = getActiveSiteId();
-    if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
-      scheduleCodesRefresh();
-    }
-  })
-  .on("postgres_changes", { event: "*", schema: "public", table: "wash_activity" }, payload => {
-    const siteId = getActiveSiteId();
-    if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
-      scheduleCodesRefresh();
-    }
-  })
-  .on("postgres_changes", { event: "*", schema: "public", table: "devices" }, payload => {
-    const siteId = getActiveSiteId();
-    if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
-      scheduleCodesRefresh();
-    }
-  })
-  .subscribe();
+
+// Realtime subscriptions removed for stability.
 
 window.onload = async function(){
   const siteId = await loadSites();
