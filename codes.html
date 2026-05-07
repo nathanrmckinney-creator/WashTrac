@@ -70,6 +70,9 @@
     .search-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
     .status{margin-top:14px;padding:12px 14px;border-radius:8px;background:#0b1220;border:1px solid #1f2937;color:#cbd5e1;display:none;}
     .status.show{display:block;}
+    .status.success{border-color:rgba(34,197,94,.35);color:#86efac;}
+    .status.warn{border-color:rgba(245,158,11,.35);color:#fde68a;}
+    .status.error{border-color:rgba(239,68,68,.35);color:#fecaca;}
 
 
     .system-banner{
@@ -389,6 +392,7 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
 
       <div class="actions">
         <button class="secondary" type="button" onclick="clearSearch()">Clear Search</button>
+        <button class="secondary" type="button" onclick="exportCodesCsv()">Export CSV</button>
         <button class="secondary" type="button" onclick="loadCodesPage()">Refresh</button>
       </div>
     </div>
@@ -498,8 +502,16 @@ const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
 const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+window.addEventListener("pageshow", function(event){
+  if(event.persisted && localStorage.getItem("washtracLoggedIn") !== "yes"){
+    window.location.replace("login.html");
+  }
+});
+
 let allCodes = [];
 let allActivity = [];
+let lastRenderedCodes = [];
+let codesLoadInProgress = false;
 let currentSiteId = null;
 let currentOrganizationId = null;
 let codesLoadToken = 0;
@@ -544,12 +556,20 @@ function getOnlineDevices(devices){
 }
 
 function renderSystemHeartbeat(devices){
-  systemOnline = true;
-  systemOnlineReason = "Code management available.";
+  const pairedDevices = devices || [];
+  const onlineDevices = getOnlineDevices(pairedDevices);
+
+  systemOnline = onlineDevices.length > 0;
+  systemOnlineReason = systemOnline
+    ? `${onlineDevices.length} CodeBox heartbeat${onlineDevices.length === 1 ? "" : "s"} active.`
+    : pairedDevices.length
+      ? "CodeBox heartbeat not currently online. Cloud code management is still available."
+      : "No CodeBox paired to this site yet. Cloud code management is still available.";
+
   const addBtn = document.getElementById("addCodeButton");
   if(addBtn){
     addBtn.disabled = false;
-    addBtn.title = "";
+    addBtn.title = systemOnlineReason;
   }
 }
 
@@ -573,6 +593,10 @@ async function fetchPairedDevices(siteId){
 }
 
 function ensureSystemOnlineForCodeChanges(){
+  /*
+    Codes are cloud-managed, so they should stay editable even when the Pi/CodeBox is offline.
+    The kiosk sync/enforcement catches up when the hardware returns online.
+  */
   return true;
 }
 
@@ -626,20 +650,29 @@ async function logout(event){
 
   localStorage.removeItem("washtracLoggedIn");
   localStorage.removeItem("activeSiteId");
+  localStorage.removeItem("washtracActiveSiteId");
   localStorage.removeItem("activeOrganizationId");
   window.location.replace("login.html");
 }
 
-function setStatus(message){
+function setStatus(message, tone = ""){
   const box = document.getElementById("statusBox");
   box.innerText = message;
-  box.classList.add("show");
+  box.className = "status show";
+
+  if(tone === "success"){
+    box.classList.add("success");
+  }else if(tone === "warn"){
+    box.classList.add("warn");
+  }else if(tone === "error" || tone === true){
+    box.classList.add("error");
+  }
 }
 
 function clearStatus(){
   const box = document.getElementById("statusBox");
   box.innerText = "";
-  box.classList.remove("show");
+  box.className = "status";
 }
 
 function handleDepartmentChange(){
@@ -993,7 +1026,7 @@ async function fetchCodes(siteId){
 
   if(error){
     console.log("fetchCodes error:", error);
-    setStatus("Could not load codes.");
+    setStatus("Could not load codes.", "error");
     return [];
   }
 
@@ -1007,8 +1040,19 @@ async function fetchActivity(siteId){
     .from("wash_activity")
     .select("*")
     .eq("site_id", siteId)
-    .order("created_at", { ascending:false })
-    .limit(500);
+    .order("event_time", { ascending:false })
+    .limit(1000);
+
+  if(result.error){
+    console.log("event_time activity query failed:", result.error);
+
+    result = await client
+      .from("wash_activity")
+      .select("*")
+      .eq("site_id", siteId)
+      .order("created_at", { ascending:false })
+      .limit(1000);
+  }
 
   if(result.error){
     console.log("created_at activity query failed:", result.error);
@@ -1017,7 +1061,7 @@ async function fetchActivity(siteId){
       .from("wash_activity")
       .select("*")
       .eq("site_id", siteId)
-      .limit(500);
+      .limit(1000);
   }
 
   if(result.error){
@@ -1029,6 +1073,8 @@ async function fetchActivity(siteId){
 }
 
 async function loadCodesPage(){
+  if(codesLoadInProgress) return;
+
   const loadToken = ++codesLoadToken;
   const activeSiteId = getActiveSiteId();
 
@@ -1037,21 +1083,32 @@ async function loadCodesPage(){
     return;
   }
 
-  const [codes, activity, devices] = await Promise.all([
-    fetchCodes(activeSiteId),
-    fetchActivity(activeSiteId),
-    fetchPairedDevices(activeSiteId)
-  ]);
+  codesLoadInProgress = true;
 
-  if(loadToken !== codesLoadToken) return;
-  if(activeSiteId !== getActiveSiteId()) return;
+  try{
+    const [codes, activity, devices] = await Promise.all([
+      fetchCodes(activeSiteId),
+      fetchActivity(activeSiteId),
+      fetchPairedDevices(activeSiteId)
+    ]);
 
-  allCodes = codes;
-  allActivity = activity;
+    if(loadToken !== codesLoadToken) return;
+    if(activeSiteId !== getActiveSiteId()) return;
 
-  renderSystemHeartbeat(devices);
-  renderCodes();
-  renderSummary();
+    allCodes = codes;
+    allActivity = activity;
+
+    renderSystemHeartbeat(devices);
+    renderCodes();
+    renderSummary();
+  }catch(err){
+    console.log("loadCodesPage error:", err);
+    setStatus("Could not load codes page.", "error");
+  }finally{
+    if(loadToken === codesLoadToken){
+      codesLoadInProgress = false;
+    }
+  }
 }
 
 function renderSummary(){
@@ -1117,9 +1174,12 @@ function renderCodes(){
   }
 
   if(!filtered.length){
+    lastRenderedCodes = [];
     tbody.innerHTML = `<tr><td colspan="7" class="muted">No matching codes found.</td></tr>`;
     return;
   }
+
+  lastRenderedCodes = filtered;
 
   filtered.forEach(item => {
     const code = getCodeValue(item);
@@ -1135,7 +1195,7 @@ function renderCodes(){
       <td>${stats.uses || 0}</td>
       <td>${escapeText(lastUsed)}</td>
       <td><button class="view-btn" type="button">View Activity</button></td>
-      <td><button class="remove-btn" type="button" ${systemOnline ? "" : "disabled title='CodeBox is offline. Code changes are paused until heartbeat returns.'"}>Remove</button></td>
+      <td><button class="remove-btn" type="button" title="${escapeText(systemOnlineReason)}">Remove</button></td>
     `;
 
     tr.querySelector(".view-btn").addEventListener("click", () => openCodeActivity(code));
@@ -1151,6 +1211,57 @@ function clearSearch(){
   renderCodes();
 }
 
+function csvEscape(value){
+  const text = String(value ?? "");
+  if(/[",\n\r]/.test(text)){
+    return `"${text.replaceAll('"', '""')}"`;
+  }
+  return text;
+}
+
+function exportCodesCsv(){
+  const rows = lastRenderedCodes || [];
+
+  if(!rows.length){
+    setStatus("No codes to export.", "warn");
+    return;
+  }
+
+  const headers = ["Code","Department","Name","Uses","Last Used","Active"];
+  const csvRows = rows.map(item => {
+    const code = getCodeValue(item);
+    const stats = getCodeStats(code);
+    const lastUsed = stats.lastUsed ? new Date(stats.lastUsed).toLocaleString() : "";
+
+    return [
+      code,
+      getCodeDepartment(item),
+      getCodeName(item),
+      stats.uses || 0,
+      lastUsed,
+      getIsActive(item) ? "Yes" : "No"
+    ];
+  });
+
+  const csv = [headers, ...csvRows]
+    .map(line => line.map(csvEscape).join(","))
+    .join("\n");
+
+  const blob = new Blob([csv], { type:"text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const dateStamp = new Date().toISOString().slice(0,10);
+
+  link.href = url;
+  link.download = `washtrac-codes-${dateStamp}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+  setStatus(`Exported ${rows.length} code${rows.length === 1 ? "" : "s"}.`, "success");
+}
+
 async function addCode(){
   clearStatus();
 
@@ -1161,7 +1272,7 @@ async function addCode(){
   try{
     activeSiteId = requireSite();
   }catch(err){
-    setStatus("No active site selected.");
+    setStatus("No active site selected.", "error");
     return;
   }
 
@@ -1169,15 +1280,15 @@ async function addCode(){
   const department = getDepartmentValue().trim();
   const name = document.getElementById("nameInput").value.trim();
 
-  if(!code){ setStatus("Enter a code."); return; }
-  if(!/^\d{4}$/.test(code)){ setStatus("Code must be 4 digits."); return; }
-  if(!department){ setStatus("Select a department or enter a custom one."); return; }
-  if(!name){ setStatus("Enter a name."); return; }
+  if(!code){ setStatus("Enter a code.", "warn"); return; }
+  if(!/^\d{4}$/.test(code)){ setStatus("Code must be 4 digits.", "warn"); return; }
+  if(!department){ setStatus("Select a department or enter a custom one.", "warn"); return; }
+  if(!name){ setStatus("Enter a name.", "warn"); return; }
 
   const existing = allCodes.find(item => String(getCodeValue(item)).trim() === code);
 
   if(existing && getIsActive(existing)){
-    setStatus("That code already exists on this site.");
+    setStatus("That code already exists on this site.", "warn");
     return;
   }
 
@@ -1195,7 +1306,7 @@ async function addCode(){
 
     if(error){
       console.log("reactivate code error:", error);
-      setStatus("Could not add code.");
+      setStatus("Could not add code.", "error");
       return;
     }
   } else {
@@ -1217,7 +1328,7 @@ async function addCode(){
 
     if(error){
       console.log("add code error:", error);
-      setStatus("Could not add code.");
+      setStatus("Could not add code.", "error");
       return;
     }
   }
@@ -1228,7 +1339,7 @@ async function addCode(){
   document.getElementById("customDepartmentInput").value = "";
   document.getElementById("customDepartmentWrap").classList.add("hidden");
 
-  setStatus("Code added.");
+  setStatus("Code added.", "success");
   await loadCodesPage();
 }
 
@@ -1242,7 +1353,7 @@ async function removeCode(id, code){
   try{
     activeSiteId = requireSite();
   }catch(err){
-    setStatus("No active site selected.");
+    setStatus("No active site selected.", "error");
     return;
   }
 
@@ -1258,16 +1369,16 @@ async function removeCode(id, code){
 
   if(error){
     console.log("remove code error:", error);
-    setStatus("Could not remove code.");
+    setStatus("Could not remove code.", "error");
     return;
   }
 
   if(!data || !data.length){
-    setStatus("Could not remove code.");
+    setStatus("Could not remove code.", "error");
     return;
   }
 
-  setStatus("Code removed.");
+  setStatus("Code removed.", "success");
   await loadCodesPage();
 }
 
@@ -1307,6 +1418,14 @@ document.addEventListener("click", function(event){
 
 
 // Realtime subscriptions removed for stability.
+
+["codeInput","nameInput","customDepartmentInput"].forEach(id => {
+  document.addEventListener("keydown", function(event){
+    if(event.target && event.target.id === id && event.key === "Enter"){
+      addCode();
+    }
+  });
+});
 
 window.onload = async function(){
   const siteId = await loadSites();
