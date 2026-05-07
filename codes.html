@@ -318,9 +318,7 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
       </button>
     </div>
 
-    <div id="systemHeartbeatBanner" class="system-banner offline">
-      Code changes require an active CodeBox connection.
-    </div>
+    
 
     <div class="summary">
       <div class="summary-box"><strong id="totalCodes">0</strong><span>Total Codes</span></div>
@@ -546,30 +544,12 @@ function getOnlineDevices(devices){
 }
 
 function renderSystemHeartbeat(devices){
-  const banner = document.getElementById("systemHeartbeatBanner");
+  systemOnline = true;
+  systemOnlineReason = "Code management available.";
   const addBtn = document.getElementById("addCodeButton");
-  const onlineDevices = getOnlineDevices(devices);
-
-  systemOnline = onlineDevices.length > 0;
-
-  if(!devices || !devices.length){
-    systemOnlineReason = "No CodeBox is paired to this site yet.";
-  } else if(!systemOnline){
-    systemOnlineReason = "No recent CodeBox heartbeat detected.";
-  } else {
-    systemOnlineReason = `${onlineDevices.length} CodeBox device${onlineDevices.length === 1 ? "" : "s"} online.`;
-  }
-
-  if(banner){
-    banner.className = `system-banner show ${systemOnline ? "online" : "offline"}`;
-    banner.innerText = systemOnline
-      ? `SYSTEM ONLINE — ${systemOnlineReason} Code changes are available.`
-      : `SYSTEM OFFLINE — ${systemOnlineReason} Viewing and searching still work, but code changes are paused until the device is online.`;
-  }
-
   if(addBtn){
-    addBtn.disabled = !systemOnline;
-    addBtn.title = systemOnline ? "" : "CodeBox is offline. Code changes are paused until heartbeat returns.";
+    addBtn.disabled = false;
+    addBtn.title = "";
   }
 }
 
@@ -593,10 +573,7 @@ async function fetchPairedDevices(siteId){
 }
 
 function ensureSystemOnlineForCodeChanges(){
-  if(systemOnline) return true;
-
-  setStatus("Code changes are paused because the CodeBox is offline. Viewing/searching still works.");
-  return false;
+  return true;
 }
 
 function toggleDesktopMenu(){
@@ -876,48 +853,84 @@ function renderCodeActivityDetails(){
 async function loadSites(){
   const select = document.getElementById("siteSwitcher");
   if(!select) return "";
-
   select.innerHTML = `<option>Loading sites...</option>`;
 
   const { data: userData, error: userError } = await client.auth.getUser();
-
   if(userError || !userData?.user){
     console.log("User error:", userError);
     select.innerHTML = `<option value="">No user</option>`;
     return "";
   }
 
-  const user = userData.user;
+  const userId = userData.user.id;
+  let membershipRows = [];
+  let membershipError = null;
 
-  const { data, error } = await client
+  /*
+    Safer site loading:
+    1) Read site IDs from site_members without asking Supabase for an embedded join.
+    2) Then fetch the sites table directly.
+    This avoids the "Error loading sites" problem when the foreign-key relationship
+    name/cache is not available to the browser client.
+  */
+  let result = await client
     .from("site_members")
-    .select(`
-      site_id,
-      sites (*)
-    `)
-    .eq("user_id", user.id);
+    .select("site_id, role")
+    .eq("user_id", userId);
 
-  if(error){
-    console.log("Site access error:", error);
+  if(result.error){
+    console.log("site_members lookup error:", result.error);
+
+    // Fallback for older builds that used user_site_access.
+    result = await client
+      .from("user_site_access")
+      .select("site_id")
+      .eq("user_id", userId);
+  }
+
+  membershipRows = result.data || [];
+  membershipError = result.error || null;
+
+  if(membershipError){
+    console.log("Site access error:", membershipError);
     select.innerHTML = `<option value="">Error loading sites</option>`;
     return "";
   }
 
-  const sites = (data || [])
-    .map(row => row.sites)
-    .filter(Boolean);
+  const siteIds = [...new Set(membershipRows.map(row => row.site_id).filter(Boolean))];
 
-  if(!sites.length){
+  if(!siteIds.length){
     select.innerHTML = `<option value="">No sites assigned</option>`;
     localStorage.removeItem("activeSiteId");
     localStorage.removeItem("activeOrganizationId");
     currentSiteId = null;
-    currentOrganizationId = null;
+    return "";
+  }
+
+  const { data: sitesData, error: sitesError } = await client
+    .from("sites")
+    .select("*")
+    .in("id", siteIds)
+    .order("name", { ascending:true });
+
+  if(sitesError){
+    console.log("Sites fetch error:", sitesError);
+    select.innerHTML = `<option value="">Error loading sites</option>`;
+    return "";
+  }
+
+  const sites = sitesData || [];
+
+  if(!sites.length){
+    select.innerHTML = `<option value="">No sites found</option>`;
+    localStorage.removeItem("activeSiteId");
+    localStorage.removeItem("activeOrganizationId");
+    currentSiteId = null;
     return "";
   }
 
   select.innerHTML = sites.map(site => {
-    return `<option value="${site.id}">${escapeText(site.name || "Unnamed Site")}</option>`;
+    return `<option value="${escapeText(site.id)}">${escapeText(site.name || "Unnamed Site")}</option>`;
   }).join("");
 
   const saved = localStorage.getItem("activeSiteId");
@@ -925,22 +938,17 @@ async function loadSites(){
   const activeSite = exists ? sites.find(site => site.id === saved) : sites[0];
 
   currentSiteId = activeSite.id;
-  currentOrganizationId = activeSite.organization_id || activeSite.org_id || activeSite.company_id || null;
-
   localStorage.setItem("activeSiteId", currentSiteId);
 
-  if(currentOrganizationId){
-    localStorage.setItem("activeOrganizationId", currentOrganizationId);
-  }
+  const orgId = activeSite.organization_id || activeSite.org_id || activeSite.company_id || null;
+  if(orgId) localStorage.setItem("activeOrganizationId", orgId);
 
   select.value = currentSiteId;
-
   return currentSiteId;
 }
 
 async function switchSite(siteId){
   if(!siteId) return;
-
   currentSiteId = siteId;
   localStorage.setItem("activeSiteId", siteId);
 
@@ -954,11 +962,8 @@ async function switchSite(siteId){
     .maybeSingle();
 
   if(!error && data){
-    currentOrganizationId = data.organization_id || data.org_id || data.company_id || null;
-
-    if(currentOrganizationId){
-      localStorage.setItem("activeOrganizationId", currentOrganizationId);
-    }
+    const orgId = data.organization_id || data.org_id || data.company_id || null;
+    if(orgId) localStorage.setItem("activeOrganizationId", orgId);
   }
 
   clearStatus();
@@ -1006,7 +1011,7 @@ async function fetchActivity(siteId){
     .limit(500);
 
   if(result.error){
-    console.log("created_at query failed:", result.error);
+    console.log("created_at activity query failed:", result.error);
 
     result = await client
       .from("wash_activity")
