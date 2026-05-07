@@ -184,7 +184,7 @@ button.secondary{background:#334155;}
 
 
 .heartbeat-banner{
-  display:flex;
+  display:none !important;
   align-items:center;
   justify-content:space-between;
   gap:14px;
@@ -301,7 +301,12 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
       <p>Usage analytics and reporting.</p>
     </div>
 
-    
+    <div class="heartbeat-banner" id="heartbeatBanner">
+      <div>
+        <strong id="heartbeatTitle">Checking CodeBox status...</strong>
+        <span id="heartbeatDetail">Reports stay available even while a CodeBox is offline.</span>
+      </div>
+      <div><span id="heartbeatPill" class="heartbeat-pill heartbeat-warn">Checking</span></div>
     </div>
 
     <div class="summary">
@@ -662,7 +667,9 @@ async function getAssignedSites(){
     .map(row => row.site_id)
     .filter(Boolean);
 
-  if(!siteIds.length) return [];
+  if(!siteIds.length){
+    return [];
+  }
 
   const siteResult = await client
     .from("sites")
@@ -674,12 +681,13 @@ async function getAssignedSites(){
     return [];
   }
 
-  return (siteResult.data || []).map(site => ({
-    id: site.id || "",
-    name: site.name || "Unnamed Site"
-  }));
+  return (siteResult.data || [])
+    .map(site => ({
+      id: site.id || "",
+      name: site.name || "Unnamed Site"
+    }))
+    .filter(site => site.id);
 }
-
 async function getAssignedSiteIds(){
   const sites = await getAssignedSites();
   return sites.map(site => site.id);
@@ -1021,12 +1029,49 @@ function formatLastSeen(value){
   return date.toLocaleString();
 }
 
-function renderHeartbeatStatus(devices){ return; }
+function renderHeartbeatStatus(devices){
+  const title = document.getElementById("heartbeatTitle");
+  const detail = document.getElementById("heartbeatDetail");
+  const pill = document.getElementById("heartbeatPill");
 
-async function loadHeartbeatStatus(){ return; }
+  if(!title || !detail || !pill) return;
 
-function scheduleHeartbeatRefresh(){ return; }
+  lastHeartbeatDevices = devices || [];
 
+  if(!devices || !devices.length){
+    title.innerText = "No CodeBox paired";
+    detail.innerText = "Reports are showing cloud data only. Pair a CodeBox from the dashboard to enable live device status.";
+    pill.className = "heartbeat-pill heartbeat-offline";
+    pill.innerText = "OFFLINE";
+    return;
+  }
+
+  const onlineDevices = devices.filter(isDeviceOnline);
+  const newestSeen = devices
+    .map(device => device.last_seen)
+    .filter(Boolean)
+    .sort((a,b) => new Date(b) - new Date(a))[0];
+
+  if(onlineDevices.length){
+    title.innerText = onlineDevices.length === 1 ? "CodeBox Online" : `${onlineDevices.length} CodeBox units online`;
+    detail.innerText = `Reports are live. Last heartbeat: ${formatLastSeen(newestSeen)}.`;
+    pill.className = "heartbeat-pill heartbeat-online";
+    pill.innerText = "ONLINE";
+    return;
+  }
+
+  title.innerText = "CodeBox Offline";
+  detail.innerText = `Showing last synced cloud data. Last heartbeat: ${formatLastSeen(newestSeen)}.`;
+  pill.className = "heartbeat-pill heartbeat-offline";
+  pill.innerText = "OFFLINE";
+}
+
+async function loadHeartbeatStatus(){
+  return;
+}
+function scheduleHeartbeatRefresh(){
+  return;
+}
 async function loadUsage(){
   let query = client
     .from("wash_activity")
@@ -1650,10 +1695,9 @@ async function initializeReportsPage(){
   loadSavedSchedule();
   applyReportUrlParams();
   await loadUsage();
-
+  await loadHeartbeatStatus();
 
   // Realtime subscriptions removed for stability.
-  // Reports refresh on page load and user actions only.
 
 }
 
