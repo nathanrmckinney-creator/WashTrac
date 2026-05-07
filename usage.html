@@ -329,7 +329,7 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
     </div>
 
     <div class="site-switcher-row">
-      <select id="siteSwitcher" onchange="switchReportSite(this.value)">
+      <select id="siteSwitcher" onchange="switchSite(this.value)">
         <option>Loading sites...</option>
       </select>
       <button type="button" onclick="window.location.href='sites.html'">Manage Sites</button>
@@ -550,6 +550,8 @@ let cachedDepartmentData = [];
 let cachedRawUses = [];
 let cachedSiteScopeLabel = "Current Site";
 let cachedSiteIds = [];
+let currentSiteId = null;
+let currentOrganizationId = null;
 let reportHeartbeatTimer = null;
 let lastHeartbeatDevices = [];
 
@@ -640,7 +642,7 @@ function getReportSiteScope(){
 }
 
 function getActiveSiteId(){
-  return localStorage.getItem("activeSiteId") || localStorage.getItem("washtracActiveSiteId") || "";
+  return currentSiteId || localStorage.getItem("activeSiteId") || localStorage.getItem("washtracActiveSiteId") || "";
 }
 
 function setActiveSiteId(siteId){
@@ -648,45 +650,6 @@ function setActiveSiteId(siteId){
   localStorage.setItem("activeSiteId", siteId);
   localStorage.setItem("washtracActiveSiteId", siteId);
 }
-
-async function loadReportSites(){
-  const select = document.getElementById("siteSwitcher");
-  if(!select) return "";
-
-  select.innerHTML = `<option>Loading sites...</option>`;
-
-  const sites = await getAssignedSites();
-
-  if(!sites.length){
-    select.innerHTML = `<option value="">No sites assigned</option>`;
-    return "";
-  }
-
-  const saved = getActiveSiteId();
-  const exists = saved && sites.some(site => site.id === saved);
-  const activeSite = exists ? sites.find(site => site.id === saved) : sites[0];
-
-  setActiveSiteId(activeSite.id);
-
-  select.innerHTML = sites.map(site => {
-    return `<option value="${site.id}">${escapeText(site.name || "Unnamed Site")}</option>`;
-  }).join("");
-
-  select.value = activeSite.id;
-  return activeSite.id;
-}
-
-async function switchReportSite(siteId){
-  if(!siteId) return;
-
-  setActiveSiteId(siteId);
-
-  const siteSwitcher = document.getElementById("siteSwitcher");
-  if(siteSwitcher) siteSwitcher.blur();
-
-  await loadUsage();
-}
-
 
 function applyReportUrlParams(){
   const params = new URLSearchParams(window.location.search);
@@ -702,6 +665,127 @@ function applyReportUrlParams(){
     scopeSelect.value = scope;
   }
 }
+
+async function loadSites(){
+  const select = document.getElementById("siteSwitcher");
+  if(!select) return "";
+  select.innerHTML = `<option>Loading sites...</option>`;
+
+  const { data: userData, error: userError } = await client.auth.getUser();
+  if(userError || !userData?.user){
+    console.log("User error:", userError);
+    select.innerHTML = `<option value="">No user</option>`;
+    return "";
+  }
+
+  const userId = userData.user.id;
+  let membershipRows = [];
+  let membershipError = null;
+
+  /*
+    Safer site loading:
+    1) Read site IDs from site_members without asking Supabase for an embedded join.
+    2) Then fetch the sites table directly.
+    This avoids the "Error loading sites" problem when the foreign-key relationship
+    name/cache is not available to the browser client.
+  */
+  let result = await client
+    .from("site_members")
+    .select("site_id, role")
+    .eq("user_id", userId);
+
+  if(result.error){
+    console.log("site_members lookup error:", result.error);
+
+    // Fallback for older builds that used user_site_access.
+    result = await client
+      .from("user_site_access")
+      .select("site_id")
+      .eq("user_id", userId);
+  }
+
+  membershipRows = result.data || [];
+  membershipError = result.error || null;
+
+  if(membershipError){
+    console.log("Site access error:", membershipError);
+    select.innerHTML = `<option value="">Error loading sites</option>`;
+    return "";
+  }
+
+  const siteIds = [...new Set(membershipRows.map(row => row.site_id).filter(Boolean))];
+
+  if(!siteIds.length){
+    select.innerHTML = `<option value="">No sites assigned</option>`;
+    localStorage.removeItem("activeSiteId");
+    localStorage.removeItem("activeOrganizationId");
+    currentSiteId = null;
+    return "";
+  }
+
+  const { data: sitesData, error: sitesError } = await client
+    .from("sites")
+    .select("*")
+    .in("id", siteIds)
+    .order("name", { ascending:true });
+
+  if(sitesError){
+    console.log("Sites fetch error:", sitesError);
+    select.innerHTML = `<option value="">Error loading sites</option>`;
+    return "";
+  }
+
+  const sites = sitesData || [];
+
+  if(!sites.length){
+    select.innerHTML = `<option value="">No sites found</option>`;
+    localStorage.removeItem("activeSiteId");
+    localStorage.removeItem("activeOrganizationId");
+    currentSiteId = null;
+    return "";
+  }
+
+  select.innerHTML = sites.map(site => {
+    return `<option value="${escapeText(site.id)}">${escapeText(site.name || "Unnamed Site")}</option>`;
+  }).join("");
+
+  const saved = localStorage.getItem("activeSiteId");
+  const exists = saved && sites.some(site => site.id === saved);
+  const activeSite = exists ? sites.find(site => site.id === saved) : sites[0];
+
+  currentSiteId = activeSite.id;
+  localStorage.setItem("activeSiteId", currentSiteId);
+
+  const orgId = activeSite.organization_id || activeSite.org_id || activeSite.company_id || null;
+  if(orgId) localStorage.setItem("activeOrganizationId", orgId);
+
+  select.value = currentSiteId;
+  return currentSiteId;
+}
+
+
+async function switchSite(siteId){
+  if(!siteId) return;
+  currentSiteId = siteId;
+  localStorage.setItem("activeSiteId", siteId);
+
+  const siteSwitcher = document.getElementById("siteSwitcher");
+  if(siteSwitcher) siteSwitcher.blur();
+
+  const { data, error } = await client
+    .from("sites")
+    .select("*")
+    .eq("id", siteId)
+    .maybeSingle();
+
+  if(!error && data){
+    const orgId = data.organization_id || data.org_id || data.company_id || null;
+    if(orgId) localStorage.setItem("activeOrganizationId", orgId);
+  }
+
+  await loadUsage();
+}
+
 
 function setSiteScopeSummary(message){
   const box = document.getElementById("siteScopeSummary");
@@ -720,57 +804,24 @@ async function getCurrentUser(){
 }
 
 async function getAssignedSites(){
-  const user = await getCurrentUser();
+  const select = document.getElementById("siteSwitcher");
 
-  if(!user){
-    return [];
-  }
+  if(select && select.options && select.options.length){
+    const sitesFromSelect = Array.from(select.options)
+      .map(option => ({ id: option.value, name: option.textContent || "Unnamed Site" }))
+      .filter(site => site.id);
 
-  const memberResult = await client
-    .from("site_members")
-    .select("site_id")
-    .eq("user_id", user.id);
-
-  if(memberResult.error){
-    console.log("Site member load error:", memberResult.error);
-
-    const saved = getActiveSiteId();
-    if(saved){
-      return [{ id:saved, name:"Current Site" }];
+    if(sitesFromSelect.length){
+      return sitesFromSelect;
     }
-
-    return [];
   }
 
-  const siteIds = (memberResult.data || [])
-    .map(row => row.site_id)
-    .filter(Boolean);
-
-  if(!siteIds.length){
-    const saved = getActiveSiteId();
-    if(saved){
-      return [{ id:saved, name:"Current Site" }];
-    }
-
-    return [];
+  const active = getActiveSiteId();
+  if(active){
+    return [{ id: active, name: "Current Site" }];
   }
 
-  const siteResult = await client
-    .from("sites")
-    .select("*")
-    .in("id", siteIds);
-
-  if(siteResult.error){
-    console.log("Site load error:", siteResult.error);
-    return siteIds.map(id => ({ id, name:"Site" }));
-  }
-
-  return (siteResult.data || [])
-    .map(site => ({
-      id: site.id || "",
-      name: site.name || "Unnamed Site"
-    }))
-    .filter(site => site.id);
+  return [];
 }
 async function getAssignedSiteIds(){
   const sites = await getAssignedSites();
@@ -1153,13 +1204,13 @@ function renderHeartbeatStatus(devices){
 async function loadHeartbeatStatus(){ return; }
 function scheduleHeartbeatRefresh(){ return; }
 async function loadUsage(){
-  let baseQuery = client
+  let query = client
     .from("wash_activity")
     .select("*")
     .order("created_at", { ascending:false })
     .limit(500);
 
-  let scoped = await applySiteScopeToQuery(baseQuery);
+  let scoped = await applySiteScopeToQuery(query);
 
   if(scoped.noSites || !scoped.query){
     cachedRawUses = [];
@@ -1182,16 +1233,14 @@ async function loadUsage(){
   if(result.error){
     console.log("Usage created_at query error:", result.error);
 
-    let fallbackQuery = client
+    query = client
       .from("wash_activity")
       .select("*")
       .limit(500);
 
-    scoped = await applySiteScopeToQuery(fallbackQuery);
+    scoped = await applySiteScopeToQuery(query);
 
-    if(scoped.noSites || !scoped.query){
-      return;
-    }
+    if(scoped.noSites || !scoped.query) return;
 
     result = await scoped.query;
   }
@@ -1790,7 +1839,7 @@ async function initializeReportsPage(){
   updateScheduleRangeFields();
   loadSavedSchedule();
   applyReportUrlParams();
-  await loadReportSites();
+  await loadSites();
   await loadUsage();
   await loadHeartbeatStatus();
 
