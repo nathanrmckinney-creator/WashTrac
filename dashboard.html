@@ -388,63 +388,75 @@
       color:#dbe5fb;
     }
 
-    .schedule-days{
-      display:grid;
-      gap:10px;
+    .weekly-lockout-table{
       margin-top:14px;
-    }
-
-    .schedule-day-row{
-      display:grid;
-      grid-template-columns:90px 1fr 1fr;
-      gap:10px;
-      align-items:center;
-      padding:12px;
+      overflow:hidden;
       border-radius:12px;
-      background:#0b1220;
       border:1px solid #1f2937;
+      background:#0b1220;
+      max-width:620px;
     }
 
-    .schedule-day-name{
+    .weekly-lockout-head,
+    .weekly-lockout-row{
+      display:grid;
+      grid-template-columns:1.2fr .9fr .9fr;
+      align-items:center;
+    }
+
+    .weekly-lockout-head{
+      background:#020617;
+      color:#94a3b8;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.8px;
+      text-transform:uppercase;
+    }
+
+    .weekly-lockout-head div,
+    .weekly-lockout-row div{
+      padding:9px 12px;
+      border-bottom:1px solid #1f2937;
+    }
+
+    .weekly-lockout-row:last-child div{
+      border-bottom:none;
+    }
+
+    .weekly-lockout-day{
       font-weight:900;
       color:white;
-      letter-spacing:.5px;
+      letter-spacing:.3px;
     }
 
-    .day-option{
-      display:flex;
+    .compact-check{
+      display:inline-flex;
       align-items:center;
-      justify-content:center;
-      gap:8px;
-      padding:10px;
-      border-radius:10px;
-      background:#020617;
-      border:1px solid #334155;
+      gap:7px;
       color:#dbe5fb;
       cursor:pointer;
       user-select:none;
-      font-weight:800;
       font-size:13px;
+      font-weight:800;
     }
 
-    .day-option input{
-      width:16px;
-      height:16px;
+    .compact-check input{
+      width:15px;
+      height:15px;
+      margin:0;
       accent-color:#1ea7ff;
     }
 
-    .day-option:has(input:checked){
-      border-color:#1ea7ff;
-      background:rgba(30,167,255,.16);
-      color:white;
-      box-shadow:0 0 12px rgba(30,167,255,.18);
+    .compact-check.full-day input{
+      accent-color:#f59e0b;
     }
 
-    .day-option.full-day:has(input:checked){
-      border-color:#f59e0b;
-      background:rgba(245,158,11,.16);
+    .compact-check:has(input:checked){
+      color:white;
+    }
+
+    .compact-check.full-day:has(input:checked){
       color:#fde68a;
-      box-shadow:0 0 12px rgba(245,158,11,.16);
     }
 
     .control-status{
@@ -599,7 +611,7 @@
       .page-header h1{font-size:34px}
       .summary{grid-template-columns:1fr}
       .control-grid,.field-grid,.bay-editor-grid{grid-template-columns:1fr}
-      .schedule-day-row{grid-template-columns:1fr}
+      .weekly-lockout-head,.weekly-lockout-row{grid-template-columns:1fr .8fr .8fr}
       .mobile-menu{
         position:absolute;
         top:64px;
@@ -786,50 +798,56 @@
         </div>
 
         <div class="note">
-          For each day, choose whether it follows the time window above or stays locked out for the full day.
+          Choose which days follow the time window, or lock a day out completely.
         </div>
 
-        <div class="schedule-days" id="lockoutDaysGrid">
-          <div class="schedule-day-row">
-            <div class="schedule-day-name">Monday</div>
-            <label class="day-option"><input type="checkbox" class="timed-day" value="mon"> Follow Time</label>
-            <label class="day-option full-day"><input type="checkbox" class="full-day" value="mon"> Full Day</label>
+        <div class="weekly-lockout-table" id="lockoutDaysGrid">
+          <div class="weekly-lockout-head">
+            <div>Day</div>
+            <div>Timed</div>
+            <div>Full Day</div>
           </div>
 
-          <div class="schedule-day-row">
-            <div class="schedule-day-name">Tuesday</div>
-            <label class="day-option"><input type="checkbox" class="timed-day" value="tue"> Follow Time</label>
-            <label class="day-option full-day"><input type="checkbox" class="full-day" value="tue"> Full Day</label>
+          <div class="weekly-lockout-row">
+            <div class="weekly-lockout-day">Monday</div>
+            <div><label class="compact-check"><input type="checkbox" class="timed-day" value="mon"> Follow</label></div>
+            <div><label class="compact-check full-day"><input type="checkbox" class="full-day" value="mon"> Lock</label></div>
           </div>
 
-          <div class="schedule-day-row">
-            <div class="schedule-day-name">Wednesday</div>
-            <label class="day-option"><input type="checkbox" class="timed-day" value="wed"> Follow Time</label>
-            <label class="day-option full-day"><input type="checkbox" class="full-day" value="wed"> Full Day</label>
+          <div class="weekly-lockout-row">
+            <div class="weekly-lockout-day">Tuesday</div>
+            <div><label class="compact-check"><input type="checkbox" class="timed-day" value="tue"> Follow</label></div>
+            <div><label class="compact-check full-day"><input type="checkbox" class="full-day" value="tue"> Lock</label></div>
           </div>
 
-          <div class="schedule-day-row">
-            <div class="schedule-day-name">Thursday</div>
-            <label class="day-option"><input type="checkbox" class="timed-day" value="thu"> Follow Time</label>
-            <label class="day-option full-day"><input type="checkbox" class="full-day" value="thu"> Full Day</label>
+          <div class="weekly-lockout-row">
+            <div class="weekly-lockout-day">Wednesday</div>
+            <div><label class="compact-check"><input type="checkbox" class="timed-day" value="wed"> Follow</label></div>
+            <div><label class="compact-check full-day"><input type="checkbox" class="full-day" value="wed"> Lock</label></div>
           </div>
 
-          <div class="schedule-day-row">
-            <div class="schedule-day-name">Friday</div>
-            <label class="day-option"><input type="checkbox" class="timed-day" value="fri"> Follow Time</label>
-            <label class="day-option full-day"><input type="checkbox" class="full-day" value="fri"> Full Day</label>
+          <div class="weekly-lockout-row">
+            <div class="weekly-lockout-day">Thursday</div>
+            <div><label class="compact-check"><input type="checkbox" class="timed-day" value="thu"> Follow</label></div>
+            <div><label class="compact-check full-day"><input type="checkbox" class="full-day" value="thu"> Lock</label></div>
           </div>
 
-          <div class="schedule-day-row">
-            <div class="schedule-day-name">Saturday</div>
-            <label class="day-option"><input type="checkbox" class="timed-day" value="sat"> Follow Time</label>
-            <label class="day-option full-day"><input type="checkbox" class="full-day" value="sat"> Full Day</label>
+          <div class="weekly-lockout-row">
+            <div class="weekly-lockout-day">Friday</div>
+            <div><label class="compact-check"><input type="checkbox" class="timed-day" value="fri"> Follow</label></div>
+            <div><label class="compact-check full-day"><input type="checkbox" class="full-day" value="fri"> Lock</label></div>
           </div>
 
-          <div class="schedule-day-row">
-            <div class="schedule-day-name">Sunday</div>
-            <label class="day-option"><input type="checkbox" class="timed-day" value="sun"> Follow Time</label>
-            <label class="day-option full-day"><input type="checkbox" class="full-day" value="sun"> Full Day</label>
+          <div class="weekly-lockout-row">
+            <div class="weekly-lockout-day">Saturday</div>
+            <div><label class="compact-check"><input type="checkbox" class="timed-day" value="sat"> Follow</label></div>
+            <div><label class="compact-check full-day"><input type="checkbox" class="full-day" value="sat"> Lock</label></div>
+          </div>
+
+          <div class="weekly-lockout-row">
+            <div class="weekly-lockout-day">Sunday</div>
+            <div><label class="compact-check"><input type="checkbox" class="timed-day" value="sun"> Follow</label></div>
+            <div><label class="compact-check full-day"><input type="checkbox" class="full-day" value="sun"> Lock</label></div>
           </div>
         </div>
 
