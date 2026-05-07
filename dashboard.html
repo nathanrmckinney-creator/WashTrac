@@ -942,7 +942,13 @@
     let currentOrganizationId = null;
     let dashboardLoadToken = 0;
     let refreshTimer = null;
+    let dashboardPollTimer = null;
+    let dashboardRealtimeChannel = null;
+    let dashboardRefreshInProgress = false;
     let lastGoodSystemControl = null;
+
+    const DASHBOARD_REFRESH_DELAY_MS = 1200;
+    const DASHBOARD_POLL_MS = 25000;
 
     function getActiveSiteId(){
       return currentSiteId || localStorage.getItem("activeSiteId") || "";
@@ -1902,63 +1908,139 @@
     }
 
     async function loadDashboard(){
+      if(dashboardRefreshInProgress) return;
+      dashboardRefreshInProgress = true;
+
       const loadToken = ++dashboardLoadToken;
       const activeSiteId = getActiveSiteId();
 
       if(!activeSiteId){
         resetDashboardEmpty();
+        dashboardRefreshInProgress = false;
         return;
       }
 
-      const [
-        codes,
-        recentActivity,
-        allActivity,
-        control,
-        bays,
-        pairedDevices
-      ] = await Promise.all([
-        fetchCodes(activeSiteId),
-        fetchRecentActivity(activeSiteId),
-        fetchAllActivity(activeSiteId),
-        fetchSystemControl(activeSiteId),
-        fetchBayStatus(activeSiteId),
-        fetchPairedDevices(activeSiteId)
-      ]);
+      try{
+        const [
+          codes,
+          recentActivity,
+          allActivity,
+          control,
+          bays,
+          pairedDevices
+        ] = await Promise.all([
+          fetchCodes(activeSiteId),
+          fetchRecentActivity(activeSiteId),
+          fetchAllActivity(activeSiteId),
+          fetchSystemControl(activeSiteId),
+          fetchBayStatus(activeSiteId),
+          fetchPairedDevices(activeSiteId)
+        ]);
 
-      if(loadToken !== dashboardLoadToken) return;
-      if(activeSiteId !== getActiveSiteId()) return;
+        if(loadToken !== dashboardLoadToken) return;
+        if(activeSiteId !== getActiveSiteId()) return;
 
-      const activeCodes = activeOnlyCodes(codes);
-      const codeUsage = buildCodeUsageData(allActivity);
-      const departments = buildDepartmentData(allActivity);
-      const daily = buildDailyData(allActivity);
-      const usedBays = [...new Set(allActivity.map(row => row.bay).filter(Boolean))];
+        const activeCodes = activeOnlyCodes(codes);
+        const codeUsage = buildCodeUsageData(allActivity);
+        const departments = buildDepartmentData(allActivity);
+        const daily = buildDailyData(allActivity);
+        const usedBays = [...new Set(allActivity.map(row => row.bay).filter(Boolean))];
 
-      document.getElementById("activeCodes").innerText = activeCodes.length;
-      document.getElementById("todayWashes").innerText = allActivity.length;
-      document.getElementById("topCode").innerText = codeUsage.length ? codeUsage[0].code : "-";
-      document.getElementById("topDepartment").innerText = departments.length ? departments[0].department : "-";
-      document.getElementById("totalActivityRecords").innerText = allActivity.length;
-      document.getElementById("totalDepartments").innerText = departments.length;
-      document.getElementById("totalBays").innerText = usedBays.length || bays.length;
-      document.getElementById("lastUpdated").innerText = new Date().toLocaleTimeString();
+        document.getElementById("activeCodes").innerText = activeCodes.length;
+        document.getElementById("todayWashes").innerText = allActivity.length;
+        document.getElementById("topCode").innerText = codeUsage.length ? codeUsage[0].code : "-";
+        document.getElementById("topDepartment").innerText = departments.length ? departments[0].department : "-";
+        document.getElementById("totalActivityRecords").innerText = allActivity.length;
+        document.getElementById("totalDepartments").innerText = departments.length;
+        document.getElementById("totalBays").innerText = usedBays.length || bays.length;
+        document.getElementById("lastUpdated").innerText = new Date().toLocaleTimeString();
 
-      renderRecentActivity(recentActivity);
-      renderTopCodes(codeUsage);
-      renderDepartmentChart(departments);
-      renderDailyChart(daily);
-      renderPairedDevices(pairedDevices);
-      renderSystemControl(control, pairedDevices);
-      renderBayEditor(bays);
+        renderRecentActivity(recentActivity);
+        renderTopCodes(codeUsage);
+        renderDepartmentChart(departments);
+        renderDailyChart(daily);
+        renderPairedDevices(pairedDevices);
+        renderSystemControl(control, pairedDevices);
+        renderBayEditor(bays);
+      }catch(err){
+        console.log("Dashboard load error:", err);
+      }finally{
+        dashboardRefreshInProgress = false;
+      }
     }
 
-    function scheduleDashboardRefresh(){
+    function scheduleDashboardRefresh(delay = DASHBOARD_REFRESH_DELAY_MS){
+      if(document.hidden) return;
+
       clearTimeout(refreshTimer);
       refreshTimer = setTimeout(() => {
         loadDashboard();
-      }, 200);
+      }, delay);
     }
+
+    function startDashboardPolling(){
+      clearInterval(dashboardPollTimer);
+
+      dashboardPollTimer = setInterval(() => {
+        if(document.hidden) return;
+        loadDashboard();
+      }, DASHBOARD_POLL_MS);
+    }
+
+    function setupDashboardRealtime(){
+      if(dashboardRealtimeChannel){
+        client.removeChannel(dashboardRealtimeChannel);
+        dashboardRealtimeChannel = null;
+      }
+
+      dashboardRealtimeChannel = client.channel("washtrac-dashboard-semi-live")
+        .on("postgres_changes", { event: "*", schema: "public", table: "wash_activity" }, payload => {
+          const siteId = getActiveSiteId();
+          if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
+            scheduleDashboardRefresh();
+          }
+        })
+        .on("postgres_changes", { event: "*", schema: "public", table: "access_codes" }, payload => {
+          const siteId = getActiveSiteId();
+          if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
+            scheduleDashboardRefresh();
+          }
+        })
+        .on("postgres_changes", { event: "*", schema: "public", table: "site_system_control" }, payload => {
+          const siteId = getActiveSiteId();
+          if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
+            scheduleDashboardRefresh(500);
+          }
+        })
+        .on("postgres_changes", { event: "*", schema: "public", table: "site_bay_status" }, payload => {
+          const siteId = getActiveSiteId();
+          if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
+            scheduleDashboardRefresh();
+          }
+        })
+        .on("postgres_changes", { event: "*", schema: "public", table: "devices" }, payload => {
+          const siteId = getActiveSiteId();
+          if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
+            scheduleDashboardRefresh();
+          }
+        })
+        .subscribe();
+    }
+
+    document.addEventListener("visibilitychange", function(){
+      if(!document.hidden){
+        scheduleDashboardRefresh(250);
+      }
+    });
+
+    window.addEventListener("beforeunload", function(){
+      clearTimeout(refreshTimer);
+      clearInterval(dashboardPollTimer);
+
+      if(dashboardRealtimeChannel){
+        client.removeChannel(dashboardRealtimeChannel);
+      }
+    });
 
     document.addEventListener("click", function(event){
       const dashboardMenu = document.getElementById("dashboardMenu");
@@ -1983,39 +2065,11 @@
       }
     });
 
-    client.channel("washtrac-live-dashboard")
-      .on("postgres_changes", { event: "*", schema: "public", table: "wash_activity" }, payload => {
-        const siteId = getActiveSiteId();
-        if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
-          scheduleDashboardRefresh();
-        }
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "access_codes" }, payload => {
-        const siteId = getActiveSiteId();
-        if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
-          scheduleDashboardRefresh();
-        }
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "site_system_control" }, payload => {
-        const siteId = getActiveSiteId();
-        if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
-          scheduleDashboardRefresh();
-        }
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "site_bay_status" }, () => {
-        scheduleDashboardRefresh();
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "devices" }, payload => {
-        const siteId = getActiveSiteId();
-        if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
-          scheduleDashboardRefresh();
-        }
-      })
-      .subscribe();
-
     window.onload = async function(){
       await loadSites();
       await loadDashboard();
+      setupDashboardRealtime();
+      startDashboardPolling();
     };
   </script>
 </body>
