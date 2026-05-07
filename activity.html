@@ -490,21 +490,67 @@ async function loadSites(){
     return "";
   }
 
-  const { data, error } = await client
-    .from("site_members")
-    .select(`site_id, sites (*)`)
-    .eq("user_id", userData.user.id);
+  const userId = userData.user.id;
+  let membershipRows = [];
+  let membershipError = null;
 
-  if(error){
-    console.log("Site access error:", error);
+  /*
+    Safer site loading:
+    1) Read site IDs from site_members without asking Supabase for an embedded join.
+    2) Then fetch the sites table directly.
+    This avoids the "Error loading sites" problem when the foreign-key relationship
+    name/cache is not available to the browser client.
+  */
+  let result = await client
+    .from("site_members")
+    .select("site_id, role")
+    .eq("user_id", userId);
+
+  if(result.error){
+    console.log("site_members lookup error:", result.error);
+
+    // Fallback for older builds that used user_site_access.
+    result = await client
+      .from("user_site_access")
+      .select("site_id")
+      .eq("user_id", userId);
+  }
+
+  membershipRows = result.data || [];
+  membershipError = result.error || null;
+
+  if(membershipError){
+    console.log("Site access error:", membershipError);
     select.innerHTML = `<option value="">Error loading sites</option>`;
     return "";
   }
 
-  const sites = (data || []).map(row => row.sites).filter(Boolean);
+  const siteIds = [...new Set(membershipRows.map(row => row.site_id).filter(Boolean))];
+
+  if(!siteIds.length){
+    select.innerHTML = `<option value="">No sites assigned</option>`;
+    localStorage.removeItem("activeSiteId");
+    localStorage.removeItem("activeOrganizationId");
+    currentSiteId = null;
+    return "";
+  }
+
+  const { data: sitesData, error: sitesError } = await client
+    .from("sites")
+    .select("*")
+    .in("id", siteIds)
+    .order("name", { ascending:true });
+
+  if(sitesError){
+    console.log("Sites fetch error:", sitesError);
+    select.innerHTML = `<option value="">Error loading sites</option>`;
+    return "";
+  }
+
+  const sites = sitesData || [];
 
   if(!sites.length){
-    select.innerHTML = `<option value="">No sites assigned</option>`;
+    select.innerHTML = `<option value="">No sites found</option>`;
     localStorage.removeItem("activeSiteId");
     localStorage.removeItem("activeOrganizationId");
     currentSiteId = null;
@@ -569,7 +615,6 @@ function mapActivityRow(row){
 }
 
 function resetActivityEmpty(message = "No active site selected."){
-  window.__lastActivityRows = [];
   document.getElementById("totalEvents").innerText = "0";
   document.getElementById("uniqueCodes").innerText = "0";
   document.getElementById("uniqueDepartments").innerText = "0";
@@ -654,7 +699,6 @@ async function loadActivity(){
 
     const rawRows = activityResult.data || [];
     const mappedRows = rawRows.map(mapActivityRow);
-    window.__lastActivityRows = mappedRows;
     const filteredRows = applyTextFilters(mappedRows);
     renderRows(filteredRows);
 
@@ -701,11 +745,7 @@ function clearFilters(){
   document.addEventListener("input", event => {
     if(event.target && event.target.id === id){
       clearTimeout(window.__activityFilterTimer);
-      window.__activityFilterTimer = setTimeout(() => {
-        if(window.__lastActivityRows){
-          renderRows(applyTextFilters(window.__lastActivityRows));
-        }
-      }, 200);
+      window.__activityFilterTimer = setTimeout(loadActivity, 350);
     }
   });
 });
