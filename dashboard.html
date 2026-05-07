@@ -935,6 +935,12 @@
     const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    window.addEventListener("pageshow", function(event){
+      if(localStorage.getItem("washtracLoggedIn") !== "yes"){
+        window.location.replace("login.html");
+      }
+    });
+
     let departmentChartInstance = null;
     let dailyChartInstance = null;
     let controlRowId = null;
@@ -996,14 +1002,25 @@
       if(event) event.preventDefault();
       closeMenus();
       localStorage.removeItem("washtracLoggedIn");
+      sessionStorage.removeItem("washtracSessionActive");
       window.location.replace("index.html");
     }
 
-    function logout(event){
+    async function logout(event){
       if(event) event.preventDefault();
       closeMenus();
+
+      try{
+        await client.auth.signOut();
+      }catch(err){
+        console.log("logout error:", err);
+      }
+
       localStorage.removeItem("washtracLoggedIn");
       localStorage.removeItem("activeSiteId");
+      localStorage.removeItem("washtracActiveSiteId");
+      localStorage.removeItem("activeOrganizationId");
+      sessionStorage.removeItem("washtracSessionActive");
       window.location.replace("login.html");
     }
 
@@ -1092,10 +1109,8 @@
         .select()
         .maybeSingle();
 
-      console.log("Pairing insert data:", data);
-      console.log("Pairing insert error:", error);
-
       if(error){
+        console.log("Pairing insert error:", error);
         alert("Error generating code: " + error.message);
         setDeviceCodeDisplay("------", "Could not create pairing code.");
         return null;
@@ -1198,6 +1213,15 @@
       return value;
     }
 
+    function escapeHtml(value){
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
     function activityCode(row){
       return cleanValue(row.code, cleanValue(row.metadata?.code, ""));
     }
@@ -1208,12 +1232,12 @@
 
     function normalizeActivity(row){
       return {
-        event_time: row.event_time,
+        event_time: cleanValue(row.event_time, cleanValue(row.created_at, "")),
         code: activityCode(row),
-        department: cleanValue(row.department, "Unassigned"),
+        department: cleanValue(row.department, cleanValue(row.metadata?.department, "Unassigned")),
         name: activityDevice(row),
-        bay: cleanValue(row.bay, ""),
-        event: cleanValue(row.event, "")
+        bay: cleanValue(row.bay, cleanValue(row.metadata?.bay, "")),
+        event: cleanValue(row.event, cleanValue(row.status, cleanValue(row.metadata?.event, "")))
       };
     }
 
@@ -1303,48 +1327,92 @@
   if(userError || !userData?.user){
     console.log("User error:", userError);
     select.innerHTML = `<option value="">No user</option>`;
+    localStorage.removeItem("washtracLoggedIn");
+    window.location.replace("login.html");
     return "";
   }
 
   const user = userData.user;
+  let membershipRows = [];
 
-  const { data, error } = await client
-    .from("user_site_access")
-    .select(`
-      site_id,
-      sites (*)
-    `)
+  let result = await client
+    .from("site_members")
+    .select("site_id, role")
     .eq("user_id", user.id);
 
-  if(error){
-    console.log("Site access error:", error);
+  if(result.error){
+    console.log("site_members lookup error:", result.error);
+
+    result = await client
+      .from("user_site_access")
+      .select("site_id")
+      .eq("user_id", user.id);
+  }
+
+  if(result.error){
+    console.log("Site access error:", result.error);
     select.innerHTML = `<option value="">Error loading sites</option>`;
     return "";
   }
 
-  const sites = (data || [])
-    .map(row => row.sites)
-    .filter(Boolean);
+  membershipRows = result.data || [];
+  const siteIds = [...new Set(membershipRows.map(row => row.site_id).filter(Boolean))];
+
+  if(!siteIds.length){
+    select.innerHTML = `<option value="">No sites assigned</option>`;
+    localStorage.removeItem("activeSiteId");
+    localStorage.removeItem("washtracActiveSiteId");
+    localStorage.removeItem("activeOrganizationId");
+    currentSiteId = null;
+    currentOrganizationId = null;
+    return "";
+  }
+
+  const { data: sitesData, error: sitesError } = await client
+    .from("sites")
+    .select("*")
+    .in("id", siteIds)
+    .order("name", { ascending:true });
+
+  if(sitesError){
+    console.log("Sites fetch error:", sitesError);
+    select.innerHTML = `<option value="">Error loading sites</option>`;
+    return "";
+  }
+
+  const sites = sitesData || [];
 
   if(!sites.length){
-    select.innerHTML = `<option value="">No sites assigned</option>`;
+    select.innerHTML = `<option value="">No sites found</option>`;
+    localStorage.removeItem("activeSiteId");
+    localStorage.removeItem("washtracActiveSiteId");
+    localStorage.removeItem("activeOrganizationId");
+    currentSiteId = null;
+    currentOrganizationId = null;
     return "";
   }
 
   select.innerHTML = sites.map(site => {
-    return `<option value="${site.id}" data-org="${site.organization_id || ""}">${site.name || "Unnamed Site"}</option>`;
+    const siteId = escapeHtml(site.id);
+    const orgId = escapeHtml(site.organization_id || site.org_id || site.company_id || "");
+    const name = escapeHtml(site.name || "Unnamed Site");
+    return `<option value="${siteId}" data-org="${orgId}">${name}</option>`;
   }).join("");
 
-  const saved = localStorage.getItem("activeSiteId");
+  const saved = localStorage.getItem("activeSiteId") || localStorage.getItem("washtracActiveSiteId");
   const exists = saved && sites.some(s => s.id === saved);
 
   currentSiteId = exists ? saved : sites[0].id;
   const selectedSite = sites.find(s => s.id === currentSiteId) || sites[0];
-  currentOrganizationId = selectedSite.organization_id || "";
+  currentOrganizationId = selectedSite.organization_id || selectedSite.org_id || selectedSite.company_id || "";
 
   localStorage.setItem("activeSiteId", currentSiteId);
+  localStorage.setItem("washtracActiveSiteId", currentSiteId);
+
   if(currentOrganizationId){
     localStorage.setItem("activeOrganizationId", currentOrganizationId);
+  }else{
+    localStorage.removeItem("activeOrganizationId");
   }
 
   select.value = currentSiteId;
@@ -1355,6 +1423,7 @@
     async function switchSite(siteId){
       currentSiteId = siteId;
       localStorage.setItem("activeSiteId", siteId);
+      localStorage.setItem("washtracActiveSiteId", siteId);
 
       const siteSwitcher = document.getElementById("siteSwitcher");
       if(siteSwitcher){
@@ -1371,6 +1440,7 @@
       controlRowId = null;
       lastGoodSystemControl = null;
       await loadDashboard();
+      setupDashboardRealtime();
     }
 
     async function fetchCodes(siteId){
@@ -1393,36 +1463,59 @@
     async function fetchRecentActivity(siteId){
       if(!siteId) return [];
 
-      const { data, error } = await client
+      let result = await client
         .from("wash_activity")
         .select("*")
         .eq("site_id", siteId)
         .order("event_time", { ascending:false })
         .limit(10);
 
-      if(error){
-        console.log("Recent activity error:", error);
+      if(result.error){
+        console.log("Recent activity event_time error:", result.error);
+
+        result = await client
+          .from("wash_activity")
+          .select("*")
+          .eq("site_id", siteId)
+          .order("created_at", { ascending:false })
+          .limit(10);
+      }
+
+      if(result.error){
+        console.log("Recent activity error:", result.error);
         return [];
       }
 
-      return (data || []).map(normalizeActivity);
+      return (result.data || []).map(normalizeActivity);
     }
 
     async function fetchAllActivity(siteId){
       if(!siteId) return [];
 
-      const { data, error } = await client
+      let result = await client
         .from("wash_activity")
         .select("*")
         .eq("site_id", siteId)
-        .order("event_time", { ascending:false });
+        .order("event_time", { ascending:false })
+        .limit(1000);
 
-      if(error){
-        console.log("All activity error:", error);
+      if(result.error){
+        console.log("All activity event_time error:", result.error);
+
+        result = await client
+          .from("wash_activity")
+          .select("*")
+          .eq("site_id", siteId)
+          .order("created_at", { ascending:false })
+          .limit(1000);
+      }
+
+      if(result.error){
+        console.log("All activity error:", result.error);
         return [];
       }
 
-      return (data || []).map(normalizeActivity);
+      return (result.data || []).map(normalizeActivity);
     }
 
     async function fetchSystemControl(siteId){
@@ -1540,8 +1633,8 @@
       }
 
       devices.forEach(device => {
-        const name = device.name || device.device_name || device.label || "CodeBox";
-        const identifier = device.device_id || device.serial_number || device.serial || device.id || "Unknown";
+        const name = escapeHtml(device.name || device.device_name || device.label || "CodeBox");
+        const identifier = escapeHtml(device.device_id || device.serial_number || device.serial || device.id || "Unknown");
         const pairedDate = device.created_at ? new Date(device.created_at).toLocaleDateString() : "Unknown date";
         const lastSeen = getLastSeenDate(device);
         const isOnline = deviceIsOnline(device);
@@ -1553,8 +1646,8 @@
             <div>
               <div class="paired-device-name">${name}</div>
               <div class="paired-device-meta">ID: ${identifier}</div>
-              <div class="paired-device-meta">Paired: ${pairedDate}</div>
-              <div class="paired-device-meta">Last seen: ${formatLastSeen(lastSeen)}</div>
+              <div class="paired-device-meta">Paired: ${escapeHtml(pairedDate)}</div>
+              <div class="paired-device-meta">Last seen: ${escapeHtml(formatLastSeen(lastSeen))}</div>
             </div>
             <div class="paired-device-status ${statusClass}">${status}</div>
           </div>
@@ -1629,9 +1722,9 @@
       rows.forEach(row => {
         wrap.innerHTML += `
           <div class="activity-row">
-            <div>${row.event_time ? new Date(row.event_time).toLocaleString() : ""}</div>
-            <div>${row.code || ""} — ${row.event || ""}</div>
-            <div>${row.bay || ""}</div>
+            <div>${escapeHtml(row.event_time ? new Date(row.event_time).toLocaleString() : "")}</div>
+            <div>${escapeHtml(row.code || "")} — ${escapeHtml(row.event || "")}</div>
+            <div>${escapeHtml(row.bay || "")}</div>
           </div>
         `;
       });
@@ -1649,8 +1742,8 @@
       codeUsage.slice(0,5).forEach(item => {
         wrap.innerHTML += `
           <div class="list-row">
-            <span><strong>${item.code}</strong> — ${item.department || ""}</span>
-            <span>${item.uses || 0}</span>
+            <span><strong>${escapeHtml(item.code)}</strong> — ${escapeHtml(item.department || "")}</span>
+            <span>${escapeHtml(item.uses || 0)}</span>
           </div>
         `;
       });
@@ -1785,7 +1878,7 @@
       bays.forEach(bay => {
         wrap.innerHTML += `
           <div class="bay-editor-card">
-            <h4>${bay.bay_name}</h4>
+            <h4>${escapeHtml(bay.bay_name)}</h4>
             <div class="field">
               <label>Status</label>
               <select onchange="updateBayStatus('${bay.id}', this.value)">
@@ -1795,7 +1888,7 @@
                 <option value="Offline" ${bay.status === "Offline" ? "selected" : ""}>Offline</option>
               </select>
             </div>
-            <div class="bay-status-preview">Current status: ${bay.status}</div>
+            <div class="bay-status-preview">Current status: ${escapeHtml(bay.status)}</div>
           </div>
         `;
       });
@@ -1993,7 +2086,9 @@
         dashboardRealtimeChannel = null;
       }
 
-      dashboardRealtimeChannel = client.channel("washtrac-dashboard-semi-live")
+      if(!getActiveSiteId()) return;
+
+      dashboardRealtimeChannel = client.channel("washtrac-dashboard-semi-live-" + getActiveSiteId())
         .on("postgres_changes", { event: "*", schema: "public", table: "wash_activity" }, payload => {
           const siteId = getActiveSiteId();
           if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
@@ -2024,7 +2119,11 @@
             scheduleDashboardRefresh();
           }
         })
-        .subscribe();
+        .subscribe((status) => {
+          if(status === "CHANNEL_ERROR" || status === "TIMED_OUT"){
+            console.log("Dashboard realtime:", status);
+          }
+        });
     }
 
     document.addEventListener("visibilitychange", function(){
@@ -2066,7 +2165,13 @@
     });
 
     window.onload = async function(){
-      await loadSites();
+      const siteId = await loadSites();
+
+      if(!siteId){
+        resetDashboardEmpty();
+        return;
+      }
+
       await loadDashboard();
       setupDashboardRealtime();
       startDashboardPolling();
