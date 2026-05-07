@@ -253,7 +253,7 @@ const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 window.addEventListener("pageshow", function(event){
-  if(event.persisted && localStorage.getItem("washtracLoggedIn") !== "yes"){
+  if(localStorage.getItem("washtracLoggedIn") !== "yes"){
     window.location.replace("login.html");
   }
 });
@@ -415,6 +415,7 @@ function goHome(event){
   if(event) event.preventDefault();
   closeMenus();
   localStorage.removeItem("washtracLoggedIn");
+  sessionStorage.removeItem("washtracSessionActive");
   window.location.replace("index.html");
 }
 
@@ -426,6 +427,7 @@ async function logout(event){
   localStorage.removeItem("activeSiteId");
   localStorage.removeItem("washtracActiveSiteId");
   localStorage.removeItem("activeOrganizationId");
+  sessionStorage.removeItem("washtracSessionActive");
   window.location.replace("login.html");
 }
 
@@ -916,6 +918,10 @@ document.addEventListener("click", function(event){
   if(desktopWrap && mobileMenu && mobileTopbar && !desktopWrap.contains(event.target) && !mobileMenu.contains(event.target) && !mobileTopbar.contains(event.target)){
     closeMenus();
   }
+});
+
+window.addEventListener("beforeunload", function(){
+  // No polling or realtime subscriptions on Activity.
 });
 
 window.onload = async function(){
