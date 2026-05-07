@@ -491,7 +491,7 @@ async function loadSites(){
   }
 
   const { data, error } = await client
-    .from("user_site_access")
+    .from("site_members")
     .select(`site_id, sites (*)`)
     .eq("user_id", userData.user.id);
 
