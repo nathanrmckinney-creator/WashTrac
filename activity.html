@@ -569,6 +569,7 @@ function mapActivityRow(row){
 }
 
 function resetActivityEmpty(message = "No active site selected."){
+  window.__lastActivityRows = [];
   document.getElementById("totalEvents").innerText = "0";
   document.getElementById("uniqueCodes").innerText = "0";
   document.getElementById("uniqueDepartments").innerText = "0";
@@ -630,13 +631,13 @@ async function loadActivity(){
 
     let query = client
       .from("wash_activity")
-      .select("id,site_id,event_time,created_at,code,access_code,department,assigned_to,bay,event,status,metadata")
+      .select("*")
       .eq("site_id", siteId)
-      .order("created_at", { ascending:false });
+      .order("created_at", { ascending:false })
       .limit(limit);
 
-    if(start) query = query.gte("event_time", start.toISOString());
-    if(end) query = query.lte("event_time", end.toISOString());
+    if(start) query = query.gte("created_at", start.toISOString());
+    if(end) query = query.lte("created_at", end.toISOString());
 
     const [activityResult, devices] = await Promise.all([query, fetchDevices(siteId)]);
 
@@ -653,6 +654,7 @@ async function loadActivity(){
 
     const rawRows = activityResult.data || [];
     const mappedRows = rawRows.map(mapActivityRow);
+    window.__lastActivityRows = mappedRows;
     const filteredRows = applyTextFilters(mappedRows);
     renderRows(filteredRows);
 
@@ -699,7 +701,11 @@ function clearFilters(){
   document.addEventListener("input", event => {
     if(event.target && event.target.id === id){
       clearTimeout(window.__activityFilterTimer);
-      window.__activityFilterTimer = setTimeout(loadActivity, 350);
+      window.__activityFilterTimer = setTimeout(() => {
+        if(window.__lastActivityRows){
+          renderRows(applyTextFilters(window.__lastActivityRows));
+        }
+      }, 200);
     }
   });
 });
