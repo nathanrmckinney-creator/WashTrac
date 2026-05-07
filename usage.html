@@ -301,12 +301,7 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
       <p>Usage analytics and reporting.</p>
     </div>
 
-    <div class="heartbeat-banner" id="heartbeatBanner">
-      <div>
-        <strong id="heartbeatTitle">Checking CodeBox status...</strong>
-        <span id="heartbeatDetail">Reports stay available even while a CodeBox is offline.</span>
-      </div>
-      <div><span id="heartbeatPill" class="heartbeat-pill heartbeat-warn">Checking</span></div>
+    
     </div>
 
     <div class="summary">
@@ -653,28 +648,36 @@ async function getAssignedSites(){
     return [];
   }
 
-  const { data, error } = await client
-    .from("user_site_access")
-    .select(`
-      site_id,
-      sites (*)
-    `)
+  const memberResult = await client
+    .from("site_members")
+    .select("site_id")
     .eq("user_id", user.id);
 
-  if(error){
-    console.log("User site access load error:", error);
+  if(memberResult.error){
+    console.log("Site member load error:", memberResult.error);
     return [];
   }
 
-  return (data || [])
-    .map(row => {
-      const site = row.sites || {};
-      return {
-        id: row.site_id || site.id || "",
-        name: site.name || "Unnamed Site"
-      };
-    })
-    .filter(site => site.id);
+  const siteIds = (memberResult.data || [])
+    .map(row => row.site_id)
+    .filter(Boolean);
+
+  if(!siteIds.length) return [];
+
+  const siteResult = await client
+    .from("sites")
+    .select("*")
+    .in("id", siteIds);
+
+  if(siteResult.error){
+    console.log("Site load error:", siteResult.error);
+    return [];
+  }
+
+  return (siteResult.data || []).map(site => ({
+    id: site.id || "",
+    name: site.name || "Unnamed Site"
+  }));
 }
 
 async function getAssignedSiteIds(){
@@ -1018,79 +1021,18 @@ function formatLastSeen(value){
   return date.toLocaleString();
 }
 
-function renderHeartbeatStatus(devices){
-  const title = document.getElementById("heartbeatTitle");
-  const detail = document.getElementById("heartbeatDetail");
-  const pill = document.getElementById("heartbeatPill");
+function renderHeartbeatStatus(devices){ return; }
 
-  if(!title || !detail || !pill) return;
+async function loadHeartbeatStatus(){ return; }
 
-  lastHeartbeatDevices = devices || [];
-
-  if(!devices || !devices.length){
-    title.innerText = "No CodeBox paired";
-    detail.innerText = "Reports are showing cloud data only. Pair a CodeBox from the dashboard to enable live device status.";
-    pill.className = "heartbeat-pill heartbeat-offline";
-    pill.innerText = "OFFLINE";
-    return;
-  }
-
-  const onlineDevices = devices.filter(isDeviceOnline);
-  const newestSeen = devices
-    .map(device => device.last_seen)
-    .filter(Boolean)
-    .sort((a,b) => new Date(b) - new Date(a))[0];
-
-  if(onlineDevices.length){
-    title.innerText = onlineDevices.length === 1 ? "CodeBox Online" : `${onlineDevices.length} CodeBox units online`;
-    detail.innerText = `Reports are live. Last heartbeat: ${formatLastSeen(newestSeen)}.`;
-    pill.className = "heartbeat-pill heartbeat-online";
-    pill.innerText = "ONLINE";
-    return;
-  }
-
-  title.innerText = "CodeBox Offline";
-  detail.innerText = `Showing last synced cloud data. Last heartbeat: ${formatLastSeen(newestSeen)}.`;
-  pill.className = "heartbeat-pill heartbeat-offline";
-  pill.innerText = "OFFLINE";
-}
-
-async function loadHeartbeatStatus(){
-  const siteInfo = await ensureActiveSiteIsValid();
-  const scope = getReportSiteScope();
-  const siteIds = scope === "all" ? siteInfo.siteIds : [siteInfo.activeSiteId].filter(Boolean);
-
-  if(!siteIds.length){
-    renderHeartbeatStatus([]);
-    return;
-  }
-
-  const { data, error } = await client
-    .from("devices")
-    .select("*")
-    .in("site_id", siteIds);
-
-  if(error){
-    console.log("Device heartbeat load error:", error);
-    renderHeartbeatStatus([]);
-    return;
-  }
-
-  renderHeartbeatStatus(data || []);
-}
-
-function scheduleHeartbeatRefresh(){
-  clearTimeout(reportHeartbeatTimer);
-  reportHeartbeatTimer = setTimeout(() => {
-    loadHeartbeatStatus();
-  }, 200);
-}
+function scheduleHeartbeatRefresh(){ return; }
 
 async function loadUsage(){
   let query = client
     .from("wash_activity")
     .select("*")
-    .order("event_time", { ascending:false });
+    .order("created_at", { ascending:false })
+    .limit(500);
 
   const scoped = await applySiteScopeToQuery(query);
 
@@ -1708,28 +1650,11 @@ async function initializeReportsPage(){
   loadSavedSchedule();
   applyReportUrlParams();
   await loadUsage();
-  await loadHeartbeatStatus();
 
-  client.channel("washtrac-live-usage")
-    .on("postgres_changes", { event: "*", schema: "public", table: "wash_activity" }, payload => {
-      const siteIds = cachedSiteIds || [];
-      const changedSiteId = payload.new?.site_id || payload.old?.site_id || "";
 
-      if(!siteIds.length || siteIds.includes(changedSiteId)){
-        loadUsage();
-      }
-    })
-    .on("postgres_changes", { event: "*", schema: "public", table: "devices" }, payload => {
-      const siteIds = cachedSiteIds || [];
-      const changedSiteId = payload.new?.site_id || payload.old?.site_id || "";
+  // Realtime subscriptions removed for stability.
+  // Reports refresh on page load and user actions only.
 
-      if(!siteIds.length || siteIds.includes(changedSiteId)){
-        scheduleHeartbeatRefresh();
-      }
-    })
-    .subscribe();
-
-  setInterval(loadHeartbeatStatus, 30000);
 }
 
 initializeReportsPage();
