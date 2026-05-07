@@ -249,7 +249,27 @@
 
 <body>
 <script>
-if(localStorage.getItem("washtracLoggedIn") !== "yes"){
+/*
+  Session rule:
+  - A normal active tab can stay open indefinitely.
+  - Closing the browser/tab ends the session unless a future Remember Me option is enabled.
+  - Logout / Back to Homepage still force login again.
+*/
+const washtracPersistentLogin = localStorage.getItem("washtracRememberMe") === "yes";
+const washtracSessionLogin = sessionStorage.getItem("washtracSessionActive") === "yes";
+const washtracLegacyLogin = localStorage.getItem("washtracLoggedIn") === "yes";
+
+if(washtracPersistentLogin && washtracLegacyLogin){
+  sessionStorage.setItem("washtracSessionActive", "yes");
+}else if(washtracLegacyLogin && !washtracSessionLogin){
+  localStorage.removeItem("washtracLoggedIn");
+  localStorage.removeItem("washtracRememberMe");
+  localStorage.removeItem("activeSiteId");
+  localStorage.removeItem("washtracActiveSiteId");
+  localStorage.removeItem("activeOrganizationId");
+  sessionStorage.removeItem("washtracSessionActive");
+  window.location.replace("login.html");
+}else if(!washtracSessionLogin){
   window.location.replace("login.html");
 }
 </script>
@@ -503,7 +523,10 @@ const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 window.addEventListener("pageshow", function(event){
-  if(event.persisted && localStorage.getItem("washtracLoggedIn") !== "yes"){
+  const persistentLogin = localStorage.getItem("washtracRememberMe") === "yes" && localStorage.getItem("washtracLoggedIn") === "yes";
+  const sessionLogin = sessionStorage.getItem("washtracSessionActive") === "yes";
+
+  if(event.persisted && !persistentLogin && !sessionLogin){
     window.location.replace("login.html");
   }
 });
@@ -634,6 +657,8 @@ function goHome(event){
   closeMenus();
 
   localStorage.removeItem("washtracLoggedIn");
+  localStorage.removeItem("washtracRememberMe");
+  sessionStorage.removeItem("washtracSessionActive");
   window.location.replace("index.html");
 }
 
@@ -1418,6 +1443,10 @@ document.addEventListener("click", function(event){
 
 
 // Realtime subscriptions removed for stability.
+
+window.addEventListener("beforeunload", function(){
+  clearTimeout(refreshTimer);
+});
 
 ["codeInput","nameInput","customDepartmentInput"].forEach(id => {
   document.addEventListener("keydown", function(event){
