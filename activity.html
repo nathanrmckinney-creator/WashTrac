@@ -43,78 +43,60 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
 
 .mobile-topbar{display:none;align-items:center;justify-content:space-between;padding:16px 20px;background:#0f172a;border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:1400;}
 .mobile-logo{margin-bottom:0;}
-
 .mobile-menu{display:none;position:fixed;top:64px;right:16px;width:240px;background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:12px 16px;box-shadow:0 12px 30px rgba(0,0,0,.45);z-index:1500;}
 .mobile-menu a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
 .mobile-menu a:hover{color:white;}
 .mobile-menu a.logout-link{color:#f87171;}
-
 .backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1100;}
 
-.page-header{margin-bottom:24px;padding-right:80px;}
+.page-header{margin-bottom:18px;padding-right:80px;}
 .page-header h1{margin:0 0 10px 0;font-size:42px;}
 .page-header p{margin:0;color:#94a3b8;line-height:1.5;}
 
+.site-switcher-row{margin-top:14px;margin-bottom:22px;max-width:640px;display:flex;gap:10px;}
+.site-switcher-row select{
+  flex:1;padding:12px;border-radius:10px;background:#0b1220;color:white;border:1px solid #1ea7ff;
+  box-shadow:0 0 6px rgba(30,167,255,0.4);font-size:15px;font-weight:600;outline:none;
+}
+.site-switcher-row button{white-space:nowrap;}
+
+.system-banner{display:none;margin-bottom:18px;padding:14px 16px;border-radius:10px;font-weight:bold;line-height:1.45;}
+.system-banner.show{display:block;}
+.system-banner.online{background:rgba(20,83,45,.28);border:1px solid rgba(34,197,94,.35);color:#bbf7d0;}
+.system-banner.offline{background:rgba(127,29,29,.28);border:1px solid rgba(239,68,68,.35);color:#fecaca;}
+.system-banner.warn{background:rgba(120,53,15,.28);border:1px solid rgba(245,158,11,.35);color:#fde68a;}
+.system-banner small{display:block;margin-top:4px;color:inherit;opacity:.9;font-weight:normal;}
+
 .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;}
-.summary-box{background:#111827;padding:18px;border-radius:10px;}
+.summary-box{background:#111827;padding:18px;border-radius:10px;border:1px solid #1f2937;}
 .summary-box strong{display:block;font-size:30px;margin-bottom:6px;}
 .summary-box span{color:#94a3b8;font-size:14px;}
 
-.card{background:#111827;padding:20px;border-radius:10px;margin-bottom:20px;}
-.card h3{margin-top:0;}
+.card{background:#111827;padding:20px;border-radius:10px;margin-bottom:20px;border:1px solid #1f2937;}
+.card h3{margin-top:0;margin-bottom:14px;}
 
-.form-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;gap:12px;margin-bottom:18px;}
-.filters{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:12px;margin-bottom:18px;}
-
-input{width:100%;padding:12px;border-radius:8px;border:1px solid #334155;background:#0b1220;color:white;}
-button{padding:12px 16px;background:#2563eb;color:white;border:none;border-radius:8px;cursor:pointer;}
+.filters{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:12px;}
+.date-filters{display:grid;grid-template-columns:1.1fr 1fr 1fr .8fr;gap:12px;margin-bottom:12px;}
+input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #334155;background:#0b1220;color:white;}
+button{padding:12px 16px;background:#2563eb;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:bold;}
 button.secondary{background:#334155;}
-
-.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;}
+button.danger{background:#7f1d1d;}
+button:disabled{opacity:.65;cursor:not-allowed;}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;align-items:center;}
+.status-line{color:#94a3b8;font-size:14px;margin-left:auto;}
 
 .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-table{width:100%;border-collapse:collapse;min-width:700px;margin-top:10px;}
-th,td{padding:12px 8px;border-bottom:1px solid #1f2937;text-align:left;}
+table{width:100%;border-collapse:collapse;min-width:760px;margin-top:10px;}
+th,td{padding:12px 8px;border-bottom:1px solid #1f2937;text-align:left;vertical-align:top;}
 th{color:#93c5fd;font-size:13px;text-transform:uppercase;letter-spacing:.5px;}
-
+td{color:#e5e7eb;}
 .notice{margin-top:14px;color:#94a3b8;font-size:14px;line-height:1.5;}
-.manual-log-card{display:none;}
-
-.system-banner{
-  display:none;
-  margin-bottom:18px;
-  padding:14px 16px;
-  border-radius:10px;
-  font-weight:bold;
-  line-height:1.45;
-}
-.system-banner.show{display:block;}
-.system-banner.online{
-  background:rgba(20,83,45,.28);
-  border:1px solid rgba(34,197,94,.35);
-  color:#bbf7d0;
-}
-.system-banner.offline{
-  background:rgba(127,29,29,.28);
-  border:1px solid rgba(239,68,68,.35);
-  color:#fecaca;
-}
-.system-banner.warn{
-  background:rgba(120,53,15,.28);
-  border:1px solid rgba(245,158,11,.35);
-  color:#fde68a;
-}
-.system-banner small{
-  display:block;
-  margin-top:4px;
-  color:inherit;
-  opacity:.9;
-  font-weight:normal;
-}
+.error-text{color:#fecaca;}
 
 @media (max-width:1100px){
   .summary{grid-template-columns:1fr 1fr;}
-  .form-grid,.filters{grid-template-columns:1fr 1fr;}
+  .filters{grid-template-columns:1fr 1fr;}
+  .date-filters{grid-template-columns:1fr 1fr;}
 }
 
 @media (max-width:900px){
@@ -126,8 +108,10 @@ th{color:#93c5fd;font-size:13px;text-transform:uppercase;letter-spacing:.5px;}
   .page-header{padding-right:0;}
   .page-header h1{font-size:34px;}
   .summary{grid-template-columns:1fr;}
-  .form-grid,.filters{grid-template-columns:1fr;}
-  table{min-width:600px;}
+  .filters,.date-filters{grid-template-columns:1fr;}
+  .site-switcher-row{display:grid;grid-template-columns:1fr;}
+  .status-line{margin-left:0;width:100%;}
+  table{min-width:680px;}
 }
 </style>
 </head>
@@ -172,38 +156,21 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
     <div class="desktop-menu-wrap">
       <button class="menu-btn" type="button" onclick="toggleDesktopMenu()">☰</button>
       <div class="hamburger-menu" id="desktopMenu">
-  <a href="#" onclick="goHome(event)">Back to Homepage</a>
-  <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
-</div>
+        <a href="#" onclick="goHome(event)">Back to Homepage</a>
+        <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
+      </div>
     </div>
 
     <div class="page-header">
       <h1>Activity</h1>
-      <p>View live activity by code, department, name, bay, and event.</p>
+      <p>Search wash activity by code, department, name, bay, event, and date range without heavy live refresh.</p>
     </div>
 
-    <div style="margin-top:14px; margin-bottom:24px; max-width:520px; display:flex; gap:10px;">
-      <select id="siteSwitcher" onchange="switchSite(this.value)" style="
-        flex:1;
-        padding:12px;
-        border-radius:10px;
-        background:#0b1220;
-        color:white;
-        border:1px solid #1ea7ff;
-        box-shadow:0 0 6px rgba(30,167,255,0.4);
-        font-size:15px;
-        font-weight:600;
-        outline:none;
-      ">
+    <div class="site-switcher-row">
+      <select id="siteSwitcher" onchange="switchSite(this.value)">
         <option>Loading sites...</option>
       </select>
-
-      <button onclick="window.location.href='sites.html'" style="
-        white-space:nowrap;
-        padding:12px 16px;
-      ">
-        Manage Sites
-      </button>
+      <button type="button" onclick="window.location.href='sites.html'">Manage Sites</button>
     </div>
 
     <div id="systemHeartbeatBanner" class="system-banner warn show">
@@ -212,38 +179,47 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
     </div>
 
     <div class="summary">
-      <div class="summary-box"><strong id="totalEvents">0</strong><span>Total Events</span></div>
+      <div class="summary-box"><strong id="totalEvents">0</strong><span>Loaded Events</span></div>
       <div class="summary-box"><strong id="uniqueCodes">0</strong><span>Unique Codes</span></div>
       <div class="summary-box"><strong id="uniqueDepartments">0</strong><span>Departments</span></div>
       <div class="summary-box"><strong id="uniqueBays">0</strong><span>Bays</span></div>
     </div>
 
-    <div class="card manual-log-card">
-      <h3>Log Wash Event</h3>
-      <div class="form-grid">
-        <input id="logCode" placeholder="Code">
-        <input id="logDepartment" placeholder="Department">
-        <input id="logName" placeholder="Name">
-        <input id="logBay" placeholder="Bay">
-        <input id="logEvent" placeholder="Event" value="Activated wash">
-        <button type="button" onclick="logWashEvent()">Log Event</button>
-      </div>
-      <div class="notice">Manual logging is disabled while live CodeBox activity is active.</div>
-    </div>
-
     <div class="card">
       <h3>Search Activity</h3>
+
+      <div class="date-filters">
+        <select id="datePreset" onchange="applyDatePreset()">
+          <option value="today">Today</option>
+          <option value="yesterday">Yesterday</option>
+          <option value="7days">Last 7 Days</option>
+          <option value="14days">Last 14 Days</option>
+          <option value="30days">Last 30 Days</option>
+          <option value="custom">Custom Range</option>
+          <option value="all">Latest Loaded Only</option>
+        </select>
+        <input id="startDate" type="date" onchange="setCustomPreset()">
+        <input id="endDate" type="date" onchange="setCustomPreset()">
+        <select id="rowLimit">
+          <option value="100">100 rows</option>
+          <option value="250" selected>250 rows</option>
+          <option value="500">500 rows</option>
+        </select>
+      </div>
+
       <div class="filters">
-        <input id="filterCode" placeholder="Filter by code" oninput="renderActivity()">
-        <input id="filterDepartment" placeholder="Filter by department" oninput="renderActivity()">
-        <input id="filterName" placeholder="Filter by name" oninput="renderActivity()">
-        <input id="filterBay" placeholder="Filter by bay" oninput="renderActivity()">
-        <input id="filterEvent" placeholder="Filter by event" oninput="renderActivity()">
+        <input id="filterCode" placeholder="Filter by code">
+        <input id="filterDepartment" placeholder="Filter by department">
+        <input id="filterName" placeholder="Filter by name">
+        <input id="filterBay" placeholder="Filter by bay">
+        <input id="filterEvent" placeholder="Filter by event">
       </div>
 
       <div class="actions">
-        <button type="button" onclick="clearFilters()">Clear Filters</button>
+        <button type="button" id="applyBtn" onclick="loadActivity()">Apply / Refresh</button>
+        <button class="secondary" type="button" onclick="clearFilters()">Clear Filters</button>
         <button class="secondary" type="button" onclick="window.print()">Print</button>
+        <span class="status-line" id="activityStatus">Ready.</span>
       </div>
 
       <div class="table-wrap">
@@ -258,8 +234,14 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
               <th>Event</th>
             </tr>
           </thead>
-          <tbody id="activityTableBody"></tbody>
+          <tbody id="activityTableBody">
+            <tr><td colspan="6">Loading activity...</td></tr>
+          </tbody>
         </table>
+      </div>
+
+      <div class="notice">
+        This safe version does not use realtime subscriptions or automatic polling. Use Apply / Refresh when you want updated activity.
       </div>
     </div>
   </div>
@@ -270,114 +252,119 @@ const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
 const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let activityRows = [];
 let currentSiteId = null;
 let activityLoadToken = 0;
-let refreshTimer = null;
-let deviceHeartbeatRows = [];
-let systemOnline = false;
 const HEARTBEAT_ONLINE_MINUTES = 5;
 
 function getActiveSiteId(){
   return currentSiteId || localStorage.getItem("activeSiteId") || "";
 }
 
-function requireSite(){
-  const siteId = getActiveSiteId();
-
-  if(!siteId){
-    throw new Error("No active site selected.");
-  }
-
-  return siteId;
+function escapeText(value){
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
-function getDeviceLastSeen(device){
-  return device.last_seen || device.last_heartbeat || device.updated_at || device.created_at || null;
+function cleanValue(value, fallback = ""){
+  if(value === null || value === undefined || value === "") return fallback;
+  return value;
 }
 
-function getHeartbeatStatus(devices){
-  const now = Date.now();
+function setStatus(message, isError = false){
+  const el = document.getElementById("activityStatus");
+  if(!el) return;
+  el.textContent = message;
+  el.className = isError ? "status-line error-text" : "status-line";
+}
 
-  if(!devices || !devices.length){
-    return {
-      online:false,
-      state:"none",
-      title:"SYSTEM OFFLINE",
-      detail:"No CodeBox is paired to this active site yet. Activity history is still available."
-    };
+function setLoading(isLoading){
+  const btn = document.getElementById("applyBtn");
+  if(btn){
+    btn.disabled = isLoading;
+    btn.textContent = isLoading ? "Loading..." : "Apply / Refresh";
+  }
+}
+
+function formatTime(value){
+  if(!value) return "";
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString();
+}
+
+function toDateInputValue(date){
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getStartOfDay(date){
+  const d = new Date(date);
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function getEndOfDay(date){
+  const d = new Date(date);
+  d.setHours(23,59,59,999);
+  return d;
+}
+
+function applyDatePreset(){
+  const preset = document.getElementById("datePreset").value;
+  const startInput = document.getElementById("startDate");
+  const endInput = document.getElementById("endDate");
+  const now = new Date();
+  let start = null;
+  let end = now;
+
+  if(preset === "all"){
+    startInput.value = "";
+    endInput.value = "";
+    return;
   }
 
-  let newest = null;
-  let onlineCount = 0;
+  if(preset === "custom") return;
 
-  devices.forEach(device => {
-    const lastSeenValue = getDeviceLastSeen(device);
-    if(!lastSeenValue) return;
-
-    const lastSeen = new Date(lastSeenValue);
-    if(Number.isNaN(lastSeen.getTime())) return;
-
-    if(!newest || lastSeen > newest) newest = lastSeen;
-
-    const diffMinutes = (now - lastSeen.getTime()) / 60000;
-    if(diffMinutes <= HEARTBEAT_ONLINE_MINUTES){
-      onlineCount += 1;
-    }
-  });
-
-  if(onlineCount > 0){
-    return {
-      online:true,
-      state:"online",
-      title:"CODEBOX ONLINE",
-      detail:`${onlineCount} active CodeBox heartbeat${onlineCount === 1 ? "" : "s"}. Live activity should update within seconds.`
-    };
+  if(preset === "today"){
+    start = now;
+    end = now;
+  }else if(preset === "yesterday"){
+    start = new Date(now);
+    start.setDate(start.getDate() - 1);
+    end = new Date(start);
+  }else if(preset === "7days"){
+    start = new Date(now);
+    start.setDate(start.getDate() - 6);
+  }else if(preset === "14days"){
+    start = new Date(now);
+    start.setDate(start.getDate() - 13);
+  }else if(preset === "30days"){
+    start = new Date(now);
+    start.setDate(start.getDate() - 29);
   }
 
+  startInput.value = start ? toDateInputValue(start) : "";
+  endInput.value = end ? toDateInputValue(end) : "";
+}
+
+function setCustomPreset(){
+  const preset = document.getElementById("datePreset");
+  if(preset) preset.value = "custom";
+}
+
+function getDateRange(){
+  const startValue = document.getElementById("startDate").value;
+  const endValue = document.getElementById("endDate").value;
   return {
-    online:false,
-    state:"offline",
-    title:"SYSTEM OFFLINE",
-    detail:newest
-      ? `Last CodeBox heartbeat: ${newest.toLocaleString()}. Activity history is still available.`
-      : "No heartbeat has been received from the paired CodeBox yet. Activity history is still available."
+    start: startValue ? getStartOfDay(new Date(startValue + "T00:00:00")) : null,
+    end: endValue ? getEndOfDay(new Date(endValue + "T00:00:00")) : null
   };
-}
-
-function renderHeartbeatBanner(devices){
-  const banner = document.getElementById("systemHeartbeatBanner");
-  if(!banner) return;
-
-  const status = getHeartbeatStatus(devices || []);
-  systemOnline = status.online;
-
-  banner.className = `system-banner show ${status.online ? "online" : "offline"}`;
-  banner.innerHTML = `${escapeText(status.title)}<small>${escapeText(status.detail)}</small>`;
-}
-
-async function fetchDevices(siteId){
-  if(!siteId) return [];
-
-  const { data, error } = await client
-    .from("devices")
-    .select("*")
-    .eq("site_id", siteId)
-    .order("created_at", { ascending:false });
-
-  if(error){
-    console.log("Devices fetch error:", error);
-    return [];
-  }
-
-  return data || [];
-}
-
-function scheduleHeartbeatRefresh(){
-  clearTimeout(refreshTimer);
-  refreshTimer = setTimeout(() => {
-    loadActivity();
-  }, 200);
 }
 
 function toggleDesktopMenu(){
@@ -385,7 +372,6 @@ function toggleDesktopMenu(){
   const mobileMenu = document.getElementById("mobileMenu");
   const backdrop = document.getElementById("backdrop");
   const isOpen = desktopMenu.style.display === "block";
-
   mobileMenu.style.display = "none";
   desktopMenu.style.display = isOpen ? "none" : "block";
   backdrop.style.display = isOpen ? "none" : "block";
@@ -396,7 +382,6 @@ function toggleMobileMenu(){
   const mobileMenu = document.getElementById("mobileMenu");
   const backdrop = document.getElementById("backdrop");
   const isOpen = mobileMenu.style.display === "block";
-
   desktopMenu.style.display = "none";
   mobileMenu.style.display = isOpen ? "none" : "block";
   backdrop.style.display = isOpen ? "none" : "block";
@@ -410,94 +395,105 @@ function closeMenus(){
 
 function goHome(event){
   if(event) event.preventDefault();
-
   closeMenus();
-
   localStorage.removeItem("washtracLoggedIn");
   window.location.replace("index.html");
 }
 
 async function logout(event){
   if(event) event.preventDefault();
-
   closeMenus();
-
-  try{
-    await client.auth.signOut();
-  }catch(err){
-    console.log("logout error:", err);
-  }
-
+  try{ await client.auth.signOut(); }catch(err){ console.log("logout error:", err); }
   localStorage.removeItem("washtracLoggedIn");
   localStorage.removeItem("activeSiteId");
   localStorage.removeItem("activeOrganizationId");
   window.location.replace("login.html");
 }
 
-function formatTime(value){
-  if(!value) return "";
-  const date = new Date(value);
-  if(Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString();
+function getDeviceLastSeen(device){
+  return device.last_seen || device.last_heartbeat || device.updated_at || device.created_at || null;
 }
 
-function cleanValue(value, fallback = ""){
-  if(value === null || value === undefined || value === "") return fallback;
-  return value;
-}
+function getHeartbeatStatus(devices){
+  const now = Date.now();
 
-function escapeText(value){
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
+  if(!devices || !devices.length){
+    return {
+      online:false,
+      title:"SYSTEM OFFLINE",
+      detail:"No CodeBox is paired to this active site yet. Activity history is still available."
+    };
+  }
 
-function getActivityCode(row){
-  return String(
-    cleanValue(row.metadata?.code, cleanValue(row.code, cleanValue(row.access_code, "")))
-  ).trim();
-}
+  let newest = null;
+  let onlineCount = 0;
 
-function mapActivityRow(row, codeNameMap = {}){
-  const code = getActivityCode(row);
+  devices.forEach(device => {
+    const value = getDeviceLastSeen(device);
+    if(!value) return;
+    const seen = new Date(value);
+    if(Number.isNaN(seen.getTime())) return;
+    if(!newest || seen > newest) newest = seen;
+    if((now - seen.getTime()) / 60000 <= HEARTBEAT_ONLINE_MINUTES) onlineCount += 1;
+  });
+
+  if(onlineCount > 0){
+    return {
+      online:true,
+      title:"CODEBOX ONLINE",
+      detail:`${onlineCount} active CodeBox heartbeat${onlineCount === 1 ? "" : "s"}. Activity is available. Use Apply / Refresh for latest rows.`
+    };
+  }
 
   return {
-    id: row.id || "",
-    event_time: cleanValue(row.event_time, cleanValue(row.created_at, "")),
-    code: code,
-    department: cleanValue(row.department, cleanValue(row.metadata?.department, "")),
-    name: cleanValue(codeNameMap[code], cleanValue(row.metadata?.name, cleanValue(row.assigned_to, ""))),
-    bay: cleanValue(row.bay, ""),
-    event: cleanValue(row.event, cleanValue(row.status, ""))
+    online:false,
+    title:"SYSTEM OFFLINE",
+    detail:newest
+      ? `Last CodeBox heartbeat: ${newest.toLocaleString()}. Activity history is still available.`
+      : "No heartbeat has been received from the paired CodeBox yet. Activity history is still available."
   };
+}
+
+function renderHeartbeatBanner(devices){
+  const banner = document.getElementById("systemHeartbeatBanner");
+  if(!banner) return;
+  const status = getHeartbeatStatus(devices || []);
+  banner.className = `system-banner show ${status.online ? "online" : "offline"}`;
+  banner.innerHTML = `${escapeText(status.title)}<small>${escapeText(status.detail)}</small>`;
+}
+
+async function fetchDevices(siteId){
+  if(!siteId) return [];
+  const { data, error } = await client
+    .from("devices")
+    .select("id,name,site_id,last_seen,last_heartbeat,updated_at,created_at")
+    .eq("site_id", siteId)
+    .order("created_at", { ascending:false })
+    .limit(20);
+
+  if(error){
+    console.log("Devices fetch error:", error);
+    return [];
+  }
+  return data || [];
 }
 
 async function loadSites(){
   const select = document.getElementById("siteSwitcher");
   if(!select) return "";
-
   select.innerHTML = `<option>Loading sites...</option>`;
 
   const { data: userData, error: userError } = await client.auth.getUser();
-
   if(userError || !userData?.user){
     console.log("User error:", userError);
     select.innerHTML = `<option value="">No user</option>`;
     return "";
   }
 
-  const user = userData.user;
-
   const { data, error } = await client
     .from("user_site_access")
-    .select(`
-      site_id,
-      sites (*)
-    `)
-    .eq("user_id", user.id);
+    .select(`site_id, sites (*)`)
+    .eq("user_id", userData.user.id);
 
   if(error){
     console.log("Site access error:", error);
@@ -505,9 +501,7 @@ async function loadSites(){
     return "";
   }
 
-  const sites = (data || [])
-    .map(row => row.sites)
-    .filter(Boolean);
+  const sites = (data || []).map(row => row.sites).filter(Boolean);
 
   if(!sites.length){
     select.innerHTML = `<option value="">No sites assigned</option>`;
@@ -518,7 +512,7 @@ async function loadSites(){
   }
 
   select.innerHTML = sites.map(site => {
-    return `<option value="${site.id}">${escapeText(site.name || "Unnamed Site")}</option>`;
+    return `<option value="${escapeText(site.id)}">${escapeText(site.name || "Unnamed Site")}</option>`;
   }).join("");
 
   const saved = localStorage.getItem("activeSiteId");
@@ -529,18 +523,14 @@ async function loadSites(){
   localStorage.setItem("activeSiteId", currentSiteId);
 
   const orgId = activeSite.organization_id || activeSite.org_id || activeSite.company_id || null;
-  if(orgId){
-    localStorage.setItem("activeOrganizationId", orgId);
-  }
+  if(orgId) localStorage.setItem("activeOrganizationId", orgId);
 
   select.value = currentSiteId;
-
   return currentSiteId;
 }
 
 async function switchSite(siteId){
   if(!siteId) return;
-
   currentSiteId = siteId;
   localStorage.setItem("activeSiteId", siteId);
 
@@ -555,156 +545,142 @@ async function switchSite(siteId){
 
   if(!error && data){
     const orgId = data.organization_id || data.org_id || data.company_id || null;
-    if(orgId){
-      localStorage.setItem("activeOrganizationId", orgId);
-    }
+    if(orgId) localStorage.setItem("activeOrganizationId", orgId);
   }
 
   await loadActivity();
 }
 
-function resetActivityEmpty(){
-  activityRows = [];
-  deviceHeartbeatRows = [];
-  systemOnline = false;
-  renderHeartbeatBanner([]);
+function getActivityCode(row){
+  return String(cleanValue(row.metadata?.code, cleanValue(row.code, cleanValue(row.access_code, "")))).trim();
+}
+
+function mapActivityRow(row){
+  const code = getActivityCode(row);
+  return {
+    id: row.id || "",
+    event_time: cleanValue(row.event_time, cleanValue(row.created_at, "")),
+    code,
+    department: cleanValue(row.department, cleanValue(row.metadata?.department, "")),
+    name: cleanValue(row.metadata?.name, cleanValue(row.assigned_to, "")),
+    bay: cleanValue(row.bay, cleanValue(row.metadata?.bay, "")),
+    event: cleanValue(row.event, cleanValue(row.status, cleanValue(row.metadata?.event, "")))
+  };
+}
+
+function resetActivityEmpty(message = "No active site selected."){
   document.getElementById("totalEvents").innerText = "0";
   document.getElementById("uniqueCodes").innerText = "0";
   document.getElementById("uniqueDepartments").innerText = "0";
   document.getElementById("uniqueBays").innerText = "0";
-  document.getElementById("activityTableBody").innerHTML = `<tr><td colspan="6">No active site selected.</td></tr>`;
+  document.getElementById("activityTableBody").innerHTML = `<tr><td colspan="6">${escapeText(message)}</td></tr>`;
 }
 
-async function fetchCodeNameMap(siteId){
-  if(!siteId) return {};
-
-  const { data, error } = await client
-    .from("access_codes")
-    .select("code,assigned_to")
-    .eq("site_id", siteId);
-
-  if(error){
-    console.log("Codes fetch error:", error);
-    return {};
-  }
-
-  const map = {};
-
-  (data || []).forEach(item => {
-    const code = String(item.code || "").trim();
-    if(code){
-      map[code] = item.assigned_to || "";
-    }
-  });
-
-  return map;
+function updateSummary(rows){
+  document.getElementById("totalEvents").innerText = rows.length;
+  document.getElementById("uniqueCodes").innerText = new Set(rows.map(r => r.code).filter(Boolean)).size;
+  document.getElementById("uniqueDepartments").innerText = new Set(rows.map(r => r.department).filter(Boolean)).size;
+  document.getElementById("uniqueBays").innerText = new Set(rows.map(r => r.bay).filter(Boolean)).size;
 }
 
-async function fetchActivity(siteId){
-  if(!siteId) return [];
+function renderRows(rows){
+  const tbody = document.getElementById("activityTableBody");
+  tbody.innerHTML = "";
 
-  const codeNameMap = await fetchCodeNameMap(siteId);
-
-  const { data, error } = await client
-    .from("wash_activity")
-    .select("*")
-    .eq("site_id", siteId)
-    .order("event_time", { ascending:false });
-
-  if(error){
-    console.log("Activity fetch error:", error);
-    return [];
-  }
-
-  return (data || []).map(row => mapActivityRow(row, codeNameMap));
-}
-
-async function loadActivity(){
-  const loadToken = ++activityLoadToken;
-  const activeSiteId = getActiveSiteId();
-
-  if(!activeSiteId){
-    resetActivityEmpty();
+  if(!rows.length){
+    tbody.innerHTML = `<tr><td colspan="6">No matching activity found.</td></tr>`;
+    updateSummary([]);
     return;
   }
 
-  const [activity, devices] = await Promise.all([
-    fetchActivity(activeSiteId),
-    fetchDevices(activeSiteId)
-  ]);
+  rows.forEach(row => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeText(formatTime(row.event_time))}</td>
+      <td>${escapeText(row.code || "")}</td>
+      <td>${escapeText(row.department || "")}</td>
+      <td>${escapeText(row.name || "")}</td>
+      <td>${escapeText(row.bay || "")}</td>
+      <td>${escapeText(row.event || "")}</td>
+    `;
+    tbody.appendChild(tr);
+  });
 
-  if(loadToken !== activityLoadToken) return;
-  if(activeSiteId !== getActiveSiteId()) return;
-
-  activityRows = activity;
-  deviceHeartbeatRows = devices;
-
-  console.log("Activity:", activityRows);
-  renderHeartbeatBanner(deviceHeartbeatRows);
-  renderActivity();
+  updateSummary(rows);
 }
 
-function getFilteredRows(){
+async function loadActivity(){
+  const token = ++activityLoadToken;
+  const siteId = getActiveSiteId();
+
+  if(!siteId){
+    resetActivityEmpty();
+    renderHeartbeatBanner([]);
+    setStatus("No active site selected.", true);
+    return;
+  }
+
+  setLoading(true);
+  setStatus("Loading activity...");
+  document.getElementById("activityTableBody").innerHTML = `<tr><td colspan="6">Loading activity...</td></tr>`;
+
+  try{
+    const limit = Number(document.getElementById("rowLimit").value || 250);
+    const { start, end } = getDateRange();
+
+    let query = client
+      .from("wash_activity")
+      .select("id,site_id,event_time,created_at,code,access_code,department,assigned_to,bay,event,status,metadata")
+      .eq("site_id", siteId)
+      .order("event_time", { ascending:false })
+      .limit(limit);
+
+    if(start) query = query.gte("event_time", start.toISOString());
+    if(end) query = query.lte("event_time", end.toISOString());
+
+    const [activityResult, devices] = await Promise.all([query, fetchDevices(siteId)]);
+
+    if(token !== activityLoadToken || siteId !== getActiveSiteId()) return;
+
+    renderHeartbeatBanner(devices);
+
+    if(activityResult.error){
+      console.log("Activity fetch error:", activityResult.error);
+      resetActivityEmpty("Could not load activity. Check the browser console for details.");
+      setStatus("Could not load activity.", true);
+      return;
+    }
+
+    const rawRows = activityResult.data || [];
+    const mappedRows = rawRows.map(mapActivityRow);
+    const filteredRows = applyTextFilters(mappedRows);
+    renderRows(filteredRows);
+
+    const nowText = new Date().toLocaleTimeString();
+    setStatus(`Loaded ${filteredRows.length} of ${rawRows.length} row${rawRows.length === 1 ? "" : "s"} at ${nowText}.`);
+  }catch(err){
+    console.log("Load activity error:", err);
+    resetActivityEmpty("Activity load failed.");
+    setStatus("Activity load failed.", true);
+  }finally{
+    if(token === activityLoadToken) setLoading(false);
+  }
+}
+
+function applyTextFilters(rows){
   const codeFilter = document.getElementById("filterCode").value.trim().toLowerCase();
   const departmentFilter = document.getElementById("filterDepartment").value.trim().toLowerCase();
   const nameFilter = document.getElementById("filterName").value.trim().toLowerCase();
   const bayFilter = document.getElementById("filterBay").value.trim().toLowerCase();
   const eventFilter = document.getElementById("filterEvent").value.trim().toLowerCase();
 
-  return activityRows.filter(row => {
-    const code = (row.code || "").toLowerCase();
-    const department = (row.department || "").toLowerCase();
-    const name = (row.name || "").toLowerCase();
-    const bay = (row.bay || "").toLowerCase();
-    const event = (row.event || "").toLowerCase();
-
-    return code.includes(codeFilter)
-      && department.includes(departmentFilter)
-      && name.includes(nameFilter)
-      && bay.includes(bayFilter)
-      && event.includes(eventFilter);
+  return rows.filter(row => {
+    return String(row.code || "").toLowerCase().includes(codeFilter)
+      && String(row.department || "").toLowerCase().includes(departmentFilter)
+      && String(row.name || "").toLowerCase().includes(nameFilter)
+      && String(row.bay || "").toLowerCase().includes(bayFilter)
+      && String(row.event || "").toLowerCase().includes(eventFilter);
   });
-}
-
-function updateSummary(rows){
-  document.getElementById("totalEvents").innerText = rows.length;
-
-  document.getElementById("uniqueCodes").innerText =
-    new Set(rows.map(r => r.code).filter(Boolean)).size;
-
-  document.getElementById("uniqueDepartments").innerText =
-    new Set(rows.map(r => r.department).filter(Boolean)).size;
-
-  document.getElementById("uniqueBays").innerText =
-    new Set(rows.map(r => r.bay).filter(Boolean)).size;
-}
-
-function renderActivity(){
-  const rows = getFilteredRows();
-  const tbody = document.getElementById("activityTableBody");
-
-  tbody.innerHTML = "";
-
-  if(rows.length === 0){
-    tbody.innerHTML = `<tr><td colspan="6">No matching activity found.</td></tr>`;
-  } else {
-    rows.forEach(row => {
-      const tr = document.createElement("tr");
-
-      tr.innerHTML = `
-        <td>${escapeText(formatTime(row.event_time))}</td>
-        <td>${escapeText(row.code || "")}</td>
-        <td>${escapeText(row.department || "")}</td>
-        <td>${escapeText(row.name || "")}</td>
-        <td>${escapeText(row.bay || "")}</td>
-        <td>${escapeText(row.event || "")}</td>
-      `;
-
-      tbody.appendChild(tr);
-    });
-  }
-
-  updateSummary(rows);
 }
 
 function clearFilters(){
@@ -713,72 +689,20 @@ function clearFilters(){
   document.getElementById("filterName").value = "";
   document.getElementById("filterBay").value = "";
   document.getElementById("filterEvent").value = "";
-  renderActivity();
+  document.getElementById("datePreset").value = "today";
+  document.getElementById("rowLimit").value = "250";
+  applyDatePreset();
+  loadActivity();
 }
 
-async function logWashEvent(){
-  alert("Manual logging is disabled. Activity is now logged from CodeBox live events.");
-}
-
-function scheduleActivityRefresh(){
-  clearTimeout(refreshTimer);
-  refreshTimer = setTimeout(() => {
-    loadActivity();
-  }, 200);
-}
-
-function startLiveActivity(){
-  client
-    .channel("wash_activity_live")
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "wash_activity"
-      },
-      payload => {
-        const siteId = getActiveSiteId();
-        if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
-          console.log("Live activity update:", payload);
-          scheduleActivityRefresh();
-        }
-      }
-    )
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "access_codes"
-      },
-      payload => {
-        const siteId = getActiveSiteId();
-        if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
-          console.log("Live code update:", payload);
-          scheduleActivityRefresh();
-        }
-      }
-    )
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "devices"
-      },
-      payload => {
-        const siteId = getActiveSiteId();
-        if(payload.new?.site_id === siteId || payload.old?.site_id === siteId){
-          console.log("Live device heartbeat update:", payload);
-          scheduleHeartbeatRefresh();
-        }
-      }
-    )
-    .subscribe(status => {
-      console.log("Realtime status:", status);
-    });
-}
+["filterCode","filterDepartment","filterName","filterBay","filterEvent"].forEach(id => {
+  document.addEventListener("input", event => {
+    if(event.target && event.target.id === id){
+      clearTimeout(window.__activityFilterTimer);
+      window.__activityFilterTimer = setTimeout(loadActivity, 350);
+    }
+  });
+});
 
 document.addEventListener("keydown", function(event){
   if(event.key === "Escape") closeMenus();
@@ -788,29 +712,20 @@ document.addEventListener("click", function(event){
   const desktopWrap = document.querySelector(".desktop-menu-wrap");
   const mobileMenu = document.getElementById("mobileMenu");
   const mobileTopbar = document.querySelector(".mobile-topbar");
-
-  if(
-    desktopWrap &&
-    mobileMenu &&
-    mobileTopbar &&
-    !desktopWrap.contains(event.target) &&
-    !mobileMenu.contains(event.target) &&
-    !mobileTopbar.contains(event.target)
-  ){
+  if(desktopWrap && mobileMenu && mobileTopbar && !desktopWrap.contains(event.target) && !mobileMenu.contains(event.target) && !mobileTopbar.contains(event.target)){
     closeMenus();
   }
 });
 
 window.onload = async function(){
+  applyDatePreset();
   const siteId = await loadSites();
-
   if(!siteId){
     resetActivityEmpty();
+    renderHeartbeatBanner([]);
     return;
   }
-
   await loadActivity();
-  startLiveActivity();
 };
 </script>
 </body>
