@@ -253,7 +253,7 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
 <body>
 <script>
 if(localStorage.getItem("washtracLoggedIn") !== "yes"){
-  window.location.href = "login.html";
+  window.location.replace("login.html");
 }
 </script>
 
@@ -346,6 +346,12 @@ const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
 const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+window.addEventListener("pageshow", function(event){
+  if(localStorage.getItem("washtracLoggedIn") !== "yes"){
+    window.location.replace("login.html");
+  }
+});
+
 let monitorChannel = null;
 let currentSiteId = null;
 let assignedSiteIds = [];
@@ -402,6 +408,7 @@ function goHome(event){
   closeMenus();
 
   localStorage.removeItem("washtracLoggedIn");
+  sessionStorage.removeItem("washtracSessionActive");
   window.location.replace("index.html");
 }
 
@@ -419,6 +426,8 @@ async function logout(event){
   localStorage.removeItem("washtracLoggedIn");
   localStorage.removeItem("activeSiteId");
   localStorage.removeItem("washtracActiveSiteId");
+  localStorage.removeItem("activeOrganizationId");
+  sessionStorage.removeItem("washtracSessionActive");
   window.location.replace("login.html");
 }
 
@@ -678,27 +687,59 @@ async function loadAssignedSites(){
 
   if(userError || !userData?.user){
     localStorage.removeItem("washtracLoggedIn");
+    sessionStorage.removeItem("washtracSessionActive");
     window.location.replace("login.html");
     return [];
   }
 
   const user = userData.user;
-
-  const { data, error } = await client
-    .from("user_site_access")
-    .select("site_id, sites(*)")
+  let membershipRows = [];
+  let result = await client
+    .from("site_members")
+    .select("site_id, role")
     .eq("user_id", user.id);
 
-  if(error){
-    console.log("user_site_access error:", error);
+  if(result.error){
+    console.log("site_members lookup error:", result.error);
+
+    result = await client
+      .from("user_site_access")
+      .select("site_id")
+      .eq("user_id", user.id);
+  }
+
+  if(result.error){
+    console.log("site access error:", result.error);
+    assignedSiteIds = [];
     return [];
   }
 
-  const sites = (data || [])
-    .map(row => row.sites || { id: row.site_id })
-    .filter(site => site && site.id);
+  membershipRows = result.data || [];
+  const siteIds = [...new Set(membershipRows.map(row => row.site_id).filter(Boolean))];
 
-  assignedSiteIds = sites.map(site => site.id);
+  if(!siteIds.length){
+    assignedSiteIds = [];
+    localStorage.removeItem("activeSiteId");
+    localStorage.removeItem("washtracActiveSiteId");
+    return [];
+  }
+
+  const { data: sitesData, error: sitesError } = await client
+    .from("sites")
+    .select("*")
+    .in("id", siteIds)
+    .order("name", { ascending:true });
+
+  if(sitesError){
+    console.log("sites fetch error:", sitesError);
+    assignedSiteIds = siteIds;
+  }else{
+    assignedSiteIds = (sitesData || []).map(site => site.id).filter(Boolean);
+  }
+
+  if(!assignedSiteIds.length){
+    assignedSiteIds = siteIds;
+  }
 
   const saved = getActiveSiteId();
   const savedIsAllowed = saved && assignedSiteIds.includes(saved);
@@ -708,7 +749,7 @@ async function loadAssignedSites(){
     setActiveSiteId(nextSiteId);
   }
 
-  return sites;
+  return sitesData || siteIds.map(id => ({ id }));
 }
 
 function hasAccessToActiveSite(){
@@ -790,20 +831,31 @@ async function loadActivity(){
     return;
   }
 
-  const { data, error } = await client
+  let result = await client
     .from("wash_activity")
     .select("*")
     .eq("site_id", activeSiteId)
     .order("event_time", { ascending:false })
     .limit(10);
 
-  if(error){
-    console.log("wash_activity error:", error);
+  if(result.error){
+    console.log("wash_activity event_time error:", result.error);
+
+    result = await client
+      .from("wash_activity")
+      .select("*")
+      .eq("site_id", activeSiteId)
+      .order("created_at", { ascending:false })
+      .limit(10);
+  }
+
+  if(result.error){
+    console.log("wash_activity error:", result.error);
     renderActivity([]);
     return;
   }
 
-  renderActivity(data || []);
+  renderActivity(result.data || []);
 }
 
 async function loadMonitor(){
@@ -915,15 +967,22 @@ function setupRealtime(){
     }, () => scheduleMonitorRefresh(150))
 
     .subscribe((status) => {
-      console.log("Monitor realtime:", status);
+      if(status === "CHANNEL_ERROR" || status === "TIMED_OUT"){
+        console.log("Monitor realtime:", status);
+      }
     });
 }
 
 async function initMonitor(){
-  await loadAssignedSites();
-  await loadMonitor();
-  setupRealtime();
-  startHeartbeatRefresh();
+  try{
+    await loadAssignedSites();
+    await loadMonitor();
+    setupRealtime();
+    startHeartbeatRefresh();
+  }catch(err){
+    console.log("initMonitor error:", err);
+    renderNoSite();
+  }
 }
 
 initMonitor();
