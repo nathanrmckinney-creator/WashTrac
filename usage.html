@@ -232,6 +232,33 @@ button.secondary{background:#334155;}
   border:1px solid rgba(245,158,11,.35);
 }
 
+
+.site-switcher-row{
+  margin-top:18px;
+  margin-bottom:20px;
+  max-width:640px;
+  display:flex;
+  gap:10px;
+}
+.site-switcher-row select{
+  flex:1;
+  padding:12px;
+  border-radius:10px;
+  background:#0b1220;
+  color:white;
+  border:1px solid #1ea7ff;
+  box-shadow:0 0 6px rgba(30,167,255,0.4);
+  font-size:15px;
+  font-weight:600;
+  outline:none;
+}
+.site-switcher-row button{
+  white-space:nowrap;
+}
+@media(max-width:900px){
+  .site-switcher-row{display:grid;grid-template-columns:1fr;}
+}
+
 @media(max-width:900px){
   .sidebar{display:none;}
   .desktop-menu-wrap{display:none;}
@@ -299,6 +326,13 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
     <div class="page-header">
       <h1>Reports</h1>
       <p>Usage analytics and reporting.</p>
+    </div>
+
+    <div class="site-switcher-row">
+      <select id="siteSwitcher" onchange="switchReportSite(this.value)">
+        <option>Loading sites...</option>
+      </select>
+      <button type="button" onclick="window.location.href='sites.html'">Manage Sites</button>
     </div>
 
     <div class="heartbeat-banner" id="heartbeatBanner">
@@ -615,6 +649,45 @@ function setActiveSiteId(siteId){
   localStorage.setItem("washtracActiveSiteId", siteId);
 }
 
+async function loadReportSites(){
+  const select = document.getElementById("siteSwitcher");
+  if(!select) return "";
+
+  select.innerHTML = `<option>Loading sites...</option>`;
+
+  const sites = await getAssignedSites();
+
+  if(!sites.length){
+    select.innerHTML = `<option value="">No sites assigned</option>`;
+    return "";
+  }
+
+  const saved = getActiveSiteId();
+  const exists = saved && sites.some(site => site.id === saved);
+  const activeSite = exists ? sites.find(site => site.id === saved) : sites[0];
+
+  setActiveSiteId(activeSite.id);
+
+  select.innerHTML = sites.map(site => {
+    return `<option value="${site.id}">${escapeText(site.name || "Unnamed Site")}</option>`;
+  }).join("");
+
+  select.value = activeSite.id;
+  return activeSite.id;
+}
+
+async function switchReportSite(siteId){
+  if(!siteId) return;
+
+  setActiveSiteId(siteId);
+
+  const siteSwitcher = document.getElementById("siteSwitcher");
+  if(siteSwitcher) siteSwitcher.blur();
+
+  await loadUsage();
+}
+
+
 function applyReportUrlParams(){
   const params = new URLSearchParams(window.location.search);
   const scope = params.get("reportScope");
@@ -660,6 +733,12 @@ async function getAssignedSites(){
 
   if(memberResult.error){
     console.log("Site member load error:", memberResult.error);
+
+    const saved = getActiveSiteId();
+    if(saved){
+      return [{ id:saved, name:"Current Site" }];
+    }
+
     return [];
   }
 
@@ -668,6 +747,11 @@ async function getAssignedSites(){
     .filter(Boolean);
 
   if(!siteIds.length){
+    const saved = getActiveSiteId();
+    if(saved){
+      return [{ id:saved, name:"Current Site" }];
+    }
+
     return [];
   }
 
@@ -678,7 +762,7 @@ async function getAssignedSites(){
 
   if(siteResult.error){
     console.log("Site load error:", siteResult.error);
-    return [];
+    return siteIds.map(id => ({ id, name:"Site" }));
   }
 
   return (siteResult.data || [])
@@ -1066,20 +1150,16 @@ function renderHeartbeatStatus(devices){
   pill.innerText = "OFFLINE";
 }
 
-async function loadHeartbeatStatus(){
-  return;
-}
-function scheduleHeartbeatRefresh(){
-  return;
-}
+async function loadHeartbeatStatus(){ return; }
+function scheduleHeartbeatRefresh(){ return; }
 async function loadUsage(){
-  let query = client
+  let baseQuery = client
     .from("wash_activity")
     .select("*")
     .order("created_at", { ascending:false })
     .limit(500);
 
-  const scoped = await applySiteScopeToQuery(query);
+  let scoped = await applySiteScopeToQuery(baseQuery);
 
   if(scoped.noSites || !scoped.query){
     cachedRawUses = [];
@@ -1097,15 +1177,32 @@ async function loadUsage(){
     return;
   }
 
-  const { data, error } = await scoped.query;
+  let result = await scoped.query;
 
-  if(error){
-    console.log("Usage load error:", error);
-    setSiteScopeSummary("Report data could not load. Make sure wash_activity has a site_id column and your user has access to the selected site.");
+  if(result.error){
+    console.log("Usage created_at query error:", result.error);
+
+    let fallbackQuery = client
+      .from("wash_activity")
+      .select("*")
+      .limit(500);
+
+    scoped = await applySiteScopeToQuery(fallbackQuery);
+
+    if(scoped.noSites || !scoped.query){
+      return;
+    }
+
+    result = await scoped.query;
+  }
+
+  if(result.error){
+    console.log("Usage load error:", result.error);
+    setSiteScopeSummary("Report data could not load. Check browser console for details.");
     return;
   }
 
-  const rows = data || [];
+  const rows = result.data || [];
 
   const uses = rows
     .filter(isUseEvent)
@@ -1138,7 +1235,6 @@ async function loadUsage(){
   renderTopCodesChart(codeArray.slice(0,10));
   renderTopCodesList(codeArray);
 }
-
 function renderTopCodesList(codes){
   const list = document.getElementById("topCodes");
   list.innerHTML = "";
@@ -1694,6 +1790,7 @@ async function initializeReportsPage(){
   updateScheduleRangeFields();
   loadSavedSchedule();
   applyReportUrlParams();
+  await loadReportSites();
   await loadUsage();
   await loadHeartbeatStatus();
 
