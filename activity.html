@@ -173,10 +173,7 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
       <button type="button" onclick="window.location.href='sites.html'">Manage Sites</button>
     </div>
 
-    <div id="systemHeartbeatBanner" class="system-banner warn show">
-      Checking CodeBox heartbeat...
-      <small>Activity history remains available even if the active CodeBox is offline.</small>
-    </div>
+    
 
     <div class="summary">
       <div class="summary-box"><strong id="totalEvents">0</strong><span>Loaded Events</span></div>
@@ -241,7 +238,7 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
       </div>
 
       <div class="notice">
-        This safe version does not use realtime subscriptions or automatic polling. Use Apply / Refresh when you want updated activity.
+        This page does not use realtime subscriptions or automatic polling. Use Apply / Refresh when you want updated history.
       </div>
     </div>
   </div>
@@ -454,13 +451,8 @@ function getHeartbeatStatus(devices){
   };
 }
 
-function renderHeartbeatBanner(devices){
-  const banner = document.getElementById("systemHeartbeatBanner");
-  if(!banner) return;
-  const status = getHeartbeatStatus(devices || []);
-  banner.className = `system-banner show ${status.online ? "online" : "offline"}`;
-  banner.innerHTML = `${escapeText(status.title)}<small>${escapeText(status.detail)}</small>`;
-}
+function renderHeartbeatBanner(devices){ return; }
+
 
 async function fetchDevices(siteId){
   if(!siteId) return [];
