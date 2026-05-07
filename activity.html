@@ -92,6 +92,8 @@ th{color:#93c5fd;font-size:13px;text-transform:uppercase;letter-spacing:.5px;}
 td{color:#e5e7eb;}
 .notice{margin-top:14px;color:#94a3b8;font-size:14px;line-height:1.5;}
 .error-text{color:#fecaca;}
+.success-text{color:#86efac;}
+.warn-text{color:#fde68a;}
 
 @media (max-width:1100px){
   .summary{grid-template-columns:1fr 1fr;}
@@ -189,7 +191,7 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
         <select id="datePreset" onchange="applyDatePreset()">
           <option value="today">Today</option>
           <option value="yesterday">Yesterday</option>
-          <option value="7days">Last 7 Days</option>
+          <option value="7days" selected>Last 7 Days</option>
           <option value="14days">Last 14 Days</option>
           <option value="30days">Last 30 Days</option>
           <option value="custom">Custom Range</option>
@@ -215,6 +217,7 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
       <div class="actions">
         <button type="button" id="applyBtn" onclick="loadActivity()">Apply / Refresh</button>
         <button class="secondary" type="button" onclick="clearFilters()">Clear Filters</button>
+        <button class="secondary" type="button" onclick="exportFilteredActivity()">Export CSV</button>
         <button class="secondary" type="button" onclick="window.print()">Print</button>
         <span class="status-line" id="activityStatus">Ready.</span>
       </div>
@@ -249,8 +252,16 @@ const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
 const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+window.addEventListener("pageshow", function(event){
+  if(event.persisted && localStorage.getItem("washtracLoggedIn") !== "yes"){
+    window.location.replace("login.html");
+  }
+});
+
 let currentSiteId = null;
 let activityLoadToken = 0;
+let lastFilteredActivityRows = [];
+let lastRawActivityCount = 0;
 const HEARTBEAT_ONLINE_MINUTES = 5;
 
 function getActiveSiteId(){
@@ -271,11 +282,21 @@ function cleanValue(value, fallback = ""){
   return value;
 }
 
-function setStatus(message, isError = false){
+function setStatus(message, tone = ""){
   const el = document.getElementById("activityStatus");
   if(!el) return;
+
   el.textContent = message;
-  el.className = isError ? "status-line error-text" : "status-line";
+
+  if(tone === true || tone === "error"){
+    el.className = "status-line error-text";
+  }else if(tone === "success"){
+    el.className = "status-line success-text";
+  }else if(tone === "warn"){
+    el.className = "status-line warn-text";
+  }else{
+    el.className = "status-line";
+  }
 }
 
 function setLoading(isLoading){
@@ -403,6 +424,7 @@ async function logout(event){
   try{ await client.auth.signOut(); }catch(err){ console.log("logout error:", err); }
   localStorage.removeItem("washtracLoggedIn");
   localStorage.removeItem("activeSiteId");
+  localStorage.removeItem("washtracActiveSiteId");
   localStorage.removeItem("activeOrganizationId");
   window.location.replace("login.html");
 }
@@ -626,7 +648,7 @@ function renderRows(rows){
   tbody.innerHTML = "";
 
   if(!rows.length){
-    tbody.innerHTML = `<tr><td colspan="6">No matching activity found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6">No matching activity found. Try clearing text filters or expanding the date range.</td></tr>`;
     updateSummary([]);
     return;
   }
@@ -664,36 +686,75 @@ function rowIsInsideSelectedDate(row){
   return true;
 }
 
-async function runActivityQuery(siteId, limit){
-  /*
-    SAFE ACTIVITY QUERY:
-    - Do NOT select column names one by one.
-    - Do NOT filter date columns in Supabase yet.
-    - Load a small capped batch for the active site.
-    - Apply date/text filters in the browser after rows load.
-  */
-  const result = await client
+function buildBaseActivityQuery(siteId){
+  return client
     .from("wash_activity")
     .select("*")
-    .eq("site_id", siteId)
-    .order("created_at", { ascending:false })
-    .limit(limit);
+    .eq("site_id", siteId);
+}
 
-  if(!result.error) return result;
+async function tryActivityQuery(siteId, limit, orderColumn, useDateFilter){
+  const range = getDateRange();
 
-  console.log("Activity created_at query failed:", result.error);
+  let query = buildBaseActivityQuery(siteId);
 
-  const fallback = await client
-    .from("wash_activity")
-    .select("*")
-    .eq("site_id", siteId)
-    .limit(limit);
-
-  if(fallback.error){
-    console.log("Activity fallback query failed:", fallback.error);
+  if(useDateFilter && range.start){
+    query = query.gte(orderColumn, range.start.toISOString());
   }
 
-  return fallback;
+  if(useDateFilter && range.end){
+    query = query.lte(orderColumn, range.end.toISOString());
+  }
+
+  return await query
+    .order(orderColumn, { ascending:false })
+    .limit(limit);
+}
+
+async function runActivityQuery(siteId, limit){
+  /*
+    HARDENED ACTIVITY QUERY:
+    - First tries event_time with the selected date range.
+    - Falls back to created_at with the same date range if needed.
+    - Final fallback loads latest rows without date filtering, then filters in browser.
+    This prevents the confusing "0 of 250" problem when the latest rows are outside the selected day.
+  */
+  let result = await tryActivityQuery(siteId, limit, "event_time", true);
+
+  if(!result.error){
+    result.__queryMode = "event_time_date";
+    return result;
+  }
+
+  console.log("Activity event_time date query failed:", result.error);
+
+  result = await tryActivityQuery(siteId, limit, "created_at", true);
+
+  if(!result.error){
+    result.__queryMode = "created_at_date";
+    return result;
+  }
+
+  console.log("Activity created_at date query failed:", result.error);
+
+  result = await tryActivityQuery(siteId, limit, "event_time", false);
+
+  if(!result.error){
+    result.__queryMode = "event_time_latest";
+    return result;
+  }
+
+  console.log("Activity latest event_time query failed:", result.error);
+
+  result = await tryActivityQuery(siteId, limit, "created_at", false);
+
+  if(result.error){
+    console.log("Activity final fallback query failed:", result.error);
+  }else{
+    result.__queryMode = "created_at_latest";
+  }
+
+  return result;
 }
 
 async function loadActivity(){
@@ -703,7 +764,9 @@ async function loadActivity(){
   if(!siteId){
     resetActivityEmpty();
     renderHeartbeatBanner([]);
-    setStatus("No active site selected.", true);
+    lastFilteredActivityRows = [];
+    lastRawActivityCount = 0;
+    setStatus("No active site selected.", "error");
     return;
   }
 
@@ -713,6 +776,7 @@ async function loadActivity(){
 
   try{
     const limit = Number(document.getElementById("rowLimit").value || 250);
+    const preset = document.getElementById("datePreset").value;
 
     const [activityResult, devices] = await Promise.all([
       runActivityQuery(siteId, limit),
@@ -726,7 +790,9 @@ async function loadActivity(){
     if(activityResult.error){
       console.log("Activity fetch error:", activityResult.error);
       resetActivityEmpty("Could not load activity. Check the browser console for details.");
-      setStatus("Could not load activity.", true);
+      lastFilteredActivityRows = [];
+      lastRawActivityCount = 0;
+      setStatus("Could not load activity.", "error");
       return;
     }
 
@@ -735,14 +801,27 @@ async function loadActivity(){
     const mappedRows = dateRows.map(mapActivityRow);
     const filteredRows = applyTextFilters(mappedRows);
 
+    lastFilteredActivityRows = filteredRows;
+    lastRawActivityCount = rawRows.length;
+
     renderRows(filteredRows);
 
     const nowText = new Date().toLocaleTimeString();
-    setStatus(`Loaded ${filteredRows.length} of ${rawRows.length} row${rawRows.length === 1 ? "" : "s"} at ${nowText}.`);
+    const rowWord = rawRows.length === 1 ? "row" : "rows";
+
+    if(!filteredRows.length && rawRows.length){
+      setStatus(`No matching rows in this filter. Loaded ${rawRows.length} ${rowWord} at ${nowText}.`, "warn");
+    }else if(!filteredRows.length && preset === "today"){
+      setStatus(`No activity found for today. Try Yesterday or Last 7 Days. Checked at ${nowText}.`, "warn");
+    }else{
+      setStatus(`Showing ${filteredRows.length} of ${rawRows.length} loaded ${rowWord} at ${nowText}.`, "success");
+    }
   }catch(err){
     console.log("Load activity error:", err);
     resetActivityEmpty("Activity load failed.");
-    setStatus("Activity load failed.", true);
+    lastFilteredActivityRows = [];
+    lastRawActivityCount = 0;
+    setStatus("Activity load failed.", "error");
   }finally{
     if(token === activityLoadToken) setLoading(false);
   }
@@ -763,13 +842,56 @@ function applyTextFilters(rows){
   });
 }
 
+function csvEscape(value){
+  const text = String(value ?? "");
+  if(/[",\n\r]/.test(text)){
+    return `"${text.replaceAll('"', '""')}"`;
+  }
+  return text;
+}
+
+function exportFilteredActivity(){
+  if(!lastFilteredActivityRows.length){
+    setStatus("No filtered activity to export.", "warn");
+    return;
+  }
+
+  const headers = ["Time","Code","Department","Name","Bay","Event"];
+  const rows = lastFilteredActivityRows.map(row => [
+    formatTime(row.event_time),
+    row.code || "",
+    row.department || "",
+    row.name || "",
+    row.bay || "",
+    row.event || ""
+  ]);
+
+  const csv = [headers, ...rows]
+    .map(line => line.map(csvEscape).join(","))
+    .join("\n");
+
+  const blob = new Blob([csv], { type:"text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const dateStamp = new Date().toISOString().slice(0,10);
+
+  link.href = url;
+  link.download = `washtrac-activity-${dateStamp}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+  setStatus(`Exported ${lastFilteredActivityRows.length} filtered row${lastFilteredActivityRows.length === 1 ? "" : "s"}.`, "success");
+}
+
 function clearFilters(){
   document.getElementById("filterCode").value = "";
   document.getElementById("filterDepartment").value = "";
   document.getElementById("filterName").value = "";
   document.getElementById("filterBay").value = "";
   document.getElementById("filterEvent").value = "";
-  document.getElementById("datePreset").value = "today";
+  document.getElementById("datePreset").value = "7days";
   document.getElementById("rowLimit").value = "250";
   applyDatePreset();
   loadActivity();
