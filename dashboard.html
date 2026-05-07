@@ -388,21 +388,37 @@
       color:#dbe5fb;
     }
 
-    .days-grid{
+    .schedule-days{
       display:grid;
-      grid-template-columns:repeat(7,1fr);
       gap:10px;
       margin-top:14px;
     }
 
-    .day-toggle{
+    .schedule-day-row{
+      display:grid;
+      grid-template-columns:90px 1fr 1fr;
+      gap:10px;
+      align-items:center;
+      padding:12px;
+      border-radius:12px;
+      background:#0b1220;
+      border:1px solid #1f2937;
+    }
+
+    .schedule-day-name{
+      font-weight:900;
+      color:white;
+      letter-spacing:.5px;
+    }
+
+    .day-option{
       display:flex;
       align-items:center;
       justify-content:center;
       gap:8px;
-      padding:12px 10px;
+      padding:10px;
       border-radius:10px;
-      background:#0b1220;
+      background:#020617;
       border:1px solid #334155;
       color:#dbe5fb;
       cursor:pointer;
@@ -411,62 +427,24 @@
       font-size:13px;
     }
 
-    .day-toggle input{
-      display:none;
+    .day-option input{
+      width:16px;
+      height:16px;
+      accent-color:#1ea7ff;
     }
 
-    .day-toggle:has(input:checked){
+    .day-option:has(input:checked){
       border-color:#1ea7ff;
       background:rgba(30,167,255,.16);
       color:white;
       box-shadow:0 0 12px rgba(30,167,255,.18);
     }
 
-    .closure-builder{
-      display:grid;
-      grid-template-columns:1fr auto;
-      gap:12px;
-      margin-top:14px;
-      align-items:end;
-    }
-
-    input[type="date"]{
-      width:100%;
-      padding:12px;
-      border-radius:8px;
-      border:1px solid #334155;
-      background:#0b1220;
-      color:white;
-      font-size:15px;
-    }
-
-    .closure-list{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-top:12px;
-      min-height:20px;
-    }
-
-    .closure-pill{
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      padding:8px 10px;
-      border-radius:999px;
+    .day-option.full-day:has(input:checked){
+      border-color:#f59e0b;
       background:rgba(245,158,11,.16);
       color:#fde68a;
-      border:1px solid rgba(245,158,11,.35);
-      font-size:13px;
-      font-weight:800;
-    }
-
-    .closure-pill button{
-      padding:2px 7px;
-      border-radius:999px;
-      background:rgba(239,68,68,.85);
-      font-size:12px;
-      line-height:1;
+      box-shadow:0 0 12px rgba(245,158,11,.16);
     }
 
     .control-status{
@@ -620,7 +598,8 @@
       }
       .page-header h1{font-size:34px}
       .summary{grid-template-columns:1fr}
-      .control-grid,.field-grid,.bay-editor-grid,.days-grid,.closure-builder{grid-template-columns:1fr}
+      .control-grid,.field-grid,.bay-editor-grid{grid-template-columns:1fr}
+      .schedule-day-row{grid-template-columns:1fr}
       .mobile-menu{
         position:absolute;
         top:64px;
@@ -807,32 +786,52 @@
         </div>
 
         <div class="note">
-          Choose which days the automatic lockout schedule applies to. Example: select Saturday and Sunday if the site closes early or does not open on weekends.
+          For each day, choose whether it follows the time window above or stays locked out for the full day.
         </div>
 
-        <div class="days-grid" id="lockoutDaysGrid">
-          <label class="day-toggle"><input type="checkbox" value="mon"> MON</label>
-          <label class="day-toggle"><input type="checkbox" value="tue"> TUE</label>
-          <label class="day-toggle"><input type="checkbox" value="wed"> WED</label>
-          <label class="day-toggle"><input type="checkbox" value="thu"> THU</label>
-          <label class="day-toggle"><input type="checkbox" value="fri"> FRI</label>
-          <label class="day-toggle"><input type="checkbox" value="sat"> SAT</label>
-          <label class="day-toggle"><input type="checkbox" value="sun"> SUN</label>
-        </div>
-
-        <div class="note">
-          Full-day closures block the wash for the entire selected date, even if the normal lockout window is not active.
-        </div>
-
-        <div class="closure-builder">
-          <div class="field">
-            <label for="closureDateInput">Add Full-Day Closure</label>
-            <input type="date" id="closureDateInput">
+        <div class="schedule-days" id="lockoutDaysGrid">
+          <div class="schedule-day-row">
+            <div class="schedule-day-name">Monday</div>
+            <label class="day-option"><input type="checkbox" class="timed-day" value="mon"> Follow Time</label>
+            <label class="day-option full-day"><input type="checkbox" class="full-day" value="mon"> Full Day</label>
           </div>
-          <button type="button" class="secondary" onclick="addClosureDate()">Add Closure Date</button>
-        </div>
 
-        <div class="closure-list" id="closureList"></div>
+          <div class="schedule-day-row">
+            <div class="schedule-day-name">Tuesday</div>
+            <label class="day-option"><input type="checkbox" class="timed-day" value="tue"> Follow Time</label>
+            <label class="day-option full-day"><input type="checkbox" class="full-day" value="tue"> Full Day</label>
+          </div>
+
+          <div class="schedule-day-row">
+            <div class="schedule-day-name">Wednesday</div>
+            <label class="day-option"><input type="checkbox" class="timed-day" value="wed"> Follow Time</label>
+            <label class="day-option full-day"><input type="checkbox" class="full-day" value="wed"> Full Day</label>
+          </div>
+
+          <div class="schedule-day-row">
+            <div class="schedule-day-name">Thursday</div>
+            <label class="day-option"><input type="checkbox" class="timed-day" value="thu"> Follow Time</label>
+            <label class="day-option full-day"><input type="checkbox" class="full-day" value="thu"> Full Day</label>
+          </div>
+
+          <div class="schedule-day-row">
+            <div class="schedule-day-name">Friday</div>
+            <label class="day-option"><input type="checkbox" class="timed-day" value="fri"> Follow Time</label>
+            <label class="day-option full-day"><input type="checkbox" class="full-day" value="fri"> Full Day</label>
+          </div>
+
+          <div class="schedule-day-row">
+            <div class="schedule-day-name">Saturday</div>
+            <label class="day-option"><input type="checkbox" class="timed-day" value="sat"> Follow Time</label>
+            <label class="day-option full-day"><input type="checkbox" class="full-day" value="sat"> Full Day</label>
+          </div>
+
+          <div class="schedule-day-row">
+            <div class="schedule-day-name">Sunday</div>
+            <label class="day-option"><input type="checkbox" class="timed-day" value="sun"> Follow Time</label>
+            <label class="day-option full-day"><input type="checkbox" class="full-day" value="sun"> Full Day</label>
+          </div>
+        </div>
 
         <div class="controls">
           <button onclick="saveSchedule()">Save Lockout Schedule</button>
@@ -926,7 +925,6 @@
     let dashboardLoadToken = 0;
     let refreshTimer = null;
     let lastGoodSystemControl = null;
-    let fullDayClosures = [];
 
     function getActiveSiteId(){
       return currentSiteId || localStorage.getItem("activeSiteId") || "";
@@ -1211,79 +1209,37 @@
       return [];
     }
 
-    function localDateKey(date = new Date()){
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
-    }
-
     function dayKey(date = new Date()){
       return ["sun","mon","tue","wed","thu","fri","sat"][date.getDay()];
     }
 
     function getSelectedLockoutDays(){
-      return Array.from(document.querySelectorAll("#lockoutDaysGrid input:checked"))
+      return Array.from(document.querySelectorAll("#lockoutDaysGrid input.timed-day:checked"))
+        .map(input => input.value);
+    }
+
+    function getSelectedFullDayLockoutDays(){
+      return Array.from(document.querySelectorAll("#lockoutDaysGrid input.full-day:checked"))
         .map(input => input.value);
     }
 
     function setSelectedLockoutDays(days){
       const selected = safeJsonArray(days);
-      document.querySelectorAll("#lockoutDaysGrid input").forEach(input => {
+      document.querySelectorAll("#lockoutDaysGrid input.timed-day").forEach(input => {
         input.checked = selected.includes(input.value);
       });
     }
 
-    function renderClosureList(){
-      const wrap = document.getElementById("closureList");
-      if(!wrap) return;
-
-      if(!fullDayClosures.length){
-        wrap.innerHTML = `<span style="color:#94a3b8; font-size:14px;">No full-day closures added.</span>`;
-        return;
-      }
-
-      wrap.innerHTML = fullDayClosures
-        .slice()
-        .sort()
-        .map(date => `
-          <span class="closure-pill">
-            ${date}
-            <button type="button" onclick="removeClosureDate('${date}')">×</button>
-          </span>
-        `)
-        .join("");
+    function setSelectedFullDayLockoutDays(days){
+      const selected = safeJsonArray(days);
+      document.querySelectorAll("#lockoutDaysGrid input.full-day").forEach(input => {
+        input.checked = selected.includes(input.value);
+      });
     }
 
-    function addClosureDate(){
-      const input = document.getElementById("closureDateInput");
-      const value = input ? input.value : "";
-
-      if(!value){
-        setControlStatus("Choose a closure date first.");
-        return;
-      }
-
-      if(!fullDayClosures.includes(value)){
-        fullDayClosures.push(value);
-      }
-
-      fullDayClosures = fullDayClosures.slice().sort();
-
-      if(input) input.value = "";
-      renderClosureList();
-      setControlStatus("Closure date added. Click Save Lockout Schedule to apply it.");
-    }
-
-    function removeClosureDate(date){
-      fullDayClosures = fullDayClosures.filter(item => item !== date);
-      renderClosureList();
-      setControlStatus("Closure date removed. Click Save Lockout Schedule to apply it.");
-    }
-
-    function isFullDayClosureActive(control){
-      const closures = safeJsonArray(control.full_day_closures);
-      return closures.includes(localDateKey());
+    function isFullDayLockoutActive(control){
+      const fullDayDays = safeJsonArray(control.full_day_lockout_days);
+      return fullDayDays.includes(dayKey());
     }
 
     function isLockoutActive(control){
@@ -1758,8 +1714,7 @@
       document.getElementById("lockoutEnd").value = control.lockout_end || "";
 
       setSelectedLockoutDays(control.lockout_days);
-      fullDayClosures = safeJsonArray(control.full_day_closures).slice().sort();
-      renderClosureList();
+      setSelectedFullDayLockoutDays(control.full_day_lockout_days);
 
       if(!deviceHealth.isOnline){
         setRemoteWashButtonsEnabled(false);
@@ -1782,9 +1737,9 @@
       } else if(!control.wash_enabled){
         banner.className = "banner red show";
         banner.innerText = "WASH DISABLED";
-      } else if(isFullDayClosureActive(control)){
+      } else if(isFullDayLockoutActive(control)){
         banner.className = "banner red show";
-        banner.innerText = "FULL-DAY CLOSURE ACTIVE";
+        banner.innerText = "FULL-DAY LOCKOUT ACTIVE";
       } else if(isLockoutActive(control)){
         banner.className = "banner yellow show";
         banner.innerText = "AFTER-HOURS LOCKOUT ACTIVE";
@@ -1858,7 +1813,7 @@
       const lockout_start = document.getElementById("lockoutStart").value || null;
       const lockout_end = document.getElementById("lockoutEnd").value || null;
       const lockout_days = getSelectedLockoutDays();
-      const full_day_closures = fullDayClosures.slice().sort();
+      const full_day_lockout_days = getSelectedFullDayLockoutDays();
 
       const { error } = await client
         .from("site_system_control")
@@ -1867,7 +1822,7 @@
           lockout_start,
           lockout_end,
           lockout_days,
-          full_day_closures,
+          full_day_lockout_days,
           updated_at: new Date().toISOString()
         })
         .eq("id", controlRowId)
