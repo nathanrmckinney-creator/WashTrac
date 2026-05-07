@@ -632,7 +632,7 @@ async function loadActivity(){
       .from("wash_activity")
       .select("id,site_id,event_time,created_at,code,access_code,department,assigned_to,bay,event,status,metadata")
       .eq("site_id", siteId)
-      .order("event_time", { ascending:false })
+      .order("created_at", { ascending:false });
       .limit(limit);
 
     if(start) query = query.gte("event_time", start.toISOString());
