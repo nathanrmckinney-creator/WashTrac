@@ -350,6 +350,11 @@ let monitorChannel = null;
 let currentSiteId = null;
 let assignedSiteIds = [];
 let refreshTimer = null;
+let heartbeatTimer = null;
+let monitorLoadInProgress = false;
+
+const MONITOR_REFRESH_DELAY_MS = 350;
+const MONITOR_HEARTBEAT_REFRESH_MS = 30000;
 
 function getActiveSiteId(){
   return currentSiteId || localStorage.getItem("activeSiteId") || localStorage.getItem("washtracActiveSiteId") || "";
@@ -802,33 +807,69 @@ async function loadActivity(){
 }
 
 async function loadMonitor(){
+  if(monitorLoadInProgress) return;
+  monitorLoadInProgress = true;
+
   const activeSiteId = getActiveSiteId();
 
   if(!activeSiteId || !hasAccessToActiveSite()){
     renderNoSite();
+    monitorLoadInProgress = false;
     return;
   }
 
-  const [control, devices] = await Promise.all([
-    fetchControl(),
-    fetchDevices(),
-    loadBays(),
-    loadActivity()
-  ]);
+  try{
+    const [control, devices] = await Promise.all([
+      fetchControl(),
+      fetchDevices(),
+      loadBays(),
+      loadActivity()
+    ]);
 
-  const hasPairedDevice = Array.isArray(devices) && devices.length > 0;
-  const hasOnlineDevice = hasPairedDevice && devices.some(device => deviceOnlineFromLastSeen(device.last_seen));
+    const hasPairedDevice = Array.isArray(devices) && devices.length > 0;
+    const hasOnlineDevice = hasPairedDevice && devices.some(device => deviceOnlineFromLastSeen(device.last_seen));
 
-  renderDevices(devices || []);
-  renderControl(control, hasOnlineDevice, hasPairedDevice);
+    renderDevices(devices || []);
+    renderControl(control, hasOnlineDevice, hasPairedDevice);
+  }catch(err){
+    console.log("monitor load error:", err);
+  }finally{
+    monitorLoadInProgress = false;
+  }
 }
 
-function scheduleMonitorRefresh(){
+function scheduleMonitorRefresh(delay = MONITOR_REFRESH_DELAY_MS){
+  if(document.hidden) return;
+
   clearTimeout(refreshTimer);
   refreshTimer = setTimeout(() => {
     loadMonitor();
-  }, 200);
+  }, delay);
 }
+
+function startHeartbeatRefresh(){
+  clearInterval(heartbeatTimer);
+
+  heartbeatTimer = setInterval(() => {
+    if(document.hidden) return;
+    loadMonitor();
+  }, MONITOR_HEARTBEAT_REFRESH_MS);
+}
+
+document.addEventListener("visibilitychange", function(){
+  if(!document.hidden){
+    scheduleMonitorRefresh(250);
+  }
+});
+
+window.addEventListener("beforeunload", function(){
+  clearTimeout(refreshTimer);
+  clearInterval(heartbeatTimer);
+
+  if(monitorChannel){
+    client.removeChannel(monitorChannel);
+  }
+});
 
 function setupRealtime(){
   const activeSiteId = getActiveSiteId();
@@ -846,28 +887,32 @@ function setupRealtime(){
       schema:"public",
       table:"wash_activity",
       filter:`site_id=eq.${activeSiteId}`
-    }, () => loadActivity())
+    }, () => {
+      if(!document.hidden) loadActivity();
+    })
 
     .on("postgres_changes", {
       event:"*",
       schema:"public",
       table:"site_system_control",
       filter:`site_id=eq.${activeSiteId}`
-    }, () => loadMonitor())
+    }, () => scheduleMonitorRefresh(150))
 
     .on("postgres_changes", {
       event:"*",
       schema:"public",
       table:"site_bay_status",
       filter:`site_id=eq.${activeSiteId}`
-    }, () => loadBays())
+    }, () => {
+      if(!document.hidden) loadBays();
+    })
 
     .on("postgres_changes", {
       event:"*",
       schema:"public",
       table:"devices",
       filter:`site_id=eq.${activeSiteId}`
-    }, () => loadMonitor())
+    }, () => scheduleMonitorRefresh(150))
 
     .subscribe((status) => {
       console.log("Monitor realtime:", status);
@@ -878,13 +923,10 @@ async function initMonitor(){
   await loadAssignedSites();
   await loadMonitor();
   setupRealtime();
+  startHeartbeatRefresh();
 }
 
 initMonitor();
-
-setInterval(function(){
-  scheduleMonitorRefresh();
-}, 30000);
 </script>
 </body>
 </html>
