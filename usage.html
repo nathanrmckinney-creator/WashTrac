@@ -93,6 +93,9 @@ button.secondary{background:#334155;}
 .note{margin-top:14px;color:#94a3b8;font-size:14px;line-height:1.5;}
 .status{margin-top:16px;padding:12px 14px;border-radius:8px;background:#0b1220;border:1px solid #1f2937;color:#cbd5e1;display:none;}
 .status.show{display:block;}
+.status.success{border-color:rgba(34,197,94,.35);color:#86efac;}
+.status.warn{border-color:rgba(245,158,11,.35);color:#fde68a;}
+.status.error{border-color:rgba(239,68,68,.35);color:#fecaca;}
 
 .builder-section{
   margin-top:18px;
@@ -253,7 +256,7 @@ button.secondary{background:#334155;}
 <body>
 <script>
 if(localStorage.getItem("washtracLoggedIn") !== "yes"){
-  window.location.href = "login.html";
+  window.location.replace("login.html");
 }
 </script>
 
@@ -509,6 +512,13 @@ const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
 const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+window.addEventListener("pageshow", function(event){
+  if(localStorage.getItem("washtracLoggedIn") !== "yes"){
+    window.location.replace("login.html");
+  }
+});
+
+
 let departmentUsageChartInstance = null;
 let topCodesChartInstance = null;
 let cachedCodes = [];
@@ -518,6 +528,8 @@ let cachedSiteScopeLabel = "Current Site";
 let cachedSiteIds = [];
 let reportHeartbeatTimer = null;
 let lastHeartbeatDevices = [];
+let reportsLoadToken = 0;
+let reportsLoadInProgress = false;
 
 const columnLabels = {
   code: "Code",
@@ -559,6 +571,8 @@ function goHome(event){
   if(event) event.preventDefault();
   closeMenus();
   localStorage.removeItem("washtracLoggedIn");
+  localStorage.removeItem("washtracRememberMe");
+  sessionStorage.removeItem("washtracSessionActive");
   window.location.replace("index.html");
 }
 
@@ -576,6 +590,9 @@ async function logout(event){
   localStorage.removeItem("washtracLoggedIn");
   localStorage.removeItem("activeSiteId");
   localStorage.removeItem("washtracActiveSiteId");
+  localStorage.removeItem("activeOrganizationId");
+  localStorage.removeItem("washtracRememberMe");
+  sessionStorage.removeItem("washtracSessionActive");
   window.location.replace("login.html");
 }
 
@@ -735,10 +752,18 @@ async function applySiteScopeToQuery(query){
   return { query:query.eq("site_id", siteInfo.activeSiteId), noSites:false };
 }
 
-function setStatus(message){
+function setStatus(message, tone = ""){
   const box = document.getElementById("emailStatus");
   box.innerText = message;
-  box.classList.add("show");
+  box.className = "status show";
+
+  if(tone === "success"){
+    box.classList.add("success");
+  }else if(tone === "warn"){
+    box.classList.add("warn");
+  }else if(tone === "error" || tone === true){
+    box.classList.add("error");
+  }
 }
 
 function getCode(row){
@@ -1055,93 +1080,126 @@ function renderHeartbeatStatus(devices){
   pill.innerText = "OFFLINE";
 }
 
+/*
+  Reports intentionally avoid realtime subscriptions and heartbeat polling.
+  Reports use cloud history and should remain lightweight/stable.
+*/
 async function loadHeartbeatStatus(){ return; }
 function scheduleHeartbeatRefresh(){ return; }
 async function loadUsage(){
-  let query = client
-    .from("wash_activity")
-    .select("*")
-    .order("created_at", { ascending:false })
-    .limit(500);
+  if(reportsLoadInProgress) return;
 
-  let scoped = await applySiteScopeToQuery(query);
+  const token = ++reportsLoadToken;
+  reportsLoadInProgress = true;
 
-  if(scoped.noSites || !scoped.query){
-    cachedRawUses = [];
-    cachedCodes = [];
-    cachedDepartmentData = [];
+  setStatus("Loading reports...");
 
-    document.getElementById("totalUses").innerText = "0";
-    document.getElementById("totalCodes").innerText = "0";
-    document.getElementById("topCode").innerText = "-";
-    document.getElementById("topDept").innerText = "-";
-
-    renderDepartmentChart([]);
-    renderTopCodesChart([]);
-    renderTopCodesList([]);
-    return;
-  }
-
-  let { data, error } = await scoped.query;
-
-  if(error){
-    console.log("Usage created_at query error:", error);
-
-    query = client
+  try{
+    let query = client
       .from("wash_activity")
       .select("*")
+      .order("created_at", { ascending:false })
       .limit(500);
 
-    scoped = await applySiteScopeToQuery(query);
+    let scoped = await applySiteScopeToQuery(query);
 
     if(scoped.noSites || !scoped.query){
+      cachedRawUses = [];
+      cachedCodes = [];
+      cachedDepartmentData = [];
+
+      document.getElementById("totalUses").innerText = "0";
+      document.getElementById("totalCodes").innerText = "0";
+      document.getElementById("topCode").innerText = "-";
+      document.getElementById("topDept").innerText = "-";
+
+      renderDepartmentChart([]);
+      renderTopCodesChart([]);
+      renderTopCodesList([]);
+
+      setStatus("No assigned sites found.", "warn");
       return;
     }
 
-    const fallback = await scoped.query;
-    data = fallback.data;
-    error = fallback.error;
+    let { data, error } = await scoped.query;
+
+    if(error){
+      console.log("Usage created_at query error:", error);
+
+      query = client
+        .from("wash_activity")
+        .select("*")
+        .order("event_time", { ascending:false })
+        .limit(500);
+
+      scoped = await applySiteScopeToQuery(query);
+
+      if(scoped.noSites || !scoped.query){
+        return;
+      }
+
+      const fallback = await scoped.query;
+      data = fallback.data;
+      error = fallback.error;
+    }
+
+    if(error){
+      console.log("Usage load error:", error);
+      setSiteScopeSummary("Report data could not load. Check browser console for details.");
+      setStatus("Could not load reports.", "error");
+      return;
+    }
+
+    if(token !== reportsLoadToken){
+      return;
+    }
+
+    const rows = data || [];
+
+    const uses = rows
+      .filter(isUseEvent)
+      .map(row => ({
+        code: getCode(row),
+        department: getDepartment(row),
+        name: getName(row),
+        uses: 1,
+        last_used: getTime(row),
+        site_id: row.site_id || "",
+        event: row.event || ""
+      }));
+
+    cachedRawUses = uses;
+
+    document.getElementById("totalUses").innerText = uses.length;
+
+    const codeArray = aggregateUses(uses);
+    cachedCodes = codeArray;
+
+    document.getElementById("totalCodes").innerText = codeArray.length;
+    document.getElementById("topCode").innerText = codeArray.length ? codeArray[0].code : "-";
+
+    const deptArray = getDepartmentDataFromUses(uses);
+    cachedDepartmentData = deptArray;
+
+    document.getElementById("topDept").innerText = deptArray.length ? deptArray[0][0] : "-";
+
+    renderDepartmentChart(deptArray);
+    renderTopCodesChart(codeArray.slice(0,10));
+    renderTopCodesList(codeArray);
+
+    const nowText = new Date().toLocaleTimeString();
+    setStatus(`Loaded ${uses.length} usage events at ${nowText}.`, "success");
+
+  }catch(err){
+    console.log("loadUsage unexpected error:", err);
+    setStatus("Unexpected reports error.", "error");
+  }finally{
+    if(token === reportsLoadToken){
+      reportsLoadInProgress = false;
+    }
   }
-
-  if(error){
-    console.log("Usage load error:", error);
-    setSiteScopeSummary("Report data could not load. Check browser console for details.");
-    return;
-  }
-
-  const rows = data || [];
-
-  const uses = rows
-    .filter(isUseEvent)
-    .map(row => ({
-      code: getCode(row),
-      department: getDepartment(row),
-      name: getName(row),
-      uses: 1,
-      last_used: getTime(row),
-      site_id: row.site_id || "",
-      event: row.event || ""
-    }));
-
-  cachedRawUses = uses;
-
-  document.getElementById("totalUses").innerText = uses.length;
-
-  const codeArray = aggregateUses(uses);
-  cachedCodes = codeArray;
-
-  document.getElementById("totalCodes").innerText = codeArray.length;
-  document.getElementById("topCode").innerText = codeArray.length ? codeArray[0].code : "-";
-
-  const deptArray = getDepartmentDataFromUses(uses);
-  cachedDepartmentData = deptArray;
-
-  document.getElementById("topDept").innerText = deptArray.length ? deptArray[0][0] : "-";
-
-  renderDepartmentChart(deptArray);
-  renderTopCodesChart(codeArray.slice(0,10));
-  renderTopCodesList(codeArray);
 }
+
 function renderTopCodesList(codes){
   const list = document.getElementById("topCodes");
   list.innerHTML = "";
@@ -1262,7 +1320,8 @@ function exportCSV(){
 
   const columns = ["code", "department", "name", "uses", "last_used"];
   const csv = buildCSV(columns, report.codes, report.label, report.scopeLabel);
-  downloadCSV(csv, "washtrac_report.csv");
+  const stamp = new Date().toISOString().slice(0,10);
+  downloadCSV(csv, `washtrac-report-${stamp}.csv`);
 }
 
 function exportCustomCSV(){
@@ -1278,7 +1337,8 @@ function exportCustomCSV(){
   if(!columns.length) return;
 
   const csv = buildCSV(columns, report.codes, report.label, report.scopeLabel);
-  downloadCSV(csv, "washtrac_custom_report.csv");
+  const stamp = new Date().toISOString().slice(0,10);
+  downloadCSV(csv, `washtrac-custom-report-${stamp}.csv`);
 }
 
 function buildReportHtml(columns, codes, departments, rangeLabel, scopeLabel){
@@ -1408,7 +1468,7 @@ function buildReportHtml(columns, codes, departments, rangeLabel, scopeLabel){
 }
 
 async function sendReportToEmail(email, subject, html){
-  setStatus("Sending report...");
+  setStatus("Sending report...", "warn");
 
   const { data, error } = await client.functions.invoke("send-report", {
     body: { to: email, subject: subject, html: html }
@@ -1416,12 +1476,12 @@ async function sendReportToEmail(email, subject, html){
 
   if(error){
     console.log(error);
-    setStatus("Email failed.");
+    setStatus("Email failed.", "error");
     return false;
   }
 
   console.log(data);
-  setStatus("Report sent.");
+  setStatus("Report sent.", "success");
   return true;
 }
 
@@ -1555,7 +1615,7 @@ function saveReportSchedule(){
   localStorage.setItem("washtracReportSchedule", JSON.stringify(schedule));
   renderScheduleSummary();
 
-  setStatus("Report schedule saved.");
+  setStatus("Report schedule saved.", "success");
 
   /*
     IMPORTANT:
@@ -1585,7 +1645,7 @@ function clearReportSchedule(){
   updateScheduleFields();
   updateScheduleRangeFields();
   renderScheduleSummary();
-  setStatus("Automatic reporting turned off.");
+  setStatus("Automatic reporting turned off.", "warn");
 }
 
 function getRangeLabelOnly(range){
@@ -1703,6 +1763,12 @@ async function initializeReportsPage(){
   // Realtime subscriptions removed for Reports stability.
 
 }
+
+window.addEventListener("beforeunload", function(){
+  clearTimeout(reportHeartbeatTimer);
+});
+
+// Reports intentionally avoid realtime subscriptions for stability.
 
 initializeReportsPage();
 </script>
