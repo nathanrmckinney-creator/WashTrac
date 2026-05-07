@@ -232,31 +232,6 @@ button.secondary{background:#334155;}
   border:1px solid rgba(245,158,11,.35);
 }
 
-
-.site-switcher-row{
-  margin-top:18px;
-  margin-bottom:20px;
-  max-width:640px;
-  display:flex;
-  gap:10px;
-}
-.site-switcher-row select{
-  flex:1;
-  padding:12px;
-  border-radius:10px;
-  background:#0b1220;
-  color:white;
-  border:1px solid #1ea7ff;
-  box-shadow:0 0 6px rgba(30,167,255,0.4);
-  font-size:15px;
-  font-weight:600;
-  outline:none;
-}
-.site-switcher-row button{white-space:nowrap;}
-@media(max-width:900px){
-  .site-switcher-row{display:grid;grid-template-columns:1fr;}
-}
-
 @media(max-width:900px){
   .sidebar{display:none;}
   .desktop-menu-wrap{display:none;}
@@ -324,13 +299,6 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
     <div class="page-header">
       <h1>Reports</h1>
       <p>Usage analytics and reporting.</p>
-    </div>
-
-    <div class="site-switcher-row">
-      <select id="siteSwitcher" onchange="switchReportSite(this.value)">
-        <option>Loading current site...</option>
-      </select>
-      <button type="button" onclick="window.location.href='sites.html'">Manage Sites</button>
     </div>
 
     <div class="heartbeat-banner" id="heartbeatBanner">
@@ -638,7 +606,7 @@ function getReportSiteScope(){
 }
 
 function getActiveSiteId(){
-  return window.currentReportSiteId || localStorage.getItem("activeSiteId") || localStorage.getItem("washtracActiveSiteId") || "";
+  return localStorage.getItem("activeSiteId") || localStorage.getItem("washtracActiveSiteId") || "";
 }
 
 function setActiveSiteId(siteId){
@@ -646,49 +614,6 @@ function setActiveSiteId(siteId){
   localStorage.setItem("activeSiteId", siteId);
   localStorage.setItem("washtracActiveSiteId", siteId);
 }
-
-async function switchReportSite(siteId){
-  if(!siteId) return;
-  window.currentReportSiteId = siteId;
-  setActiveSiteId(siteId);
-  const switcher = document.getElementById("siteSwitcher");
-  if(switcher) switcher.blur();
-  await loadUsage();
-}
-
-async function loadReportSiteSwitcher(){
-  const select = document.getElementById("siteSwitcher");
-  if(!select) return;
-
-  const activeSiteId = getActiveSiteId();
-
-  if(!activeSiteId){
-    select.innerHTML = `<option value="">No current site selected</option>`;
-    return;
-  }
-
-  window.currentReportSiteId = activeSiteId;
-
-  let label = "Current Site";
-
-  try{
-    const { data, error } = await client
-      .from("sites")
-      .select("*")
-      .eq("id", activeSiteId)
-      .maybeSingle();
-
-    if(!error && data){
-      label = data.name || "Current Site";
-    }
-  }catch(err){
-    console.log("Report site name load error:", err);
-  }
-
-  select.innerHTML = `<option value="${activeSiteId}">${escapeText(label)}</option>`;
-  select.value = activeSiteId;
-}
-
 
 function applyReportUrlParams(){
   const params = new URLSearchParams(window.location.search);
@@ -722,30 +647,36 @@ async function getCurrentUser(){
 }
 
 async function getAssignedSites(){
-  const activeSiteId = getActiveSiteId();
+  const user = await getCurrentUser();
 
-  if(activeSiteId){
-    let label = "Current Site";
-
-    try{
-      const { data, error } = await client
-        .from("sites")
-        .select("*")
-        .eq("id", activeSiteId)
-        .maybeSingle();
-
-      if(!error && data){
-        label = data.name || "Current Site";
-      }
-    }catch(err){
-      console.log("Active site label error:", err);
-    }
-
-    return [{ id: activeSiteId, name: label }];
+  if(!user){
+    return [];
   }
 
-  return [];
+  const { data, error } = await client
+    .from("user_site_access")
+    .select(`
+      site_id,
+      sites (*)
+    `)
+    .eq("user_id", user.id);
+
+  if(error){
+    console.log("User site access load error:", error);
+    return [];
+  }
+
+  return (data || [])
+    .map(row => {
+      const site = row.sites || {};
+      return {
+        id: row.site_id || site.id || "",
+        name: site.name || "Unnamed Site"
+      };
+    })
+    .filter(site => site.id);
 }
+
 async function getAssignedSiteIds(){
   const sites = await getAssignedSites();
   return sites.map(site => site.id);
@@ -1124,25 +1055,21 @@ function renderHeartbeatStatus(devices){
   pill.innerText = "OFFLINE";
 }
 
-async function loadHeartbeatStatus(){
-  return;
-}
-function scheduleHeartbeatRefresh(){
-  return;
-}
+async function loadHeartbeatStatus(){ return; }
+function scheduleHeartbeatRefresh(){ return; }
 async function loadUsage(){
   let query = client
     .from("wash_activity")
     .select("*")
-    .eq("site_id", getActiveSiteId())
     .order("created_at", { ascending:false })
     .limit(500);
 
-  if(!getActiveSiteId()){
+  let scoped = await applySiteScopeToQuery(query);
+
+  if(scoped.noSites || !scoped.query){
     cachedRawUses = [];
     cachedCodes = [];
     cachedDepartmentData = [];
-    setSiteScopeSummary("No current site is selected. Open Dashboard or Codes first, then return to Reports.");
 
     document.getElementById("totalUses").innerText = "0";
     document.getElementById("totalCodes").innerText = "0";
@@ -1155,21 +1082,23 @@ async function loadUsage(){
     return;
   }
 
-  cachedSiteIds = [getActiveSiteId()];
-  cachedSiteScopeLabel = "Current Site";
-  setSiteScopeSummary("Reports are using the current selected site.");
-
-  let { data, error } = await query;
+  let { data, error } = await scoped.query;
 
   if(error){
     console.log("Usage created_at query error:", error);
 
-    const fallback = await client
+    query = client
       .from("wash_activity")
       .select("*")
-      .eq("site_id", getActiveSiteId())
       .limit(500);
 
+    scoped = await applySiteScopeToQuery(query);
+
+    if(scoped.noSites || !scoped.query){
+      return;
+    }
+
+    const fallback = await scoped.query;
     data = fallback.data;
     error = fallback.error;
   }
@@ -1768,11 +1697,10 @@ async function initializeReportsPage(){
   updateScheduleRangeFields();
   loadSavedSchedule();
   applyReportUrlParams();
-  await loadReportSiteSwitcher();
   await loadUsage();
   await loadHeartbeatStatus();
 
-  // Realtime subscriptions removed for stability.
+  // Realtime subscriptions removed for Reports stability.
 
 }
 
