@@ -24,54 +24,35 @@
       color: inherit;
     }
 
+    
     .brand-wrap{
       display:flex;
-      flex-direction:column;
-      line-height:1;
+      align-items:center;
       margin-right:8px;
-   }
-
-    .logo {
-      font-family:'Orbitron', Arial, sans-serif;
-      font-size: 32px;
-      font-weight: 750;
-      letter-spacing: .5px;
     }
 
-    .logo .trac {
-      background:linear-gradient(180deg,#ffffff 0%,#66c7ff 40%,#1e9bff 72%,#0b5cff 100%);
-      -webkit-background-clip:text;
-      background-clip:text;
-      color:transparent;
-      -webkit-text-fill-color:transparent;
+    .header-logo{
+      width:195px;
+      height:auto;
+      display:block;
+      object-fit:contain;
     }
 
-   .tagline{
-  margin-top:4px;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size:13px;
-  font-weight:600;
-  letter-spacing:1.2px;
-  color:#94a3b8;
-  text-align:center;
-}
+
 
 .screen-logo-wrap{
   display:flex;
-  flex-direction:column;
   align-items:center;
-  line-height:1;
+  justify-content:center;
 }
 
-.screen-tagline{
-  margin-top:3px;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size:9px;
-  font-weight:600;
-  letter-spacing:1.2px;
-  color:#9fb3c8;
-  text-align:center;
+.screen-logo-image{
+  width:145px;
+  height:auto;
+  display:block;
+  object-fit:contain;
 }
+
     
     header {
       display: flex;
@@ -309,21 +290,7 @@
   justify-content:center;
 }
 
-.screen-logo{
-  font-family:'Orbitron', Arial, sans-serif;
-  font-size:24px;
-  font-weight:750;
-  letter-spacing:.5px;
-  color:#ffffff;
-}
 
-.screen-logo .trac{
-  background:linear-gradient(180deg,#ffffff 0%,#66c7ff 40%,#1e9bff 72%,#0b5cff 100%);
-  -webkit-background-clip:text;
-  background-clip:text;
-  color:transparent;
-  -webkit-text-fill-color:transparent;
-}
 
 .signal{
   position:absolute;
@@ -763,13 +730,8 @@
     padding: 16px 20px;
   }
 
-  .logo {
-    font-size: 27px;
-  }
-
-  .tagline {
-    font-size: 11px;
-    letter-spacing: 1.4px;
+  .header-logo{
+    width:165px;
   }
 
   .menu-panel {
@@ -870,8 +832,11 @@
 <body>
   <header>
     <div class="brand-wrap">
-      <div class="logo">Wash<span class="trac">Trac</span></div>
-      <div class="tagline">Control. Track. Manage.</div>
+      <img
+        src="washtrac-logo.png"
+        alt="WashTrac"
+        class="header-logo"
+      >
     </div>
 
     <button class="menu-btn" onclick="toggleMenu()">&#9776;</button>
@@ -924,12 +889,11 @@
 
    <div class="screen-top">
   <div class="screen-logo-wrap">
-    <div class="screen-logo">
-      Wash<span class="trac">Trac</span>
-    </div>
-    <div class="screen-tagline">
-      Control. Track. Manage.
-    </div>
+    <img
+      src="washtrac-logo.png"
+      alt="WashTrac"
+      class="screen-logo-image"
+    >
   </div>
 
   <div class="signal">
