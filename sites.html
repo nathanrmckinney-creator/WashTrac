@@ -32,24 +32,22 @@
       border-right:1px solid #1e293b;
     }
 
-    .logo,.mobile-logo{
-      display:flex;
-      align-items:center;
+    
+    .logo,
+    .mobile-logo{
+      margin-bottom:24px;
     }
 
-    .logo{
-      margin-bottom:32px;
-    }
-
-    .logo img,
-    .mobile-logo img{
-      display:block;
-      width:220px;
-      height:auto;
-    }
-
-    .mobile-logo img{
+    .logo-image{
       width:180px;
+      height:auto;
+      display:block;
+    }
+
+    .logo-image-mobile{
+      width:150px;
+      height:auto;
+      display:block;
     }
 
     .nav a{
@@ -89,12 +87,7 @@
       z-index:1400;
     }
 
-    .mobile-logo{
-      font-size:22px;
-      font-weight:bold;
-      letter-spacing:0;
-      margin-bottom:0;
-    }
+    .mobile-logo{margin-bottom:0;}
 
     .menu-btn{
       background:#2563eb;
@@ -425,7 +418,11 @@
 
   <div class="mobile-topbar">
     <div class="mobile-logo">
-      <img src="washtrac-logo.png" alt="WashTrac">
+      <img
+        src="washtrac-logo.png"
+        alt="WashTrac"
+        class="logo-image-mobile"
+      >
     </div>
     <button class="menu-btn" onclick="toggleMobileMenu()">☰</button>
 
@@ -446,8 +443,12 @@
   <div class="app">
     <div class="sidebar">
       <div class="logo">
-        <img src="washtrac-logo.png" alt="WashTrac">
-      </div>
+      <img
+        src="washtrac-logo.png"
+        alt="WashTrac"
+        class="logo-image"
+      >
+    </div>
 
       <div class="nav">
         <a href="dashboard.html">Dashboard</a>
