@@ -33,24 +33,24 @@
       border-right:1px solid #1e293b;
     }
 
+    
     .logo,
     .mobile-logo{
-      margin-bottom:28px;
+      margin-bottom:24px;
     }
 
-    .logo img{
-      width:178px;
+    .logo-image{
+      width:180px;
       height:auto;
       display:block;
-      object-fit:contain;
     }
 
-    .mobile-logo img{
-      width:142px;
+    .logo-image-mobile{
+      width:150px;
       height:auto;
       display:block;
-      object-fit:contain;
     }
+
 
     .nav a{
       display:block;
@@ -630,7 +630,11 @@
 
   <div class="mobile-topbar">
     <div class="mobile-logo">
-      <img src="washtrac-logo-preview-dark.png" alt="WashTrac">
+      <img
+        src="washtrac-logo.png"
+        alt="WashTrac"
+        class="logo-image-mobile"
+      >
     </div>
     <button class="menu-btn" onclick="toggleMobileMenu()">☰</button>
 
@@ -651,7 +655,11 @@
   <div class="app">
     <div class="sidebar">
       <div class="logo">
-        <img src="washtrac-logo-preview-dark.png" alt="WashTrac">
+        <img
+          src="washtrac-logo.png"
+          alt="WashTrac"
+          class="logo-image"
+        >
       </div>
 
       <div class="nav">
