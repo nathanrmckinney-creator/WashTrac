@@ -14,21 +14,24 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
 .app{display:flex;min-height:100vh;}
 .sidebar{width:220px;background:#0f172a;padding:20px;flex-shrink:0;border-right:1px solid #1e293b;}
 
-.logo,.mobile-logo{
-  font-family:'Orbitron', Arial, sans-serif;
-  font-size:22px;
-  font-weight:900;
-  letter-spacing:.5px;
-  margin-bottom:32px;
+
+.logo,
+.mobile-logo{
+  margin-bottom:24px;
 }
 
-.logo .trac,.mobile-logo .trac{
-  background:linear-gradient(180deg,#ffffff 0%,#66c7ff 40%,#1e9bff 72%,#0b5cff 100%);
-  -webkit-background-clip:text;
-  background-clip:text;
-  color:transparent;
-  -webkit-text-fill-color:transparent;
+.logo-image{
+  width:180px;
+  height:auto;
+  display:block;
 }
+
+.logo-image-mobile{
+  width:150px;
+  height:auto;
+  display:block;
+}
+
 
 .nav a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
 .nav a:hover{color:white;}
@@ -258,7 +261,13 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
 </script>
 
 <div class="mobile-topbar">
-  <div class="mobile-logo">Wash<span class="trac">Trac</span></div>
+  <div class="mobile-logo">
+      <img
+        src="washtrac-logo.png"
+        alt="WashTrac"
+        class="logo-image-mobile"
+      >
+    </div>
   <button class="menu-btn" type="button" onclick="toggleMobileMenu()">☰</button>
 </div>
 
@@ -277,7 +286,13 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
 
 <div class="app">
   <div class="sidebar">
-    <div class="logo">Wash<span class="trac">Trac</span></div>
+    <div class="logo">
+      <img
+        src="washtrac-logo.png"
+        alt="WashTrac"
+        class="logo-image"
+      >
+    </div>
 
     <div class="nav">
       <a href="dashboard.html">Dashboard</a>
