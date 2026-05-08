@@ -1,10 +1,11 @@
+# WashTrac Sign Up Page (Logo Updated)
+
+```html
 <!DOCTYPE html>
 <html>
 <head>
   <title>WashTrac Sign Up</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
 
   <style>
     * {
@@ -17,7 +18,6 @@
       background: linear-gradient(180deg, #000814 0%, #06142d 100%);
       color: white;
       min-height: 100vh;
-
       display: flex;
       justify-content: center;
       align-items: flex-start;
@@ -29,37 +29,17 @@
       text-align: center;
     }
 
-    /* 🔥 UPDATED LOGO (matches your system) */
-    .logo{
-      font-family:'Orbitron', Arial, sans-serif;
-      font-size:30px;
-      font-weight:750;
-      letter-spacing:.5px;
-      margin-bottom:10px;
-      text-align:center;
+    .logo-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 14px;
     }
 
-    .logo .trac{
-      background:linear-gradient(
-        180deg,
-        #ffffff 0%,
-        #66c7ff 40%,
-        #1e9bff 72%,
-        #0b5cff 100%
-      );
-      -webkit-background-clip:text;
-      background-clip:text;
-      color:transparent;
-      -webkit-text-fill-color:transparent;
-    }
-
-    .tagline {
-      color: #9fb3c8;
-      font-size: 13px;
-      letter-spacing: 1.3px;
-      margin-top: -12px;
-      margin-bottom: 8px;
-      text-align: center;
+    .logo-image {
+      width: 250px;
+      height: auto;
+      display: block;
     }
 
     .card {
@@ -125,10 +105,6 @@
       margin-top: 2px;
     }
 
-    .login-btn:hover {
-      opacity: 0.95;
-    }
-
     .home-btn {
       width: 100%;
       height: 50px;
@@ -177,10 +153,13 @@
 
   <div class="page">
 
-    <!-- 🔥 UPDATED LOGO -->
-    <div class="logo">Wash<span class="trac">Trac</span></div>
-
-    <div class="tagline">Control. Track. Manage.</div>
+    <div class="logo-wrap">
+      <img
+        src="washtrac-logo.png"
+        alt="WashTrac"
+        class="logo-image"
+      />
+    </div>
 
     <div class="card">
       <h2>Create Account</h2>
@@ -274,3 +253,10 @@ async function signup(event) {
 
 </body>
 </html>
+```
+
+Put your exported transparent PNG in the same folder and name it:
+
+```txt
+washtrac-logo.png
+```
