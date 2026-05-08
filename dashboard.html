@@ -33,67 +33,26 @@
       border-right:1px solid #1e293b;
     }
 
+    
     .logo,
     .mobile-logo{
-      display:flex;
-      flex-direction:column;
-      align-items:flex-start;
-      line-height:1;
-      margin-bottom:34px;
+      margin-bottom:28px;
     }
 
-    .mobile-logo{
-      margin-bottom:0;
+    .brand-logo{
+      width:180px;
+      height:auto;
+      display:block;
+      object-fit:contain;
     }
 
-    .logo-main,
-    .mobile-logo-main{
-      font-family:'Orbitron', Arial, sans-serif;
-      font-size:30px;
-      font-weight:900;
-      letter-spacing:-0.5px;
-      color:#ffffff;
-      text-shadow:
-        0 0 10px rgba(255,255,255,.06),
-        0 0 22px rgba(30,167,255,.14);
+    .brand-logo-mobile{
+      width:145px;
+      height:auto;
+      display:block;
+      object-fit:contain;
     }
-
-    .mobile-logo-main{
-      font-size:28px;
-    }
-
-    .logo-main .trac,
-    .mobile-logo-main .trac{
-      background:linear-gradient(
-        180deg,
-        #ffffff 0%,
-        #bfe7ff 18%,
-        #66c7ff 45%,
-        #1ea7ff 72%,
-        #0b5cff 100%
-      );
-      -webkit-background-clip:text;
-      background-clip:text;
-      color:transparent;
-      -webkit-text-fill-color:transparent;
-    }
-
-    .logo-tagline,
-    .mobile-logo-tagline{
-      margin-top:6px;
-      margin-left:2px;
-      font-size:10px;
-      font-weight:700;
-      letter-spacing:2.4px;
-      text-transform:uppercase;
-      color:#94a3b8;
-      opacity:.92;
-    }
-
-    .mobile-logo-tagline{
-      font-size:9px;
-      letter-spacing:2px;
-    }
+    
 
     .nav a{
       display:block;
@@ -129,6 +88,12 @@
       z-index:1400;
     }
 
+    .mobile-logo{
+      font-size:22px;
+      font-weight:bold;
+      letter-spacing:0;
+      margin-bottom:0;
+    }
 
     .menu-btn{
       background:#2563eb;
@@ -670,12 +635,7 @@
 
   <div class="mobile-topbar">
     <div class="mobile-logo">
-      <div class="mobile-logo-main">
-        Wash<span class="trac">Trac</span>
-      </div>
-      <div class="mobile-logo-tagline">
-        Control. Track. Manage.
-      </div>
+      <img src="logo-email.png" alt="WashTrac Logo" class="brand-logo-mobile">
     </div>
     <button class="menu-btn" onclick="toggleMobileMenu()">☰</button>
 
@@ -696,12 +656,7 @@
   <div class="app">
     <div class="sidebar">
       <div class="logo">
-        <div class="logo-main">
-          Wash<span class="trac">Trac</span>
-        </div>
-        <div class="logo-tagline">
-          Control. Track. Manage.
-        </div>
+        <img src="logo-email.png" alt="WashTrac Logo" class="brand-logo">
       </div>
 
       <div class="nav">
