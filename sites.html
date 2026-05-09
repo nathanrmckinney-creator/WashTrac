@@ -56,27 +56,29 @@
 }
 
     
-   header {
+ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 18px 40px;
 
-  /* Base header color */
-  background-color: rgba(2, 6, 23, 0.96);
-
-  /* VERY VISIBLE blue glow behind the logo */
-  box-shadow:
-    inset 0 0 180px rgba(37, 99, 235, 0.22),
-    inset 180px 0 220px rgba(37, 99, 235, 0.55),
-    0 0 80px rgba(37, 99, 235, 0.15);
+  background:
+    radial-gradient(
+      circle at 140px 45px,
+      rgba(37, 99, 235, 1.00) 0px,
+      rgba(37, 99, 235, 0.95) 40px,
+      rgba(37, 99, 235, 0.75) 90px,
+      rgba(37, 99, 235, 0.45) 160px,
+      rgba(37, 99, 235, 0.18) 240px,
+      rgba(37, 99, 235, 0.00) 340px
+    ),
+    rgba(2, 6, 23, 0.96);
 
   border-bottom: 1px solid #1e293b;
   position: sticky;
   top: 0;
   z-index: 1000;
 }
-
     header::after {
       content: "";
       position: absolute;
