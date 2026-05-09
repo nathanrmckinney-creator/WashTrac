@@ -19,6 +19,33 @@
       overflow-x:hidden;
     }
 
+    body::before {
+  content: "";
+  position: fixed;
+  top: -220px;
+
+  /* Align with the header logo position instead of page center */
+  left: 120px;
+
+  transform: translateX(-50%);
+  width: 1000px;
+  height: 700px;
+
+  pointer-events: none;
+  z-index: 1;
+
+  background: radial-gradient(
+    ellipse at top center,
+    rgba(37, 99, 235, 0.55) 0%,
+    rgba(37, 99, 235, 0.28) 18%,
+    rgba(37, 99, 235, 0.12) 38%,
+    rgba(37, 99, 235, 0.04) 58%,
+    rgba(37, 99, 235, 0) 78%
+  );
+
+  filter: blur(28px);
+}
+    
     .app{
       display:flex;
       min-height:100vh;
