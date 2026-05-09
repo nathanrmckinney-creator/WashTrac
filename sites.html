@@ -34,26 +34,9 @@
       overflow:hidden;
     }
 
-    .sidebar::before{
-      content:"";
-      position:absolute;
-      top:-145px;
-      left:112px;
-      width:520px;
-      height:360px;
-      transform:translateX(-50%);
-      pointer-events:none;
-      z-index:0;
-      background:radial-gradient(
-        ellipse at top center,
-        rgba(37,99,235,.95) 0%,
-        rgba(37,99,235,.58) 24%,
-        rgba(37,99,235,.24) 50%,
-        rgba(37,99,235,.08) 68%,
-        rgba(37,99,235,0) 84%
-      );
-      filter:blur(20px);
-    }
+   .sidebar::before{
+  display:none;
+}
 
     
     .logo,
