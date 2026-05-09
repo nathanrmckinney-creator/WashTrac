@@ -30,7 +30,7 @@
       align-items:center;
       margin-right:8px;
       position:relative;
-      z-index:2;
+      z-index:3;
     }
 
     .header-logo{
@@ -56,48 +56,64 @@
 }
 
     
- header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 18px 40px;
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 40px;
+      background: rgba(2, 6, 23, 0.92);
+      border-bottom: 1px solid #1e293b;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      overflow: visible;
+    }
 
-  background:
-    radial-gradient(
-      circle at 140px 45px,
-      rgba(37, 99, 235, 1.00) 0px,
-      rgba(37, 99, 235, 0.95) 40px,
-      rgba(37, 99, 235, 0.75) 90px,
-      rgba(37, 99, 235, 0.45) 160px,
-      rgba(37, 99, 235, 0.18) 240px,
-      rgba(37, 99, 235, 0.00) 340px
-    ),
-    rgba(2, 6, 23, 0.96);
-
-  border-bottom: 1px solid #1e293b;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
-    header::after {
-      content: "";
+    .logo-hue {
       position: absolute;
-      top: 82px;
-      left: 145px;
-      transform: translateX(-50%);
+      top: -80px;
+      left: 138px;
       width: 520px;
-      height: 250px;
+      height: 260px;
+      transform: translateX(-50%);
       pointer-events: none;
-      z-index: 0;
+      z-index: 1;
+
+      background:
+        radial-gradient(
+          ellipse at top center,
+          rgba(37, 99, 235, 0.95) 0%,
+          rgba(37, 99, 235, 0.62) 20%,
+          rgba(37, 99, 235, 0.32) 42%,
+          rgba(37, 99, 235, 0.12) 64%,
+          rgba(37, 99, 235, 0.00) 86%
+        );
+
+      filter: blur(18px);
+      opacity: 1;
+    }
+
+    .logo-ray {
+      position: absolute;
+      top: 72px;
+      left: 138px;
+      width: 440px;
+      height: 290px;
+      transform: translateX(-50%);
+      pointer-events: none;
+      z-index: 1;
+
       background: linear-gradient(
         to bottom,
-        rgba(37, 99, 235, 0.42) 0%,
-        rgba(37, 99, 235, 0.20) 28%,
-        rgba(37, 99, 235, 0.08) 58%,
+        rgba(37, 99, 235, 0.38) 0%,
+        rgba(37, 99, 235, 0.20) 34%,
+        rgba(37, 99, 235, 0.08) 66%,
         rgba(37, 99, 235, 0.00) 100%
       );
-      clip-path: polygon(36% 0%, 64% 0%, 100% 100%, 0% 100%);
-      filter: blur(28px);
+
+      clip-path: polygon(38% 0%, 62% 0%, 100% 100%, 0% 100%);
+      filter: blur(22px);
+      opacity: 1;
     }
 
     .menu-btn {
@@ -109,8 +125,7 @@
       font-weight: bold;
       cursor: pointer;
       position:relative;
-      z-index:2;
-      box-shadow: 0 0 24px rgba(37, 99, 235, 0.35);
+      z-index:3;
     }
 
     .menu-panel {
@@ -169,7 +184,6 @@
     .hero {
       position: relative;
       min-height: 100vh;
-      z-index: 1;
     }
 
     .hero::before {
@@ -772,6 +786,18 @@
     width:165px;
   }
 
+  .logo-hue {
+    left: 108px;
+    width: 430px;
+    height: 230px;
+  }
+
+  .logo-ray {
+    left: 108px;
+    width: 360px;
+    height: 250px;
+  }
+
   .menu-panel {
     top: 70px;
     right: 12px;
@@ -799,24 +825,6 @@
 
   .hero p {
     font-size: 19px;
-  }
-
-  header {
-    background:
-      radial-gradient(
-        ellipse at 105px -40px,
-        rgba(37, 99, 235, 0.95) 0%,
-        rgba(37, 99, 235, 0.58) 18%,
-        rgba(37, 99, 235, 0.26) 36%,
-        rgba(37, 99, 235, 0.10) 54%,
-        rgba(2, 6, 23, 0.92) 74%
-      ),
-      rgba(2, 6, 23, 0.92);
-  }
-
-  header::after {
-    left: 105px;
-    width: 430px;
   }
 
   .device-wrap {
@@ -887,6 +895,9 @@
 
 <body>
   <header>
+    <div class="logo-hue"></div>
+    <div class="logo-ray"></div>
+
     <div class="brand-wrap">
       <img
         src="washtrac-logo.png"
