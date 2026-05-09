@@ -18,29 +18,6 @@
       color:white;
       overflow-x:hidden;
     }
-
- body::before {
-  content: "";
-  position: fixed;
-  top: -180px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 1400px;
-  height: 900px;
-  pointer-events: none;
-  z-index: 999;
-
-  background: radial-gradient(
-    ellipse at top center,
-    rgba(37, 99, 235, 0.95) 0%,
-    rgba(37, 99, 235, 0.55) 18%,
-    rgba(37, 99, 235, 0.22) 38%,
-    rgba(37, 99, 235, 0.08) 58%,
-    rgba(37, 99, 235, 0.00) 80%
-  );
-
-  filter: blur(32px);
-}
     
     .app{
       display:flex;
@@ -53,12 +30,37 @@
       padding:20px;
       flex-shrink:0;
       border-right:1px solid #1e293b;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .sidebar::before{
+      content:"";
+      position:absolute;
+      top:-145px;
+      left:112px;
+      width:520px;
+      height:360px;
+      transform:translateX(-50%);
+      pointer-events:none;
+      z-index:0;
+      background:radial-gradient(
+        ellipse at top center,
+        rgba(37,99,235,.95) 0%,
+        rgba(37,99,235,.58) 24%,
+        rgba(37,99,235,.24) 50%,
+        rgba(37,99,235,.08) 68%,
+        rgba(37,99,235,0) 84%
+      );
+      filter:blur(20px);
     }
 
     
     .logo,
     .mobile-logo{
       margin-bottom:24px;
+      position:relative;
+      z-index:2;
     }
 
     .logo-image{
@@ -71,6 +73,11 @@
       width:150px;
       height:auto;
       display:block;
+    }
+
+    .nav{
+      position:relative;
+      z-index:2;
     }
 
     .nav a{
@@ -108,6 +115,28 @@
       position:sticky;
       top:0;
       z-index:1400;
+      overflow:hidden;
+    }
+
+    .mobile-topbar::before{
+      content:"";
+      position:absolute;
+      top:-135px;
+      left:100px;
+      width:470px;
+      height:300px;
+      transform:translateX(-50%);
+      pointer-events:none;
+      z-index:0;
+      background:radial-gradient(
+        ellipse at top center,
+        rgba(37,99,235,.95) 0%,
+        rgba(37,99,235,.58) 25%,
+        rgba(37,99,235,.24) 52%,
+        rgba(37,99,235,.08) 70%,
+        rgba(37,99,235,0) 86%
+      );
+      filter:blur(18px);
     }
 
     .mobile-logo{margin-bottom:0;}
@@ -120,6 +149,8 @@
       border-radius:8px;
       cursor:pointer;
       font-weight:bold;
+      position:relative;
+      z-index:2;
     }
 
     .mobile-menu{
