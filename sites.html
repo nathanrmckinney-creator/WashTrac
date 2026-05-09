@@ -29,8 +29,6 @@
       display:flex;
       align-items:center;
       margin-right:8px;
-      position:relative;
-      z-index:3;
     }
 
     .header-logo{
@@ -66,54 +64,6 @@
       position: sticky;
       top: 0;
       z-index: 1000;
-      overflow: visible;
-    }
-
-    .logo-hue {
-      position: absolute;
-      top: -80px;
-      left: 138px;
-      width: 520px;
-      height: 260px;
-      transform: translateX(-50%);
-      pointer-events: none;
-      z-index: 1;
-
-      background:
-        radial-gradient(
-          ellipse at top center,
-          rgba(37, 99, 235, 0.95) 0%,
-          rgba(37, 99, 235, 0.62) 20%,
-          rgba(37, 99, 235, 0.32) 42%,
-          rgba(37, 99, 235, 0.12) 64%,
-          rgba(37, 99, 235, 0.00) 86%
-        );
-
-      filter: blur(18px);
-      opacity: 1;
-    }
-
-    .logo-ray {
-      position: absolute;
-      top: 72px;
-      left: 138px;
-      width: 440px;
-      height: 290px;
-      transform: translateX(-50%);
-      pointer-events: none;
-      z-index: 1;
-
-      background: linear-gradient(
-        to bottom,
-        rgba(37, 99, 235, 0.38) 0%,
-        rgba(37, 99, 235, 0.20) 34%,
-        rgba(37, 99, 235, 0.08) 66%,
-        rgba(37, 99, 235, 0.00) 100%
-      );
-
-      clip-path: polygon(38% 0%, 62% 0%, 100% 100%, 0% 100%);
-      filter: blur(22px);
-      opacity: 1;
     }
 
     .menu-btn {
@@ -124,8 +74,6 @@
       border-radius: 10px;
       font-weight: bold;
       cursor: pointer;
-      position:relative;
-      z-index:3;
     }
 
     .menu-panel {
@@ -786,18 +734,6 @@
     width:165px;
   }
 
-  .logo-hue {
-    left: 108px;
-    width: 430px;
-    height: 230px;
-  }
-
-  .logo-ray {
-    left: 108px;
-    width: 360px;
-    height: 250px;
-  }
-
   .menu-panel {
     top: 70px;
     right: 12px;
@@ -895,9 +831,6 @@
 
 <body>
   <header>
-    <div class="logo-hue"></div>
-    <div class="logo-ray"></div>
-
     <div class="brand-wrap">
       <img
         src="washtrac-logo.png"
