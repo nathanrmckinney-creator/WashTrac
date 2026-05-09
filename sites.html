@@ -19,26 +19,27 @@
       overflow-x:hidden;
     }
 
-   body::before {
+ body::before {
   content: "";
   position: fixed;
-  top: -120px;
-  left: 135px;
+  top: -180px;
+  left: 50%;
   transform: translateX(-50%);
-  width: 650px;
-  height: 360px;
+  width: 1400px;
+  height: 900px;
   pointer-events: none;
-  z-index: 1001;
+  z-index: 999;
 
   background: radial-gradient(
     ellipse at top center,
-    rgba(37, 99, 235, 0.85) 0%,
-    rgba(37, 99, 235, 0.45) 22%,
-    rgba(37, 99, 235, 0.18) 48%,
-    rgba(37, 99, 235, 0.00) 78%
+    rgba(37, 99, 235, 0.95) 0%,
+    rgba(37, 99, 235, 0.55) 18%,
+    rgba(37, 99, 235, 0.22) 38%,
+    rgba(37, 99, 235, 0.08) 58%,
+    rgba(37, 99, 235, 0.00) 80%
   );
 
-  filter: blur(18px);
+  filter: blur(32px);
 }
     
     .app{
