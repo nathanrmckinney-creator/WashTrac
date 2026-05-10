@@ -74,17 +74,17 @@
       z-index:1200;
     }
 
-   .mobile-topbar{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0px 20px 8px;
-  background:#0f172a;
-  border-bottom:1px solid #1e293b;
-  position:sticky;
-  top:0;
-  z-index:1400;
-}
+    .mobile-topbar{
+      display:none;
+      align-items:center;
+      justify-content:space-between;
+      padding:16px 20px;
+      background:#0f172a;
+      border-bottom:1px solid #1e293b;
+      position:sticky;
+      top:0;
+      z-index:1400;
+    }
 
     .mobile-logo{
       margin-bottom:0;
@@ -599,7 +599,7 @@
       .activity-row{grid-template-columns:1fr}
     }
 
-   @media only screen and (max-width:900px) and (hover:none){
+    @media (max-width:900px){
       .app{display:block}
       .sidebar{display:none}
       .mobile-topbar{display:flex}
@@ -617,9 +617,6 @@
         top:64px;
         right:16px;
       }
-      .menu-btn{
-  margin-top:10px;
-}
     }
   </style>
 </head>
