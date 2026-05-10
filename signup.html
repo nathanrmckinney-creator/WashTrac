@@ -153,16 +153,16 @@
       color: #22c55e;
     }
 
- @media (max-width: 900px) {
+@media (max-width: 900px) {
   body {
     overflow: auto;
     padding: 12px 8px;
   }
 
   .logo-wrap {
-    position: static;
+    position: static;          /* remove fixed positioning */
     display: flex;
-    justify-content: center;
+    justify-content: center;   /* center logo above card */
     margin-bottom: 12px;
   }
 
