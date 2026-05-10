@@ -18,7 +18,7 @@
       color:white;
       overflow-x:hidden;
     }
-    
+
     .app{
       display:flex;
       min-height:100vh;
@@ -34,11 +34,10 @@
       overflow:hidden;
     }
 
-   .sidebar::before{
-  display:none;
-}
+    .sidebar::before{
+      display:none;
+    }
 
-    
     .logo,
     .mobile-logo{
       margin-bottom:24px;
@@ -88,6 +87,16 @@
       z-index:1200;
     }
 
+    .menu-btn{
+      background:#2563eb;
+      border:none;
+      color:white;
+      padding:10px 14px;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:bold;
+    }
+
     .mobile-topbar{
       display:none;
       align-items:center;
@@ -98,56 +107,22 @@
       position:sticky;
       top:0;
       z-index:1400;
-      overflow:hidden;
-    }
-
-    .mobile-topbar::before{
-      content:"";
-      position:absolute;
-      top:-135px;
-      left:100px;
-      width:470px;
-      height:300px;
-      transform:translateX(-50%);
-      pointer-events:none;
-      z-index:0;
-      background:radial-gradient(
-        ellipse at top center,
-        rgba(37,99,235,.95) 0%,
-        rgba(37,99,235,.58) 25%,
-        rgba(37,99,235,.24) 52%,
-        rgba(37,99,235,.08) 70%,
-        rgba(37,99,235,0) 86%
-      );
-      filter:blur(18px);
     }
 
     .mobile-logo{margin-bottom:0;}
 
-    .menu-btn{
-      background:#2563eb;
-      border:none;
-      color:white;
-      padding:10px 14px;
-      border-radius:8px;
-      cursor:pointer;
-      font-weight:bold;
-      position:relative;
-      z-index:2;
-    }
-
     .mobile-menu{
       display:none;
-      position:absolute;
-      top:46px;
-      right:0;
+      position:fixed;
+      top:64px;
+      right:16px;
       width:240px;
       background:#0f172a;
       border:1px solid #1e293b;
       border-radius:12px;
       padding:12px 16px;
       box-shadow:0 12px 30px rgba(0,0,0,.45);
-      z-index:1300;
+      z-index:1500;
     }
 
     .mobile-menu a{
@@ -166,7 +141,7 @@
       position:fixed;
       inset:0;
       background:rgba(0,0,0,.35);
-      z-index:1050;
+      z-index:1100;
     }
 
     .page-header{
@@ -437,11 +412,6 @@
       .field-grid{grid-template-columns:1fr}
       .site-card-top{grid-template-columns:1fr}
       .invite-grid{grid-template-columns:1fr}
-      .mobile-menu{
-        position:absolute;
-        top:64px;
-        right:16px;
-      }
     }
   </style>
 </head>
@@ -461,18 +431,18 @@
         class="logo-image-mobile"
       >
     </div>
-    <button class="menu-btn" onclick="toggleMobileMenu()">☰</button>
+    <button class="menu-btn" type="button" onclick="toggleMobileMenu()">☰</button>
+  </div>
 
-    <div class="mobile-menu" id="mobileMenu">
-      <a href="dashboard.html">Dashboard</a>
-      <a href="codes.html">Codes</a>
-      <a href="activity.html">Activity</a>
-      <a href="usage.html">Reports</a>
-      <a href="monitor.html">Monitor</a>
-      <a href="sites.html">Sites</a>
-      <a href="#" onclick="goHome(event)">Back to Homepage</a>
-      <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
-    </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="codes.html">Codes</a>
+    <a href="activity.html">Activity</a>
+    <a href="usage.html">Reports</a>
+    <a href="monitor.html">Monitor</a>
+    <a href="sites.html">Sites</a>
+    <a href="#" onclick="goHome(event)">Back to Homepage</a>
+    <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
   </div>
 
   <div class="backdrop" id="backdrop" onclick="closeMenus()"></div>
@@ -480,12 +450,12 @@
   <div class="app">
     <div class="sidebar">
       <div class="logo">
-      <img
-        src="washtrac-logo.png"
-        alt="WashTrac"
-        class="logo-image"
-      >
-    </div>
+        <img
+          src="washtrac-logo.png"
+          alt="WashTrac"
+          class="logo-image"
+        >
+      </div>
 
       <div class="nav">
         <a href="dashboard.html">Dashboard</a>
@@ -499,7 +469,7 @@
 
     <div class="main">
       <div class="dashboard-menu-wrap">
-        <button class="menu-btn" onclick="toggleDashboardMenu()">☰</button>
+        <button class="menu-btn" type="button" onclick="toggleDashboardMenu()">☰</button>
 
         <div class="mobile-menu" id="dashboardMenu">
           <a href="#" onclick="goHome(event)">Back to Homepage</a>
@@ -741,7 +711,6 @@
       d.setDate(d.getDate() + days);
       return d;
     }
-
 
     function normalizeBayName(value){
       return String(value || "").trim().toUpperCase();
@@ -1355,11 +1324,18 @@
 
       const clickedDashboard = dashboardWrap && dashboardWrap.contains(event.target);
       const clickedMobile = mobileTopbar && mobileTopbar.contains(event.target);
+      const clickedMobileMenu = mobileMenu && mobileMenu.contains(event.target);
 
-      if(!clickedDashboard && !clickedMobile){
+      if(!clickedDashboard && !clickedMobile && !clickedMobileMenu){
         if(dashboardMenu) dashboardMenu.style.display = "none";
         if(mobileMenu) mobileMenu.style.display = "none";
         if(backdrop) backdrop.style.display = "none";
+      }
+    });
+
+    document.addEventListener("keydown", function(event){
+      if(event.key === "Escape"){
+        closeMenus();
       }
     });
 
