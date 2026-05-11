@@ -255,7 +255,10 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
 
 <body>
 <script>
-if(localStorage.getItem("washtracLoggedIn") !== "yes"){
+const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
+const isAdminLogin = sessionStorage.getItem("washtracAdmin") === "yes";
+
+if(!isClientLogin && !isAdminLogin){
   window.location.replace("login.html");
 }
 </script>
@@ -277,6 +280,8 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
   <a href="activity.html">Activity</a>
   <a href="usage.html">Reports</a>
   <a href="monitor.html">Monitor</a>
+  <a href="sites.html">Sites</a>
+  <a href="maintenance.html">Maintenance</a>
   <hr class="menu-divider">
   <a href="#" onclick="goHome(event)">Back to Homepage</a>
   <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
@@ -300,6 +305,8 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
       <a href="activity.html">Activity</a>
       <a href="usage.html">Reports</a>
       <a href="monitor.html">Monitor</a>
+      <a href="sites.html">Sites</a>
+      <a href="maintenance.html">Maintenance</a>
     </div>
   </div>
 
@@ -362,7 +369,10 @@ const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 window.addEventListener("pageshow", function(event){
-  if(localStorage.getItem("washtracLoggedIn") !== "yes"){
+  const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
+  const isAdminLogin = sessionStorage.getItem("washtracAdmin") === "yes";
+
+  if(!isClientLogin && !isAdminLogin){
     window.location.replace("login.html");
   }
 });
@@ -423,6 +433,7 @@ function goHome(event){
   closeMenus();
 
   localStorage.removeItem("washtracLoggedIn");
+  sessionStorage.removeItem("washtracAdmin");
   sessionStorage.removeItem("washtracSessionActive");
   window.location.replace("index.html");
 }
@@ -442,6 +453,7 @@ async function logout(event){
   localStorage.removeItem("activeSiteId");
   localStorage.removeItem("washtracActiveSiteId");
   localStorage.removeItem("activeOrganizationId");
+  sessionStorage.removeItem("washtracAdmin");
   sessionStorage.removeItem("washtracSessionActive");
   window.location.replace("login.html");
 }
@@ -698,6 +710,39 @@ function renderNoSite(){
 }
 
 async function loadAssignedSites(){
+  const isAdminLogin = sessionStorage.getItem("washtracAdmin") === "yes";
+
+  if(isAdminLogin){
+    const { data: sitesData, error: sitesError } = await client
+      .from("sites")
+      .select("*")
+      .order("name", { ascending:true });
+
+    if(sitesError){
+      console.log("admin sites fetch error:", sitesError);
+      assignedSiteIds = [];
+      return [];
+    }
+
+    assignedSiteIds = (sitesData || []).map(site => site.id).filter(Boolean);
+
+    if(!assignedSiteIds.length){
+      localStorage.removeItem("activeSiteId");
+      localStorage.removeItem("washtracActiveSiteId");
+      return [];
+    }
+
+    const saved = getActiveSiteId();
+    const savedIsAllowed = saved && assignedSiteIds.includes(saved);
+    const nextSiteId = savedIsAllowed ? saved : assignedSiteIds[0];
+
+    if(nextSiteId){
+      setActiveSiteId(nextSiteId);
+    }
+
+    return sitesData || [];
+  }
+
   const { data: userData, error: userError } = await client.auth.getUser();
 
   if(userError || !userData?.user){
