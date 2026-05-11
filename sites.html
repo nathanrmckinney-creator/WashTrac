@@ -144,6 +144,15 @@
       z-index:1100;
     }
 
+
+    .admin-only{
+      display:none !important;
+    }
+
+    body.admin-mode .admin-only{
+      display:block !important;
+    }
+
     .page-header{
       margin-bottom:24px;
       padding-right:70px;
@@ -407,7 +416,16 @@
       .mobile-topbar{display:flex}
       .main{padding:20px}
       .dashboard-menu-wrap{display:none}
-      .page-header{padding-right:0}
+  
+    .admin-only{
+      display:none !important;
+    }
+
+    body.admin-mode .admin-only{
+      display:block !important;
+    }
+
+    .page-header{padding-right:0}
       .page-header h1{font-size:34px}
       .field-grid{grid-template-columns:1fr}
       .site-card-top{grid-template-columns:1fr}
@@ -418,8 +436,21 @@
 
 <body>
   <script>
+    function hasAdminAccess(){
+      return sessionStorage.getItem("washtracAdmin") === "yes" ||
+             localStorage.getItem("washtracAdmin") === "yes";
+    }
+
+    if(sessionStorage.getItem("washtracAdmin") === "yes"){
+      localStorage.setItem("washtracAdmin", "yes");
+    }
+
     const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
-    const isAdminLogin = sessionStorage.getItem("washtracAdmin") === "yes";
+    const isAdminLogin = hasAdminAccess();
+
+    if(isAdminLogin){
+      document.body.classList.add("admin-mode");
+    }
 
     if(!isClientLogin && !isAdminLogin){
       window.location.replace("login.html");
@@ -444,7 +475,7 @@
     <a href="usage.html">Reports</a>
     <a href="monitor.html">Monitor</a>
     <a href="sites.html">Sites</a>
-    <a href="maintenance.html">Maintenance</a>
+    <a href="maintenance.html" class="admin-only">Maintenance</a>
     <a href="#" onclick="goHome(event)">Back to Homepage</a>
     <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
   </div>
@@ -468,7 +499,7 @@
         <a href="usage.html">Reports</a>
         <a href="monitor.html">Monitor</a>
         <a class="active" href="sites.html">Sites</a>
-        <a href="maintenance.html">Maintenance</a>
+        <a href="maintenance.html" class="admin-only">Maintenance</a>
       </div>
     </div>
 
@@ -638,6 +669,7 @@
       closeMenus();
       localStorage.removeItem("washtracLoggedIn");
       sessionStorage.removeItem("washtracAdmin");
+      localStorage.removeItem("washtracAdmin");
       window.location.replace("index.html");
     }
 
@@ -654,6 +686,7 @@
       localStorage.removeItem("washtracLoggedIn");
       localStorage.removeItem("activeSiteId");
       sessionStorage.removeItem("washtracAdmin");
+      localStorage.removeItem("washtracAdmin");
       sessionStorage.removeItem("washtracSessionActive");
       window.location.replace("login.html");
     }
@@ -871,7 +904,7 @@
     }
 
     async function loadCurrentUser(){
-      const isAdminLogin = sessionStorage.getItem("washtracAdmin") === "yes";
+      const isAdminLogin = hasAdminAccess();
 
       const { data, error } = await client.auth.getUser();
 
@@ -930,7 +963,7 @@
     }
 
     async function acceptPendingInvitesForCurrentUser(){
-      if(sessionStorage.getItem("washtracAdmin") === "yes") return;
+      if(hasAdminAccess()) return;
       if(!currentUser?.email) return;
 
       const email = normalizeEmail(currentUser.email);
@@ -997,7 +1030,7 @@
 
       currentSites = [];
 
-      const isAdminLogin = sessionStorage.getItem("washtracAdmin") === "yes";
+      const isAdminLogin = hasAdminAccess();
 
       if(!currentUser && !isAdminLogin){
         wrap.innerHTML = `<div class="site-row"><div><div class="site-name">No user found.</div></div><div class="pill red">Error</div></div>`;
@@ -1251,7 +1284,7 @@
         return;
       }
 
-      if(currentUser && siteData?.id && sessionStorage.getItem("washtracAdmin") !== "yes"){
+      if(currentUser && siteData?.id && !hasAdminAccess()){
         const { error: memberError } = await client
           .from("user_site_access")
           .insert([
