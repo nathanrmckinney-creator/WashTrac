@@ -72,6 +72,10 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
 
 .backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1100;}
 
+
+.admin-only{display:none !important;}
+body.admin-mode .admin-only{display:block !important;}
+
 .page-header{padding-right:80px;}
 .page-header h1{margin:0 0 10px 0;font-size:40px;}
 .page-header p{margin:0;color:#94a3b8;}
@@ -258,8 +262,21 @@ button.secondary{background:#334155;}
 
 <body>
 <script>
+function hasAdminAccess(){
+  return sessionStorage.getItem("washtracAdmin") === "yes" ||
+         localStorage.getItem("washtracAdmin") === "yes";
+}
+
+if(sessionStorage.getItem("washtracAdmin") === "yes"){
+  localStorage.setItem("washtracAdmin", "yes");
+}
+
 const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
-const isAdminLogin = sessionStorage.getItem("washtracAdmin") === "yes";
+const isAdminLogin = hasAdminAccess();
+
+if(isAdminLogin){
+  document.body.classList.add("admin-mode");
+}
 
 if(!isClientLogin && !isAdminLogin){
   window.location.replace("login.html");
@@ -284,7 +301,7 @@ if(!isClientLogin && !isAdminLogin){
   <a href="usage.html">Reports</a>
   <a href="monitor.html">Monitor</a>
   <a href="sites.html">Sites</a>
-  <a href="maintenance.html">Maintenance</a>
+  <a href="maintenance.html" class="admin-only">Maintenance</a>
   <hr class="menu-divider">
   <a href="#" onclick="goHome(event)">Back to Homepage</a>
   <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
@@ -308,7 +325,7 @@ if(!isClientLogin && !isAdminLogin){
       <a href="usage.html">Reports</a>
       <a href="monitor.html">Monitor</a>
       <a href="sites.html">Sites</a>
-      <a href="maintenance.html">Maintenance</a>
+      <a href="maintenance.html" class="admin-only">Maintenance</a>
     </div>
   </div>
 
@@ -536,7 +553,11 @@ const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 window.addEventListener("pageshow", function(event){
   const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
-  const isAdminLogin = sessionStorage.getItem("washtracAdmin") === "yes";
+  const isAdminLogin = hasAdminAccess();
+
+  if(isAdminLogin){
+    document.body.classList.add("admin-mode");
+  }
 
   if(!isClientLogin && !isAdminLogin){
     window.location.replace("login.html");
@@ -598,6 +619,7 @@ function goHome(event){
   localStorage.removeItem("washtracLoggedIn");
   localStorage.removeItem("washtracRememberMe");
   sessionStorage.removeItem("washtracAdmin");
+  localStorage.removeItem("washtracAdmin");
   sessionStorage.removeItem("washtracSessionActive");
   window.location.replace("index.html");
 }
@@ -619,6 +641,7 @@ async function logout(event){
   localStorage.removeItem("activeOrganizationId");
   localStorage.removeItem("washtracRememberMe");
   sessionStorage.removeItem("washtracAdmin");
+  localStorage.removeItem("washtracAdmin");
   sessionStorage.removeItem("washtracSessionActive");
   window.location.replace("login.html");
 }
@@ -680,7 +703,7 @@ function setSiteScopeSummary(message){
 }
 
 async function getCurrentUser(){
-  const isAdminLogin = sessionStorage.getItem("washtracAdmin") === "yes";
+  const isAdminLogin = hasAdminAccess();
 
   const { data, error } = await client.auth.getUser();
 
@@ -702,7 +725,7 @@ async function getCurrentUser(){
 }
 
 async function getAssignedSites(){
-  const isAdminLogin = sessionStorage.getItem("washtracAdmin") === "yes";
+  const isAdminLogin = hasAdminAccess();
 
   if(isAdminLogin){
     const { data, error } = await client
