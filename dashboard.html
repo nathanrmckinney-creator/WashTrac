@@ -972,11 +972,24 @@ function injectAdminMaintenanceLinks(){
     const link = document.createElement("a");
     link.href = "maintenance.html";
     link.textContent = "Maintenance";
-    nav.appendChild(link);
+
+    const sitesLink = nav.querySelector('a[href="sites.html"]');
+    if(sitesLink && sitesLink.nextSibling){
+      nav.insertBefore(link, sitesLink.nextSibling);
+    }else{
+      nav.appendChild(link);
+    }
   }
 }
 
-document.addEventListener("DOMContentLoaded", injectAdminMaintenanceLinks);
+function runAdminMenuInjection(){
+  injectAdminMaintenanceLinks();
+  setTimeout(injectAdminMaintenanceLinks, 50);
+  setTimeout(injectAdminMaintenanceLinks, 250);
+}
+
+
+document.addEventListener("DOMContentLoaded", runAdminMenuInjection);
 
     window.addEventListener("pageshow", function(event){
   injectAdminMaintenanceLinks();
@@ -2270,6 +2283,7 @@ document.addEventListener("DOMContentLoaded", injectAdminMaintenanceLinks);
     });
 
     window.onload = async function(){
+  runAdminMenuInjection();
   injectAdminMaintenanceLinks();
       const siteId = await loadSites();
 
@@ -2282,6 +2296,7 @@ document.addEventListener("DOMContentLoaded", injectAdminMaintenanceLinks);
       setupDashboardRealtime();
       startDashboardPolling();
     };
-  </script>
+  runAdminMenuInjection();
+</script>
 </body>
 </html>
