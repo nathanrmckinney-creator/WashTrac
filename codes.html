@@ -78,7 +78,6 @@
     .status.warn{border-color:rgba(245,158,11,.35);color:#fde68a;}
     .status.error{border-color:rgba(239,68,68,.35);color:#fecaca;}
 
-
     .system-banner{
       display:none;
       margin-bottom:20px;
@@ -109,7 +108,6 @@
       cursor:not-allowed;
       filter:grayscale(.35);
     }
-
 
     .view-btn{background:#334155;padding:10px 14px;}
     .view-btn:hover{background:#475569;}
@@ -229,16 +227,6 @@
       font-weight:bold;
       white-space:nowrap;
     }
-
-
-    .admin-only{
-      display:none !important;
-    }
-
-    body.admin-mode .admin-only{
-      display:block !important;
-    }
-
     @media (max-width:1100px){
       .summary{grid-template-columns:1fr 1fr;}
       .form-grid,.search-grid{grid-template-columns:1fr 1fr;}
@@ -273,11 +261,6 @@ if(sessionStorage.getItem("washtracAdmin") === "yes"){
 
 const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
 const isAdminLogin = hasAdminAccess();
-
-if(isAdminLogin){
-  document.body.classList.add("admin-mode");
-}
-
 if(!isClientLogin && !isAdminLogin){
   window.location.replace("login.html");
 }
@@ -301,7 +284,6 @@ if(!isClientLogin && !isAdminLogin){
   <a href="usage.html">Reports</a>
   <a href="monitor.html">Monitor</a>
   <a href="sites.html">Sites</a>
-  <a href="maintenance.html" class="admin-only">Maintenance</a>
   <a href="#" onclick="goHome(event)">Back to Homepage</a>
   <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
 </div>
@@ -324,7 +306,6 @@ if(!isClientLogin && !isAdminLogin){
       <a href="usage.html">Reports</a>
       <a href="monitor.html">Monitor</a>
       <a href="sites.html">Sites</a>
-      <a href="maintenance.html" class="admin-only">Maintenance</a>
     </div>
   </div>
 
@@ -541,7 +522,6 @@ if(!isClientLogin && !isAdminLogin){
   </div>
 </div>
 
-
 <script>
 const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
 const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
@@ -550,12 +530,7 @@ const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 window.addEventListener("pageshow", function(event){
   const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
   const isAdminLogin = hasAdminAccess();
-
-  if(isAdminLogin){
-    document.body.classList.add("admin-mode");
-  }
-
-  if(!isClientLogin && !isAdminLogin){
+if(!isClientLogin && !isAdminLogin){
     window.location.replace("login.html");
   }
 });
@@ -586,7 +561,6 @@ function requireSite(){
 
   return siteId;
 }
-
 
 function getHeartbeatTimestamp(device){
   return device?.last_seen || device?.last_heartbeat || device?.heartbeat_at || device?.updated_at || "";
@@ -811,7 +785,6 @@ function getCodeStats(code){
   };
 }
 
-
 function isGrantedActivity(row){
   const event = String(row.event || "").toLowerCase();
   const status = String(row.status || "").toLowerCase();
@@ -939,7 +912,6 @@ function renderCodeActivityDetails(){
     `;
   });
 }
-
 
 async function loadSites(){
   const select = document.getElementById("siteSwitcher");
@@ -1509,7 +1481,6 @@ document.addEventListener("click", function(event){
     closeMenus();
   }
 });
-
 
 // Realtime subscriptions removed for stability.
 
