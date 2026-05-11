@@ -283,31 +283,94 @@ async function loadCurrentUser(){
 }
 
 async function loadSites(){
-  const select=document.getElementById("siteFilter");
-  const existingValue=select.value;
-  select.innerHTML=`<option value="">All Sites</option>`;
+  const select = document.getElementById("siteFilter");
+  const existingValue = select.value;
+
+  select.innerHTML = `<option value="">All Sites</option>`;
+
   let data = [];
   let error = null;
 
-  if(sessionStorage.getItem("washtracAdmin") === "yes" && !currentUser){
-    const result = await client.from("sites").select("*").order("name",{ascending:true});
+  const isAdmin = sessionStorage.getItem("washtracAdmin") === "yes";
+
+  if(isAdmin){
+    const result = await client
+      .from("sites")
+      .select("*")
+      .order("name", { ascending:true });
+
     data = result.data || [];
     error = result.error || null;
   }else{
-    let result=await client.from("site_members").select("site_id").eq("user_id",currentUser.id);
-    if(result.error){console.log("site_members lookup error:",result.error);result=await client.from("user_site_access").select("site_id").eq("user_id",currentUser.id);}
-    if(result.error){console.log("Site access lookup error:",result.error);return [];}
-    const siteIds=[...new Set((result.data||[]).map(row=>row.site_id).filter(Boolean))];
-    if(!siteIds.length){allSites=[];return [];}
-    const siteResult=await client.from("sites").select("*").in("id",siteIds).order("name",{ascending:true});
+    if(!currentUser){
+      allSites = [];
+      return [];
+    }
+
+    let result = await client
+      .from("site_members")
+      .select("site_id")
+      .eq("user_id", currentUser.id);
+
+    if(result.error){
+      console.log("site_members lookup error:", result.error);
+
+      result = await client
+        .from("user_site_access")
+        .select("site_id")
+        .eq("user_id", currentUser.id);
+    }
+
+    if(result.error){
+      console.log("Site access lookup error:", result.error);
+      allSites = [];
+      return [];
+    }
+
+    const siteIds = [...new Set(
+      (result.data || [])
+        .map(row => row.site_id)
+        .filter(Boolean)
+    )];
+
+    if(!siteIds.length){
+      allSites = [];
+      return [];
+    }
+
+    const siteResult = await client
+      .from("sites")
+      .select("*")
+      .in("id", siteIds)
+      .order("name", { ascending:true });
+
     data = siteResult.data || [];
     error = siteResult.error || null;
   }
-  if(error){console.log("Sites load error:",error);return [];}
-  allSites=data||[];
-  select.innerHTML=`<option value="">All Sites</option>`+allSites.map(site=>`<option value="${escapeText(site.id)}">${escapeText(site.name||site.site_name||"Unnamed Site")}</option>`).join("");
-  const activeSiteId=existingValue||localStorage.getItem("activeSiteId")||"";
-  if(activeSiteId&&allSites.some(site=>site.id===activeSiteId))select.value=activeSiteId;
+
+  if(error){
+    console.log("Sites load error:", error);
+    allSites = [];
+    return [];
+  }
+
+  allSites = data || [];
+
+  select.innerHTML =
+    `<option value="">All Sites</option>` +
+    allSites.map(site => {
+      return `<option value="${escapeText(site.id)}">${escapeText(site.name || site.site_name || "Unnamed Site")}</option>`;
+    }).join("");
+
+  const activeSiteId =
+    existingValue ||
+    localStorage.getItem("activeSiteId") ||
+    "";
+
+  if(activeSiteId && allSites.some(site => site.id === activeSiteId)){
+    select.value = activeSiteId;
+  }
+
   return allSites;
 }
 
