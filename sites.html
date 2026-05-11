@@ -143,17 +143,7 @@
       background:rgba(0,0,0,.35);
       z-index:1100;
     }
-
-
-    .admin-only{
-      display:none !important;
-    }
-
-    body.admin-mode .admin-only{
-      display:block !important;
-    }
-
-    .page-header{
+.page-header{
       margin-bottom:24px;
       padding-right:70px;
     }
@@ -416,16 +406,7 @@
       .mobile-topbar{display:flex}
       .main{padding:20px}
       .dashboard-menu-wrap{display:none}
-  
-    .admin-only{
-      display:none !important;
-    }
-
-    body.admin-mode .admin-only{
-      display:block !important;
-    }
-
-    .page-header{padding-right:0}
+.page-header{padding-right:0}
       .page-header h1{font-size:34px}
       .field-grid{grid-template-columns:1fr}
       .site-card-top{grid-template-columns:1fr}
@@ -447,12 +428,7 @@
 
     const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
     const isAdminLogin = hasAdminAccess();
-
-    if(isAdminLogin){
-      document.body.classList.add("admin-mode");
-    }
-
-    if(!isClientLogin && !isAdminLogin){
+if(!isClientLogin && !isAdminLogin){
       window.location.replace("login.html");
     }
   </script>
@@ -475,7 +451,6 @@
     <a href="usage.html">Reports</a>
     <a href="monitor.html">Monitor</a>
     <a href="sites.html">Sites</a>
-    <a href="maintenance.html" class="admin-only">Maintenance</a>
     <a href="#" onclick="goHome(event)">Back to Homepage</a>
     <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
   </div>
@@ -499,7 +474,6 @@
         <a href="usage.html">Reports</a>
         <a href="monitor.html">Monitor</a>
         <a class="active" href="sites.html">Sites</a>
-        <a href="maintenance.html" class="admin-only">Maintenance</a>
       </div>
     </div>
 
