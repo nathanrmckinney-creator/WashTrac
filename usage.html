@@ -15,7 +15,6 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
 .app{display:flex;min-height:100vh;}
 .sidebar{width:220px;background:#0f172a;padding:20px;border-right:1px solid #1e293b;}
 
-
 .logo,
 .mobile-logo{
   margin-bottom:24px;
@@ -32,7 +31,6 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
   height:auto;
   display:block;
 }
-
 
 .nav a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
 .nav a:hover{color:white;}
@@ -68,14 +66,7 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
 .mobile-menu a:hover{color:white;}
 .mobile-menu a.logout-link{color:#f87171;}
 
-.menu-divider{border:0;border-top:1px solid #1e293b;margin:8px 0;}
-
 .backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1100;}
-
-
-.admin-only{display:none !important;}
-body.admin-mode .admin-only{display:block !important;}
-
 .page-header{padding-right:80px;}
 .page-header h1{margin:0 0 10px 0;font-size:40px;}
 .page-header p{margin:0;color:#94a3b8;}
@@ -192,7 +183,6 @@ button.secondary{background:#334155;}
 
 .hidden{display:none;}
 
-
 .heartbeat-banner{
   display:none !important;
   align-items:center;
@@ -273,11 +263,6 @@ if(sessionStorage.getItem("washtracAdmin") === "yes"){
 
 const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
 const isAdminLogin = hasAdminAccess();
-
-if(isAdminLogin){
-  document.body.classList.add("admin-mode");
-}
-
 if(!isClientLogin && !isAdminLogin){
   window.location.replace("login.html");
 }
@@ -301,8 +286,6 @@ if(!isClientLogin && !isAdminLogin){
   <a href="usage.html">Reports</a>
   <a href="monitor.html">Monitor</a>
   <a href="sites.html">Sites</a>
-  <a href="maintenance.html" class="admin-only">Maintenance</a>
-  <hr class="menu-divider">
   <a href="#" onclick="goHome(event)">Back to Homepage</a>
   <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
 </div>
@@ -325,7 +308,6 @@ if(!isClientLogin && !isAdminLogin){
       <a href="usage.html">Reports</a>
       <a href="monitor.html">Monitor</a>
       <a href="sites.html">Sites</a>
-      <a href="maintenance.html" class="admin-only">Maintenance</a>
     </div>
   </div>
 
@@ -554,16 +536,10 @@ const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 window.addEventListener("pageshow", function(event){
   const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
   const isAdminLogin = hasAdminAccess();
-
-  if(isAdminLogin){
-    document.body.classList.add("admin-mode");
-  }
-
-  if(!isClientLogin && !isAdminLogin){
+if(!isClientLogin && !isAdminLogin){
     window.location.replace("login.html");
   }
 });
-
 
 let departmentUsageChartInstance = null;
 let topCodesChartInstance = null;
@@ -1106,7 +1082,6 @@ function getReportCodesForSelectedRange(){
     departments: getDepartmentDataFromUses(filtered.uses)
   };
 }
-
 
 function isDeviceOnline(device){
   if(!device || !device.last_seen) return false;
