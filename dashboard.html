@@ -621,9 +621,15 @@
 <body>
   <script>
     function hasAdminAccess(){
-      return hasAdminAccess() ||
-             localStorage.getItem("washtracAdmin") === "yes";
-    }
+    return sessionStorage.getItem("washtracAdmin") === "yes" ||
+           localStorage.getItem("washtracAdmin") === "yes" ||
+           sessionStorage.getItem("washtracAdminMode") === "yes" ||
+           localStorage.getItem("washtracAdminMode") === "yes" ||
+           sessionStorage.getItem("washtracMaintenance") === "yes" ||
+           localStorage.getItem("washtracMaintenance") === "yes" ||
+           sessionStorage.getItem("washtracMaintenanceMode") === "yes" ||
+           localStorage.getItem("washtracMaintenanceMode") === "yes";
+  }
 
     if(hasAdminAccess()){
       localStorage.setItem("washtracAdmin", "yes");
@@ -955,41 +961,51 @@ if(!isClientLogin && !isAdminLogin){
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 function injectAdminMaintenanceLinks(){
-  if(!hasAdminAccess()) return;
+  const admin = hasAdminAccess();
+  console.log("WashTrac admin mode detected:", admin);
+
+  if(!admin) return;
 
   const mobileMenu = document.getElementById("mobileMenu");
   if(mobileMenu && !mobileMenu.querySelector('a[href="maintenance.html"]')){
     const link = document.createElement("a");
     link.href = "maintenance.html";
     link.textContent = "Maintenance";
+    link.style.display = "block";
 
     const homeLink = mobileMenu.querySelector('a[onclick="goHome(event)"]');
     mobileMenu.insertBefore(link, homeLink || null);
   }
 
-  const nav = document.querySelector(".nav");
-  if(nav && !nav.querySelector('a[href="maintenance.html"]')){
-    const link = document.createElement("a");
-    link.href = "maintenance.html";
-    link.textContent = "Maintenance";
+  document.querySelectorAll(".nav").forEach(nav => {
+    if(!nav.querySelector('a[href="maintenance.html"]')){
+      const link = document.createElement("a");
+      link.href = "maintenance.html";
+      link.textContent = "Maintenance";
+      link.style.display = "block";
 
-    const sitesLink = nav.querySelector('a[href="sites.html"]');
-    if(sitesLink && sitesLink.nextSibling){
-      nav.insertBefore(link, sitesLink.nextSibling);
-    }else{
-      nav.appendChild(link);
+      const sitesLink = nav.querySelector('a[href="sites.html"]');
+      if(sitesLink && sitesLink.nextSibling){
+        nav.insertBefore(link, sitesLink.nextSibling);
+      }else{
+        nav.appendChild(link);
+      }
     }
-  }
+  });
 }
 
 function runAdminMenuInjection(){
   injectAdminMaintenanceLinks();
-  setTimeout(injectAdminMaintenanceLinks, 50);
-  setTimeout(injectAdminMaintenanceLinks, 250);
+  setTimeout(injectAdminMaintenanceLinks, 25);
+  setTimeout(injectAdminMaintenanceLinks, 100);
+  setTimeout(injectAdminMaintenanceLinks, 500);
+  setTimeout(injectAdminMaintenanceLinks, 1000);
 }
 
 
+
 document.addEventListener("DOMContentLoaded", runAdminMenuInjection);
+window.addEventListener("load", runAdminMenuInjection);
 
     window.addEventListener("pageshow", function(event){
   injectAdminMaintenanceLinks();
