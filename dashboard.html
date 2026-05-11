@@ -623,7 +623,19 @@
 
 <body>
   <script>
-    if(localStorage.getItem("washtracLoggedIn") !== "yes"){
+    function hasAdminAccess(){
+      return sessionStorage.getItem("washtracAdmin") === "yes" ||
+             localStorage.getItem("washtracAdmin") === "yes";
+    }
+
+    if(sessionStorage.getItem("washtracAdmin") === "yes"){
+      localStorage.setItem("washtracAdmin", "yes");
+    }
+
+    const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
+    const isAdminLogin = hasAdminAccess();
+
+    if(!isClientLogin && !isAdminLogin){
       window.location.replace("login.html");
     }
   </script>
@@ -644,6 +656,8 @@
       <a href="activity.html">Activity</a>
       <a href="usage.html">Reports</a>
       <a href="monitor.html">Monitor</a>
+      <a href="sites.html">Sites</a>
+      <a href="maintenance.html">Maintenance</a>
       <a href="#" onclick="openAddDevice(event)">Add Device</a>
       <a href="#" onclick="goHome(event)">Back to Homepage</a>
       <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
@@ -668,6 +682,8 @@
         <a href="activity.html">Activity</a>
         <a href="usage.html">Reports</a>
         <a href="monitor.html">Monitor</a>
+        <a href="sites.html">Sites</a>
+        <a href="maintenance.html">Maintenance</a>
       </div>
     </div>
 
@@ -677,6 +693,7 @@
 
         <div class="mobile-menu" id="dashboardMenu">
           <a href="#" onclick="openAddDevice(event)">Add Device</a>
+          <a href="maintenance.html">Maintenance</a>
           <a href="#" onclick="goHome(event)">Back to Homepage</a>
           <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
         </div>
@@ -915,6 +932,8 @@
           <div class="list-row"><span>Manage codes</span><span><a href="codes.html" style="color:#93c5fd;">Open</a></span></div>
           <div class="list-row"><span>View reports</span><span><a href="usage.html" style="color:#93c5fd;">Open</a></span></div>
           <div class="list-row"><span>Live monitor</span><span><a href="monitor.html" style="color:#93c5fd;">Open</a></span></div>
+          <div class="list-row"><span>Manage sites</span><span><a href="sites.html" style="color:#93c5fd;">Open</a></span></div>
+          <div class="list-row"><span>Maintenance</span><span><a href="maintenance.html" style="color:#93c5fd;">Open</a></span></div>
         </div>
       </div>
     </div>
@@ -944,7 +963,10 @@
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     window.addEventListener("pageshow", function(event){
-      if(localStorage.getItem("washtracLoggedIn") !== "yes"){
+      const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
+      const isAdminLogin = hasAdminAccess();
+
+      if(!isClientLogin && !isAdminLogin){
         window.location.replace("login.html");
       }
     });
@@ -1010,6 +1032,8 @@
       if(event) event.preventDefault();
       closeMenus();
       localStorage.removeItem("washtracLoggedIn");
+      sessionStorage.removeItem("washtracAdmin");
+      localStorage.removeItem("washtracAdmin");
       sessionStorage.removeItem("washtracSessionActive");
       window.location.replace("index.html");
     }
@@ -1028,6 +1052,8 @@
       localStorage.removeItem("activeSiteId");
       localStorage.removeItem("washtracActiveSiteId");
       localStorage.removeItem("activeOrganizationId");
+      sessionStorage.removeItem("washtracAdmin");
+      localStorage.removeItem("washtracAdmin");
       sessionStorage.removeItem("washtracSessionActive");
       window.location.replace("login.html");
     }
@@ -1330,6 +1356,61 @@
 
   select.innerHTML = `<option>Loading sites...</option>`;
 
+  const isAdminLogin = hasAdminAccess();
+
+  // ADMIN MODE: load every site in the system
+  if(isAdminLogin){
+    const { data, error } = await client
+      .from("sites")
+      .select("*")
+      .order("name", { ascending:true });
+
+    if(error){
+      console.log("Admin sites load error:", error);
+      select.innerHTML = `<option value="">Error loading sites</option>`;
+      return "";
+    }
+
+    const sites = data || [];
+
+    if(!sites.length){
+      select.innerHTML = `<option value="">No sites found</option>`;
+      localStorage.removeItem("activeSiteId");
+      localStorage.removeItem("washtracActiveSiteId");
+      localStorage.removeItem("activeOrganizationId");
+      currentSiteId = null;
+      currentOrganizationId = null;
+      return "";
+    }
+
+    select.innerHTML = sites.map(site => {
+      const siteId = escapeHtml(site.id);
+      const orgId = escapeHtml(site.organization_id || site.org_id || site.company_id || "");
+      const name = escapeHtml(site.name || site.site_name || "Unnamed Site");
+      return `<option value="${siteId}" data-org="${orgId}">${name}</option>`;
+    }).join("");
+
+    const saved = localStorage.getItem("activeSiteId") || localStorage.getItem("washtracActiveSiteId");
+    const exists = saved && sites.some(s => s.id === saved);
+
+    currentSiteId = exists ? saved : sites[0].id;
+    const selectedSite = sites.find(s => s.id === currentSiteId) || sites[0];
+    currentOrganizationId = selectedSite.organization_id || selectedSite.org_id || selectedSite.company_id || "";
+
+    localStorage.setItem("activeSiteId", currentSiteId);
+    localStorage.setItem("washtracActiveSiteId", currentSiteId);
+
+    if(currentOrganizationId){
+      localStorage.setItem("activeOrganizationId", currentOrganizationId);
+    }else{
+      localStorage.removeItem("activeOrganizationId");
+    }
+
+    select.value = currentSiteId;
+    return currentSiteId;
+  }
+
+  // NORMAL USER MODE
   const { data: userData, error: userError } = await client.auth.getUser();
 
   if(userError || !userData?.user){
