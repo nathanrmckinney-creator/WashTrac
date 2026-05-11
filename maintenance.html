@@ -81,8 +81,11 @@
 
 <body>
 <script>
-if(localStorage.getItem("washtracLoggedIn") !== "yes"){
-  window.location.replace("login.html");
+if(
+  localStorage.getItem("washtracLoggedIn") !== "yes" &&
+  sessionStorage.getItem("washtracAdmin") !== "yes"
+){
+  window.location.replace("index.html");
 }
 </script>
 
@@ -260,21 +263,46 @@ function siteName(siteId){const site=allSites.find(item=>item.id===siteId);retur
 function toggleDesktopMenu(){const desktopMenu=document.getElementById("desktopMenu");const mobileMenu=document.getElementById("mobileMenu");const backdrop=document.getElementById("backdrop");const isOpen=desktopMenu.style.display==="block";mobileMenu.style.display="none";desktopMenu.style.display=isOpen?"none":"block";backdrop.style.display=isOpen?"none":"block";}
 function toggleMobileMenu(){const desktopMenu=document.getElementById("desktopMenu");const mobileMenu=document.getElementById("mobileMenu");const backdrop=document.getElementById("backdrop");const isOpen=mobileMenu.style.display==="block";desktopMenu.style.display="none";mobileMenu.style.display=isOpen?"none":"block";backdrop.style.display=isOpen?"none":"block";}
 function closeMenus(){document.getElementById("mobileMenu").style.display="none";document.getElementById("desktopMenu").style.display="none";document.getElementById("backdrop").style.display="none";}
-function goHome(event){if(event)event.preventDefault();closeMenus();localStorage.removeItem("washtracLoggedIn");sessionStorage.removeItem("washtracSessionActive");window.location.replace("index.html");}
-async function logout(event){if(event)event.preventDefault();closeMenus();try{await client.auth.signOut();}catch(err){console.log("logout error:",err);}localStorage.removeItem("washtracLoggedIn");localStorage.removeItem("activeSiteId");localStorage.removeItem("washtracActiveSiteId");localStorage.removeItem("activeOrganizationId");sessionStorage.removeItem("washtracSessionActive");window.location.replace("login.html");}
-async function loadCurrentUser(){const {data,error}=await client.auth.getUser();if(error)console.log("User lookup error:",error);currentUser=data?.user||null;if(!currentUser){localStorage.removeItem("washtracLoggedIn");window.location.replace("login.html");return null;}return currentUser;}
+function goHome(event){if(event)event.preventDefault();closeMenus();localStorage.removeItem("washtracLoggedIn");sessionStorage.removeItem("washtracSessionActive");sessionStorage.removeItem("washtracAdmin");window.location.replace("index.html");}
+async function logout(event){if(event)event.preventDefault();closeMenus();try{await client.auth.signOut();}catch(err){console.log("logout error:",err);}localStorage.removeItem("washtracLoggedIn");localStorage.removeItem("activeSiteId");localStorage.removeItem("washtracActiveSiteId");localStorage.removeItem("activeOrganizationId");sessionStorage.removeItem("washtracSessionActive");sessionStorage.removeItem("washtracAdmin");window.location.replace("index.html");}
+async function loadCurrentUser(){
+  const isAdminSession = sessionStorage.getItem("washtracAdmin") === "yes";
+
+  const {data,error}=await client.auth.getUser();
+  if(error)console.log("User lookup error:",error);
+
+  currentUser=data?.user||null;
+
+  if(!currentUser && !isAdminSession){
+    localStorage.removeItem("washtracLoggedIn");
+    window.location.replace("login.html");
+    return null;
+  }
+
+  return currentUser;
+}
 
 async function loadSites(){
   const select=document.getElementById("siteFilter");
   const existingValue=select.value;
   select.innerHTML=`<option value="">All Sites</option>`;
-  if(!currentUser)return [];
-  let result=await client.from("site_members").select("site_id").eq("user_id",currentUser.id);
-  if(result.error){console.log("site_members lookup error:",result.error);result=await client.from("user_site_access").select("site_id").eq("user_id",currentUser.id);}
-  if(result.error){console.log("Site access lookup error:",result.error);return [];}
-  const siteIds=[...new Set((result.data||[]).map(row=>row.site_id).filter(Boolean))];
-  if(!siteIds.length){allSites=[];return [];}
-  const {data,error}=await client.from("sites").select("*").in("id",siteIds).order("name",{ascending:true});
+  let data = [];
+  let error = null;
+
+  if(sessionStorage.getItem("washtracAdmin") === "yes" && !currentUser){
+    const result = await client.from("sites").select("*").order("name",{ascending:true});
+    data = result.data || [];
+    error = result.error || null;
+  }else{
+    let result=await client.from("site_members").select("site_id").eq("user_id",currentUser.id);
+    if(result.error){console.log("site_members lookup error:",result.error);result=await client.from("user_site_access").select("site_id").eq("user_id",currentUser.id);}
+    if(result.error){console.log("Site access lookup error:",result.error);return [];}
+    const siteIds=[...new Set((result.data||[]).map(row=>row.site_id).filter(Boolean))];
+    if(!siteIds.length){allSites=[];return [];}
+    const siteResult=await client.from("sites").select("*").in("id",siteIds).order("name",{ascending:true});
+    data = siteResult.data || [];
+    error = siteResult.error || null;
+  }
   if(error){console.log("Sites load error:",error);return [];}
   allSites=data||[];
   select.innerHTML=`<option value="">All Sites</option>`+allSites.map(site=>`<option value="${escapeText(site.id)}">${escapeText(site.name||site.site_name||"Unnamed Site")}</option>`).join("");
@@ -286,9 +314,12 @@ async function loadSites(){
 async function loadDevices(){
   const siteFilter=document.getElementById("siteFilter").value;
   const siteIds=allSites.map(site=>site.id);
-  if(!siteIds.length){allDevices=[];return [];}
   let query=client.from("devices").select("*").order("created_at",{ascending:false});
-  if(siteFilter){query=query.eq("site_id",siteFilter);}else{query=query.in("site_id",siteIds);}
+  if(siteFilter){
+    query=query.eq("site_id",siteFilter);
+  }else if(siteIds.length){
+    query=query.in("site_id",siteIds);
+  }
   const {data,error}=await query;
   if(error){console.log("Devices load error:",error);setStatus("Could not load devices. Make sure the devices table exists.","error");allDevices=[];return [];}
   allDevices=data||[];
