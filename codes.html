@@ -253,7 +253,10 @@
 
 <body>
 <script>
-if(localStorage.getItem("washtracLoggedIn") !== "yes"){
+const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
+const isAdminLogin = sessionStorage.getItem("washtracAdmin") === "yes";
+
+if(!isClientLogin && !isAdminLogin){
   window.location.replace("login.html");
 }
 </script>
@@ -275,6 +278,8 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
   <a href="activity.html">Activity</a>
   <a href="usage.html">Reports</a>
   <a href="monitor.html">Monitor</a>
+  <a href="sites.html">Sites</a>
+  <a href="maintenance.html">Maintenance</a>
   <a href="#" onclick="goHome(event)">Back to Homepage</a>
   <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
 </div>
@@ -296,6 +301,8 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
       <a href="activity.html">Activity</a>
       <a href="usage.html">Reports</a>
       <a href="monitor.html">Monitor</a>
+      <a href="sites.html">Sites</a>
+      <a href="maintenance.html">Maintenance</a>
     </div>
   </div>
 
@@ -519,7 +526,10 @@ const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 window.addEventListener("pageshow", function(event){
-  if(localStorage.getItem("washtracLoggedIn") !== "yes"){
+  const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
+  const isAdminLogin = sessionStorage.getItem("washtracAdmin") === "yes";
+
+  if(!isClientLogin && !isAdminLogin){
     window.location.replace("login.html");
   }
 });
@@ -650,6 +660,7 @@ function goHome(event){
   closeMenus();
 
   localStorage.removeItem("washtracLoggedIn");
+  sessionStorage.removeItem("washtracAdmin");
   sessionStorage.removeItem("washtracSessionActive");
   window.location.replace("index.html");
 }
@@ -669,6 +680,7 @@ async function logout(event){
   localStorage.removeItem("activeSiteId");
   localStorage.removeItem("washtracActiveSiteId");
   localStorage.removeItem("activeOrganizationId");
+  sessionStorage.removeItem("washtracAdmin");
   sessionStorage.removeItem("washtracSessionActive");
   window.location.replace("login.html");
 }
@@ -904,9 +916,55 @@ function renderCodeActivityDetails(){
 async function loadSites(){
   const select = document.getElementById("siteSwitcher");
   if(!select) return "";
+
   select.innerHTML = `<option>Loading sites...</option>`;
 
+  const isAdminLogin = sessionStorage.getItem("washtracAdmin") === "yes";
+
+  // ADMIN MODE: load every site in the system
+  if(isAdminLogin){
+    const { data, error } = await client
+      .from("sites")
+      .select("*")
+      .order("name", { ascending:true });
+
+    if(error){
+      console.log("Admin sites load error:", error);
+      select.innerHTML = `<option value="">Error loading sites</option>`;
+      return "";
+    }
+
+    const sites = data || [];
+
+    if(!sites.length){
+      select.innerHTML = `<option value="">No sites found</option>`;
+      localStorage.removeItem("activeSiteId");
+      localStorage.removeItem("activeOrganizationId");
+      currentSiteId = null;
+      return "";
+    }
+
+    select.innerHTML = sites.map(site => {
+      return `<option value="${escapeText(site.id)}">${escapeText(site.name || site.site_name || "Unnamed Site")}</option>`;
+    }).join("");
+
+    const saved = localStorage.getItem("activeSiteId");
+    const exists = saved && sites.some(site => site.id === saved);
+    const activeSite = exists ? sites.find(site => site.id === saved) : sites[0];
+
+    currentSiteId = activeSite.id;
+    localStorage.setItem("activeSiteId", currentSiteId);
+
+    const orgId = activeSite.organization_id || activeSite.org_id || activeSite.company_id || null;
+    if(orgId) localStorage.setItem("activeOrganizationId", orgId);
+
+    select.value = currentSiteId;
+    return currentSiteId;
+  }
+
+  // NORMAL USER MODE
   const { data: userData, error: userError } = await client.auth.getUser();
+
   if(userError || !userData?.user){
     console.log("User error:", userError);
     select.innerHTML = `<option value="">No user</option>`;
@@ -914,16 +972,7 @@ async function loadSites(){
   }
 
   const userId = userData.user.id;
-  let membershipRows = [];
-  let membershipError = null;
 
-  /*
-    Safer site loading:
-    1) Read site IDs from site_members without asking Supabase for an embedded join.
-    2) Then fetch the sites table directly.
-    This avoids the "Error loading sites" problem when the foreign-key relationship
-    name/cache is not available to the browser client.
-  */
   let result = await client
     .from("site_members")
     .select("site_id, role")
@@ -932,15 +981,14 @@ async function loadSites(){
   if(result.error){
     console.log("site_members lookup error:", result.error);
 
-    // Fallback for older builds that used user_site_access.
     result = await client
       .from("user_site_access")
       .select("site_id")
       .eq("user_id", userId);
   }
 
-  membershipRows = result.data || [];
-  membershipError = result.error || null;
+  const membershipRows = result.data || [];
+  const membershipError = result.error || null;
 
   if(membershipError){
     console.log("Site access error:", membershipError);
