@@ -258,7 +258,10 @@ button.secondary{background:#334155;}
 
 <body>
 <script>
-if(localStorage.getItem("washtracLoggedIn") !== "yes"){
+const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
+const isAdminLogin = sessionStorage.getItem("washtracAdmin") === "yes";
+
+if(!isClientLogin && !isAdminLogin){
   window.location.replace("login.html");
 }
 </script>
@@ -280,6 +283,8 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
   <a href="activity.html">Activity</a>
   <a href="usage.html">Reports</a>
   <a href="monitor.html">Monitor</a>
+  <a href="sites.html">Sites</a>
+  <a href="maintenance.html">Maintenance</a>
   <hr class="menu-divider">
   <a href="#" onclick="goHome(event)">Back to Homepage</a>
   <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
@@ -302,6 +307,8 @@ if(localStorage.getItem("washtracLoggedIn") !== "yes"){
       <a href="activity.html">Activity</a>
       <a href="usage.html">Reports</a>
       <a href="monitor.html">Monitor</a>
+      <a href="sites.html">Sites</a>
+      <a href="maintenance.html">Maintenance</a>
     </div>
   </div>
 
@@ -528,7 +535,10 @@ const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 window.addEventListener("pageshow", function(event){
-  if(localStorage.getItem("washtracLoggedIn") !== "yes"){
+  const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
+  const isAdminLogin = sessionStorage.getItem("washtracAdmin") === "yes";
+
+  if(!isClientLogin && !isAdminLogin){
     window.location.replace("login.html");
   }
 });
@@ -587,6 +597,7 @@ function goHome(event){
   closeMenus();
   localStorage.removeItem("washtracLoggedIn");
   localStorage.removeItem("washtracRememberMe");
+  sessionStorage.removeItem("washtracAdmin");
   sessionStorage.removeItem("washtracSessionActive");
   window.location.replace("index.html");
 }
@@ -607,6 +618,7 @@ async function logout(event){
   localStorage.removeItem("washtracActiveSiteId");
   localStorage.removeItem("activeOrganizationId");
   localStorage.removeItem("washtracRememberMe");
+  sessionStorage.removeItem("washtracAdmin");
   sessionStorage.removeItem("washtracSessionActive");
   window.location.replace("login.html");
 }
@@ -668,10 +680,21 @@ function setSiteScopeSummary(message){
 }
 
 async function getCurrentUser(){
+  const isAdminLogin = sessionStorage.getItem("washtracAdmin") === "yes";
+
   const { data, error } = await client.auth.getUser();
 
   if(error || !data?.user){
     console.log("User load error:", error);
+
+    if(isAdminLogin){
+      return {
+        id: "admin-session",
+        email: "admin@washtrac.local",
+        is_admin_session: true
+      };
+    }
+
     return null;
   }
 
@@ -679,6 +702,27 @@ async function getCurrentUser(){
 }
 
 async function getAssignedSites(){
+  const isAdminLogin = sessionStorage.getItem("washtracAdmin") === "yes";
+
+  if(isAdminLogin){
+    const { data, error } = await client
+      .from("sites")
+      .select("*")
+      .order("name", { ascending:true });
+
+    if(error){
+      console.log("Admin sites load error:", error);
+      return [];
+    }
+
+    return (data || [])
+      .map(site => ({
+        id: site.id || "",
+        name: site.name || site.site_name || "Unnamed Site"
+      }))
+      .filter(site => site.id);
+  }
+
   const user = await getCurrentUser();
 
   if(!user){
@@ -1632,8 +1676,8 @@ async function saveReportSchedule(){
   try{
     const user = await getCurrentUser();
 
-    if(!user){
-      setStatus("Could not save schedule. User not logged in.", "error");
+    if(!user || user.is_admin_session){
+      setStatus("Admin preview mode cannot save customer report schedules.", "warn");
       return;
     }
 
