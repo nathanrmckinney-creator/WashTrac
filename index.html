@@ -825,7 +825,75 @@
     grid-template-columns: 1fr;
   }
 }
-  </style>
+  
+    /* Admin Login Modal */
+    .admin-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 5000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .admin-modal.show {
+      display: flex;
+    }
+
+    .admin-card {
+      width: 100%;
+      max-width: 420px;
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.55);
+    }
+
+    .admin-card h3 {
+      margin: 0 0 20px 0;
+      font-size: 28px;
+    }
+
+    .admin-card label {
+      display: block;
+      margin-bottom: 8px;
+      color: #cbd5e1;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .admin-card input {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 16px;
+      border-radius: 10px;
+      border: 1px solid #334155;
+      background: #020617;
+      color: #fff;
+      font-size: 15px;
+    }
+
+    .admin-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .admin-actions button {
+      flex: 1;
+    }
+
+    .admin-status {
+      margin-top: 14px;
+      color: #ef4444;
+      min-height: 20px;
+      font-size: 14px;
+    }
+
+</style>
 </head>
 
 <body>
@@ -849,7 +917,7 @@
     <a href="#monitoring" onclick="closeMenu()">Monitoring</a>
     <a href="#systemstate" onclick="closeMenu()">Live Demo</a>
     <a href="#contact" onclick="closeMenu()">Contact</a>
-    <a href="maintenance.html" onclick="closeMenu()">Admin</a>
+    <a href="#" onclick="openAdminLogin(); return false;">Admin</a>
   </div>
 
   <div id="backdrop" class="backdrop" onclick="closeMenu()"></div>
@@ -1301,6 +1369,41 @@
       document.getElementById("message").value = "";
     }
 
+
+    function openAdminLogin() {
+      closeMenu();
+      document.getElementById("adminModal").classList.add("show");
+      document.getElementById("adminStatus").innerText = "";
+      document.getElementById("adminUser").value = "";
+      document.getElementById("adminPass").value = "";
+      setTimeout(() => document.getElementById("adminUser").focus(), 50);
+    }
+
+    function closeAdminLogin(event) {
+      if (event && event.target !== document.getElementById("adminModal")) return;
+      document.getElementById("adminModal").classList.remove("show");
+    }
+
+    function adminLogin() {
+      const username = document.getElementById("adminUser").value.trim();
+      const password = document.getElementById("adminPass").value;
+      const status = document.getElementById("adminStatus");
+
+      const ADMIN_USER = "admin";
+      const ADMIN_PASS = "WashTrac2026!";
+
+      if (username === ADMIN_USER && password === ADMIN_PASS) {
+        sessionStorage.setItem("washtracAdmin", "yes");
+        window.location.href = "maintenance.html";
+        return;
+      }
+
+      status.innerText = "Invalid username or password.";
+      document.getElementById("adminPass").value = "";
+      document.getElementById("adminPass").focus();
+    }
+
+
     document.addEventListener("DOMContentLoaded", function () {
       const contactForm = document.getElementById("contactForm");
 
@@ -1311,6 +1414,21 @@
         });
       }
 
+
+      const adminUser = document.getElementById("adminUser");
+      const adminPass = document.getElementById("adminPass");
+      [adminUser, adminPass].forEach(el => {
+        el.addEventListener("keydown", function(e) {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            adminLogin();
+          }
+          if (e.key === "Escape") {
+            closeAdminLogin();
+          }
+        });
+      });
+
       loadLiveSystemState();
 
       supabaseClient
@@ -1320,5 +1438,25 @@
         .subscribe();
     });
   </script>
+
+  <div id="adminModal" class="admin-modal" onclick="closeAdminLogin(event)">
+    <div class="admin-card" onclick="event.stopPropagation()">
+      <h3>Admin Access</h3>
+
+      <label for="adminUser">Username</label>
+      <input id="adminUser" type="text" autocomplete="username">
+
+      <label for="adminPass">Password</label>
+      <input id="adminPass" type="password" autocomplete="current-password">
+
+      <div class="admin-actions">
+        <button class="btn secondary" type="button" onclick="closeAdminLogin()">Cancel</button>
+        <button class="btn" type="button" onclick="adminLogin()">Sign In</button>
+      </div>
+
+      <div id="adminStatus" class="admin-status"></div>
+    </div>
+  </div>
+
 </body>
 </html>
