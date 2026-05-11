@@ -587,6 +587,15 @@
   border:1px solid rgba(34,197,94,.35);
 }
 
+
+    .admin-only{
+      display:none !important;
+    }
+
+    body.admin-mode .admin-only{
+      display:block !important;
+    }
+
     @media (max-width:1200px){
       .bay-editor-grid{
         grid-template-columns:1fr 1fr;
@@ -635,6 +644,10 @@
     const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
     const isAdminLogin = hasAdminAccess();
 
+    if(isAdminLogin){
+      document.body.classList.add("admin-mode");
+    }
+
     if(!isClientLogin && !isAdminLogin){
       window.location.replace("login.html");
     }
@@ -657,7 +670,7 @@
       <a href="usage.html">Reports</a>
       <a href="monitor.html">Monitor</a>
       <a href="sites.html">Sites</a>
-      <a href="maintenance.html">Maintenance</a>
+      <a href="maintenance.html" class="admin-only">Maintenance</a>
       <a href="#" onclick="openAddDevice(event)">Add Device</a>
       <a href="#" onclick="goHome(event)">Back to Homepage</a>
       <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
@@ -683,7 +696,7 @@
         <a href="usage.html">Reports</a>
         <a href="monitor.html">Monitor</a>
         <a href="sites.html">Sites</a>
-        <a href="maintenance.html">Maintenance</a>
+        <a href="maintenance.html" class="admin-only">Maintenance</a>
       </div>
     </div>
 
@@ -693,7 +706,7 @@
 
         <div class="mobile-menu" id="dashboardMenu">
           <a href="#" onclick="openAddDevice(event)">Add Device</a>
-          <a href="maintenance.html">Maintenance</a>
+          <a href="maintenance.html" class="admin-only">Maintenance</a>
           <a href="#" onclick="goHome(event)">Back to Homepage</a>
           <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
         </div>
@@ -933,7 +946,7 @@
           <div class="list-row"><span>View reports</span><span><a href="usage.html" style="color:#93c5fd;">Open</a></span></div>
           <div class="list-row"><span>Live monitor</span><span><a href="monitor.html" style="color:#93c5fd;">Open</a></span></div>
           <div class="list-row"><span>Manage sites</span><span><a href="sites.html" style="color:#93c5fd;">Open</a></span></div>
-          <div class="list-row"><span>Maintenance</span><span><a href="maintenance.html" style="color:#93c5fd;">Open</a></span></div>
+          <div class="list-row admin-only"><span>Maintenance</span><span><a href="maintenance.html" style="color:#93c5fd;">Open</a></span></div>
         </div>
       </div>
     </div>
