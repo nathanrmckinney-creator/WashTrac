@@ -3,1535 +3,1420 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WashTrac Maintenance</title>
+  <title>WashTrac Sites</title>
 
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    *{box-sizing:border-box;}
-    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#020617;color:#fff;overflow-x:hidden;}
-    .app{display:flex;min-height:100vh;}
-    .sidebar{width:220px;background:#0f172a;padding:20px;border-right:1px solid #1e293b;flex-shrink:0;}
-    .logo{margin-bottom:24px;}
-    .logo-image{width:180px;height:auto;display:block;}
-    .nav a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
-    .nav a:hover,.nav a.active{color:#fff;}
-    .main{flex:1;padding:30px;position:relative;}
-    .desktop-menu-wrap{position:absolute;top:24px;right:30px;z-index:1200;}
-    .menu-btn{background:#2563eb;border:none;color:#fff;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:bold;}
-    .hamburger-menu{display:none;position:absolute;top:46px;right:0;width:220px;background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:12px 16px;box-shadow:0 12px 30px rgba(0,0,0,.45);z-index:1500;}
-    .hamburger-menu a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
-    .hamburger-menu a:hover{color:#fff;}
-    .hamburger-menu a.logout-link{color:#f87171;}
-    .mobile-topbar{display:none;align-items:center;justify-content:space-between;padding:16px 20px;background:#0f172a;border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:1400;}
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      background:#020617;
+      color:white;
+      overflow-x:hidden;
+    }
+
+    .app{
+      display:flex;
+      min-height:100vh;
+    }
+
+    .sidebar{
+      width:220px;
+      background:#0f172a;
+      padding:20px;
+      flex-shrink:0;
+      border-right:1px solid #1e293b;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .sidebar::before{
+      display:none;
+    }
+
+    .logo,
+    .mobile-logo{
+      margin-bottom:24px;
+      position:relative;
+      z-index:2;
+    }
+
+    .logo-image{
+      width:180px;
+      height:auto;
+      display:block;
+    }
+
+    .logo-image-mobile{
+      width:150px;
+      height:auto;
+      display:block;
+    }
+
+    .nav{
+      position:relative;
+      z-index:2;
+    }
+
+    .nav a{
+      display:block;
+      color:#cbd5f5;
+      text-decoration:none;
+      padding:10px 0;
+    }
+
+    .nav a:hover,
+    .nav a.active{
+      color:white;
+    }
+
+    .main{
+      flex:1;
+      padding:30px;
+      position:relative;
+    }
+
+    .dashboard-menu-wrap{
+      position:absolute;
+      top:24px;
+      right:30px;
+      z-index:1200;
+    }
+
+    .menu-btn{
+      background:#2563eb;
+      border:none;
+      color:white;
+      padding:10px 14px;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:bold;
+    }
+
+    .mobile-topbar{
+      display:none;
+      align-items:center;
+      justify-content:space-between;
+      padding:16px 20px;
+      background:#0f172a;
+      border-bottom:1px solid #1e293b;
+      position:sticky;
+      top:0;
+      z-index:1400;
+    }
+
     .mobile-logo{margin-bottom:0;}
-    .logo-image-mobile{width:150px;height:auto;display:block;}
-    .mobile-menu{display:none;position:fixed;top:64px;right:16px;width:240px;background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:12px 16px;box-shadow:0 12px 30px rgba(0,0,0,.45);z-index:1500;}
-    .mobile-menu a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
-    .mobile-menu a:hover{color:#fff;}
-    .mobile-menu a.logout-link{color:#f87171;}
-    .backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1100;}
-    .page-header{margin-bottom:24px;padding-right:80px;}
-    .page-header h1{margin:0 0 10px 0;font-size:42px;}
-    .page-header p{margin:0;color:#94a3b8;line-height:1.5;max-width:920px;}
-    .admin-pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(37,99,235,.15);color:#93c5fd;font-size:12px;font-weight:bold;margin-left:10px;vertical-align:middle;}
-    .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;}
-    .summary-box{background:#111827;padding:18px;border-radius:12px;border:1px solid #1f2937;}
-    .summary-box strong{display:block;font-size:30px;margin-bottom:6px;}
-    .summary-box span{color:#94a3b8;font-size:14px;}
-    .card{background:#111827;padding:20px;border-radius:12px;border:1px solid #1f2937;margin-bottom:20px;}
-    .card h3{margin:0 0 16px 0;}
-    .card h4{margin:0 0 12px 0;}
-    .field-grid{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end;margin-bottom:16px;}
-    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
-    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:20px;}
-    .field{display:flex;flex-direction:column;gap:8px;}
-    .field label{color:#94a3b8;font-size:13px;font-weight:bold;}
-    input,select,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid #334155;background:#0b1220;color:#fff;font-size:15px;outline:none;}
-    textarea{min-height:90px;resize:vertical;}
-    input::placeholder,textarea::placeholder{color:#64748b;}
-    button{padding:12px 16px;background:#2563eb;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold;}
-    button.secondary{background:#334155;}
-    button.danger{background:#dc2626;}
-    button.success{background:#16a34a;}
-    button.warn{background:#d97706;}
-    button:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.35);}
-    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
-    .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-    table{width:100%;border-collapse:collapse;min-width:980px;}
-    th,td{padding:14px 10px;border-bottom:1px solid #1f2937;text-align:left;vertical-align:middle;}
-    th{color:#93c5fd;font-size:13px;text-transform:uppercase;letter-spacing:.5px;}
-    .muted{color:#94a3b8;}
-    .tag{display:inline-block;padding:6px 10px;border-radius:999px;background:#1e293b;color:#cbd5e1;font-size:12px;font-weight:bold;white-space:nowrap;}
-    .tag.online{background:rgba(34,197,94,.16);color:#86efac;}
-    .tag.offline{background:rgba(239,68,68,.16);color:#fca5a5;}
-    .tag.pending{background:rgba(245,158,11,.16);color:#fcd34d;}
-    .tag.done{background:rgba(34,197,94,.16);color:#86efac;}
-    .tag.failed{background:rgba(239,68,68,.16);color:#fca5a5;}
-    .tag.red{background:rgba(239,68,68,.16);color:#fca5a5;}
-    .tag.green{background:rgba(34,197,94,.16);color:#86efac;}
-    .tag.yellow{background:rgba(245,158,11,.16);color:#fcd34d;}
-    .status{margin-top:14px;padding:12px 14px;border-radius:8px;background:#0b1220;border:1px solid #1f2937;color:#cbd5e1;display:none;line-height:1.4;}
-    .status.show{display:block;}
-    .status.success{border-color:rgba(34,197,94,.35);color:#bbf7d0;background:rgba(20,83,45,.24);}
-    .status.error{border-color:rgba(239,68,68,.35);color:#fecaca;background:rgba(127,29,29,.24);}
-    .status.warn{border-color:rgba(245,158,11,.35);color:#fde68a;background:rgba(120,53,15,.24);}
-    .note{color:#94a3b8;font-size:14px;line-height:1.5;margin-top:12px;}
-    .danger-zone{border-color:rgba(239,68,68,.32);box-shadow:0 0 0 1px rgba(239,68,68,.08);}
-    .danger-zone h3{color:#fecaca;}
-    .support-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 0;}
-    .mini-list{border:1px solid #1f2937;border-radius:12px;overflow:hidden;background:#0b1220;}
-    .mini-row{display:grid;grid-template-columns:1fr auto;gap:10px;padding:12px;border-bottom:1px solid #1f2937;align-items:center;}
-    .mini-row:last-child{border-bottom:none;}
-    .mini-main{min-width:0;overflow:hidden;text-overflow:ellipsis;}
-    .mini-muted{color:#94a3b8;font-size:13px;margin-top:3px;}
-    .inline-code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;background:#020617;border:1px solid #1f2937;border-radius:8px;padding:2px 6px;color:#93c5fd;}
 
-    .signal-wrap{display:flex;align-items:flex-end;gap:4px;height:24px;margin-top:8px;}
-    .signal-bar{width:7px;border-radius:3px 3px 0 0;background:#334155;box-shadow:none;}
-    .signal-bar.on{background:#2563eb;box-shadow:0 0 8px rgba(37,99,235,.45);}
-    .signal-bar:nth-child(1){height:7px;}
-    .signal-bar:nth-child(2){height:11px;}
-    .signal-bar:nth-child(3){height:16px;}
-    .signal-bar:nth-child(4){height:21px;}
-    .network-card{background:#0b1220;border:1px solid #1f2937;border-radius:12px;padding:16px;}
-    .network-card h4{display:flex;justify-content:space-between;gap:12px;align-items:center;}
-    .network-meta{color:#94a3b8;font-size:13px;line-height:1.6;margin-top:8px;}
+    .mobile-menu{
+      display:none;
+      position:fixed;
+      top:64px;
+      right:16px;
+      width:240px;
+      background:#0f172a;
+      border:1px solid #1e293b;
+      border-radius:12px;
+      padding:12px 16px;
+      box-shadow:0 12px 30px rgba(0,0,0,.45);
+      z-index:1500;
+    }
 
-    @media (max-width:1200px){.grid-3{grid-template-columns:1fr 1fr;}}
-    @media (max-width:1100px){.summary{grid-template-columns:1fr 1fr;}.field-grid{grid-template-columns:1fr 1fr;}.grid-2,.grid-3{grid-template-columns:1fr;}}
-    @media (max-width:900px){.app{display:block;}.sidebar{display:none;}.desktop-menu-wrap{display:none;}.mobile-topbar{display:flex;}.main{padding:20px;}.page-header{padding-right:0;}.page-header h1{font-size:34px;}.summary{grid-template-columns:1fr;}.field-grid{grid-template-columns:1fr;}table{min-width:840px;}}
+    .mobile-menu a{
+      display:block;
+      color:#cbd5f5;
+      text-decoration:none;
+      padding:10px 0;
+      cursor:pointer;
+    }
+
+    .mobile-menu a:hover{color:white}
+    .mobile-menu a.logout-link{color:#f87171}
+
+    .backdrop{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.35);
+      z-index:1100;
+    }
+.page-header{
+      margin-bottom:24px;
+      padding-right:70px;
+    }
+
+    .page-header h1{
+      margin:0 0 10px 0;
+      font-size:42px;
+    }
+
+    .page-header p{
+      margin:0;
+      color:#94a3b8;
+      line-height:1.5;
+    }
+
+    .live-pill{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(30,167,255,.15);
+      color:#93c5fd;
+      font-size:12px;
+      font-weight:bold;
+      margin-left:10px;
+      vertical-align:middle;
+    }
+
+    .grid-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:20px;
+      margin-bottom:20px;
+    }
+
+    .card{
+      background:#111827;
+      padding:20px;
+      border-radius:12px;
+      border:1px solid #1f2937;
+      margin-bottom:20px;
+    }
+
+    .card h3{
+      margin:0 0 16px 0;
+    }
+
+    .card h4{
+      margin:0 0 12px 0;
+    }
+
+    .note{
+      margin-top:14px;
+      color:#94a3b8;
+      font-size:14px;
+      line-height:1.5;
+    }
+
+    .site-row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:12px;
+      padding:14px 0;
+      border-bottom:1px solid #1f2937;
+      color:#dbe5fb;
+      align-items:center;
+    }
+
+    .site-row:last-child{border-bottom:none}
+
+    .site-name{
+      font-weight:bold;
+      font-size:17px;
+      margin-bottom:5px;
+    }
+
+    .site-meta{
+      color:#94a3b8;
+      font-size:14px;
+      line-height:1.4;
+    }
+
+    .pill{
+      display:inline-block;
+      padding:7px 10px;
+      border-radius:999px;
+      background:rgba(30,167,255,.14);
+      color:#93c5fd;
+      font-size:12px;
+      font-weight:bold;
+      white-space:nowrap;
+      text-transform:uppercase;
+    }
+
+    .pill.green{
+      background:rgba(34,197,94,.14);
+      color:#86efac;
+    }
+
+    .pill.yellow{
+      background:rgba(245,158,11,.14);
+      color:#fcd34d;
+    }
+
+    .pill.red{
+      background:rgba(239,68,68,.14);
+      color:#fca5a5;
+    }
+
+    .field-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-top:14px;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .field.full{
+      grid-column:1 / -1;
+    }
+
+    .field label{
+      font-size:13px;
+      color:#94a3b8;
+    }
+
+    input,select{
+      width:100%;
+      padding:12px;
+      border-radius:8px;
+      border:1px solid #334155;
+      background:#0b1220;
+      color:white;
+      font-size:15px;
+    }
+
+    input::placeholder{color:#64748b}
+
+    .controls{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top:16px;
+    }
+
+    button{
+      padding:12px 16px;
+      background:#2563eb;
+      color:white;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:bold;
+    }
+
+    button.secondary{background:#334155}
+    button.success{background:#16a34a}
+    button.danger{background:#dc2626}
+
+    .status{
+      margin-top:14px;
+      padding:12px 14px;
+      border-radius:8px;
+      background:#0b1220;
+      border:1px solid #1f2937;
+      color:#cbd5e1;
+      display:none;
+    }
+
+    .status.show{display:block}
+
+    .status.good{
+      border-color:rgba(34,197,94,.35);
+      color:#bbf7d0;
+      background:rgba(20,83,45,.24);
+    }
+
+    .status.bad{
+      border-color:rgba(239,68,68,.35);
+      color:#fecaca;
+      background:rgba(127,29,29,.24);
+    }
+
+    .site-card{
+      background:#0b1220;
+      border:1px solid #1f2937;
+      border-radius:12px;
+      padding:18px;
+      margin-bottom:16px;
+    }
+
+    .site-card-top{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:12px;
+      align-items:start;
+      padding-bottom:14px;
+      border-bottom:1px solid #1f2937;
+      margin-bottom:14px;
+    }
+
+    .invite-box{
+      margin-top:14px;
+      padding-top:14px;
+      border-top:1px solid #1f2937;
+    }
+
+    .invite-grid{
+      display:grid;
+      grid-template-columns:1fr 150px auto;
+      gap:10px;
+      align-items:end;
+    }
+
+    .mini-list{
+      margin-top:12px;
+      background:#020617;
+      border:1px solid #1f2937;
+      border-radius:10px;
+      overflow:hidden;
+    }
+
+    .mini-row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:10px;
+      padding:10px 12px;
+      border-bottom:1px solid #1f2937;
+      color:#cbd5e1;
+      align-items:center;
+    }
+
+    .mini-row:last-child{border-bottom:none}
+
+    .mini-main{
+      min-width:0;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .mini-muted{
+      color:#94a3b8;
+      font-size:13px;
+      margin-top:3px;
+    }
+
+    @media (max-width:1100px){
+      .grid-2{grid-template-columns:1fr}
+      .invite-grid{grid-template-columns:1fr 1fr}
+      .invite-grid .field.full-mobile{grid-column:1 / -1}
+    }
+
+    @media (max-width:900px){
+      .app{display:block}
+      .sidebar{display:none}
+      .mobile-topbar{display:flex}
+      .main{padding:20px}
+      .dashboard-menu-wrap{display:none}
+.page-header{padding-right:0}
+      .page-header h1{font-size:34px}
+      .field-grid{grid-template-columns:1fr}
+      .site-card-top{grid-template-columns:1fr}
+      .invite-grid{grid-template-columns:1fr}
+    }
   </style>
 </head>
 
 <body>
-<script>
-const hasAdminSession =
-  sessionStorage.getItem("washtracAdmin") === "yes" ||
-  localStorage.getItem("washtracAdmin") === "yes";
+  <script>
+    function hasAdminAccess(){
+      return sessionStorage.getItem("washtracAdmin") === "yes" ||
+             localStorage.getItem("washtracAdmin") === "yes";
+    }
 
-if(!hasAdminSession){
-  window.location.replace("index.html");
-}
-</script>
+    if(sessionStorage.getItem("washtracAdmin") === "yes"){
+      localStorage.setItem("washtracAdmin", "yes");
+    }
 
-<div class="mobile-topbar">
-  <div class="mobile-logo"><img src="washtrac-logo.png" alt="WashTrac" class="logo-image-mobile"></div>
-  <button class="menu-btn" type="button" onclick="toggleMobileMenu()">☰</button>
-</div>
+    const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
+    const isAdminLogin = hasAdminAccess();
+if(!isClientLogin && !isAdminLogin){
+      window.location.replace("login.html");
+    }
+  </script>
 
-<div class="mobile-menu" id="mobileMenu">
-  <a href="dashboard.html">Dashboard</a>
-  <a href="codes.html">Codes</a>
-  <a href="activity.html">Activity</a>
-  <a href="usage.html">Reports</a>
-  <a href="monitor.html">Monitor</a>
-  <a href="sites.html">Sites</a>
-  <a href="maintenance.html">Maintenance</a>
-  <a href="#" onclick="goHome(event)">Back to Homepage</a>
-  <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
-</div>
-
-<div class="backdrop" id="backdrop" onclick="closeMenus()"></div>
-
-<div class="app">
-  <div class="sidebar">
-    <div class="logo"><img src="washtrac-logo.png" alt="WashTrac" class="logo-image"></div>
-    <div class="nav">
-      <a href="dashboard.html">Dashboard</a>
-      <a href="codes.html">Codes</a>
-      <a href="activity.html">Activity</a>
-      <a href="usage.html">Reports</a>
-      <a href="monitor.html">Monitor</a>
-      <a href="sites.html">Sites</a>
-      <a class="active" href="maintenance.html">Maintenance</a>
+  <div class="mobile-topbar">
+    <div class="mobile-logo">
+      <img
+        src="washtrac-logo.png"
+        alt="WashTrac"
+        class="logo-image-mobile"
+      >
     </div>
+    <button class="menu-btn" type="button" onclick="toggleMobileMenu()">☰</button>
   </div>
 
-  <div class="main">
-    <div class="desktop-menu-wrap">
-      <button class="menu-btn" type="button" onclick="toggleDesktopMenu()">☰</button>
-      <div class="hamburger-menu" id="desktopMenu">
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="codes.html">Codes</a>
+    <a href="activity.html">Activity</a>
+    <a href="usage.html">Reports</a>
+    <a href="monitor.html">Monitor</a>
+    <a href="sites.html">Sites</a>
+    <a href="#" onclick="goHome(event)">Back to Homepage</a>
+    <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
+  </div>
+
+  <div class="backdrop" id="backdrop" onclick="closeMenus()"></div>
+
+  <div class="app">
+    <div class="sidebar">
+      <div class="logo">
+        <img
+          src="washtrac-logo.png"
+          alt="WashTrac"
+          class="logo-image"
+        >
+      </div>
+
+      <div class="nav">
         <a href="dashboard.html">Dashboard</a>
         <a href="codes.html">Codes</a>
-        <a href="sites.html">Sites</a>
-        <a href="#" onclick="goHome(event)">Back to Homepage</a>
-        <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
+        <a href="activity.html">Activity</a>
+        <a href="usage.html">Reports</a>
+        <a href="monitor.html">Monitor</a>
+        <a class="active" href="sites.html">Sites</a>
       </div>
     </div>
 
-    <div class="page-header">
-      <h1>Maintenance <span class="admin-pill">SUPPORT</span></h1>
-      <p>
-        Customer support control center for devices, pairing codes, customer access, site codes, and remote CodeBox commands.
-        Maintenance is admin-only and should be used as the field support lifeline.
-      </p>
-    </div>
+    <div class="main">
+      <div class="dashboard-menu-wrap">
+        <button class="menu-btn" type="button" onclick="toggleDashboardMenu()">☰</button>
 
-    <div class="summary">
-      <div class="summary-box"><strong id="totalDevices">0</strong><span>Total Devices</span></div>
-      <div class="summary-box"><strong id="onlineDevices">0</strong><span>Online</span></div>
-      <div class="summary-box"><strong id="activeCodesCount">0</strong><span>Active Codes</span></div>
-      <div class="summary-box"><strong id="pendingCommands">0</strong><span>Pending Commands</span></div>
-    </div>
-
-    <div class="card">
-      <h3>Support Scope</h3>
-      <div class="field-grid">
-        <div class="field">
-          <label for="siteFilter">Customer Site</label>
-          <select id="siteFilter" onchange="handleSiteChange()"><option value="">Loading sites...</option></select>
-        </div>
-        <div class="field">
-          <label for="deviceSearch">Search Device</label>
-          <input id="deviceSearch" placeholder="Name, serial, version..." oninput="renderDevices()">
-        </div>
-        <div class="field">
-          <label for="statusFilter">Device Status</label>
-          <select id="statusFilter" onchange="renderDevices()">
-            <option value="">All</option>
-            <option value="online">Online</option>
-            <option value="offline">Offline</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>&nbsp;</label>
-          <button type="button" onclick="loadMaintenancePage()">Refresh</button>
+        <div class="mobile-menu" id="dashboardMenu">
+          <a href="#" onclick="goHome(event)">Back to Homepage</a>
+          <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
         </div>
       </div>
 
-      <div class="support-toolbar">
-        <button type="button" onclick="openCustomerView('dashboard.html')">Open Dashboard</button>
-        <button type="button" onclick="openCustomerView('codes.html')">Open Codes</button>
-        <button type="button" onclick="openCustomerView('monitor.html')">Open Monitor</button>
-        <button type="button" onclick="openCustomerView('sites.html')">Open Sites</button>
+      <div class="page-header">
+        <h1>
+          Sites
+          <span class="live-pill">LOCATIONS</span>
+        </h1>
+        <p>
+          Add locations, manage site access, and invite other users by email.
+        </p>
       </div>
-
-      <div id="statusBox" class="status"></div>
-      <div class="note">
-        Select a site first. All support tools below apply to the selected customer site unless a tool says “all visible.”
-      </div>
-    </div>
-
-    <div class="grid-2">
-      <div class="card">
-        <h3>Customer Account Support</h3>
-
-        <div class="field">
-          <label for="customerEmail">Customer Email</label>
-          <input id="customerEmail" type="email" placeholder="customer@email.com">
-        </div>
-
-        <div class="actions">
-          <button type="button" onclick="sendPasswordReset()">Send Password Reset Email</button>
-          <button class="secondary" type="button" onclick="loadSiteAccessUsers()">Load Site Users</button>
-        </div>
-
-        <div id="usersList" class="mini-list" style="margin-top:14px;">
-          <div class="mini-row">
-            <div class="mini-main"><span class="mini-muted">Load users to view site access records.</span></div>
-            <div class="tag">Users</div>
-          </div>
-        </div>
-
-        <div class="note">
-          Browser-safe password support sends a reset email. A true “set password for user” tool requires a secure Supabase Edge Function using the service-role key. Do not place a service-role key in this HTML file.
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>Pairing Code Manager</h3>
-
-        <div class="field-grid" style="grid-template-columns:1fr 1fr;">
-          <div class="field">
-            <label for="pairingCodeInput">6-Digit Pairing Code</label>
-            <input id="pairingCodeInput" maxlength="6" inputmode="numeric" placeholder="Auto-generate or enter code">
-          </div>
-          <div class="field">
-            <label for="pairingMinutes">Expires In</label>
-            <select id="pairingMinutes">
-              <option value="15">15 minutes</option>
-              <option value="30">30 minutes</option>
-              <option value="60">1 hour</option>
-              <option value="1440">24 hours</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="actions">
-          <button type="button" onclick="generatePairingCode()">Generate</button>
-          <button class="success" type="button" onclick="savePairingCode()">Save / Re-Sync Pairing Code</button>
-          <button class="danger" type="button" onclick="cancelPendingPairingCodes()">Cancel Pending Codes</button>
-        </div>
-
-        <div id="pairingStatusBox" class="mini-list" style="margin-top:14px;">
-          <div class="mini-row">
-            <div class="mini-main"><span class="mini-muted">No pairing data loaded yet.</span></div>
-            <div class="tag">Pairing</div>
-          </div>
-        </div>
-
-        <div class="note">
-          Re-sync creates a fresh pending code for the selected site, then queues <span class="inline-code">sync_pairing_code</span> for visible CodeBox units.
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>Site Access Codes</h3>
-      <div class="field-grid">
-        <div class="field">
-          <label for="supportCode">Code</label>
-          <input id="supportCode" maxlength="4" inputmode="numeric" placeholder="4-digit code">
-        </div>
-        <div class="field">
-          <label for="supportDepartment">Department</label>
-          <input id="supportDepartment" placeholder="Service, Sales, Detail...">
-        </div>
-        <div class="field">
-          <label for="supportName">Name / Assigned To</label>
-          <input id="supportName" placeholder="Employee or purpose">
-        </div>
-        <div class="field">
-          <label>&nbsp;</label>
-          <button type="button" onclick="addSupportCode()">Add Code</button>
-        </div>
-      </div>
-
-      <div class="actions">
-        <button class="secondary" type="button" onclick="loadSiteCodes()">Refresh Codes</button>
-        <button class="success" type="button" onclick="queueCommandForVisible('sync_codes')">Re-Sync Codes to Keypad</button>
-      </div>
-
-      <div class="table-wrap" style="margin-top:14px;">
-        <table>
-          <thead>
-            <tr>
-              <th>Code</th>
-              <th>Department</th>
-              <th>Name</th>
-              <th>Status</th>
-              <th>Created</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="codesTableBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-
-    <div class="card">
-      <h3>Connectivity Support</h3>
 
       <div class="grid-2">
-        <div class="network-card">
-          <h4>
-            Wi‑Fi
-            <span id="wifiStatusTag" class="tag">Unknown</span>
-          </h4>
+        <div class="card">
+          <h3>Add Site</h3>
 
-          <div class="field-grid" style="grid-template-columns:1fr 1fr;">
-            <div class="field">
-              <label for="wifiSsid">Wi‑Fi SSID</label>
-              <input id="wifiSsid" placeholder="Network name">
+          <div class="field-grid">
+            <div class="field full">
+              <label for="organizationSelect">Organization</label>
+              <select id="organizationSelect">
+                <option value="">Loading organizations...</option>
+              </select>
             </div>
+
             <div class="field">
-              <label for="wifiPassword">Wi‑Fi Password</label>
-              <input id="wifiPassword" type="password" placeholder="Leave blank to keep existing">
+              <label for="siteName">Site Name</label>
+              <input id="siteName" placeholder="Example: Scrubbles Dallas">
+            </div>
+
+            <div class="field">
+              <label for="siteCity">City</label>
+              <input id="siteCity" placeholder="Example: Dallas">
+            </div>
+
+            <div class="field">
+              <label for="siteState">State</label>
+              <input id="siteState" placeholder="Example: TX">
+            </div>
+
+            <div class="field">
+              <label for="siteAddress">Address</label>
+              <input id="siteAddress" placeholder="Optional">
+            </div>
+
+            <div class="field">
+              <label for="siteBayCount">Number of Bays</label>
+              <select id="siteBayCount">
+                <option value="1" selected>1 Bay</option>
+                <option value="2">2 Bays</option>
+                <option value="3">3 Bays</option>
+                <option value="4">4 Bays</option>
+              </select>
             </div>
           </div>
 
-          <div class="signal-wrap" id="wifiSignalBars">
-            <div class="signal-bar"></div><div class="signal-bar"></div><div class="signal-bar"></div><div class="signal-bar"></div>
+          <div class="controls">
+            <button onclick="addSite()">Add Site</button>
+            <button class="secondary" onclick="clearForm()">Clear</button>
           </div>
 
-          <div id="wifiMeta" class="network-meta">No Wi‑Fi data loaded yet.</div>
+          <div id="siteStatus" class="status"></div>
 
-          <div class="actions">
-            <button type="button" onclick="saveWifiConfig()">Save Wi‑Fi Config</button>
-            <button class="secondary" type="button" onclick="queueCommandForVisible('refresh_network')">Refresh Network</button>
-            <button class="warn" type="button" onclick="queueCommandForVisible('restart_network')">Restart Network</button>
+          <div class="note">
+            When a site is added, it is linked to your login, becomes available in the dashboard site switcher, and creates the selected number of bay records.
           </div>
         </div>
 
-        <div class="network-card">
-          <h4>
-            LTE / SIM
-            <span id="lteStatusTag" class="tag">Unknown</span>
-          </h4>
+        <div class="card">
+          <h3>How User Access Works</h3>
 
-          <div class="field-grid" style="grid-template-columns:1fr 1fr;">
-            <div class="field">
-              <label for="lteApn">APN</label>
-              <input id="lteApn" placeholder="carrier APN">
+          <div class="site-row">
+            <div>
+              <div class="site-name">Owner / Admin</div>
+              <div class="site-meta">Can create sites and invite other users.</div>
             </div>
-            <div class="field">
-              <label for="lteSim">SIM ICCID / SIM ID</label>
-              <input id="lteSim" placeholder="SIM card number">
-            </div>
+            <div class="pill green">Control</div>
           </div>
 
-          <div class="field-grid" style="grid-template-columns:1fr 1fr;">
-            <div class="field">
-              <label for="lteCarrier">Carrier</label>
-              <input id="lteCarrier" placeholder="AT&T, Verizon, T-Mobile...">
+          <div class="site-row">
+            <div>
+              <div class="site-name">Email Invite</div>
+              <div class="site-meta">Invite a boss, manager, or tech by email. No user code needed.</div>
             </div>
-            <div class="field">
-              <label for="lteImei">Modem IMEI</label>
-              <input id="lteImei" placeholder="IMEI">
-            </div>
+            <div class="pill">Users</div>
           </div>
 
-          <div class="signal-wrap" id="lteSignalBars">
-            <div class="signal-bar"></div><div class="signal-bar"></div><div class="signal-bar"></div><div class="signal-bar"></div>
+          <div class="site-row">
+            <div>
+              <div class="site-name">6-Digit Code</div>
+              <div class="site-meta">Reserved for pairing a physical CodeBox to a site.</div>
+            </div>
+            <div class="pill yellow">Device</div>
           </div>
 
-          <div id="lteMeta" class="network-meta">No LTE/SIM data loaded yet.</div>
-
-          <div class="actions">
-            <button type="button" onclick="saveLteConfig()">Save LTE/SIM Config</button>
-            <button class="secondary" type="button" onclick="queueCommandForVisible('refresh_lte')">Refresh LTE</button>
-            <button class="warn" type="button" onclick="queueCommandForVisible('register_lte')">Re-Register SIM</button>
+          <div class="note">
+            If the invited email already has a WashTrac login, they can be linked when they open this page. If they sign up later with the same email, the invite can be accepted then.
           </div>
         </div>
       </div>
 
-      <div class="note">
-        The CodeBox should report Wi‑Fi/LTE status into the <span class="inline-code">devices</span> row or a future <span class="inline-code">device_network_status</span> table. These controls queue safe commands; the device agent performs the actual network changes.
-      </div>
-    </div>
-
-    <div class="grid-2">
       <div class="card">
-        <h3>Send Device Command</h3>
-
-        <div class="field">
-          <label for="targetDevice">Target Device</label>
-          <select id="targetDevice"><option value="">All visible devices</option></select>
-        </div>
-
-        <div class="field" style="margin-top:12px;">
-          <label for="commandSelect">Command</label>
-          <select id="commandSelect" onchange="handleCommandChange()">
-            <option value="sync_codes">Sync Codes Now</option>
-            <option value="sync_pairing_code">Sync Pairing Code</option>
-            <option value="restart_app">Restart Kiosk App</option>
-            <option value="restart_device">Reboot Device</option>
-            <option value="pull_logs">Pull Logs</option>
-            <option value="refresh_config">Refresh Config</option>
-            <option value="refresh_network">Refresh Network</option>
-            <option value="restart_network">Restart Network</option>
-            <option value="refresh_lte">Refresh LTE</option>
-            <option value="register_lte">Re-Register SIM</option>
-            <option value="enter_maintenance">Enter Maintenance Mode</option>
-            <option value="exit_maintenance">Exit Maintenance Mode</option>
-            <option value="update_software">Software Update</option>
-          </select>
-        </div>
-
-        <div class="field" id="versionWrap" style="margin-top:12px; display:none;">
-          <label for="updateVersion">Update Version / Package</label>
-          <input id="updateVersion" placeholder="Example: v1.0.7">
-        </div>
-
-        <div class="field" style="margin-top:12px;">
-          <label for="commandNote">Command Note</label>
-          <textarea id="commandNote" placeholder="Optional note for this command"></textarea>
-        </div>
-
-        <div class="actions">
-          <button type="button" onclick="queueCommand()">Queue Command</button>
-          <button class="secondary" type="button" onclick="clearCommandForm()">Clear</button>
-        </div>
-      </div>
-
-      <div class="card danger-zone">
-        <h3>Support Lifeline Commands</h3>
-        <p class="note">
-          These affect the selected site’s visible devices. Reboot and software update should only be used when you are actively supporting that customer.
-        </p>
-
-        <div class="actions">
-          <button class="success" type="button" onclick="queueCommandForVisible('sync_codes')">Sync Codes</button>
-          <button class="warn" type="button" onclick="queueCommandForVisible('pull_logs')">Pull Logs</button>
-          <button class="secondary" type="button" onclick="queueCommandForVisible('refresh_config')">Refresh Config</button>
-          <button class="danger" type="button" onclick="queueCommandForVisible('restart_app')">Restart App</button>
-          <button class="danger" type="button" onclick="queueCommandForVisible('restart_device')">Reboot Device</button>
-        </div>
-
-        <div class="note">
-          Needed backend/agent support on CodeBox: the Pi/CodeBox must poll <span class="inline-code">device_commands</span>, execute allowed commands, then update command status.
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>Devices</h3>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Status</th><th>Device</th><th>Site</th><th>Serial</th><th>Version</th><th>Last Seen</th><th>Command</th></tr></thead>
-          <tbody id="devicesTableBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>Recent Commands</h3>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Status</th><th>Command</th><th>Device</th><th>Created</th><th>Completed</th><th>Message</th></tr></thead>
-          <tbody id="commandsTableBody"></tbody>
-        </table>
+        <h3>Your Sites</h3>
+        <div id="sitesList"></div>
       </div>
     </div>
   </div>
-</div>
 
-<script>
-const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
-const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
-const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  <script>
+    const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const HEARTBEAT_ONLINE_MINUTES = 5;
+    let organizations = [];
+    let currentUser = null;
+    let currentSites = [];
+    let pendingInvites = [];
+    let acceptedMembers = [];
+    let siteBayCounts = {};
 
-let currentUser = null;
-let allSites = [];
-let allDevices = [];
-let visibleDevices = [];
-let recentCommands = [];
-let siteCodes = [];
-let selectedSiteId = "";
+    function injectAdminMaintenanceLinks(){
+      if(!hasAdminAccess()) return;
 
-function escapeText(value){
-  return String(value ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
+      const mobileMenu = document.getElementById("mobileMenu");
+      if(mobileMenu && !mobileMenu.querySelector('a[href="maintenance.html"]')){
+        const link = document.createElement("a");
+        link.href = "maintenance.html";
+        link.textContent = "Maintenance";
 
-function formatDateTime(value){
-  if(!value) return "-";
-  const d = new Date(value);
-  if(Number.isNaN(d.getTime())) return "-";
-  return d.toLocaleString();
-}
+        const homeLink = mobileMenu.querySelector('a[onclick="goHome(event)"]');
+        mobileMenu.insertBefore(link, homeLink || null);
+      }
 
-function shortDate(value){
-  if(!value) return "-";
-  const d = new Date(value);
-  if(Number.isNaN(d.getTime())) return "-";
-  return d.toLocaleDateString();
-}
+      const nav = document.querySelector(".nav");
+      if(nav && !nav.querySelector('a[href="maintenance.html"]')){
+        const link = document.createElement("a");
+        link.href = "maintenance.html";
+        link.textContent = "Maintenance";
+        nav.appendChild(link);
+      }
+    }
 
-function setStatus(message,tone=""){
-  const box=document.getElementById("statusBox");
-  box.innerText=message;
-  box.className="status show";
-  if(tone) box.classList.add(tone);
-}
+    function toggleMobileMenu(){
+      const menu = document.getElementById("mobileMenu");
+      const dashboardMenu = document.getElementById("dashboardMenu");
+      const backdrop = document.getElementById("backdrop");
 
-function clearStatus(){
-  const box=document.getElementById("statusBox");
-  box.innerText="";
-  box.className="status";
-}
+      if(dashboardMenu) dashboardMenu.style.display = "none";
 
-function selectedSite(){
-  return document.getElementById("siteFilter").value || "";
-}
+      const isOpen = menu.style.display === "block";
+      menu.style.display = isOpen ? "none" : "block";
+      backdrop.style.display = isOpen ? "none" : "block";
+    }
 
-function getDeviceName(device){return device.device_name||device.name||device.nickname||"Unnamed CodeBox";}
-function getDeviceSerial(device){return device.device_serial||device.serial||device.serial_number||device.id||"-";}
-function getDeviceVersion(device){return device.app_version||device.software_version||device.version||"-";}
-function getDeviceLastSeen(device){return device.last_seen||device.last_heartbeat||device.heartbeat_at||device.updated_at||"";}
+    function toggleDashboardMenu(){
+      const menu = document.getElementById("dashboardMenu");
+      const mobileMenu = document.getElementById("mobileMenu");
+      const backdrop = document.getElementById("backdrop");
 
-function isDeviceOnline(device){
-  const heartbeat=getDeviceLastSeen(device);
-  if(!heartbeat) return false;
-  const seen=new Date(heartbeat);
-  if(Number.isNaN(seen.getTime())) return false;
-  const diffMinutes=(new Date()-seen)/60000;
-  return diffMinutes<=HEARTBEAT_ONLINE_MINUTES;
-}
+      if(mobileMenu) mobileMenu.style.display = "none";
 
-function siteName(siteId){
-  const site=allSites.find(item=>item.id===siteId);
-  return site?(site.name||site.site_name||"Unnamed Site"):"-";
-}
+      const isOpen = menu.style.display === "block";
+      menu.style.display = isOpen ? "none" : "block";
+      backdrop.style.display = isOpen ? "none" : "block";
+    }
 
-function toggleDesktopMenu(){
-  const desktopMenu=document.getElementById("desktopMenu");
-  const mobileMenu=document.getElementById("mobileMenu");
-  const backdrop=document.getElementById("backdrop");
-  const isOpen=desktopMenu.style.display==="block";
-  mobileMenu.style.display="none";
-  desktopMenu.style.display=isOpen?"none":"block";
-  backdrop.style.display=isOpen?"none":"block";
-}
+    function closeMenus(){
+      const mobileMenu = document.getElementById("mobileMenu");
+      const dashboardMenu = document.getElementById("dashboardMenu");
+      const backdrop = document.getElementById("backdrop");
 
-function toggleMobileMenu(){
-  const desktopMenu=document.getElementById("desktopMenu");
-  const mobileMenu=document.getElementById("mobileMenu");
-  const backdrop=document.getElementById("backdrop");
-  const isOpen=mobileMenu.style.display==="block";
-  desktopMenu.style.display="none";
-  mobileMenu.style.display=isOpen?"none":"block";
-  backdrop.style.display=isOpen?"none":"block";
-}
+      if(mobileMenu) mobileMenu.style.display = "none";
+      if(dashboardMenu) dashboardMenu.style.display = "none";
+      if(backdrop) backdrop.style.display = "none";
+    }
 
-function closeMenus(){
-  document.getElementById("mobileMenu").style.display="none";
-  document.getElementById("desktopMenu").style.display="none";
-  document.getElementById("backdrop").style.display="none";
-}
+    function goHome(event){
+      if(event) event.preventDefault();
+      closeMenus();
+      localStorage.removeItem("washtracLoggedIn");
+      sessionStorage.removeItem("washtracAdmin");
+      localStorage.removeItem("washtracAdmin");
+      window.location.replace("index.html");
+    }
 
-function goHome(event){
-  if(event) event.preventDefault();
-  closeMenus();
-  localStorage.removeItem("washtracLoggedIn");
-  localStorage.removeItem("washtracAdmin");
-  sessionStorage.removeItem("washtracSessionActive");
-  sessionStorage.removeItem("washtracAdmin");
-  window.location.replace("index.html");
-}
+    async function logout(event){
+      if(event) event.preventDefault();
+      closeMenus();
 
-async function logout(event){
-  if(event) event.preventDefault();
-  closeMenus();
+      try{
+        await client.auth.signOut();
+      }catch(err){
+        console.log("logout error:", err);
+      }
 
-  try{ await client.auth.signOut(); }catch(err){ console.log("logout error:",err); }
+      localStorage.removeItem("washtracLoggedIn");
+      localStorage.removeItem("activeSiteId");
+      sessionStorage.removeItem("washtracAdmin");
+      localStorage.removeItem("washtracAdmin");
+      sessionStorage.removeItem("washtracSessionActive");
+      window.location.replace("login.html");
+    }
 
-  localStorage.removeItem("washtracLoggedIn");
-  localStorage.removeItem("washtracAdmin");
-  localStorage.removeItem("activeSiteId");
-  localStorage.removeItem("washtracActiveSiteId");
-  localStorage.removeItem("activeOrganizationId");
-  sessionStorage.removeItem("washtracSessionActive");
-  sessionStorage.removeItem("washtracAdmin");
-  window.location.replace("index.html");
-}
+    function setStatus(message, type = ""){
+      const box = document.getElementById("siteStatus");
+      box.innerText = message;
+      box.className = "status show";
+      if(type) box.classList.add(type);
+    }
 
-async function loadCurrentUser(){
-  const {data,error}=await client.auth.getUser();
-  if(error) console.log("User lookup error:",error);
+    function clearStatus(){
+      const box = document.getElementById("siteStatus");
+      box.innerText = "";
+      box.className = "status";
+    }
 
-  currentUser=data?.user || {
-    id:"admin-session",
-    email:"admin@washtrac.local",
-    is_admin_session:true
-  };
+    function clearForm(){
+      document.getElementById("siteName").value = "";
+      document.getElementById("siteCity").value = "";
+      document.getElementById("siteState").value = "";
+      document.getElementById("siteAddress").value = "";
+      document.getElementById("siteBayCount").value = "1";
+      clearStatus();
+    }
 
-  return currentUser;
-}
+    function siteLabel(site){
+      return site.name || site.site_name || "Unnamed Site";
+    }
 
-async function loadSites(){
-  const select = document.getElementById("siteFilter");
-  const existingValue = select.value || localStorage.getItem("activeSiteId") || "";
+    function organizationLabel(org){
+      return org.name || org.organization_name || org.company_name || "Unnamed Organization";
+    }
 
-  select.innerHTML = `<option value="">All Sites</option>`;
+    function escapeText(value){
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
 
-  const { data, error } = await client
-    .from("sites")
-    .select("*")
-    .order("name", { ascending:true });
+    function normalizeEmail(email){
+      return String(email || "").trim().toLowerCase();
+    }
 
-  if(error){
-    console.log("Sites load error:", error);
-    allSites = [];
-    select.innerHTML = `<option value="">Error loading sites</option>`;
-    return [];
-  }
+    function isValidEmail(email){
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim());
+    }
 
-  allSites = data || [];
+    function generateInviteCode(){
+      const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let code = "";
+      for(let i = 0; i < 10; i++){
+        code += alphabet[Math.floor(Math.random() * alphabet.length)];
+      }
+      return code;
+    }
 
-  select.innerHTML =
-    `<option value="">All Sites</option>` +
-    allSites.map(site => {
-      return `<option value="${escapeText(site.id)}">${escapeText(site.name || site.site_name || "Unnamed Site")}</option>`;
-    }).join("");
+    function addDays(date, days){
+      const d = new Date(date);
+      d.setDate(d.getDate() + days);
+      return d;
+    }
 
-  if(existingValue && allSites.some(site => site.id === existingValue)){
-    select.value = existingValue;
-  }else if(allSites.length){
-    select.value = allSites[0].id;
-  }
+    function normalizeBayName(value){
+      return String(value || "").trim().toUpperCase();
+    }
 
-  selectedSiteId = select.value || "";
+    function getBayNumberFromName(value){
+      const match = normalizeBayName(value).match(/^BAY\s*(\d+)$/);
+      return match ? parseInt(match[1], 10) : null;
+    }
 
-  if(selectedSiteId){
-    localStorage.setItem("activeSiteId", selectedSiteId);
-    localStorage.setItem("washtracActiveSiteId", selectedSiteId);
-    const site = allSites.find(item => item.id === selectedSiteId);
-    const orgId = site?.organization_id || site?.org_id || site?.company_id || "";
-    if(orgId) localStorage.setItem("activeOrganizationId", orgId);
-  }
+    function clampBayCount(value){
+      const count = parseInt(value, 10);
+      if(Number.isNaN(count)) return 1;
+      return Math.min(4, Math.max(1, count));
+    }
 
-  return allSites;
-}
+    async function loadBayCountsForSites(){
+      siteBayCounts = {};
+      const siteIds = currentSites.map(site => site.id).filter(Boolean);
 
-async function handleSiteChange(){
-  selectedSiteId = selectedSite();
+      if(!siteIds.length) return;
 
-  if(selectedSiteId){
-    localStorage.setItem("activeSiteId", selectedSiteId);
-    localStorage.setItem("washtracActiveSiteId", selectedSiteId);
-    const site = allSites.find(item => item.id === selectedSiteId);
-    const orgId = site?.organization_id || site?.org_id || site?.company_id || "";
-    if(orgId) localStorage.setItem("activeOrganizationId", orgId);
-  }
+      const { data, error } = await client
+        .from("site_bay_status")
+        .select("site_id,bay_name")
+        .in("site_id", siteIds);
 
-  await loadMaintenancePage(false);
-}
+      if(error){
+        console.log("Bay count load error:", error);
+        return;
+      }
 
-async function loadDevices(){
-  const siteFilter=selectedSite();
-  let query=client.from("devices").select("*").order("created_at",{ascending:false});
+      (data || []).forEach(row => {
+        if(!row.site_id) return;
+        siteBayCounts[row.site_id] = (siteBayCounts[row.site_id] || 0) + 1;
+      });
+    }
 
-  if(siteFilter){
-    query=query.eq("site_id",siteFilter);
-  }else if(allSites.length){
-    query=query.in("site_id",allSites.map(site=>site.id));
-  }
+    async function syncSiteBays(site, requestedCount){
+      const siteId = typeof site === "string" ? site : site?.id;
+      const organizationId = typeof site === "string" ? "" : (site?.organization_id || "");
+      const count = clampBayCount(requestedCount);
 
-  const {data,error}=await query;
+      if(!siteId){
+        throw new Error("No site id provided for bay sync.");
+      }
 
-  if(error){
-    console.log("Devices load error:",error);
-    setStatus("Could not load devices. Make sure the devices table exists.","error");
-    allDevices=[];
-    return [];
-  }
+      const { data: existingRows, error: loadError } = await client
+        .from("site_bay_status")
+        .select("*")
+        .eq("site_id", siteId);
 
-  allDevices=data||[];
-  return allDevices;
-}
+      if(loadError){
+        console.log("Bay sync load error:", loadError);
+        throw loadError;
+      }
 
-async function loadRecentCommands(){
-  const deviceIds=allDevices.map(device=>device.id).filter(Boolean);
-  if(!deviceIds.length){recentCommands=[];return [];}
+      const existing = existingRows || [];
+      const byBayNumber = {};
 
-  const {data,error}=await client
-    .from("device_commands")
-    .select("*")
-    .in("device_id",deviceIds)
-    .order("created_at",{ascending:false})
-    .limit(50);
+      existing.forEach(row => {
+        const bayNumber = getBayNumberFromName(row.bay_name);
+        if(bayNumber) byBayNumber[bayNumber] = row;
+      });
 
-  if(error){
-    console.log("Commands load error:",error);
-    recentCommands=[];
-    return [];
-  }
+      const rowsToInsert = [];
+      for(let i = 1; i <= count; i++){
+        if(!byBayNumber[i]){
+          const row = {
+            site_id: siteId,
+            bay_name: `BAY ${i}`,
+            status: "Ready",
+            updated_at: new Date().toISOString()
+          };
 
-  recentCommands=data||[];
-  return recentCommands;
-}
+          if(organizationId) row.organization_id = organizationId;
+          rowsToInsert.push(row);
+        }
+      }
 
-async function loadSiteCodes(){
-  const siteId = selectedSite();
+      if(rowsToInsert.length){
+        const { error: insertError } = await client
+          .from("site_bay_status")
+          .insert(rowsToInsert);
 
-  const tbody = document.getElementById("codesTableBody");
-  tbody.innerHTML = `<tr><td colspan="6" class="muted">Loading codes...</td></tr>`;
+        if(insertError){
+          console.log("Bay sync insert error:", insertError);
+          throw insertError;
+        }
+      }
 
-  if(!siteId){
-    siteCodes = [];
-    tbody.innerHTML = `<tr><td colspan="6" class="muted">Select a site to manage codes.</td></tr>`;
-    renderSummary();
-    return [];
-  }
+      const rowsToDelete = existing.filter(row => {
+        const bayNumber = getBayNumberFromName(row.bay_name);
+        return bayNumber && bayNumber > count;
+      });
 
-  const { data, error } = await client
-    .from("access_codes")
-    .select("*")
-    .eq("site_id", siteId)
-    .order("created_at", { ascending:false });
+      if(rowsToDelete.length){
+        const deleteIds = rowsToDelete.map(row => row.id).filter(Boolean);
 
-  if(error){
-    console.log("Codes load error:", error);
-    tbody.innerHTML = `<tr><td colspan="6" class="muted">Could not load codes.</td></tr>`;
-    return [];
-  }
+        if(deleteIds.length){
+          const { error: deleteError } = await client
+            .from("site_bay_status")
+            .delete()
+            .in("id", deleteIds);
 
-  siteCodes = data || [];
-  renderCodes();
-  renderSummary();
-  return siteCodes;
-}
-
-function renderCodes(){
-  const tbody = document.getElementById("codesTableBody");
-  tbody.innerHTML = "";
-
-  if(!siteCodes.length){
-    tbody.innerHTML = `<tr><td colspan="6" class="muted">No codes found for this site.</td></tr>`;
-    return;
-  }
-
-  siteCodes.forEach(item => {
-    const active = item.is_active !== false;
-    tbody.innerHTML += `
-      <tr>
-        <td><strong>${escapeText(item.code || "")}</strong></td>
-        <td>${escapeText(item.department || "Unassigned")}</td>
-        <td>${escapeText(item.assigned_to || item.name || "")}</td>
-        <td><span class="tag ${active ? "green" : "red"}">${active ? "Active" : "Inactive"}</span></td>
-        <td>${escapeText(formatDateTime(item.created_at))}</td>
-        <td>
-          ${active
-            ? `<button class="danger" type="button" onclick="removeSupportCode('${escapeText(item.id)}','${escapeText(item.code || "")}')">Remove</button>`
-            : `<button class="success" type="button" onclick="reactivateSupportCode('${escapeText(item.id)}')">Reactivate</button>`
+          if(deleteError){
+            console.log("Bay sync delete error:", deleteError);
+            throw deleteError;
           }
-        </td>
-      </tr>
-    `;
-  });
-}
+        }
+      }
 
-async function addSupportCode(){
-  clearStatus();
-
-  const siteId = selectedSite();
-  if(!siteId){ setStatus("Select a site first.", "warn"); return; }
-
-  const code = document.getElementById("supportCode").value.trim();
-  const department = document.getElementById("supportDepartment").value.trim();
-  const name = document.getElementById("supportName").value.trim();
-
-  if(!/^\d{4}$/.test(code)){
-    setStatus("Code must be 4 digits.", "warn");
-    return;
-  }
-
-  if(!department){
-    setStatus("Enter a department.", "warn");
-    return;
-  }
-
-  if(!name){
-    setStatus("Enter a name / assigned to.", "warn");
-    return;
-  }
-
-  const existing = siteCodes.find(item => String(item.code || "").trim() === code);
-
-  if(existing && existing.is_active !== false){
-    setStatus("That code already exists and is active for this site.", "warn");
-    return;
-  }
-
-  const site = allSites.find(item => item.id === siteId);
-  const orgId = site?.organization_id || site?.org_id || site?.company_id || null;
-
-  if(existing && existing.is_active === false){
-    const { error } = await client
-      .from("access_codes")
-      .update({
-        department,
-        assigned_to:name,
-        is_active:true,
-        updated_at:new Date().toISOString()
-      })
-      .eq("id", existing.id)
-      .eq("site_id", siteId);
-
-    if(error){
-      console.log("Reactivate code error:", error);
-      setStatus("Could not reactivate code.", "error");
-      return;
+      siteBayCounts[siteId] = count;
+      return count;
     }
-  }else{
-    const payload = {
-      site_id:siteId,
-      code,
-      department,
-      assigned_to:name,
-      is_active:true
+
+    async function updateSiteBayCount(siteId, countValue){
+      clearStatus();
+
+      const site = currentSites.find(item => item.id === siteId);
+      if(!site){
+        setStatus("Site not found.", "bad");
+        return;
+      }
+
+      if(!canManageSite(site)){
+        setStatus("Only owner/admin users can change bay setup.", "bad");
+        await loadSites();
+        return;
+      }
+
+      const count = clampBayCount(countValue);
+      const confirmText = `Set ${siteLabel(site)} to ${count} bay${count === 1 ? "" : "s"}? This will remove extra BAY rows from this site.`;
+      const confirmed = confirm(confirmText);
+
+      if(!confirmed){
+        await loadSites();
+        return;
+      }
+
+      try{
+        await syncSiteBays(site, count);
+        setStatus(`Bay setup saved: ${count} bay${count === 1 ? "" : "s"}.`, "good");
+        await loadSites();
+      }catch(err){
+        console.log("Update bay count error:", err);
+        setStatus("Could not update bay setup: " + (err.message || "Unknown error"), "bad");
+        await loadSites();
+      }
+    }
+
+    async function loadCurrentUser(){
+      const isAdminLogin = hasAdminAccess();
+
+      const { data, error } = await client.auth.getUser();
+
+      if(error){
+        console.log("User lookup error:", error);
+      }
+
+      currentUser = data?.user || null;
+
+      if(!currentUser && isAdminLogin){
+        currentUser = {
+          id: "admin-session",
+          email: "admin@washtrac.local",
+          is_admin_session: true
+        };
+        return currentUser;
+      }
+
+      if(!currentUser){
+        localStorage.removeItem("washtracLoggedIn");
+        window.location.replace("login.html");
+        return null;
+      }
+
+      return currentUser;
+    }
+
+    async function loadOrganizations(){
+      const select = document.getElementById("organizationSelect");
+      select.innerHTML = `<option value="">Loading organizations...</option>`;
+
+      const { data, error } = await client
+        .from("organizations")
+        .select("*")
+        .order("name", { ascending:true });
+
+      if(error){
+        console.log("Organizations error:", error);
+        select.innerHTML = `<option value="">No organizations found</option>`;
+        organizations = [];
+        return [];
+      }
+
+      organizations = data || [];
+
+      if(!organizations.length){
+        select.innerHTML = `<option value="">No organizations found</option>`;
+        return [];
+      }
+
+      select.innerHTML = organizations.map(org => {
+        return `<option value="${escapeText(org.id)}">${escapeText(organizationLabel(org))}</option>`;
+      }).join("");
+
+      return organizations;
+    }
+
+    async function acceptPendingInvitesForCurrentUser(){
+      if(hasAdminAccess()) return;
+      if(!currentUser?.email) return;
+
+      const email = normalizeEmail(currentUser.email);
+
+      const { data: invites, error } = await client
+        .from("site_invites")
+        .select("*")
+        .eq("email", email)
+        .is("accepted_at", null);
+
+      if(error){
+        console.log("Pending invite lookup error:", error);
+        return;
+      }
+
+      const now = new Date();
+
+      for(const invite of (invites || [])){
+        if(invite.expires_at && new Date(invite.expires_at) < now){
+          continue;
+        }
+
+        const { data: existingAccess, error: existingError } = await client
+          .from("user_site_access")
+          .select("id")
+          .eq("user_id", currentUser.id)
+          .eq("site_id", invite.site_id)
+          .limit(1);
+
+        if(existingError){
+          console.log("Existing access check error:", existingError);
+          continue;
+        }
+
+        if(!existingAccess || !existingAccess.length){
+          const { error: accessError } = await client
+            .from("user_site_access")
+            .insert([{
+              user_id: currentUser.id,
+              site_id: invite.site_id,
+              role: invite.role || "viewer"
+            }]);
+
+          if(accessError){
+            console.log("Accept invite access insert error:", accessError);
+            continue;
+          }
+        }
+
+        const { error: acceptError } = await client
+          .from("site_invites")
+          .update({ accepted_at: new Date().toISOString(), accepted_by: currentUser.id })
+          .eq("id", invite.id);
+
+        if(acceptError){
+          console.log("Mark invite accepted error:", acceptError);
+        }
+      }
+    }
+
+    async function loadSites(){
+      const wrap = document.getElementById("sitesList");
+      wrap.innerHTML = `<div class="site-row"><div><div class="site-name">Loading sites...</div></div><div class="pill">...</div></div>`;
+
+      currentSites = [];
+
+      const isAdminLogin = hasAdminAccess();
+
+      if(!currentUser && !isAdminLogin){
+        wrap.innerHTML = `<div class="site-row"><div><div class="site-name">No user found.</div></div><div class="pill red">Error</div></div>`;
+        return [];
+      }
+
+      if(isAdminLogin){
+        const { data, error } = await client
+          .from("sites")
+          .select("*")
+          .order("name", { ascending:true });
+
+        if(error){
+          console.log("Admin sites load error:", error);
+          wrap.innerHTML = `<div class="site-row"><div><div class="site-name">Could not load sites.</div><div class="site-meta">Check sites table and policies.</div></div><div class="pill red">Error</div></div>`;
+          return [];
+        }
+
+        currentSites = (data || [])
+          .filter(site => site && site.id)
+          .map(site => ({
+            ...site,
+            member_role: "admin"
+          }));
+      }else{
+        const memberResult = await client
+          .from("user_site_access")
+          .select("site_id, role, sites(*)")
+          .eq("user_id", currentUser.id);
+
+        if(memberResult.error){
+          console.log("User site access error:", memberResult.error);
+          wrap.innerHTML = `<div class="site-row"><div><div class="site-name">Could not load site access.</div><div class="site-meta">Check user_site_access table and policies.</div></div><div class="pill red">Error</div></div>`;
+          return [];
+        }
+
+        currentSites = (memberResult.data || [])
+          .map(row => ({
+            ...row.sites,
+            member_role: row.role || "viewer"
+          }))
+          .filter(site => site && site.id);
+      }
+
+      if(!currentSites.length){
+        wrap.innerHTML = `<div class="site-row"><div><div class="site-name">No sites yet.</div><div class="site-meta">Add your first site above.</div></div><div class="pill">0</div></div>`;
+        return [];
+      }
+
+      await loadInviteAndMemberData();
+      await loadBayCountsForSites();
+      renderSites();
+      return currentSites;
+    }
+
+    async function loadInviteAndMemberData(){
+      const siteIds = currentSites.map(site => site.id).filter(Boolean);
+
+      pendingInvites = [];
+      acceptedMembers = [];
+
+      if(!siteIds.length) return;
+
+      const { data: invites, error: inviteError } = await client
+        .from("site_invites")
+        .select("*")
+        .in("site_id", siteIds)
+        .is("accepted_at", null)
+        .order("created_at", { ascending:false });
+
+      if(inviteError){
+        console.log("Site invites load error:", inviteError);
+      }else{
+        pendingInvites = invites || [];
+      }
+
+      const { data: members, error: memberError } = await client
+        .from("user_site_access")
+        .select("id, user_id, site_id, role, created_at")
+        .in("site_id", siteIds)
+        .order("created_at", { ascending:false });
+
+      if(memberError){
+        console.log("Site members load error:", memberError);
+      }else{
+        acceptedMembers = members || [];
+      }
+    }
+
+    function canManageSite(site){
+      const role = String(site.member_role || "").toLowerCase();
+      return role === "owner" || role === "admin";
+    }
+
+    function renderSites(){
+      const wrap = document.getElementById("sitesList");
+      wrap.innerHTML = "";
+
+      currentSites.forEach(site => {
+        const city = site.city || "";
+        const state = site.state || "";
+        const address = site.address || "";
+        const location = [city, state].filter(Boolean).join(", ");
+        const metaParts = [];
+
+        if(location) metaParts.push(location);
+        if(address) metaParts.push(address);
+
+        const siteInvites = pendingInvites.filter(invite => invite.site_id === site.id);
+        const siteMembers = acceptedMembers.filter(member => member.site_id === site.id);
+        const manager = canManageSite(site);
+
+        const invitesHtml = siteInvites.length
+          ? siteInvites.map(invite => `
+              <div class="mini-row">
+                <div class="mini-main">
+                  <strong>${escapeText(invite.email)}</strong>
+                  <div class="mini-muted">Pending invite • Code: ${escapeText(invite.invite_code || "")}</div>
+                </div>
+                <div class="pill yellow">${escapeText(invite.role || "viewer")}</div>
+              </div>
+            `).join("")
+          : `<div class="mini-row"><div class="mini-main"><span class="mini-muted">No pending invites.</span></div><div class="pill">0</div></div>`;
+
+        const membersHtml = siteMembers.length
+          ? siteMembers.map(member => `
+              <div class="mini-row">
+                <div class="mini-main">
+                  <strong>${member.user_id === currentUser.id ? "You" : "User"}</strong>
+                  <div class="mini-muted">${escapeText(member.user_id)}</div>
+                </div>
+                <div class="pill green">${escapeText(member.role || "viewer")}</div>
+              </div>
+            `).join("")
+          : `<div class="mini-row"><div class="mini-main"><span class="mini-muted">No linked users found.</span></div><div class="pill">0</div></div>`;
+
+        wrap.innerHTML += `
+          <div class="site-card">
+            <div class="site-card-top">
+              <div>
+                <div class="site-name">${escapeText(siteLabel(site))}</div>
+                <div class="site-meta">${metaParts.length ? escapeText(metaParts.join(" • ")) : "No location details"}</div>
+                <div class="site-meta">Site ID: ${escapeText(site.id)}</div>
+              </div>
+              <div class="pill">${escapeText(site.member_role || "site")}</div>
+            </div>
+
+            <div class="invite-box" style="margin-top:0; padding-top:0; border-top:none; margin-bottom:16px;">
+              <h4>Bay Setup</h4>
+              <div class="invite-grid">
+                <div class="field full-mobile">
+                  <label for="bayCount-${escapeText(site.id)}">Number of Bays For This Site</label>
+                  <select id="bayCount-${escapeText(site.id)}" onchange="updateSiteBayCount('${escapeText(site.id)}', this.value)" ${manager ? "" : "disabled"}>
+                    <option value="1" ${clampBayCount(siteBayCounts[site.id] || 1) === 1 ? "selected" : ""}>1 Bay</option>
+                    <option value="2" ${clampBayCount(siteBayCounts[site.id] || 1) === 2 ? "selected" : ""}>2 Bays</option>
+                    <option value="3" ${clampBayCount(siteBayCounts[site.id] || 1) === 3 ? "selected" : ""}>3 Bays</option>
+                    <option value="4" ${clampBayCount(siteBayCounts[site.id] || 1) === 4 ? "selected" : ""}>4 Bays</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Current</label>
+                  <div class="pill green">${clampBayCount(siteBayCounts[site.id] || 1)} BAY${clampBayCount(siteBayCounts[site.id] || 1) === 1 ? "" : "S"}</div>
+                </div>
+              </div>
+              <div class="note">
+                ${manager ? "Changing this updates the bay rows used by Dashboard and Monitor." : "Only owner/admin users can change bay setup."}
+              </div>
+            </div>
+
+            <h4>Linked Users</h4>
+            <div class="mini-list">${membersHtml}</div>
+
+            <div class="invite-box">
+              <h4>Invite User</h4>
+              <div class="invite-grid">
+                <div class="field full-mobile">
+                  <label for="inviteEmail-${escapeText(site.id)}">Email Address</label>
+                  <input id="inviteEmail-${escapeText(site.id)}" type="email" placeholder="manager@company.com" ${manager ? "" : "disabled"}>
+                </div>
+
+                <div class="field">
+                  <label for="inviteRole-${escapeText(site.id)}">Role</label>
+                  <select id="inviteRole-${escapeText(site.id)}" ${manager ? "" : "disabled"}>
+                    <option value="viewer">Viewer</option>
+                    <option value="admin">Admin</option>
+                    <option value="owner">Owner</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label>&nbsp;</label>
+                  <button onclick="inviteUser('${escapeText(site.id)}')" ${manager ? "" : "disabled"}>Invite</button>
+                </div>
+              </div>
+
+              <div class="note">
+                ${manager ? "Invited users are linked by email. If they do not have an account yet, they will be linked after signing up with that email." : "Only owner/admin users can invite others to this site."}
+              </div>
+
+              <h4 style="margin-top:16px;">Pending Invites</h4>
+              <div class="mini-list">${invitesHtml}</div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    async function addSite(){
+      clearStatus();
+
+      const organization_id = document.getElementById("organizationSelect").value;
+      const name = document.getElementById("siteName").value.trim();
+      const city = document.getElementById("siteCity").value.trim();
+      const state = document.getElementById("siteState").value.trim();
+      const address = document.getElementById("siteAddress").value.trim();
+      const bayCount = clampBayCount(document.getElementById("siteBayCount").value);
+
+      if(!organization_id){
+        setStatus("Choose an organization first.", "bad");
+        return;
+      }
+
+      if(!name){
+        setStatus("Enter a site name.", "bad");
+        return;
+      }
+
+      if(!currentUser){
+        setStatus("No logged-in user found.", "bad");
+        return;
+      }
+
+      const payload = {
+        organization_id,
+        name
+      };
+
+      if(city) payload.city = city;
+      if(state) payload.state = state;
+      if(address) payload.address = address;
+
+      const { data: siteData, error: siteError } = await client
+        .from("sites")
+        .insert([payload])
+        .select("*")
+        .maybeSingle();
+
+      if(siteError){
+        console.log("Add site error:", siteError);
+        setStatus("Could not add site: " + siteError.message, "bad");
+        return;
+      }
+
+      if(currentUser && siteData?.id && !hasAdminAccess()){
+        const { error: memberError } = await client
+          .from("user_site_access")
+          .insert([
+            {
+              user_id: currentUser.id,
+              site_id: siteData.id,
+              role: "owner"
+            }
+          ]);
+
+        if(memberError){
+          console.log("Site member insert error:", memberError);
+          setStatus("Site created, but user was not linked in user_site_access. Check policies/table columns.", "bad");
+          await loadSites();
+          return;
+        }
+      }
+
+      try{
+        await syncSiteBays(siteData, bayCount);
+      }catch(err){
+        console.log("Initial bay setup error:", err);
+        setStatus("Site created, but bay setup failed. You can set the bay count below.", "bad");
+        await loadSites();
+        return;
+      }
+
+      localStorage.setItem("activeSiteId", siteData.id);
+
+      clearForm();
+      setStatus(`Site added with ${bayCount} bay${bayCount === 1 ? "" : "s"}, selected, and linked to your account.`, "good");
+      await loadSites();
+    }
+
+    async function inviteUser(siteId){
+      clearStatus();
+
+      const site = currentSites.find(item => item.id === siteId);
+      if(!site){
+        setStatus("Site not found.", "bad");
+        return;
+      }
+
+      if(!canManageSite(site)){
+        setStatus("Only owner/admin users can invite others.", "bad");
+        return;
+      }
+
+      const emailInput = document.getElementById(`inviteEmail-${siteId}`);
+      const roleSelect = document.getElementById(`inviteRole-${siteId}`);
+
+      const email = normalizeEmail(emailInput.value);
+      const role = roleSelect.value || "viewer";
+
+      if(!email){
+        setStatus("Enter an email address to invite.", "bad");
+        return;
+      }
+
+      if(!isValidEmail(email)){
+        setStatus("Enter a valid email address.", "bad");
+        return;
+      }
+
+      if(email === normalizeEmail(currentUser.email)){
+        setStatus("You already have access to this site.", "bad");
+        return;
+      }
+
+      const existingPending = pendingInvites.find(invite =>
+        invite.site_id === siteId && normalizeEmail(invite.email) === email
+      );
+
+      if(existingPending){
+        setStatus("That email already has a pending invite for this site.", "bad");
+        return;
+      }
+
+      const inviteCode = generateInviteCode();
+      const expiresAt = addDays(new Date(), 14).toISOString();
+
+      const { error } = await client
+        .from("site_invites")
+        .insert([{
+          site_id: siteId,
+          email,
+          role,
+          invite_code: inviteCode,
+          created_by: currentUser.id,
+          expires_at: expiresAt
+        }]);
+
+      if(error){
+        console.log("Invite insert error:", error);
+        setStatus("Could not create invite. Make sure the site_invites table exists.", "bad");
+        return;
+      }
+
+      emailInput.value = "";
+      roleSelect.value = "viewer";
+
+      setStatus(`Invite saved for ${email}.`, "good");
+      await loadSites();
+    }
+
+    document.addEventListener("click", function(event){
+      const dashboardMenu = document.getElementById("dashboardMenu");
+      const mobileMenu = document.getElementById("mobileMenu");
+      const dashboardWrap = document.querySelector(".dashboard-menu-wrap");
+      const mobileTopbar = document.querySelector(".mobile-topbar");
+      const backdrop = document.getElementById("backdrop");
+
+      const clickedDashboard = dashboardWrap && dashboardWrap.contains(event.target);
+      const clickedMobile = mobileTopbar && mobileTopbar.contains(event.target);
+      const clickedMobileMenu = mobileMenu && mobileMenu.contains(event.target);
+
+      if(!clickedDashboard && !clickedMobile && !clickedMobileMenu){
+        if(dashboardMenu) dashboardMenu.style.display = "none";
+        if(mobileMenu) mobileMenu.style.display = "none";
+        if(backdrop) backdrop.style.display = "none";
+      }
+    });
+
+    document.addEventListener("keydown", function(event){
+      if(event.key === "Escape"){
+        closeMenus();
+      }
+    });
+
+    window.onload = async function(){
+      injectAdminMaintenanceLinks();
+      await loadCurrentUser();
+      await acceptPendingInvitesForCurrentUser();
+      await loadOrganizations();
+      await loadSites();
     };
-
-    if(orgId) payload.organization_id = orgId;
-
-    const { error } = await client
-      .from("access_codes")
-      .insert([payload]);
-
-    if(error){
-      console.log("Add code error:", error);
-      setStatus("Could not add code.", "error");
-      return;
-    }
-  }
-
-  document.getElementById("supportCode").value = "";
-  document.getElementById("supportDepartment").value = "";
-  document.getElementById("supportName").value = "";
-
-  setStatus("Code saved. Queueing sync to visible CodeBox units.", "success");
-  await loadSiteCodes();
-  await queueCommandForVisible("sync_codes", false);
-}
-
-async function removeSupportCode(id, code){
-  const siteId = selectedSite();
-  if(!siteId){ setStatus("Select a site first.", "warn"); return; }
-
-  const confirmed = confirm(`Remove code ${code}? This disables it for this site.`);
-  if(!confirmed) return;
-
-  const { error } = await client
-    .from("access_codes")
-    .update({ is_active:false, updated_at:new Date().toISOString() })
-    .eq("id", id)
-    .eq("site_id", siteId);
-
-  if(error){
-    console.log("Remove code error:", error);
-    setStatus("Could not remove code.", "error");
-    return;
-  }
-
-  setStatus("Code removed. Queueing sync to visible CodeBox units.", "success");
-  await loadSiteCodes();
-  await queueCommandForVisible("sync_codes", false);
-}
-
-async function reactivateSupportCode(id){
-  const siteId = selectedSite();
-  if(!siteId){ setStatus("Select a site first.", "warn"); return; }
-
-  const { error } = await client
-    .from("access_codes")
-    .update({ is_active:true, updated_at:new Date().toISOString() })
-    .eq("id", id)
-    .eq("site_id", siteId);
-
-  if(error){
-    console.log("Reactivate code error:", error);
-    setStatus("Could not reactivate code.", "error");
-    return;
-  }
-
-  setStatus("Code reactivated. Queueing sync to visible CodeBox units.", "success");
-  await loadSiteCodes();
-  await queueCommandForVisible("sync_codes", false);
-}
-
-async function sendPasswordReset(){
-  clearStatus();
-
-  const email = document.getElementById("customerEmail").value.trim().toLowerCase();
-
-  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
-    setStatus("Enter a valid customer email.", "warn");
-    return;
-  }
-
-  const confirmed = confirm(`Send password reset email to ${email}?`);
-  if(!confirmed) return;
-
-  const redirectTo = `${window.location.origin}/login.html`;
-
-  const { error } = await client.auth.resetPasswordForEmail(email, {
-    redirectTo
-  });
-
-  if(error){
-    console.log("Password reset error:", error);
-    setStatus("Password reset email failed: " + error.message, "error");
-    return;
-  }
-
-  setStatus(`Password reset email sent to ${email}.`, "success");
-}
-
-async function loadSiteAccessUsers(){
-  clearStatus();
-
-  const siteId = selectedSite();
-  const wrap = document.getElementById("usersList");
-
-  if(!siteId){
-    wrap.innerHTML = `<div class="mini-row"><div class="mini-main"><span class="mini-muted">Select a site first.</span></div><div class="tag red">No Site</div></div>`;
-    return;
-  }
-
-  wrap.innerHTML = `<div class="mini-row"><div class="mini-main"><span class="mini-muted">Loading users and invites...</span></div><div class="tag">...</div></div>`;
-
-  let accessResult = await client
-    .from("user_site_access")
-    .select("*")
-    .eq("site_id", siteId)
-    .order("created_at", { ascending:false });
-
-  if(accessResult.error){
-    console.log("user_site_access error:", accessResult.error);
-
-    accessResult = await client
-      .from("site_members")
-      .select("*")
-      .eq("site_id", siteId);
-  }
-
-  const { data: invites, error: inviteError } = await client
-    .from("site_invites")
-    .select("*")
-    .eq("site_id", siteId)
-    .order("created_at", { ascending:false });
-
-  if(accessResult.error && inviteError){
-    wrap.innerHTML = `<div class="mini-row"><div class="mini-main"><span class="mini-muted">Could not load users.</span></div><div class="tag red">Error</div></div>`;
-    return;
-  }
-
-  const accessRows = accessResult.data || [];
-  const inviteRows = invites || [];
-
-  let html = "";
-
-  accessRows.forEach(row => {
-    html += `
-      <div class="mini-row">
-        <div class="mini-main">
-          <strong>${escapeText(row.user_id || "Linked user")}</strong>
-          <div class="mini-muted">Role: ${escapeText(row.role || "viewer")} • Access record</div>
-        </div>
-        <div class="tag green">Linked</div>
-      </div>
-    `;
-  });
-
-  inviteRows.forEach(row => {
-    html += `
-      <div class="mini-row">
-        <div class="mini-main">
-          <strong>${escapeText(row.email || "Invite")}</strong>
-          <div class="mini-muted">Role: ${escapeText(row.role || "viewer")} • Code: ${escapeText(row.invite_code || "")}</div>
-        </div>
-        <div class="tag ${row.accepted_at ? "green" : "yellow"}">${row.accepted_at ? "Accepted" : "Pending"}</div>
-      </div>
-    `;
-  });
-
-  if(!html){
-    html = `<div class="mini-row"><div class="mini-main"><span class="mini-muted">No linked users or invites found for this site.</span></div><div class="tag">0</div></div>`;
-  }
-
-  wrap.innerHTML = html;
-}
-
-function generatePairingCode(){
-  document.getElementById("pairingCodeInput").value =
-    Math.floor(100000 + Math.random() * 900000).toString();
-}
-
-async function loadPairingCodes(){
-  const siteId = selectedSite();
-  const wrap = document.getElementById("pairingStatusBox");
-
-  if(!siteId){
-    wrap.innerHTML = `<div class="mini-row"><div class="mini-main"><span class="mini-muted">Select a site first.</span></div><div class="tag red">No Site</div></div>`;
-    return [];
-  }
-
-  const { data, error } = await client
-    .from("device_pairing_codes")
-    .select("*")
-    .eq("site_id", siteId)
-    .order("created_at", { ascending:false })
-    .limit(5);
-
-  if(error){
-    console.log("Pairing load error:", error);
-    wrap.innerHTML = `<div class="mini-row"><div class="mini-main"><span class="mini-muted">Could not load pairing codes.</span></div><div class="tag red">Error</div></div>`;
-    return [];
-  }
-
-  const rows = data || [];
-
-  if(!rows.length){
-    wrap.innerHTML = `<div class="mini-row"><div class="mini-main"><span class="mini-muted">No pairing codes found.</span></div><div class="tag">0</div></div>`;
-    return [];
-  }
-
-  wrap.innerHTML = rows.map(row => {
-    const expired = row.expires_at && new Date(row.expires_at) < new Date();
-    const status = expired ? "expired" : (row.status || "pending");
-    const tagClass = status === "pending" ? "yellow" : status === "used" ? "green" : "red";
-
-    return `
-      <div class="mini-row">
-        <div class="mini-main">
-          <strong>${escapeText(row.code || "------")}</strong>
-          <div class="mini-muted">Status: ${escapeText(status)} • Expires: ${escapeText(formatDateTime(row.expires_at))}</div>
-        </div>
-        <div class="tag ${tagClass}">${escapeText(status)}</div>
-      </div>
-    `;
-  }).join("");
-
-  return rows;
-}
-
-async function cancelPendingPairingCodes(){
-  const siteId = selectedSite();
-  if(!siteId){ setStatus("Select a site first.", "warn"); return; }
-
-  const confirmed = confirm("Cancel all pending pairing codes for this site?");
-  if(!confirmed) return;
-
-  const { error } = await client
-    .from("device_pairing_codes")
-    .update({ status:"cancelled" })
-    .eq("site_id", siteId)
-    .eq("status", "pending");
-
-  if(error){
-    console.log("Cancel pairing codes error:", error);
-    setStatus("Could not cancel pending pairing codes.", "error");
-    return;
-  }
-
-  setStatus("Pending pairing codes cancelled.", "success");
-  await loadPairingCodes();
-}
-
-async function savePairingCode(){
-  clearStatus();
-
-  const siteId = selectedSite();
-  if(!siteId){ setStatus("Select a site first.", "warn"); return; }
-
-  let code = document.getElementById("pairingCodeInput").value.trim();
-
-  if(!code){
-    generatePairingCode();
-    code = document.getElementById("pairingCodeInput").value.trim();
-  }
-
-  if(!/^\d{6}$/.test(code)){
-    setStatus("Pairing code must be 6 digits.", "warn");
-    return;
-  }
-
-  const minutes = Number(document.getElementById("pairingMinutes").value || 15);
-  const expiresAt = new Date(Date.now() + minutes * 60000).toISOString();
-
-  const site = allSites.find(item => item.id === siteId);
-  const orgId = site?.organization_id || site?.org_id || site?.company_id || null;
-
-  await cancelPendingPairingCodesSilent(siteId);
-
-  const payload = {
-    code,
-    site_id: siteId,
-    status: "pending",
-    expires_at: expiresAt,
-    used_at: null
-  };
-
-  if(orgId) payload.organization_id = orgId;
-
-  const { error } = await client
-    .from("device_pairing_codes")
-    .insert([payload]);
-
-  if(error){
-    console.log("Save pairing code error:", error);
-    setStatus("Could not save pairing code.", "error");
-    return;
-  }
-
-  setStatus(`Pairing code ${code} saved. Queueing sync to visible CodeBox units.`, "success");
-  await loadPairingCodes();
-  await queueCommandForVisible("sync_pairing_code", false, { pairing_code: code, expires_at: expiresAt });
-}
-
-async function cancelPendingPairingCodesSilent(siteId){
-  await client
-    .from("device_pairing_codes")
-    .update({ status:"cancelled" })
-    .eq("site_id", siteId)
-    .eq("status", "pending");
-}
-
-
-function setSignalBars(elementId, strength){
-  const wrap = document.getElementById(elementId);
-  if(!wrap) return;
-
-  const value = Math.max(0, Math.min(4, Number(strength || 0)));
-  Array.from(wrap.querySelectorAll(".signal-bar")).forEach((bar, index) => {
-    bar.classList.toggle("on", index < value);
-  });
-}
-
-function getNetworkField(device, names, fallback = ""){
-  for(const name of names){
-    if(device && device[name] !== undefined && device[name] !== null && device[name] !== ""){
-      return device[name];
-    }
-  }
-
-  const network = device?.network || device?.metadata?.network || {};
-  for(const name of names){
-    if(network && network[name] !== undefined && network[name] !== null && network[name] !== ""){
-      return network[name];
-    }
-  }
-
-  return fallback;
-}
-
-function renderNetworkSupport(){
-  const device = visibleDevices[0] || allDevices[0] || null;
-
-  const wifiStrength = Number(getNetworkField(device, ["wifi_strength","wifiStrength","wifi_signal","signal_strength"], 0));
-  const lteStrength = Number(getNetworkField(device, ["lte_strength","lteStrength","lte_signal","cell_signal"], 0));
-
-  const wifiConnected = String(getNetworkField(device, ["wifi_status","wifiStatus","connection_type"], "")).toLowerCase().includes("wifi")
-    || getNetworkField(device, ["wifi_connected","wifiConnected"], false) === true;
-
-  const lteRegistered = String(getNetworkField(device, ["lte_status","lteStatus","sim_status","simStatus"], "")).toLowerCase().includes("registered")
-    || getNetworkField(device, ["lte_registered","lteRegistered"], false) === true;
-
-  document.getElementById("wifiStatusTag").className = "tag " + (wifiConnected ? "green" : "yellow");
-  document.getElementById("wifiStatusTag").innerText = wifiConnected ? "Connected" : "Needs Check";
-
-  document.getElementById("lteStatusTag").className = "tag " + (lteRegistered ? "green" : "yellow");
-  document.getElementById("lteStatusTag").innerText = lteRegistered ? "Registered" : "Needs Check";
-
-  setSignalBars("wifiSignalBars", wifiStrength);
-  setSignalBars("lteSignalBars", lteStrength);
-
-  const wifiSsid = getNetworkField(device, ["wifi_ssid","wifiSsid","ssid"], "");
-  const lteApn = getNetworkField(device, ["lte_apn","lteApn","apn"], "");
-  const sim = getNetworkField(device, ["sim_iccid","simIccid","iccid","sim_id"], "");
-  const carrier = getNetworkField(device, ["carrier","lte_carrier","lteCarrier"], "");
-  const imei = getNetworkField(device, ["imei","modem_imei","modemImei"], "");
-
-  if(wifiSsid && !document.getElementById("wifiSsid").value) document.getElementById("wifiSsid").value = wifiSsid;
-  if(lteApn && !document.getElementById("lteApn").value) document.getElementById("lteApn").value = lteApn;
-  if(sim && !document.getElementById("lteSim").value) document.getElementById("lteSim").value = sim;
-  if(carrier && !document.getElementById("lteCarrier").value) document.getElementById("lteCarrier").value = carrier;
-  if(imei && !document.getElementById("lteImei").value) document.getElementById("lteImei").value = imei;
-
-  document.getElementById("wifiMeta").innerText = device
-    ? `SSID: ${wifiSsid || "Unknown"} • Strength: ${wifiStrength || 0}/4 • Device: ${getDeviceName(device)}`
-    : "No device selected or visible.";
-
-  document.getElementById("lteMeta").innerText = device
-    ? `Carrier: ${carrier || "Unknown"} • SIM: ${sim || "Unknown"} • IMEI: ${imei || "Unknown"} • Strength: ${lteStrength || 0}/4`
-    : "No device selected or visible.";
-}
-
-async function saveWifiConfig(){
-  clearStatus();
-
-  const siteId = selectedSite();
-  if(!siteId){ setStatus("Select a site first.", "warn"); return; }
-
-  const ssid = document.getElementById("wifiSsid").value.trim();
-  const password = document.getElementById("wifiPassword").value;
-
-  if(!ssid){
-    setStatus("Enter a Wi‑Fi SSID.", "warn");
-    return;
-  }
-
-  await queueCommandForVisible("set_wifi_config", false, {
-    ssid,
-    password: password || null
-  });
-
-  document.getElementById("wifiPassword").value = "";
-}
-
-async function saveLteConfig(){
-  clearStatus();
-
-  const siteId = selectedSite();
-  if(!siteId){ setStatus("Select a site first.", "warn"); return; }
-
-  const apn = document.getElementById("lteApn").value.trim();
-  const sim_iccid = document.getElementById("lteSim").value.trim();
-  const carrier = document.getElementById("lteCarrier").value.trim();
-  const imei = document.getElementById("lteImei").value.trim();
-
-  await queueCommandForVisible("set_lte_config", false, {
-    apn,
-    sim_iccid,
-    carrier,
-    imei
-  });
-}
-
-function renderSummary(){
-  const online=allDevices.filter(isDeviceOnline);
-  const pending=recentCommands.filter(cmd=>String(cmd.status||"").toLowerCase()==="pending");
-  const activeCodes = siteCodes.filter(code => code.is_active !== false);
-
-  document.getElementById("totalDevices").innerText=allDevices.length;
-  document.getElementById("onlineDevices").innerText=online.length;
-  document.getElementById("activeCodesCount").innerText=activeCodes.length;
-  document.getElementById("pendingCommands").innerText=pending.length;
-}
-
-function renderTargetDeviceSelect(){
-  const select=document.getElementById("targetDevice");
-  select.innerHTML=`<option value="">All visible devices</option>`+visibleDevices.map(device=>`<option value="${escapeText(device.id)}">${escapeText(getDeviceName(device))} — ${escapeText(siteName(device.site_id))}</option>`).join("");
-}
-
-function renderDevices(){
-  const tbody=document.getElementById("devicesTableBody");
-  const search=document.getElementById("deviceSearch").value.trim().toLowerCase();
-  const statusFilter=document.getElementById("statusFilter").value;
-
-  visibleDevices=allDevices.filter(device=>{
-    const online=isDeviceOnline(device);
-    const haystack=[getDeviceName(device),getDeviceSerial(device),getDeviceVersion(device),siteName(device.site_id),device.id].join(" ").toLowerCase();
-
-    if(search&&!haystack.includes(search))return false;
-    if(statusFilter==="online"&&!online)return false;
-    if(statusFilter==="offline"&&online)return false;
-
-    return true;
-  });
-
-  tbody.innerHTML="";
-
-  if(!visibleDevices.length){
-    tbody.innerHTML=`<tr><td colspan="7" class="muted">No devices found.</td></tr>`;
-    renderTargetDeviceSelect();
-    renderNetworkSupport();
-    renderSummary();
-    return;
-  }
-
-  visibleDevices.forEach(device=>{
-    const online=isDeviceOnline(device);
-    const tagClass=online?"online":"offline";
-    const statusText=online?"Online":"Offline";
-
-    tbody.innerHTML+=`
-      <tr>
-        <td><span class="tag ${tagClass}">${statusText}</span></td>
-        <td><strong>${escapeText(getDeviceName(device))}</strong><div class="muted">${escapeText(device.id||"")}</div></td>
-        <td>${escapeText(siteName(device.site_id))}</td>
-        <td>${escapeText(getDeviceSerial(device))}</td>
-        <td>${escapeText(getDeviceVersion(device))}</td>
-        <td>${escapeText(formatDateTime(getDeviceLastSeen(device)))}</td>
-        <td><button class="secondary" type="button" onclick="selectDevice('${escapeText(device.id)}')">Select</button></td>
-      </tr>`;
-  });
-
-  renderTargetDeviceSelect();
-  renderNetworkSupport();
-  renderSummary();
-}
-
-function renderCommands(){
-  const tbody=document.getElementById("commandsTableBody");
-  tbody.innerHTML="";
-
-  if(!recentCommands.length){
-    tbody.innerHTML=`<tr><td colspan="6" class="muted">No recent commands found.</td></tr>`;
-    return;
-  }
-
-  recentCommands.forEach(cmd=>{
-    const status=String(cmd.status||"pending").toLowerCase();
-    const statusClass=status==="complete"||status==="completed"||status==="done"?"done":status==="failed"||status==="error"?"failed":"pending";
-    const device=allDevices.find(item=>item.id===cmd.device_id);
-    const deviceText=device?getDeviceName(device):(cmd.device_id||"-");
-    const message=cmd.result_message||cmd.message||cmd.error||"";
-
-    tbody.innerHTML+=`
-      <tr>
-        <td><span class="tag ${statusClass}">${escapeText(status)}</span></td>
-        <td><strong>${escapeText(cmd.command||"-")}</strong></td>
-        <td>${escapeText(deviceText)}</td>
-        <td>${escapeText(formatDateTime(cmd.created_at))}</td>
-        <td>${escapeText(formatDateTime(cmd.completed_at))}</td>
-        <td>${escapeText(message||"-")}</td>
-      </tr>`;
-  });
-}
-
-function selectDevice(deviceId){
-  document.getElementById("targetDevice").value=deviceId;
-  window.scrollTo({top:0,behavior:"smooth"});
-}
-
-function handleCommandChange(){
-  const command=document.getElementById("commandSelect").value;
-  document.getElementById("versionWrap").style.display=command==="update_software"?"flex":"none";
-}
-
-function clearCommandForm(){
-  document.getElementById("targetDevice").value="";
-  document.getElementById("commandSelect").value="sync_codes";
-  document.getElementById("updateVersion").value="";
-  document.getElementById("commandNote").value="";
-  handleCommandChange();
-  clearStatus();
-}
-
-function buildPayload(command, extraPayload = {}){
-  const note=document.getElementById("commandNote").value.trim();
-  const payload={...extraPayload};
-
-  if(note) payload.note=note;
-
-  if(command==="update_software"){
-    const version=document.getElementById("updateVersion").value.trim();
-    if(version) payload.version=version;
-  }
-
-  return payload;
-}
-
-async function queueCommandForDevices(command,devices,extraPayload={}){
-  if(!devices.length){
-    setStatus("No devices selected.", "warn");
-    return false;
-  }
-
-  const payload=buildPayload(command, extraPayload);
-
-  const rows=devices.map(device=>({
-    device_id:device.id,
-    site_id:device.site_id||null,
-    command,
-    payload,
-    status:"pending",
-    created_by:currentUser?.id||null,
-    created_at:new Date().toISOString()
-  }));
-
-  const {error}=await client.from("device_commands").insert(rows);
-
-  if(error){
-    console.log("Queue command error:",error);
-    setStatus("Could not queue command. Make sure the device_commands table exists.", "error");
-    return false;
-  }
-
-  setStatus(`Queued ${command} for ${rows.length} device${rows.length===1?"":"s"}.`, "success");
-  await loadRecentCommands();
-  renderCommands();
-  renderSummary();
-  return true;
-}
-
-async function queueCommand(){
-  clearStatus();
-
-  const command=document.getElementById("commandSelect").value;
-  const targetDeviceId=document.getElementById("targetDevice").value;
-
-  if(command==="update_software"&&!document.getElementById("updateVersion").value.trim()){
-    setStatus("Enter an update version/package before queuing a software update.", "warn");
-    return;
-  }
-
-  let targets=[];
-
-  if(targetDeviceId){
-    const device=allDevices.find(item=>item.id===targetDeviceId);
-    if(device) targets=[device];
-  }else{
-    targets=[...visibleDevices];
-  }
-
-  if(!targets.length){
-    setStatus("No target devices found.", "warn");
-    return;
-  }
-
-  const highImpact=["restart_device","update_software","enter_maintenance"];
-  if(highImpact.includes(command)){
-    const confirmed=confirm(`Queue ${command} for ${targets.length} device${targets.length===1?"":"s"}?`);
-    if(!confirmed) return;
-  }
-
-  await queueCommandForDevices(command,targets);
-}
-
-async function queueCommandForVisible(command, askConfirm=true, extraPayload={}){
-  clearStatus();
-
-  if(!visibleDevices.length){
-    setStatus("No visible devices to target.", "warn");
-    return;
-  }
-
-  if(askConfirm){
-    const confirmed=confirm(`Queue ${command} for all ${visibleDevices.length} visible device${visibleDevices.length===1?"":"s"}?`);
-    if(!confirmed) return;
-  }
-
-  document.getElementById("commandSelect").value=command;
-  handleCommandChange();
-
-  await queueCommandForDevices(command,visibleDevices,extraPayload);
-}
-
-function openCustomerView(page){
-  const siteId = selectedSite();
-  if(siteId){
-    localStorage.setItem("activeSiteId", siteId);
-    localStorage.setItem("washtracActiveSiteId", siteId);
-  }
-
-  window.location.href = page;
-}
-
-async function loadMaintenancePage(showLoading=true){
-  if(showLoading) setStatus("Loading maintenance data...");
-
-  await loadSites();
-  await loadDevices();
-  await loadRecentCommands();
-  await loadSiteCodes();
-  await loadPairingCodes();
-
-  renderDevices();
-  renderCommands();
-
-  if(showLoading) clearStatus();
-}
-
-document.addEventListener("keydown",function(event){
-  if(event.key==="Escape") closeMenus();
-});
-
-document.addEventListener("click",function(event){
-  const desktopWrap=document.querySelector(".desktop-menu-wrap");
-  const mobileMenu=document.getElementById("mobileMenu");
-  const mobileTopbar=document.querySelector(".mobile-topbar");
-
-  if(
-    desktopWrap &&
-    mobileMenu &&
-    mobileTopbar &&
-    !desktopWrap.contains(event.target) &&
-    !mobileMenu.contains(event.target) &&
-    !mobileTopbar.contains(event.target)
-  ){
-    closeMenus();
-  }
-});
-
-window.onload=async function(){
-  await loadCurrentUser();
-  await loadMaintenancePage();
-};
-
-setInterval(function(){
-  loadMaintenancePage(false);
-},30000);
-</script>
+  </script>
 </body>
 </html>
