@@ -584,7 +584,7 @@
   color:#86efac;
   border:1px solid rgba(34,197,94,.35);
 }
-    @media (max-width:1200px){
+@media (max-width:1200px){
       .bay-editor-grid{
         grid-template-columns:1fr 1fr;
       }
@@ -621,11 +621,11 @@
 <body>
   <script>
     function hasAdminAccess(){
-      return sessionStorage.getItem("washtracAdmin") === "yes" ||
+      return hasAdminAccess() ||
              localStorage.getItem("washtracAdmin") === "yes";
     }
 
-    if(sessionStorage.getItem("washtracAdmin") === "yes"){
+    if(hasAdminAccess()){
       localStorage.setItem("washtracAdmin", "yes");
     }
 
@@ -954,7 +954,32 @@ if(!isClientLogin && !isAdminLogin){
     const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+function injectAdminMaintenanceLinks(){
+  if(!hasAdminAccess()) return;
+
+  const mobileMenu = document.getElementById("mobileMenu");
+  if(mobileMenu && !mobileMenu.querySelector('a[href="maintenance.html"]')){
+    const link = document.createElement("a");
+    link.href = "maintenance.html";
+    link.textContent = "Maintenance";
+
+    const homeLink = mobileMenu.querySelector('a[onclick="goHome(event)"]');
+    mobileMenu.insertBefore(link, homeLink || null);
+  }
+
+  const nav = document.querySelector(".nav");
+  if(nav && !nav.querySelector('a[href="maintenance.html"]')){
+    const link = document.createElement("a");
+    link.href = "maintenance.html";
+    link.textContent = "Maintenance";
+    nav.appendChild(link);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", injectAdminMaintenanceLinks);
+
     window.addEventListener("pageshow", function(event){
+  injectAdminMaintenanceLinks();
       const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
       const isAdminLogin = hasAdminAccess();
 
@@ -2245,6 +2270,7 @@ if(!isClientLogin && !isAdminLogin){
     });
 
     window.onload = async function(){
+  injectAdminMaintenanceLinks();
       const siteId = await loadSites();
 
       if(!siteId){
