@@ -418,7 +418,10 @@
 
 <body>
   <script>
-    if(localStorage.getItem("washtracLoggedIn") !== "yes"){
+    const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
+    const isAdminLogin = sessionStorage.getItem("washtracAdmin") === "yes";
+
+    if(!isClientLogin && !isAdminLogin){
       window.location.replace("login.html");
     }
   </script>
@@ -441,6 +444,7 @@
     <a href="usage.html">Reports</a>
     <a href="monitor.html">Monitor</a>
     <a href="sites.html">Sites</a>
+    <a href="maintenance.html">Maintenance</a>
     <a href="#" onclick="goHome(event)">Back to Homepage</a>
     <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
   </div>
@@ -464,6 +468,7 @@
         <a href="usage.html">Reports</a>
         <a href="monitor.html">Monitor</a>
         <a class="active" href="sites.html">Sites</a>
+        <a href="maintenance.html">Maintenance</a>
       </div>
     </div>
 
@@ -632,6 +637,7 @@
       if(event) event.preventDefault();
       closeMenus();
       localStorage.removeItem("washtracLoggedIn");
+      sessionStorage.removeItem("washtracAdmin");
       window.location.replace("index.html");
     }
 
@@ -647,6 +653,8 @@
 
       localStorage.removeItem("washtracLoggedIn");
       localStorage.removeItem("activeSiteId");
+      sessionStorage.removeItem("washtracAdmin");
+      sessionStorage.removeItem("washtracSessionActive");
       window.location.replace("login.html");
     }
 
@@ -863,6 +871,8 @@
     }
 
     async function loadCurrentUser(){
+      const isAdminLogin = sessionStorage.getItem("washtracAdmin") === "yes";
+
       const { data, error } = await client.auth.getUser();
 
       if(error){
@@ -870,6 +880,15 @@
       }
 
       currentUser = data?.user || null;
+
+      if(!currentUser && isAdminLogin){
+        currentUser = {
+          id: "admin-session",
+          email: "admin@washtrac.local",
+          is_admin_session: true
+        };
+        return currentUser;
+      }
 
       if(!currentUser){
         localStorage.removeItem("washtracLoggedIn");
@@ -911,6 +930,7 @@
     }
 
     async function acceptPendingInvitesForCurrentUser(){
+      if(sessionStorage.getItem("washtracAdmin") === "yes") return;
       if(!currentUser?.email) return;
 
       const email = normalizeEmail(currentUser.email);
@@ -977,28 +997,50 @@
 
       currentSites = [];
 
-      if(!currentUser){
+      const isAdminLogin = sessionStorage.getItem("washtracAdmin") === "yes";
+
+      if(!currentUser && !isAdminLogin){
         wrap.innerHTML = `<div class="site-row"><div><div class="site-name">No user found.</div></div><div class="pill red">Error</div></div>`;
         return [];
       }
 
-      const memberResult = await client
-        .from("user_site_access")
-        .select("site_id, role, sites(*)")
-        .eq("user_id", currentUser.id);
+      if(isAdminLogin){
+        const { data, error } = await client
+          .from("sites")
+          .select("*")
+          .order("name", { ascending:true });
 
-      if(memberResult.error){
-        console.log("User site access error:", memberResult.error);
-        wrap.innerHTML = `<div class="site-row"><div><div class="site-name">Could not load site access.</div><div class="site-meta">Check user_site_access table and policies.</div></div><div class="pill red">Error</div></div>`;
-        return [];
+        if(error){
+          console.log("Admin sites load error:", error);
+          wrap.innerHTML = `<div class="site-row"><div><div class="site-name">Could not load sites.</div><div class="site-meta">Check sites table and policies.</div></div><div class="pill red">Error</div></div>`;
+          return [];
+        }
+
+        currentSites = (data || [])
+          .filter(site => site && site.id)
+          .map(site => ({
+            ...site,
+            member_role: "admin"
+          }));
+      }else{
+        const memberResult = await client
+          .from("user_site_access")
+          .select("site_id, role, sites(*)")
+          .eq("user_id", currentUser.id);
+
+        if(memberResult.error){
+          console.log("User site access error:", memberResult.error);
+          wrap.innerHTML = `<div class="site-row"><div><div class="site-name">Could not load site access.</div><div class="site-meta">Check user_site_access table and policies.</div></div><div class="pill red">Error</div></div>`;
+          return [];
+        }
+
+        currentSites = (memberResult.data || [])
+          .map(row => ({
+            ...row.sites,
+            member_role: row.role || "viewer"
+          }))
+          .filter(site => site && site.id);
       }
-
-      currentSites = (memberResult.data || [])
-        .map(row => ({
-          ...row.sites,
-          member_role: row.role || "viewer"
-        }))
-        .filter(site => site && site.id);
 
       if(!currentSites.length){
         wrap.innerHTML = `<div class="site-row"><div><div class="site-name">No sites yet.</div><div class="site-meta">Add your first site above.</div></div><div class="pill">0</div></div>`;
@@ -1209,7 +1251,7 @@
         return;
       }
 
-      if(currentUser && siteData?.id){
+      if(currentUser && siteData?.id && sessionStorage.getItem("washtracAdmin") !== "yes"){
         const { error: memberError } = await client
           .from("user_site_access")
           .insert([
