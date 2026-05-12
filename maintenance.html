@@ -86,6 +86,9 @@
     .mini-main{min-width:0;overflow:hidden;text-overflow:ellipsis;}
     .mini-muted{color:#94a3b8;font-size:13px;margin-top:3px;}
     .inline-code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;background:#020617;border:1px solid #1f2937;border-radius:8px;padding:2px 6px;color:#93c5fd;}
+    .mini-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
+    .mini-select{width:auto;min-width:110px;padding:8px 10px;font-size:13px;}
+    .small-btn{padding:8px 10px;font-size:12px;border-radius:7px;}
 
     .signal-wrap{display:flex;align-items:flex-end;gap:4px;height:24px;margin-top:8px;}
     .signal-bar{width:7px;border-radius:3px 3px 0 0;background:#334155;box-shadow:none;}
@@ -453,6 +456,8 @@ if(!hasAdminSession){
           <button class="success" type="button" onclick="queueCommandForVisible('sync_codes')">Sync Codes</button>
           <button class="warn" type="button" onclick="queueCommandForVisible('pull_logs')">Pull Logs</button>
           <button class="secondary" type="button" onclick="queueCommandForVisible('refresh_config')">Refresh Config</button>
+          <button class="secondary" type="button" onclick="queueCommandForVisible('refresh_network')">Refresh Network Status</button>
+          <button class="warn" type="button" onclick="queueCommandForVisible('register_lte')">Re-Register SIM</button>
           <button class="danger" type="button" onclick="queueCommandForVisible('restart_app')">Restart App</button>
           <button class="danger" type="button" onclick="queueCommandForVisible('restart_device')">Reboot Device</button>
         </div>
@@ -482,6 +487,23 @@ if(!hasAdminSession){
         </table>
       </div>
     </div>
+
+    <div class="card">
+      <h3>Device Logs</h3>
+      <div class="actions">
+        <button class="secondary" type="button" onclick="loadDeviceLogs()">Refresh Logs</button>
+        <button class="warn" type="button" onclick="queueCommandForVisible('pull_logs')">Pull Logs From Visible Devices</button>
+      </div>
+      <div class="table-wrap" style="margin-top:14px;">
+        <table>
+          <thead><tr><th>Device</th><th>File</th><th>Created</th><th>Action</th></tr></thead>
+          <tbody id="logsTableBody"></tbody>
+        </table>
+      </div>
+      <div class="note">
+        Logs appear here after a CodeBox completes <span class="inline-code">pull_logs</span> and writes to <span class="inline-code">device_logs</span>.
+      </div>
+    </div>
   </div>
 </div>
 
@@ -498,7 +520,10 @@ let allDevices = [];
 let visibleDevices = [];
 let recentCommands = [];
 let siteCodes = [];
+let deviceLogs = [];
 let selectedSiteId = "";
+let quietRefreshTimer = null;
+let quietRefreshInProgress = false;
 
 function escapeText(value){
   return String(value ?? "")
@@ -988,13 +1013,25 @@ async function loadSiteAccessUsers(){
   let html = "";
 
   accessRows.forEach(row => {
+    const role = row.role || "viewer";
+    const accessId = row.id || "";
+    const userId = row.user_id || "Linked user";
+
     html += `
       <div class="mini-row">
         <div class="mini-main">
-          <strong>${escapeText(row.user_id || "Linked user")}</strong>
-          <div class="mini-muted">Role: ${escapeText(row.role || "viewer")} • Access record</div>
+          <strong>${escapeText(userId)}</strong>
+          <div class="mini-muted">Role: ${escapeText(role)} • Access record</div>
         </div>
-        <div class="tag green">Linked</div>
+        <div class="mini-actions">
+          <select class="mini-select" id="role-${escapeText(accessId)}">
+            <option value="viewer" ${role === "viewer" ? "selected" : ""}>Viewer</option>
+            <option value="admin" ${role === "admin" ? "selected" : ""}>Admin</option>
+            <option value="owner" ${role === "owner" ? "selected" : ""}>Owner</option>
+          </select>
+          <button class="small-btn secondary" type="button" onclick="changeUserRole('${escapeText(accessId)}')">Save Role</button>
+          <button class="small-btn danger" type="button" onclick="removeUserAccess('${escapeText(accessId)}','${escapeText(userId)}')">Remove</button>
+        </div>
       </div>
     `;
   });
@@ -1016,6 +1053,58 @@ async function loadSiteAccessUsers(){
   }
 
   wrap.innerHTML = html;
+}
+
+async function changeUserRole(accessId){
+  clearStatus();
+
+  if(!accessId){
+    setStatus("No access record selected.", "warn");
+    return;
+  }
+
+  const select = document.getElementById(`role-${accessId}`);
+  const role = select ? select.value : "viewer";
+
+  const { error } = await client
+    .from("user_site_access")
+    .update({ role })
+    .eq("id", accessId);
+
+  if(error){
+    console.log("Change user role error:", error);
+    setStatus("Could not update user role.", "error");
+    return;
+  }
+
+  setStatus("User role updated.", "success");
+  await loadSiteAccessUsers();
+}
+
+async function removeUserAccess(accessId, userLabel){
+  clearStatus();
+
+  if(!accessId){
+    setStatus("No access record selected.", "warn");
+    return;
+  }
+
+  const confirmed = confirm(`Remove site access for ${userLabel || "this user"}?`);
+  if(!confirmed) return;
+
+  const { error } = await client
+    .from("user_site_access")
+    .delete()
+    .eq("id", accessId);
+
+  if(error){
+    console.log("Remove user access error:", error);
+    setStatus("Could not remove user access.", "error");
+    return;
+  }
+
+  setStatus("User access removed.", "success");
+  await loadSiteAccessUsers();
 }
 
 function generatePairingCode(){
@@ -1264,6 +1353,94 @@ async function saveLteConfig(){
   });
 }
 
+async function loadDeviceLogs(){
+  const siteId = selectedSite();
+  const tbody = document.getElementById("logsTableBody");
+
+  if(!tbody) return [];
+
+  tbody.innerHTML = `<tr><td colspan="4" class="muted">Loading logs...</td></tr>`;
+
+  let query = client
+    .from("device_logs")
+    .select("*")
+    .order("created_at", { ascending:false })
+    .limit(25);
+
+  if(siteId){
+    query = query.eq("site_id", siteId);
+  }
+
+  const { data, error } = await query;
+
+  if(error){
+    console.log("Device logs load error:", error);
+    deviceLogs = [];
+    tbody.innerHTML = `<tr><td colspan="4" class="muted">Could not load logs.</td></tr>`;
+    return [];
+  }
+
+  deviceLogs = data || [];
+  renderDeviceLogs();
+  return deviceLogs;
+}
+
+function renderDeviceLogs(){
+  const tbody = document.getElementById("logsTableBody");
+  if(!tbody) return;
+
+  tbody.innerHTML = "";
+
+  if(!deviceLogs.length){
+    tbody.innerHTML = `<tr><td colspan="4" class="muted">No logs found yet.</td></tr>`;
+    return;
+  }
+
+  deviceLogs.forEach(log => {
+    const device = allDevices.find(item => item.id === log.device_id);
+    const deviceText = device ? getDeviceName(device) : (log.device_id || "Unknown device");
+    const fileName = log.file_name || "Device log";
+    const hasUrl = !!log.file_url;
+    const hasText = !!log.log_text;
+
+    tbody.innerHTML += `
+      <tr>
+        <td>${escapeText(deviceText)}</td>
+        <td>${escapeText(fileName)}</td>
+        <td>${escapeText(formatDateTime(log.created_at))}</td>
+        <td>
+          ${hasUrl
+            ? `<button class="secondary" type="button" onclick="window.open('${escapeText(log.file_url)}','_blank')">Download</button>`
+            : hasText
+              ? `<button class="secondary" type="button" onclick="downloadLogText('${escapeText(log.id)}')">Download Text</button>`
+              : `<span class="muted">No file</span>`
+          }
+        </td>
+      </tr>
+    `;
+  });
+}
+
+function downloadLogText(logId){
+  const log = deviceLogs.find(item => item.id === logId);
+  if(!log || !log.log_text){
+    setStatus("No log text available.", "warn");
+    return;
+  }
+
+  const blob = new Blob([log.log_text], { type:"text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const stamp = new Date().toISOString().slice(0,10);
+
+  link.href = url;
+  link.download = log.file_name || `washtrac-device-log-${stamp}.txt`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 function renderSummary(){
   const online=allDevices.filter(isDeviceOnline);
   const pending=recentCommands.filter(cmd=>String(cmd.status||"").toLowerCase()==="pending");
@@ -1447,7 +1624,7 @@ async function queueCommand(){
     return;
   }
 
-  const highImpact=["restart_device","update_software","enter_maintenance"];
+  const highImpact=["restart_device","restart_app","restart_network","register_lte","update_software","enter_maintenance"];
   if(highImpact.includes(command)){
     const confirmed=confirm(`Queue ${command} for ${targets.length} device${targets.length===1?"":"s"}?`);
     if(!confirmed) return;
@@ -1493,11 +1670,36 @@ async function loadMaintenancePage(showLoading=true){
   await loadRecentCommands();
   await loadSiteCodes();
   await loadPairingCodes();
+  await loadDeviceLogs();
 
   renderDevices();
   renderCommands();
 
   if(showLoading) clearStatus();
+}
+
+async function quietRefreshMaintenance(){
+  if(document.hidden || quietRefreshInProgress) return;
+  if(document.activeElement && ["INPUT","SELECT","TEXTAREA"].includes(document.activeElement.tagName)) return;
+
+  quietRefreshInProgress = true;
+
+  try{
+    await loadDevices();
+    await loadRecentCommands();
+    await loadDeviceLogs();
+    renderDevices();
+    renderCommands();
+  }catch(err){
+    console.log("Quiet maintenance refresh error:", err);
+  }finally{
+    quietRefreshInProgress = false;
+  }
+}
+
+function startQuietMaintenanceRefresh(){
+  clearInterval(quietRefreshTimer);
+  quietRefreshTimer = setInterval(quietRefreshMaintenance, 30000);
 }
 
 document.addEventListener("keydown",function(event){
@@ -1524,7 +1726,12 @@ document.addEventListener("click",function(event){
 window.onload=async function(){
   await loadCurrentUser();
   await loadMaintenancePage();
+  startQuietMaintenanceRefresh();
 };
+
+window.addEventListener("beforeunload", function(){
+  clearInterval(quietRefreshTimer);
+});
 
 //setInterval(function(){
 //  loadMaintenancePage(false);
