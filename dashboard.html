@@ -31,12 +31,19 @@
       padding:20px;
       flex-shrink:0;
       border-right:1px solid #1e293b;
+      position:relative;
+      overflow:hidden;
     }
 
-    
+    .sidebar::before{
+      display:none;
+    }
+
     .logo,
     .mobile-logo{
       margin-bottom:24px;
+      position:relative;
+      z-index:2;
     }
 
     .logo-image{
@@ -58,7 +65,13 @@
       padding:10px 0;
     }
 
-    .nav a:hover{color:white}
+    .nav{
+      position:relative;
+      z-index:2;
+    }
+
+    .nav a:hover,
+    .nav a.active{color:white}
 
     .main{
       flex:1;
@@ -101,16 +114,16 @@
 
     .mobile-menu{
       display:none;
-      position:absolute;
-      top:46px;
-      right:0;
+      position:fixed;
+      top:64px;
+      right:16px;
       width:240px;
       background:#0f172a;
       border:1px solid #1e293b;
       border-radius:12px;
       padding:12px 16px;
       box-shadow:0 12px 30px rgba(0,0,0,.45);
-      z-index:1300;
+      z-index:1500;
     }
 
     .mobile-menu a{
@@ -129,7 +142,7 @@
       position:fixed;
       inset:0;
       background:rgba(0,0,0,.35);
-      z-index:1050;
+      z-index:1100;
     }
 
     .page-header{
@@ -609,11 +622,6 @@
       .summary{grid-template-columns:1fr}
       .control-grid,.field-grid,.bay-editor-grid{grid-template-columns:1fr}
       .weekly-lockout-head,.weekly-lockout-row{grid-template-columns:1fr .8fr .8fr}
-      .mobile-menu{
-        position:absolute;
-        top:64px;
-        right:16px;
-      }
     }
   </style>
 </head>
@@ -621,27 +629,9 @@
 <body>
   <script>
     function hasAdminAccess(){
-    const accepted = new Set(["yes", "true", "1", "admin"]);
-
-    function scanStorage(storage){
-      for(let i = 0; i < storage.length; i++){
-        const key = storage.key(i) || "";
-        const value = String(storage.getItem(key) || "").toLowerCase();
-        const keyLower = key.toLowerCase();
-
-        if(
-          (keyLower.includes("admin") || keyLower.includes("maintenance")) &&
-          accepted.has(value)
-        ){
-          return true;
-        }
-      }
-
-      return false;
+      return sessionStorage.getItem("washtracAdmin") === "yes" ||
+             localStorage.getItem("washtracAdmin") === "yes";
     }
-
-    return scanStorage(sessionStorage) || scanStorage(localStorage);
-  }
 
     if(sessionStorage.getItem("washtracAdmin") === "yes"){
       localStorage.setItem("washtracAdmin", "yes");
@@ -649,8 +639,15 @@
 
     const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
     const isAdminLogin = hasAdminAccess();
-if(!isClientLogin && !isAdminLogin){
+
+    if(!isClientLogin && !isAdminLogin){
       window.location.replace("login.html");
+    }
+
+    function applyAdminMenuVisibility(){
+      document.querySelectorAll(".admin-only-link").forEach(link => {
+        link.style.display = hasAdminAccess() ? "block" : "none";
+      });
     }
   </script>
 
@@ -662,19 +659,20 @@ if(!isClientLogin && !isAdminLogin){
         class="logo-image-mobile"
       >
     </div>
-    <button class="menu-btn" onclick="toggleMobileMenu()">☰</button>
+    <button class="menu-btn" type="button" onclick="toggleMobileMenu()">☰</button>
+  </div>
 
-    <div class="mobile-menu" id="mobileMenu">
-      <a href="dashboard.html">Dashboard</a>
-      <a href="codes.html">Codes</a>
-      <a href="activity.html">Activity</a>
-      <a href="usage.html">Reports</a>
-      <a href="monitor.html">Monitor</a>
-      <a href="sites.html">Sites</a>
-      <a href="#" onclick="openAddDevice(event)">Add Device</a>
-      <a href="#" onclick="goHome(event)">Back to Homepage</a>
-      <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
-    </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="codes.html">Codes</a>
+    <a href="activity.html">Activity</a>
+    <a href="usage.html">Reports</a>
+    <a href="monitor.html">Monitor</a>
+    <a href="sites.html">Sites</a>
+    <a href="maintenance.html" class="admin-only-link" style="display:none;">Maintenance</a>
+    <a href="#" onclick="openAddDevice(event)">Add Device</a>
+    <a href="#" onclick="goHome(event)">Back to Homepage</a>
+    <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
   </div>
 
   <div class="backdrop" id="backdrop" onclick="closeMenus()"></div>
@@ -690,21 +688,23 @@ if(!isClientLogin && !isAdminLogin){
       </div>
 
       <div class="nav">
-        <a href="dashboard.html">Dashboard</a>
+        <a class="active" href="dashboard.html">Dashboard</a>
         <a href="codes.html">Codes</a>
         <a href="activity.html">Activity</a>
         <a href="usage.html">Reports</a>
         <a href="monitor.html">Monitor</a>
         <a href="sites.html">Sites</a>
+        <a href="maintenance.html" class="admin-only-link" style="display:none;">Maintenance</a>
       </div>
     </div>
 
     <div class="main">
       <div class="dashboard-menu-wrap">
-        <button class="menu-btn" onclick="toggleDashboardMenu()">☰</button>
+        <button class="menu-btn" type="button" onclick="toggleDashboardMenu()">☰</button>
 
         <div class="mobile-menu" id="dashboardMenu">
           <a href="#" onclick="openAddDevice(event)">Add Device</a>
+          <a href="maintenance.html" class="admin-only-link" style="display:none;">Maintenance</a>
           <a href="#" onclick="goHome(event)">Back to Homepage</a>
           <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
         </div>
@@ -972,45 +972,12 @@ if(!isClientLogin && !isAdminLogin){
     const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    function injectAdminMaintenanceLinks(){
-      if(!hasAdminAccess()) return;
+    document.addEventListener("DOMContentLoaded", applyAdminMenuVisibility);
+    window.addEventListener("load", applyAdminMenuVisibility);
 
-      const mobileMenu = document.getElementById("mobileMenu");
-      if(mobileMenu && !mobileMenu.querySelector('a[href="maintenance.html"]')){
-        const link = document.createElement("a");
-        link.href = "maintenance.html";
-        link.textContent = "Maintenance";
-        const homeLink = mobileMenu.querySelector('a[onclick="goHome(event)"]');
-        mobileMenu.insertBefore(link, homeLink || null);
-      }
+    window.addEventListener("pageshow", function(){
+      applyAdminMenuVisibility();
 
-      const sideNav = document.querySelector(".sidebar .nav");
-      if(sideNav && !sideNav.querySelector('a[href="maintenance.html"]')){
-        const link = document.createElement("a");
-        link.href = "maintenance.html";
-        link.textContent = "Maintenance";
-
-        const sitesLink = sideNav.querySelector('a[href="sites.html"]');
-        if(sitesLink && sitesLink.nextSibling){
-          sideNav.insertBefore(link, sitesLink.nextSibling);
-        }else{
-          sideNav.appendChild(link);
-        }
-      }
-    }
-
-    function runAdminMenuInjection(){
-      injectAdminMaintenanceLinks();
-      setTimeout(injectAdminMaintenanceLinks, 50);
-      setTimeout(injectAdminMaintenanceLinks, 250);
-      setTimeout(injectAdminMaintenanceLinks, 1000);
-    }
-
-    document.addEventListener("DOMContentLoaded", runAdminMenuInjection);
-    window.addEventListener("load", runAdminMenuInjection);
-
-    window.addEventListener("pageshow", function(event){
-      runAdminMenuInjection();
       const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
       const isAdminLogin = hasAdminAccess();
 
@@ -2286,8 +2253,9 @@ if(!isClientLogin && !isAdminLogin){
 
       const clickedDashboard = dashboardWrap && dashboardWrap.contains(event.target);
       const clickedMobile = mobileTopbar && mobileTopbar.contains(event.target);
+      const clickedMobileMenu = mobileMenu && mobileMenu.contains(event.target);
 
-      if(!clickedDashboard && !clickedMobile){
+      if(!clickedDashboard && !clickedMobile && !clickedMobileMenu){
         if(dashboardMenu) dashboardMenu.style.display = "none";
         if(mobileMenu) mobileMenu.style.display = "none";
         if(backdrop) backdrop.style.display = "none";
@@ -2301,7 +2269,7 @@ if(!isClientLogin && !isAdminLogin){
     });
 
     window.onload = async function(){
-      runAdminMenuInjection();
+      applyAdminMenuVisibility();
       const siteId = await loadSites();
 
       if(!siteId){
