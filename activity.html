@@ -699,7 +699,7 @@ function mapActivityRow(row){
     event_time: cleanValue(getRowTimeValue(row), ""),
     code,
     department: cleanValue(row.department, cleanValue(row.metadata?.department, "")),
-    name: cleanValue(row.metadata?.name, cleanValue(row.assigned_to, "")),
+    name: cleanValue(row.metadata?.name, cleanValue(row.metadata?.assigned_to, cleanValue(row.assigned_to, ""))),
     bay: cleanValue(row.bay, cleanValue(row.metadata?.bay, "")),
     event: cleanValue(row.event, cleanValue(row.status, cleanValue(row.metadata?.event, "")))
   };
