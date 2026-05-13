@@ -1225,17 +1225,42 @@ async function loadUsage(){
 
     const rows = data || [];
 
-    const uses = rows
-      .filter(isUseEvent)
-      .map(row => ({
-        code: getCode(row),
-        department: getDepartment(row),
-        name: getName(row),
-        uses: 1,
-        last_used: getTime(row),
-        site_id: row.site_id || "",
-        event: row.event || ""
-      }));
+    const codeLookup = {};
+
+if(cachedSiteIds.length){
+  const { data: accessCodes, error: codeLookupError } = await client
+    .from("access_codes")
+    .select("code, assigned_to, name, department, site_id")
+    .in("site_id", cachedSiteIds);
+
+  if(codeLookupError){
+    console.log("Code lookup error:", codeLookupError);
+  }
+
+  (accessCodes || []).forEach(item => {
+    codeLookup[String(item.code || "").trim()] = {
+      name: item.assigned_to || item.name || "",
+      department: item.department || ""
+    };
+  });
+}
+
+const uses = rows
+  .filter(isUseEvent)
+  .map(row => {
+    const code = String(getCode(row) || "").trim();
+    const matchedCode = codeLookup[code] || {};
+
+    return {
+      code,
+      department: matchedCode.department || getDepartment(row),
+      name: matchedCode.name || getName(row),
+      uses: 1,
+      last_used: getTime(row),
+      site_id: row.site_id || "",
+      event: row.event || ""
+    };
+  });
 
     cachedRawUses = uses;
 
