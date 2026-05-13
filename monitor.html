@@ -194,12 +194,27 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
   border-radius:999px;
 }
 
+.activity-header,
 .activity-row{
-  display:flex;
-  justify-content:space-between;
+  display:grid;
+  grid-template-columns:1.2fr .8fr 1fr 1fr .9fr;
+  gap:14px;
+  align-items:center;
+}
+
+.activity-header{
+  color:#93c5fd;
+  font-size:13px;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  font-weight:bold;
+  padding:8px 0 10px;
+  border-bottom:1px solid #1f2937;
+}
+
+.activity-row{
   border-bottom:1px solid #1f2937;
   padding:10px 0;
-  gap:14px;
 }
 
 .activity-row:last-child{
@@ -211,13 +226,13 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
 .activity-department,
 .activity-name,
 .activity-event{
-  flex:1;
+  min-width:0;
 }
 
 .activity-code,
 .activity-department,
 .activity-name{
-  text-align:center;
+  text-align:left;
 }
 
 .activity-event{
@@ -242,8 +257,9 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
   .page-header{padding-right:0;}
   .page-header h1{font-size:34px;}
   .grid,.bay-grid{grid-template-columns:1fr;}
-  .activity-row{flex-direction:column;gap:6px;}
-  .activity-code,.activity-event{text-align:left;}
+  .activity-header{display:none;}
+  .activity-row{grid-template-columns:1fr;gap:6px;}
+  .activity-code,.activity-department,.activity-name,.activity-event{text-align:left;}
 }
 </style>
 </head>
@@ -584,6 +600,16 @@ function renderActivity(activity){
     return;
   }
 
+  wrap.innerHTML = `
+    <div class="activity-header">
+      <div>Time</div>
+      <div>Code</div>
+      <div>Department</div>
+      <div>Name</div>
+      <div style="text-align:right;">Event</div>
+    </div>
+  `;
+
   activity.forEach(row => {
     const rawTime = getActivityTime(row);
     const timeText = rawTime ? new Date(rawTime).toLocaleTimeString() : "--:--";
@@ -591,9 +617,9 @@ function renderActivity(activity){
     wrap.innerHTML += `
       <div class="activity-row">
         <div class="activity-time">${escapeText(timeText)}</div>
-        <div class="activity-code">Code: ${escapeText(getActivityCode(row))}</div>
-        <div class="activity-department">Dept: ${escapeText(getActivityDepartment(row))}</div>
-        <div class="activity-name">Name: ${escapeText(getActivityName(row))}</div>
+        <div class="activity-code">${escapeText(getActivityCode(row))}</div>
+        <div class="activity-department">${escapeText(getActivityDepartment(row))}</div>
+        <div class="activity-name">${escapeText(getActivityName(row))}</div>
         <div class="activity-event">${escapeText(getActivityEvent(row))}</div>
       </div>
     `;
