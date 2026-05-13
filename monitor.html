@@ -208,11 +208,15 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
 
 .activity-time,
 .activity-code,
+.activity-department,
+.activity-name,
 .activity-event{
   flex:1;
 }
 
-.activity-code{
+.activity-code,
+.activity-department,
+.activity-name{
   text-align:center;
 }
 
@@ -555,6 +559,14 @@ function getActivityCode(row){
   return row.metadata?.code || row.code || row.access_code || "";
 }
 
+function getActivityDepartment(row){
+  return row.department || row.metadata?.department || "";
+}
+
+function getActivityName(row){
+  return row.metadata?.name || row.metadata?.assigned_to || row.assigned_to || "";
+}
+
 function getActivityEvent(row){
   return row.event || row.status || "";
 }
@@ -579,7 +591,9 @@ function renderActivity(activity){
     wrap.innerHTML += `
       <div class="activity-row">
         <div class="activity-time">${escapeText(timeText)}</div>
-        <div class="activity-code">${escapeText(getActivityCode(row))}</div>
+        <div class="activity-code">Code: ${escapeText(getActivityCode(row))}</div>
+        <div class="activity-department">Dept: ${escapeText(getActivityDepartment(row))}</div>
+        <div class="activity-name">Name: ${escapeText(getActivityName(row))}</div>
         <div class="activity-event">${escapeText(getActivityEvent(row))}</div>
       </div>
     `;
