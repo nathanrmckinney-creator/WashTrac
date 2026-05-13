@@ -1407,6 +1407,13 @@ function exportCustomCSV(){
 }
 
 function buildReportHtml(columns, codes, departments, rangeLabel, scopeLabel){
+  const esc = (value) => String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
   const totalUses = codes.reduce((sum, item) => sum + Number(item.uses || 0), 0);
   const totalCodes = codes.length;
   const topCode = codes.length ? codes[0].code : "-";
@@ -1414,121 +1421,170 @@ function buildReportHtml(columns, codes, departments, rangeLabel, scopeLabel){
 
   const cleanScope = scopeLabel || cachedSiteScopeLabel || "Current Site";
   const isAllSites = cleanScope.toLowerCase().includes("all");
+  const generatedAt = new Date().toLocaleString();
 
-  const scopeBadge = isAllSites
-    ? `<span style="background:#1d4ed8;color:#ffffff;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:bold;">ALL SITES</span>`
-    : `<span style="background:#065f46;color:#bbf7d0;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:bold;">CURRENT SITE</span>`;
+  const activeSiteId = getActiveSiteId();
+  const reportUrl = isAllSites
+    ? "https://www.thewashtrac.com/usage.html?reportScope=all"
+    : `https://www.thewashtrac.com/usage.html?reportScope=current&siteId=${encodeURIComponent(activeSiteId)}`;
 
-  let tableHeaders = "";
-  columns.forEach(col => {
-    tableHeaders += `<th style="text-align:left;padding:12px;border-bottom:1px solid #1e293b;color:#93c5fd;font-size:13px;">${columnLabels[col] || col}</th>`;
-  });
+  const loginUrl = `https://www.thewashtrac.com/login.html?redirect=${encodeURIComponent(reportUrl)}`;
 
-  let tableRows = "";
-  codes.forEach(item => {
-    tableRows += "<tr>";
-    columns.forEach(col => {
-      tableRows += `<td style="padding:12px;border-bottom:1px solid #1e293b;color:#e5e7eb;font-size:13px;">${item[col] || ""}</td>`;
-    });
-    tableRows += "</tr>";
-  });
+  const tableHeaders = columns.map(col => `
+    <th style="padding:13px 14px;border:1px solid rgba(93,139,184,.25);color:#ffffff;background:rgba(2,8,23,.74);font-size:12px;text-align:left;letter-spacing:.5px;text-transform:uppercase;">
+      ${esc(columnLabels[col] || col)}
+    </th>
+  `).join("");
 
-  let deptHtml = "";
-  departments.slice(0,5).forEach(item => {
-    deptHtml += `
-      <div style="padding:10px 0;border-bottom:1px solid #1e293b;color:#e5e7eb;">
-        <strong>${item[0]}</strong>
-        <span style="float:right;color:#93c5fd;">${item[1]} uses</span>
+  const tableRows = codes.length ? codes.map((item, index) => {
+    const bg = index % 2 === 0 ? "rgba(13,32,52,.92)" : "rgba(8,23,39,.92)";
+    return `
+      <tr style="background:${bg};">
+        ${columns.map(col => `
+          <td style="padding:12px 14px;border:1px solid rgba(93,139,184,.18);color:#eaf4ff;font-size:13px;">
+            ${esc(item[col] || "")}
+          </td>
+        `).join("")}
+      </tr>
+    `;
+  }).join("") : `
+    <tr>
+      <td colspan="${columns.length}" style="padding:30px;text-align:center;color:#94a3b8;background:#06111f;border:1px solid rgba(93,139,184,.18);">
+        No report data found for this range.
+      </td>
+    </tr>
+  `;
+
+  const maxDept = departments.length ? Number(departments[0][1] || 1) : 1;
+  const deptHtml = departments.length ? departments.slice(0,5).map((item, index) => {
+    const width = Math.max(10, Math.round((Number(item[1] || 0) / maxDept) * 100));
+    return `
+      <div style="margin:0 0 13px;">
+        <div style="display:flex;justify-content:space-between;gap:14px;color:#ffffff;font-size:14px;line-height:1.2;">
+          <span>${index + 1}.&nbsp; ${esc(item[0])}</span>
+          <strong>${esc(item[1])}</strong>
+        </div>
+        <div style="height:4px;background:rgba(90,126,163,.22);border-radius:99px;margin-top:7px;overflow:hidden;">
+          <div style="height:4px;width:${width}%;border-radius:99px;background:linear-gradient(90deg,#38bdf8,#2563eb);box-shadow:0 0 12px rgba(37,99,235,.72);"></div>
+        </div>
       </div>
     `;
-  });
+  }).join("") : `<div style="color:#9ca3af;font-size:13px;padding:12px 0;">No department data found.</div>`;
+
+  function metricCard(label, value, sub, accent){
+    return `
+      <td width="25%" style="padding:7px;vertical-align:top;">
+        <div style="min-height:132px;border-radius:14px;background:linear-gradient(145deg,rgba(9,27,45,.96),rgba(5,18,31,.98));border:1px solid rgba(86,138,192,.42);box-shadow:inset 0 0 24px rgba(56,189,248,.04),0 0 22px rgba(0,0,0,.28);padding:18px 12px;text-align:center;">
+          <div style="font-size:13px;letter-spacing:.5px;color:#ffffff;text-transform:uppercase;font-weight:800;min-height:30px;">${esc(label)}</div>
+          <div style="font-size:36px;line-height:1;font-weight:900;color:#ffffff;margin-top:8px;">${esc(value)}</div>
+          <div style="font-size:13px;color:${accent};font-weight:800;margin-top:10px;">${esc(sub)}</div>
+        </div>
+      </td>
+    `;
+  }
 
   return `
-  <div style="margin:0;padding:0;background:#020617;font-family:Arial,Helvetica,sans-serif;color:#ffffff;">
-    <div style="max-width:760px;margin:0 auto;padding:28px;">
-
-      <!-- HEADER -->
-      <div style="background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:24px;margin-bottom:18px;">
-
-       <!-- LOGO IMAGE -->
-<div style="margin-bottom:18px;text-align:center;">
-  <img src="https://thewashtrac.com/logo-email.png" width="220" style="display:block;margin:0 auto;">
-</div>
-        <h2 style="margin:10px 0 10px;font-size:22px;">Usage Report</h2>
-
-        <div style="margin-bottom:10px;">${scopeBadge}</div>
-
-        <p style="margin:0;color:#94a3b8;font-size:14px;">
-          Range: <strong style="color:#ffffff;">${rangeLabel}</strong>
-        </p>
-
-        <p style="margin-top:10px;color:#94a3b8;font-size:13px;">
-          Tip: Download the CSV report for full sorting and filtering.
-        </p>
-
-        <!-- BUTTON -->
-        ${(() => {
-          const activeSiteId = getActiveSiteId();
-          const reportUrl = isAllSites
-            ? "https://www.thewashtrac.com/usage.html?reportScope=all"
-            : `https://www.thewashtrac.com/usage.html?reportScope=current&siteId=${encodeURIComponent(activeSiteId)}`;
-
-          const loginUrl = `https://www.thewashtrac.com/login.html?redirect=${encodeURIComponent(reportUrl)}`;
-
-          return `
-            <a href="${loginUrl}"
-               style="display:inline-block;margin-top:14px;padding:10px 14px;background:#2563eb;color:white;border-radius:8px;text-decoration:none;font-size:14px;font-weight:bold;">
-              View Full Interactive Report
-            </a>
-          `;
-        })()}
-
-      </div>
-
-      <!-- SUMMARY -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;">
-        <div style="background:#111827;border:1px solid #1e293b;border-radius:12px;padding:16px;">
-          <div style="font-size:22px;font-weight:bold;">${totalUses}</div>
-          <div style="color:#94a3b8;font-size:12px;">Total Uses</div>
-        </div>
-
-        <div style="background:#111827;border:1px solid #1e293b;border-radius:12px;padding:16px;">
-          <div style="font-size:22px;font-weight:bold;">${totalCodes}</div>
-          <div style="color:#94a3b8;font-size:12px;">Total Codes</div>
-        </div>
-
-        <div style="background:#111827;border:1px solid #1e293b;border-radius:12px;padding:16px;">
-          <div style="font-size:22px;font-weight:bold;">${topCode}</div>
-          <div style="color:#94a3b8;font-size:12px;">Top Code</div>
-        </div>
-
-        <div style="background:#111827;border:1px solid #1e293b;border-radius:12px;padding:16px;">
-          <div style="font-size:22px;font-weight:bold;">${topDept}</div>
-          <div style="color:#94a3b8;font-size:12px;">Top Department</div>
-        </div>
-      </div>
-
-      <!-- TABLE -->
-      <div style="background:#111827;border:1px solid #1e293b;border-radius:16px;padding:20px;margin-bottom:18px;">
-        <h3 style="margin:0 0 14px;">Selected Report Columns</h3>
-        <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;">
-          <thead><tr>${tableHeaders}</tr></thead>
-          <tbody>${tableRows}</tbody>
-        </table>
-      </div>
-
-      <!-- DEPARTMENTS -->
-      <div style="background:#111827;border:1px solid #1e293b;border-radius:16px;padding:20px;">
-        <h3 style="margin:0 0 14px;">Top Departments</h3>
-        ${deptHtml || `<div style="color:#94a3b8;">No department data.</div>`}
-      </div>
-
-      <p style="text-align:center;color:#64748b;font-size:12px;margin-top:22px;">
-        Generated ${new Date().toLocaleString()} by WashTrac
-      </p>
-
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="color-scheme" content="dark">
+    <meta name="supported-color-schemes" content="dark">
+  </head>
+  <body style="margin:0;padding:0;background:#000712;font-family:Arial,Helvetica,sans-serif;color:#ffffff;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;">
+      WashTrac ${esc(rangeLabel)} report for ${esc(cleanScope)}.
     </div>
-  </div>
+
+    <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0;padding:0;background:#000712;">
+      <tr>
+        <td align="center" style="padding:26px 10px;background:radial-gradient(circle at 50% 0%,#0b2540 0%,#020817 42%,#00040c 100%);">
+          <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:980px;border-collapse:collapse;">
+            <tr>
+              <td style="border-radius:16px;overflow:hidden;background:linear-gradient(180deg,#050d19 0%,#071727 48%,#020817 100%);border:1px solid rgba(77,139,199,.42);box-shadow:0 0 42px rgba(0,119,255,.22),0 30px 80px rgba(0,0,0,.68);">
+
+                <div style="padding:28px 24px 18px;text-align:center;background:radial-gradient(circle at 50% 8%,rgba(35,136,255,.28),rgba(2,8,23,0) 42%);">
+                  <img src="https://thewashtrac.com/washtrac-logo.png" alt="WashTrac" width="380" style="display:block;margin:0 auto 10px auto;height:auto;max-width:88%;">
+
+                  <div style="height:1px;background:linear-gradient(90deg,rgba(37,99,235,0),rgba(59,130,246,.95),rgba(37,99,235,0));box-shadow:0 0 18px rgba(59,130,246,.85);max-width:720px;margin:14px auto 14px;"></div>
+
+                  <div style="font-family:Arial Black,Arial,sans-serif;font-size:30px;line-height:1;font-weight:900;color:#ffffff;letter-spacing:.3px;">
+                    ${esc(cleanScope)}
+                  </div>
+
+                  <div style="margin-top:8px;color:#248bff;font-size:18px;letter-spacing:4px;font-weight:900;">
+                    USAGE REPORT
+                  </div>
+
+                  <div style="margin-top:14px;color:#c5ccd6;font-size:15px;">
+                    Range: <strong style="color:#ffffff;">${esc(rangeLabel)}</strong>
+                  </div>
+
+                  <a href="${loginUrl}" style="display:inline-block;margin-top:18px;padding:12px 18px;background:#2563eb;color:#ffffff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:900;">
+                    View Full Interactive Report
+                  </a>
+                </div>
+
+                <div style="padding:0 24px 22px;">
+                  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:14px;">
+                    <tr>
+                      ${metricCard("Total Uses", totalUses, "Current range", "#56a8ff")}
+                      ${metricCard("Total Codes", totalCodes, "Active in report", "#7ee787")}
+                      ${metricCard("Top Code", topCode, "Most used", "#a855f7")}
+                      ${metricCard("Top Department", topDept, "Highest usage", "#facc15")}
+                    </tr>
+                  </table>
+
+                  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:14px;">
+                    <tr>
+                      <td width="60%" style="padding:7px;vertical-align:top;">
+                        <div style="border-radius:12px;border:1px solid rgba(86,138,192,.42);background:rgba(7,23,39,.92);padding:18px;min-height:220px;">
+                          <div style="color:#4ea1ff;font-size:20px;font-weight:900;letter-spacing:.8px;margin-bottom:16px;">REPORT SUMMARY</div>
+                          <div style="color:#cbd5e1;font-size:15px;line-height:1.8;">
+                            <div><strong style="color:#ffffff;">Scope:</strong> ${esc(cleanScope)}</div>
+                            <div><strong style="color:#ffffff;">Range:</strong> ${esc(rangeLabel)}</div>
+                            <div><strong style="color:#ffffff;">Generated:</strong> ${esc(generatedAt)}</div>
+                            <div><strong style="color:#ffffff;">Columns:</strong> ${esc(columns.map(col => columnLabels[col] || col).join(", "))}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td width="40%" style="padding:7px;vertical-align:top;">
+                        <div style="border-radius:12px;border:1px solid rgba(86,138,192,.42);background:rgba(7,23,39,.92);padding:18px;min-height:220px;">
+                          <div style="color:#4ea1ff;font-size:20px;font-weight:900;letter-spacing:.8px;margin-bottom:16px;">TOP DEPARTMENTS</div>
+                          ${deptHtml}
+                        </div>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <div style="border-radius:12px;border:1px solid rgba(86,138,192,.42);background:rgba(7,23,39,.92);padding:16px;margin:7px 7px 18px;">
+                    <div style="color:#4ea1ff;font-size:20px;font-weight:900;letter-spacing:.8px;margin-bottom:12px;">SELECTED REPORT COLUMNS</div>
+                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:13px;overflow:hidden;border-radius:8px;">
+                      <thead><tr>${tableHeaders}</tr></thead>
+                      <tbody>${tableRows}</tbody>
+                    </table>
+                  </div>
+
+                  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-top:8px;">
+                    <tr>
+                      <td style="border-top:1px solid rgba(37,99,235,.55);box-shadow:0 -1px 12px rgba(37,99,235,.35);font-size:0;line-height:0;">&nbsp;</td>
+                      <td width="430" align="center" style="color:#c8ced8;font-size:14px;line-height:1.7;padding:0 16px;">
+                        This is an automated WashTrac report.<br>
+                        © ${new Date().getFullYear()} WashTrac. All rights reserved.
+                      </td>
+                      <td style="border-top:1px solid rgba(37,99,235,.55);box-shadow:0 -1px 12px rgba(37,99,235,.35);font-size:0;line-height:0;">&nbsp;</td>
+                    </tr>
+                  </table>
+                </div>
+
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
   `;
 }
 
