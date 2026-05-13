@@ -1051,6 +1051,14 @@ function aggregateUses(uses){
       };
     }
 
+    if(item.name && !codeMap[code].name){
+      codeMap[code].name = item.name;
+    }
+
+    if(item.department && (!codeMap[code].department || codeMap[code].department === "Unassigned")){
+      codeMap[code].department = item.department;
+    }
+
     codeMap[code].uses += 1;
 
     if(item.last_used && (!codeMap[code].last_used || item.last_used > codeMap[code].last_used)){
@@ -1230,7 +1238,7 @@ async function loadUsage(){
 if(cachedSiteIds.length){
   const { data: accessCodes, error: codeLookupError } = await client
     .from("access_codes")
-    .select("code, assigned_to, name, department, site_id")
+    .select("*")
     .in("site_id", cachedSiteIds);
 
   if(codeLookupError){
@@ -1238,9 +1246,18 @@ if(cachedSiteIds.length){
   }
 
   (accessCodes || []).forEach(item => {
-    codeLookup[String(item.code || "").trim()] = {
-      name: item.assigned_to || item.name || "",
-      department: item.department || ""
+    const codeKey = String(item.code || item.access_code || "").trim();
+    if(!codeKey) return;
+
+    codeLookup[codeKey] = {
+      name:
+        item.assigned_to ||
+        item.name ||
+        item.customer_name ||
+        item.employee_name ||
+        item.employee ||
+        "",
+      department: item.department || item.dept || item.department_name || ""
     };
   });
 }
