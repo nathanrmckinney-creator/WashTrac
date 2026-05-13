@@ -844,9 +844,13 @@ function getCode(row){
 function getName(row){
   return (
     row.metadata?.name ||
-    row.metadata?.device ||
     row.name ||
-    row.device ||
+    row.customer_name ||
+    row.employee_name ||
+    row.employee ||
+    row.metadata?.customer_name ||
+    row.metadata?.employee_name ||
+    row.metadata?.employee ||
     ""
   );
 }
