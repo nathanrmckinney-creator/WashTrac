@@ -2238,14 +2238,16 @@
     }
 
     function setRemoteWashButtonsEnabled(enabled){
-      const enableBtn = document.getElementById("enableWashBtn");
-      const disableBtn = document.getElementById("disableWashBtn");
-      const triggerWashBtn = document.getElementById("dashboardTriggerWashBtn");
+  const enableBtn = document.getElementById("enableWashBtn");
+  const disableBtn = document.getElementById("disableWashBtn");
+  const triggerWashBtn = document.getElementById("dashboardTriggerWashBtn");
 
-      if(enableBtn) enableBtn.disabled = !enabled;
-      if(disableBtn) disableBtn.disabled = !enabled;
-      if(triggerWashBtn) triggerWashBtn.disabled = !enabled;
-    }
+  if(enableBtn) enableBtn.disabled = !enabled;
+  if(disableBtn) disableBtn.disabled = !enabled;
+
+  // Always keep Trigger Wash enabled and bright green
+  if(triggerWashBtn) triggerWashBtn.disabled = false;
+}
 
     function renderPairedDevices(devices){
       const wrap = document.getElementById("pairedDevicesList");
