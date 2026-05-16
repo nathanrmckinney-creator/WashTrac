@@ -18,10 +18,7 @@
       overflow-x: hidden;
     }
 
-    a {
-      text-decoration: none;
-      color: inherit;
-    }
+    a { text-decoration: none; color: inherit; }
 
     header {
       display: flex;
@@ -35,11 +32,7 @@
       z-index: 1000;
     }
 
-    .brand-wrap {
-      display: flex;
-      align-items: center;
-      margin-right: 8px;
-    }
+    .brand-wrap { display: flex; align-items: center; margin-right: 8px; }
 
     .header-logo {
       width: 240px;
@@ -76,19 +69,9 @@
       box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
     }
 
-    .menu-panel a {
-      color: #e5e7eb;
-      font-size: 16px;
-    }
-
-    .menu-panel a:hover {
-      color: #fff;
-    }
-
-    .menu-panel .login-link {
-      color: #2563eb;
-      font-weight: bold;
-    }
+    .menu-panel a { color: #e5e7eb; font-size: 16px; }
+    .menu-panel a:hover { color: #fff; }
+    .menu-panel .login-link { color: #2563eb; font-weight: bold; }
 
     .backdrop {
       display: none;
@@ -106,11 +89,7 @@
       border-bottom: 1px solid #1e293b;
     }
 
-    .hero-inner {
-      max-width: 1100px;
-      margin: auto;
-      text-align: center;
-    }
+    .hero-inner { max-width: 1100px; margin: auto; text-align: center; }
 
     .eyebrow {
       color: #2563eb;
@@ -141,10 +120,7 @@
       padding: 70px 30px;
     }
 
-    .section h2 {
-      font-size: 38px;
-      margin: 0 0 14px;
-    }
+    .section h2 { font-size: 38px; margin: 0 0 14px; }
 
     .section-intro {
       color: #94a3b8;
@@ -178,10 +154,7 @@
       box-shadow: 0 18px 38px rgba(0, 0, 0, 0.35);
     }
 
-    .guide-card h3 {
-      margin: 0 0 10px;
-      font-size: 22px;
-    }
+    .guide-card h3 { margin: 0 0 10px; font-size: 22px; }
 
     .guide-card p {
       margin: 0;
@@ -197,10 +170,7 @@
       font-size: 14px;
     }
 
-    .faq-list {
-      display: grid;
-      gap: 16px;
-    }
+    .faq-list { display: grid; gap: 16px; }
 
     .faq-item {
       background: #0f172a;
@@ -209,10 +179,7 @@
       padding: 22px;
     }
 
-    .faq-item h3 {
-      margin: 0 0 8px;
-      font-size: 20px;
-    }
+    .faq-item h3 { margin: 0 0 8px; font-size: 20px; }
 
     .faq-item p {
       margin: 0;
@@ -228,9 +195,7 @@
       text-align: center;
     }
 
-    .support-box h2 {
-      margin-top: 0;
-    }
+    .support-box h2 { margin-top: 0; }
 
     .support-box p {
       color: #94a3b8;
@@ -260,47 +225,18 @@
     }
 
     @media (max-width: 900px) {
-      header {
-        padding: 16px 20px;
-      }
-
-      .header-logo {
-        width: 200px;
-      }
-
-      .menu-panel {
-        top: 70px;
-        right: 12px;
-        width: 220px;
-      }
-
-      .hero {
-        padding: 65px 20px 45px;
-      }
-
-      h1 {
-        font-size: 42px;
-      }
-
-      .hero p {
-        font-size: 17px;
-      }
-
-      .section {
-        padding: 55px 20px;
-      }
-
-      .section h2 {
-        font-size: 32px;
-      }
-
-      .guide-grid {
-        grid-template-columns: 1fr;
-      }
+      header { padding: 16px 20px; }
+      .header-logo { width: 200px; }
+      .menu-panel { top: 70px; right: 12px; width: 220px; }
+      .hero { padding: 65px 20px 45px; }
+      h1 { font-size: 42px; }
+      .hero p { font-size: 17px; }
+      .section { padding: 55px 20px; }
+      .section h2 { font-size: 32px; }
+      .guide-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
-
 <body>
   <header>
     <div class="brand-wrap">
@@ -308,7 +244,6 @@
         <img src="washtrac-logo.png" alt="WashTrac" class="header-logo">
       </a>
     </div>
-
     <button class="menu-btn" onclick="toggleMenu()">&#9776;</button>
   </header>
 
@@ -339,15 +274,12 @@
 
     <div class="guide-grid">
       <a class="guide-card" href="quick-start.html">
-  <div>
-    <h3>Quick Start Guide</h3>
-    <p>
-      Register online, create your site, add your device, retrieve a 6-digit
-      pairing code, and connect the keypad.
-    </p>
-  </div>
-  <div class="guide-tag">Open Guide</div>
-</a>
+        <div>
+          <h3>Quick Start Guide</h3>
+          <p>Register online, create your site, add your device, retrieve a 6-digit pairing code, and connect the keypad.</p>
+        </div>
+        <div class="guide-tag">Open Guide</div>
+      </a>
 
       <a class="guide-card" href="#">
         <div>
@@ -365,97 +297,84 @@
         <div class="guide-tag">Coming Soon</div>
       </a>
 
-      <a class="guide-card" href="#">
+      <a class="guide-card" href="pair-device.html">
         <div>
           <h3>Pair Device to Account</h3>
           <p>Use the online dashboard to generate a 6-digit code and enter it on the keypad to link the device.</p>
         </div>
-        <div class="guide-tag">Coming Soon</div>
+        <div class="guide-tag">Open Guide</div>
       </a>
 
-      <a class="guide-card" href="#">
+      <a class="guide-card" href="keypad-programming.html">
         <div>
           <h3>Keypad Programming</h3>
           <p>Add, delete, and manage access codes directly from the keypad when local programming is enabled.</p>
         </div>
-        <div class="guide-tag">Coming Soon</div>
+        <div class="guide-tag">Open Guide</div>
       </a>
 
-      <a class="guide-card" href="#">
+      <a class="guide-card" href="internet-lte-setup.html">
         <div>
           <h3>Internet / LTE Setup</h3>
           <p>Connect the system through Wi-Fi or cellular service and understand what happens when the system is offline.</p>
         </div>
-        <div class="guide-tag">Coming Soon</div>
+        <div class="guide-tag">Open Guide</div>
       </a>
 
-      <a class="guide-card" href="#">
+      <a class="guide-card" href="dashboard-guide.html">
         <div>
           <h3>Dashboard Guide</h3>
           <p>Manage sites, access codes, activity logs, reports, monitoring, scheduled lockouts, and system controls.</p>
         </div>
-        <div class="guide-tag">Coming Soon</div>
+        <div class="guide-tag">Open Guide</div>
       </a>
 
-      <a class="guide-card" href="#">
+      <a class="guide-card" href="reports-audit-logs.html">
         <div>
           <h3>Reports & Audit Logs</h3>
           <p>Review wash activity, export records, email reports, and track usage by user, code, site, and department.</p>
         </div>
-        <div class="guide-tag">Coming Soon</div>
+        <div class="guide-tag">Open Guide</div>
       </a>
 
-      <a class="guide-card" href="#">
+      <a class="guide-card" href="troubleshooting.html">
         <div>
           <h3>Troubleshooting</h3>
           <p>Help for offline devices, display issues, pairing problems, codes not working, and connection errors.</p>
         </div>
-        <div class="guide-tag">Coming Soon</div>
+        <div class="guide-tag">Open Guide</div>
       </a>
     </div>
   </section>
 
   <section class="section">
     <h2>Common Questions</h2>
-    <p class="section-intro">
-      Quick answers to common setup and operation questions.
-    </p>
+    <p class="section-intro">Quick answers to common setup and operation questions.</p>
 
     <div class="faq-list">
       <div class="faq-item">
         <h3>Can the keypad work if the internet goes down?</h3>
-        <p>
-          The WashTrac keypad is designed to continue functioning locally when offline, depending on the installed configuration.
-          Online activity syncing and remote dashboard features resume when the device reconnects.
-        </p>
+        <p>The WashTrac keypad is designed to continue functioning locally when offline. Online syncing resumes automatically when the device reconnects.</p>
       </div>
 
       <div class="faq-item">
         <h3>How do I connect a keypad to my account?</h3>
-        <p>
-          Log in to the WashTrac dashboard, add a device, retrieve the 6-digit pairing code, then enter that code on the keypad.
-        </p>
+        <p>Log in to the dashboard, add a device, retrieve the 6-digit pairing code, then enter that code on the keypad.</p>
       </div>
 
       <div class="faq-item">
         <h3>Can I add or remove access codes from the keypad?</h3>
-        <p>
-          Yes. Local programming can allow authorized users to add or delete keypad access codes directly from the device.
-        </p>
+        <p>Yes. Authorized users can add or delete access codes directly from the keypad.</p>
       </div>
 
       <div class="faq-item">
         <h3>Can WashTrac track who used the wash?</h3>
-        <p>
-          Yes. WashTrac can log wash activity by code, user, department, site, and timestamp for audit and reporting visibility.
-        </p>
+        <p>Yes. WashTrac logs activity by code, user, department, site, and timestamp.</p>
       </div>
 
       <div class="faq-item">
         <h3>Can the wash be disabled remotely?</h3>
-        <p>
-          WashTrac can support remote shutdown, scheduled lockouts, and live monitoring depending on system configuration.
-        </p>
+        <p>Yes. WashTrac supports remote shutdown, scheduled lockouts, and live monitoring.</p>
       </div>
     </div>
   </section>
@@ -481,7 +400,6 @@
       const menu = document.getElementById("menuPanel");
       const backdrop = document.getElementById("backdrop");
       const isOpen = menu.style.display === "flex";
-
       menu.style.display = isOpen ? "none" : "flex";
       backdrop.style.display = isOpen ? "none" : "block";
     }
