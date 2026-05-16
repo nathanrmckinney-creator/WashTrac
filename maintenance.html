@@ -55,6 +55,7 @@
     button.danger{background:#dc2626;}
     button.success{background:#16a34a;}
     button.warn{background:#d97706;}
+    button.test{background:#7c3aed;}
     button:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.35);}
     .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
     .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
@@ -111,7 +112,7 @@
     .relay-output-wrap{display:grid;gap:12px;margin-top:14px;}
     .relay-output-row{
       display:grid;
-      grid-template-columns:120px 1.4fr 150px 150px 110px 130px 96px;
+      grid-template-columns:120px 1.4fr 150px 150px 110px 130px 96px 96px;
       gap:10px;
       align-items:end;
       padding:14px;
@@ -1625,6 +1626,11 @@ function renderRelayOutputAssignments(){
           </label>
           <button type="button" onclick="saveRelayOutput('${key}')">Save</button>
         </div>
+
+        <div class="field">
+          <label>&nbsp;</label>
+          <button class="test" type="button" onclick="testRelayOutput('${key}')">Test</button>
+        </div>
       </div>
     `;
   }).join("");
@@ -1731,6 +1737,39 @@ async function saveRelayOutput(outputKey){
   }
 
   return true;
+}
+
+async function testRelayOutput(outputKey){
+  clearStatus();
+
+  const siteId = selectedSite();
+  if(!siteId){
+    setRelayOutputStatus("Select a site first.", "warn");
+    return;
+  }
+
+  if(!visibleDevices.length){
+    setRelayOutputStatus("No visible CodeBox found for this site.", "warn");
+    return;
+  }
+
+  const payload = buildRelayOutputPayload(outputKey);
+
+  const confirmed = confirm(
+    `Test ${payload.output_label} (${payload.output_name}) now?\n\n` +
+    `${payload.contact_type === "nc" ? "Normally Closed" : "Normally Open"} • ` +
+    `${payload.timer_type === "off_delay" ? "Off Delay" : "On Delay"} • ` +
+    `${payload.duration_value} ${payload.duration_unit}`
+  );
+
+  if(!confirmed) return;
+
+  await queueCommandForVisible("test_relay_output", false, payload);
+
+  setRelayOutputStatus(
+    `Test command queued for ${payload.output_label}: ${payload.output_name}.`,
+    "success"
+  );
 }
 
 async function saveAllRelayOutputs(){
