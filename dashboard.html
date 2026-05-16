@@ -507,51 +507,22 @@
       color:#94a3b8;
     }
 
-    .bay-status-trigger-layout{
-      display:grid;
-      grid-template-columns:minmax(260px, 320px) 1fr;
-      gap:24px;
-      align-items:stretch;
-    }
-
-    .bay-trigger-panel{
-      background:#0b1220;
-      border:1px solid #1f2937;
-      border-radius:12px;
-      padding:18px;
+    .bay-trigger-actions{
       display:flex;
-      flex-direction:column;
-      justify-content:center;
-      min-height:174px;
-    }
-
-    .bay-trigger-panel h4{
-      margin:0 0 8px 0;
-      font-size:20px;
-    }
-
-    .bay-trigger-panel p{
-      margin:0;
-      color:#94a3b8;
-      line-height:1.45;
-      max-width:420px;
+      justify-content:flex-start;
+      margin:0 0 16px 0;
     }
 
     .trigger-wash-button{
-      margin-top:18px;
-      width:280px;
-      max-width:100%;
-      background:linear-gradient(180deg,#4ade80,#16a34a);
+      background:#16a34a;
       color:#ffffff;
-      border:1px solid rgba(134,239,172,.55);
-      box-shadow:0 0 18px rgba(34,197,94,.22);
-      font-size:18px;
+      border:1px solid rgba(134,239,172,.45);
+      box-shadow:0 0 14px rgba(34,197,94,.18);
       font-weight:900;
-      letter-spacing:.2px;
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      gap:10px;
+      gap:8px;
     }
 
     .trigger-wash-button:hover{
@@ -559,14 +530,14 @@
     }
 
     .trigger-wash-icon{
-      width:22px;
-      height:22px;
+      width:18px;
+      height:18px;
       border-radius:999px;
       border:2px solid rgba(255,255,255,.9);
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      font-size:12px;
+      font-size:10px;
       line-height:1;
     }
 
@@ -801,8 +772,7 @@
       }
       .page-header h1{font-size:34px}
       .summary{grid-template-columns:1fr}
-      .control-grid,.field-grid,.bay-editor-grid,.bay-status-trigger-layout{grid-template-columns:1fr}
-      .trigger-wash-button{width:100%}
+      .control-grid,.field-grid,.bay-editor-grid{grid-template-columns:1fr}
       .weekly-lockout-head,.weekly-lockout-row{grid-template-columns:1fr .8fr .8fr}
     }
   </style>
@@ -1145,23 +1115,14 @@
       <div class="card">
         <h3>Bay Status Editor</h3>
 
-        <div class="bay-status-trigger-layout">
-          <div class="bay-editor-grid" id="bayEditorGrid"></div>
-
-          <div class="bay-trigger-panel">
-            <h4>Trigger Wash</h4>
-            <p>
-              Send a remote command to start one wash on the connected CodeBox.
-              This behaves the same as the maintenance trigger wash command.
-            </p>
-
-            <button id="dashboardTriggerWashBtn" class="trigger-wash-button" type="button" onclick="triggerWashFromDashboard()">
-              <span class="trigger-wash-icon">▶</span>
-              Trigger Wash
-            </button>
-          </div>
+        <div class="bay-trigger-actions">
+          <button id="dashboardTriggerWashBtn" class="trigger-wash-button" type="button" onclick="triggerWashFromDashboard()">
+            <span class="trigger-wash-icon">▶</span>
+            Trigger Wash
+          </button>
         </div>
 
+        <div class="bay-editor-grid" id="bayEditorGrid"></div>
         <div id="bayStatusMessage" class="control-status"></div>
       </div>
 
@@ -1539,7 +1500,12 @@
         device_id: device.id,
         site_id: activeSiteId,
         command: "trigger_wash",
-        payload: {},
+        payload: {
+          source: "dashboard_trigger",
+          department: "Management",
+          name: "OPS",
+          assigned_to: "OPS"
+        },
         status: "pending",
         created_at: new Date().toISOString()
       };
