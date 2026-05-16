@@ -507,6 +507,70 @@
       color:#94a3b8;
     }
 
+    .bay-status-trigger-layout{
+      display:grid;
+      grid-template-columns:minmax(260px, 320px) 1fr;
+      gap:24px;
+      align-items:stretch;
+    }
+
+    .bay-trigger-panel{
+      background:#0b1220;
+      border:1px solid #1f2937;
+      border-radius:12px;
+      padding:18px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      min-height:174px;
+    }
+
+    .bay-trigger-panel h4{
+      margin:0 0 8px 0;
+      font-size:20px;
+    }
+
+    .bay-trigger-panel p{
+      margin:0;
+      color:#94a3b8;
+      line-height:1.45;
+      max-width:420px;
+    }
+
+    .trigger-wash-button{
+      margin-top:18px;
+      width:280px;
+      max-width:100%;
+      background:linear-gradient(180deg,#4ade80,#16a34a);
+      color:#ffffff;
+      border:1px solid rgba(134,239,172,.55);
+      box-shadow:0 0 18px rgba(34,197,94,.22);
+      font-size:18px;
+      font-weight:900;
+      letter-spacing:.2px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+    }
+
+    .trigger-wash-button:hover{
+      filter:brightness(1.08);
+    }
+
+    .trigger-wash-icon{
+      width:22px;
+      height:22px;
+      border-radius:999px;
+      border:2px solid rgba(255,255,255,.9);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-size:12px;
+      line-height:1;
+    }
+
+
     .brand-accent{
       color:#2ea8ff !important;
     }
@@ -737,7 +801,8 @@
       }
       .page-header h1{font-size:34px}
       .summary{grid-template-columns:1fr}
-      .control-grid,.field-grid,.bay-editor-grid{grid-template-columns:1fr}
+      .control-grid,.field-grid,.bay-editor-grid,.bay-status-trigger-layout{grid-template-columns:1fr}
+      .trigger-wash-button{width:100%}
       .weekly-lockout-head,.weekly-lockout-row{grid-template-columns:1fr .8fr .8fr}
     }
   </style>
@@ -1079,7 +1144,24 @@
 
       <div class="card">
         <h3>Bay Status Editor</h3>
-        <div class="bay-editor-grid" id="bayEditorGrid"></div>
+
+        <div class="bay-status-trigger-layout">
+          <div class="bay-editor-grid" id="bayEditorGrid"></div>
+
+          <div class="bay-trigger-panel">
+            <h4>Trigger Wash</h4>
+            <p>
+              Send a remote command to start one wash on the connected CodeBox.
+              This behaves the same as the maintenance trigger wash command.
+            </p>
+
+            <button id="dashboardTriggerWashBtn" class="trigger-wash-button" type="button" onclick="triggerWashFromDashboard()">
+              <span class="trigger-wash-icon">▶</span>
+              Trigger Wash
+            </button>
+          </div>
+        </div>
+
         <div id="bayStatusMessage" class="control-status"></div>
       </div>
 
@@ -1435,6 +1517,47 @@
       box.innerText = message;
       box.classList.add("show");
     }
+
+    async function triggerWashFromDashboard(){
+      const activeSiteId = getActiveSiteId();
+      const device = getPrimaryDevice();
+
+      if(!activeSiteId){
+        setBayStatusMessage("No active site selected.");
+        return;
+      }
+
+      if(!device || !device.id){
+        setBayStatusMessage("No paired CodeBox found for this site.");
+        return;
+      }
+
+      const confirmed = confirm("Trigger one wash now?");
+      if(!confirmed) return;
+
+      const row = {
+        device_id: device.id,
+        site_id: activeSiteId,
+        command: "trigger_wash",
+        payload: {},
+        status: "pending",
+        created_at: new Date().toISOString()
+      };
+
+      const { error } = await client
+        .from("device_commands")
+        .insert([row]);
+
+      if(error){
+        console.log("Trigger wash error:", error);
+        setBayStatusMessage("Could not queue trigger wash command.");
+        return;
+      }
+
+      setBayStatusMessage(`Trigger wash queued for ${device.device_name || device.name || "CodeBox"}.`);
+      scheduleDashboardRefresh(1500);
+    }
+
 
     function cleanValue(value, fallback = ""){
       if(value === null || value === undefined || value === "") return fallback;
@@ -2136,9 +2259,11 @@
     function setRemoteWashButtonsEnabled(enabled){
       const enableBtn = document.getElementById("enableWashBtn");
       const disableBtn = document.getElementById("disableWashBtn");
+      const triggerWashBtn = document.getElementById("dashboardTriggerWashBtn");
 
       if(enableBtn) enableBtn.disabled = !enabled;
       if(disableBtn) disableBtn.disabled = !enabled;
+      if(triggerWashBtn) triggerWashBtn.disabled = !enabled;
     }
 
     function renderPairedDevices(devices){
