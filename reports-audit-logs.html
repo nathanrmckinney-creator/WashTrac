@@ -1,1 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WashTrac Reports & Audit Logs</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #020617;
+      color: #ffffff;
+      line-height: 1.6;
+    }
+
+    a { text-decoration: none; color: inherit; }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(2, 6, 23, 0.95);
+      border-bottom: 1px solid #1e293b;
+      padding: 14px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-logo {
+      width: 220px;
+      max-width: 100%;
+      height: auto;
+      display: block;
+      position: relative;
+      top: -10px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 18px;
+      border-radius: 10px;
+      background: #1b4fd6;
+      color: #ffffff;
+      font-weight: 700;
+      border: none;
+    }
+
+    .hero {
+      padding: 80px 20px 50px;
+      background:
+        radial-gradient(circle at top center, rgba(37,99,235,0.22), transparent 45%),
+        linear-gradient(180deg, #020617 0%, #07111f 55%, #020617 100%);
+      border-bottom: 1px solid #1e293b;
+      text-align: center;
+    }
+
+    .hero .eyebrow {
+      color: #60a5fa;
+      letter-spacing: 2px;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .hero h1 {
+      margin: 0 0 16px;
+      font-size: 54px;
+      line-height: 1.05;
+    }
+
+    .hero p {
+      max-width: 760px;
+      margin: 0 auto;
+      color: #94a3b8;
+      font-size: 19px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 70px 20px;
+    }
+
+    .section-card {
+      background: linear-gradient(180deg, #0f172a, #111827);
+      border: 1px solid #1e293b;
+      border-radius: 18px;
+      padding: 28px;
+      margin-bottom: 28px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .section-card h2 {
+      margin: 0 0 12px;
+      font-size: 32px;
+    }
+
+    .section-card p {
+      margin: 0 0 14px;
+      color: #cbd5e1;
+      font-size: 17px;
+    }
+
+    .section-card ul {
+      margin: 0;
+      padding-left: 22px;
+      color: #cbd5e1;
+    }
+
+    .section-card li {
+      margin-bottom: 8px;
+    }
+
+    .image-placeholder {
+      margin-top: 22px;
+      background: linear-gradient(145deg, #111827, #0b1220);
+      border: 2px dashed #334155;
+      border-radius: 14px;
+      min-height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #64748b;
+      font-weight: 700;
+      padding: 20px;
+    }
+
+    .tip {
+      margin-top: 16px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: rgba(37, 99, 235, 0.10);
+      border: 1px solid rgba(37, 99, 235, 0.28);
+      color: #dbeafe;
+      font-size: 15px;
+    }
+
+    .next-box {
+      margin-top: 50px;
+      background: linear-gradient(145deg, #0f172a, #111827);
+      border: 1px solid #1e293b;
+      border-radius: 18px;
+      padding: 36px;
+      text-align: center;
+    }
+
+    .next-box h2 {
+      margin-top: 0;
+      font-size: 36px;
+    }
+
+    .next-box p {
+      max-width: 700px;
+      margin: 0 auto 22px;
+      color: #94a3b8;
+      font-size: 18px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px;
+      color: #64748b;
+      border-top: 1px solid #1e293b;
+      margin-top: 40px;
+    }
+
+    @media (max-width: 900px) {
+      header { padding: 14px 20px; }
+      .header-logo { width: 180px; }
+      .hero { padding: 65px 20px 40px; }
+      .hero h1 { font-size: 40px; }
+      .hero p { font-size: 17px; }
+      .container { padding: 50px 20px; }
+      .section-card { padding: 22px; }
+      .section-card h2 { font-size: 26px; }
+      .image-placeholder { min-height: 180px; }
+      .next-box { padding: 28px 22px; }
+      .next-box h2 { font-size: 30px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="index.html">
+      <img src="washtrac-logo.png" alt="WashTrac" class="header-logo">
+    </a>
+
+    <a href="faq.html" class="btn">Back to Guides</a>
+  </header>
+
+  <section class="hero">
+    <div class="eyebrow">Reporting Guide</div>
+    <h1>Reports & Audit Logs</h1>
+    <p>
+      Use WashTrac reporting tools to analyze usage, export data,
+      schedule email reports, and maintain a complete audit trail.
+    </p>
+  </section>
+
+  <div class="container">
+
+    <div class="section-card">
+      <h2>Audit Trail Overview</h2>
+      <p>
+        Every keypad event is recorded to create a complete and searchable history.
+      </p>
+      <ul>
+        <li>Successful washes</li>
+        <li>Denied access attempts</li>
+        <li>Date and time of each event</li>
+        <li>Code, name, department, and site</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Activity Log Table
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h2>Reports Dashboard</h2>
+      <p>
+        View high-level statistics and visual charts showing wash activity trends.
+      </p>
+      <ul>
+        <li>Total washes</li>
+        <li>Denied attempts</li>
+        <li>Top wash codes</li>
+        <li>Usage by time of day</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Reports Dashboard
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h2>Filtering Data</h2>
+      <p>
+        Narrow report results to focus on specific information.
+      </p>
+      <ul>
+        <li>Select a date range</li>
+        <li>Filter by site</li>
+        <li>Filter by code, user, or department</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Report Filters
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h2>Scheduled Email Reports</h2>
+      <p>
+        Automatically send reports to managers and administrators.
+      </p>
+      <ul>
+        <li>Choose recipients</li>
+        <li>Select report frequency</li>
+        <li>Set start and end dates</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Scheduled Report Settings
+      </div>
+
+      <div class="tip">
+        Reports can be delivered automatically to one or more email addresses on a recurring schedule.
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h2>Exporting Data</h2>
+      <p>
+        Download activity data for analysis in spreadsheets or accounting systems.
+      </p>
+      <ul>
+        <li>Export CSV files</li>
+        <li>Share audit data with management</li>
+        <li>Archive records for compliance</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Export CSV Button
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h2>Top Wash Codes</h2>
+      <p>
+        Identify the most frequently used codes and associated users.
+      </p>
+      <ul>
+        <li>Rank code usage</li>
+        <li>Display names next to codes</li>
+        <li>Spot unusual activity</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Top Wash Codes Widget
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h2>Wash Activity by Time</h2>
+      <p>
+        Understand the busiest periods during the day.
+      </p>
+      <ul>
+        <li>24-hour usage chart</li>
+        <li>Average activity by time of day</li>
+        <li>Trend analysis</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Activity Over Time Chart
+      </div>
+    </div>
+
+    <div class="next-box">
+      <h2>Complete Accountability</h2>
+      <p>
+        WashTrac reporting tools provide a permanent audit trail and actionable insights
+        to help you control costs and improve accountability.
+      </p>
+
+      <a href="faq.html" class="btn">Return to FAQ & Guides</a>
+    </div>
+
+  </div>
+
+  <footer>
+    WASHTRAC © 2026<br>
+    Control. Track. Manage.
+  </footer>
+
+</body>
+</html>
 
