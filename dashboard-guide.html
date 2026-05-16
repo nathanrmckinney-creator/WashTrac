@@ -1,1 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WashTrac Dashboard Guide</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #020617;
+      color: #ffffff;
+      line-height: 1.6;
+    }
+
+    a { text-decoration: none; color: inherit; }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(2, 6, 23, 0.95);
+      border-bottom: 1px solid #1e293b;
+      padding: 14px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-logo {
+      width: 220px;
+      max-width: 100%;
+      height: auto;
+      display: block;
+      position: relative;
+      top: -10px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 18px;
+      border-radius: 10px;
+      background: #1b4fd6;
+      color: #ffffff;
+      font-weight: 700;
+      border: none;
+    }
+
+    .hero {
+      padding: 80px 20px 50px;
+      background:
+        radial-gradient(circle at top center, rgba(37,99,235,0.22), transparent 45%),
+        linear-gradient(180deg, #020617 0%, #07111f 55%, #020617 100%);
+      border-bottom: 1px solid #1e293b;
+      text-align: center;
+    }
+
+    .hero .eyebrow {
+      color: #60a5fa;
+      letter-spacing: 2px;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .hero h1 {
+      margin: 0 0 16px;
+      font-size: 54px;
+      line-height: 1.05;
+    }
+
+    .hero p {
+      max-width: 760px;
+      margin: 0 auto;
+      color: #94a3b8;
+      font-size: 19px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 70px 20px;
+    }
+
+    .section-card {
+      background: linear-gradient(180deg, #0f172a, #111827);
+      border: 1px solid #1e293b;
+      border-radius: 18px;
+      padding: 28px;
+      margin-bottom: 28px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .section-card h2 {
+      margin: 0 0 12px;
+      font-size: 32px;
+    }
+
+    .section-card p {
+      margin: 0 0 14px;
+      color: #cbd5e1;
+      font-size: 17px;
+    }
+
+    .section-card ul {
+      margin: 0;
+      padding-left: 22px;
+      color: #cbd5e1;
+    }
+
+    .section-card li {
+      margin-bottom: 8px;
+    }
+
+    .image-placeholder {
+      margin-top: 22px;
+      background: linear-gradient(145deg, #111827, #0b1220);
+      border: 2px dashed #334155;
+      border-radius: 14px;
+      min-height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #64748b;
+      font-weight: 700;
+      padding: 20px;
+    }
+
+    .tip {
+      margin-top: 16px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: rgba(37, 99, 235, 0.10);
+      border: 1px solid rgba(37, 99, 235, 0.28);
+      color: #dbeafe;
+      font-size: 15px;
+    }
+
+    .next-box {
+      margin-top: 50px;
+      background: linear-gradient(145deg, #0f172a, #111827);
+      border: 1px solid #1e293b;
+      border-radius: 18px;
+      padding: 36px;
+      text-align: center;
+    }
+
+    .next-box h2 {
+      margin-top: 0;
+      font-size: 36px;
+    }
+
+    .next-box p {
+      max-width: 700px;
+      margin: 0 auto 22px;
+      color: #94a3b8;
+      font-size: 18px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px;
+      color: #64748b;
+      border-top: 1px solid #1e293b;
+      margin-top: 40px;
+    }
+
+    @media (max-width: 900px) {
+      header { padding: 14px 20px; }
+      .header-logo { width: 180px; }
+      .hero { padding: 65px 20px 40px; }
+      .hero h1 { font-size: 40px; }
+      .hero p { font-size: 17px; }
+      .container { padding: 50px 20px; }
+      .section-card { padding: 22px; }
+      .section-card h2 { font-size: 26px; }
+      .image-placeholder { min-height: 180px; }
+      .next-box { padding: 28px 22px; }
+      .next-box h2 { font-size: 30px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="index.html">
+      <img src="washtrac-logo.png" alt="WashTrac" class="header-logo">
+    </a>
+
+    <a href="faq.html" class="btn">Back to Guides</a>
+  </header>
+
+  <section class="hero">
+    <div class="eyebrow">Management Guide</div>
+    <h1>Dashboard Guide</h1>
+    <p>
+      Learn how to manage sites, access codes, devices, activity, reports,
+      monitoring, lockouts, controls, and Wi-Fi settings from the WashTrac dashboard.
+    </p>
+  </section>
+
+  <div class="container">
+
+    <div class="section-card">
+      <h2>Dashboard Overview</h2>
+      <p>
+        The dashboard provides a central place to manage every WashTrac site and device.
+      </p>
+      <ul>
+        <li>View usage totals and key metrics</li>
+        <li>See recent wash activity</li>
+        <li>Monitor online/offline status</li>
+        <li>Access all management tools</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Dashboard Home Page
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h2>Sites</h2>
+      <p>
+        Sites represent physical locations where WashTrac devices are installed.
+      </p>
+      <ul>
+        <li>Create and edit site information</li>
+        <li>Assign devices to specific locations</li>
+        <li>Organize reporting by site</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Sites Page
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h2>Codes</h2>
+      <p>
+        Manage wash access codes and assign them to people or departments.
+      </p>
+      <ul>
+        <li>Create new 4-digit codes</li>
+        <li>Assign names and departments</li>
+        <li>Enable or disable codes</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Codes Page
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h2>Activity</h2>
+      <p>
+        Review detailed logs showing every wash event and denied attempt.
+      </p>
+      <ul>
+        <li>Filter by date, site, code, or department</li>
+        <li>See timestamps and results</li>
+        <li>Audit usage history</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Activity Page
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h2>Reports</h2>
+      <p>
+        Generate visual summaries and schedule automatic email reports.
+      </p>
+      <ul>
+        <li>View charts and statistics</li>
+        <li>Email reports automatically</li>
+        <li>Export activity data</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Reports Page
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h2>Monitor</h2>
+      <p>
+        View live device status and connection information.
+      </p>
+      <ul>
+        <li>Online/offline status</li>
+        <li>E-STOP monitoring</li>
+        <li>Signal strength and connectivity</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Monitor Page
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h2>Controls</h2>
+      <p>
+        Trigger a wash, remotely disable the system, or configure scheduled lockouts.
+      </p>
+      <ul>
+        <li>Queue a test wash</li>
+        <li>Enable remote shutdown</li>
+        <li>Set weekly lockout schedules</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Controls Page
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h2>Wi-Fi Setup</h2>
+      <p>
+        Search for wireless networks and connect the device to a local Wi-Fi network.
+      </p>
+      <ul>
+        <li>Scan for available networks</li>
+        <li>Select the correct Wi-Fi name</li>
+        <li>Enter the network password</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Wi-Fi Setup Section
+      </div>
+
+      <div class="tip">
+        LTE and advanced communication settings are managed internally by WashTrac support and are not part of the customer dashboard.
+      </div>
+    </div>
+
+    <div class="next-box">
+      <h2>Full Control at Your Fingertips</h2>
+      <p>
+        The WashTrac dashboard gives you complete visibility and control over
+        wash access, activity tracking, reporting, and device management.
+      </p>
+
+      <a href="faq.html" class="btn">Return to FAQ & Guides</a>
+    </div>
+
+  </div>
+
+  <footer>
+    WASHTRAC © 2026<br>
+    Control. Track. Manage.
+  </footer>
+
+</body>
+</html>
 
