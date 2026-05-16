@@ -597,6 +597,121 @@
   color:#86efac;
   border:1px solid rgba(34,197,94,.35);
 }
+
+.wifi-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  margin-top:14px;
+}
+
+.wifi-panel{
+  background:#0b1220;
+  border:1px solid #1f2937;
+  border-radius:12px;
+  padding:16px;
+}
+
+.wifi-panel h4{
+  margin:0 0 12px 0;
+  font-size:18px;
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
+}
+
+.wifi-meta{
+  color:#94a3b8;
+  font-size:13px;
+  line-height:1.6;
+  margin-top:8px;
+}
+
+.wifi-network-list{
+  display:grid;
+  gap:10px;
+  margin-top:14px;
+}
+
+.wifi-network-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px;
+  border:1px solid #1f2937;
+  border-radius:10px;
+  background:#020617;
+  cursor:pointer;
+}
+
+.wifi-network-row:hover,
+.wifi-network-row.selected{
+  border-color:#1ea7ff;
+  box-shadow:0 0 12px rgba(30,167,255,.18);
+}
+
+.wifi-network-name{
+  font-weight:800;
+  color:white;
+}
+
+.wifi-network-meta{
+  color:#94a3b8;
+  font-size:13px;
+  margin-top:3px;
+}
+
+.signal-wrap{
+  display:flex;
+  align-items:flex-end;
+  gap:4px;
+  height:24px;
+  margin-top:8px;
+}
+
+.signal-bar{
+  width:7px;
+  border-radius:3px 3px 0 0;
+  background:#334155;
+  box-shadow:none;
+}
+
+.signal-bar.on{
+  background:#2563eb;
+  box-shadow:0 0 8px rgba(37,99,235,.45);
+}
+
+.signal-bar:nth-child(1){height:7px;}
+.signal-bar:nth-child(2){height:11px;}
+.signal-bar:nth-child(3){height:16px;}
+.signal-bar:nth-child(4){height:21px;}
+
+.wifi-message{
+  margin-top:14px;
+  padding:12px 14px;
+  border-radius:8px;
+  background:#0b1220;
+  border:1px solid #1f2937;
+  color:#cbd5e1;
+  display:none;
+}
+
+.wifi-message.show{
+  display:block;
+}
+
+.wifi-input{
+  width:100%;
+  padding:12px;
+  border-radius:8px;
+  border:1px solid #334155;
+  background:#0b1220;
+  color:white;
+  font-size:15px;
+}
+
 @media (max-width:1200px){
       .bay-editor-grid{
         grid-template-columns:1fr 1fr;
@@ -610,6 +725,8 @@
     }
 
     @media (max-width:900px){
+      .wifi-grid{grid-template-columns:1fr}
+
       .app{display:block}
       .sidebar{display:none}
       .mobile-topbar{display:flex}
@@ -772,6 +889,71 @@
           <div class="list-row"><span>Loading paired devices...</span><span>-</span></div>
         </div>
         <div class="note">CodeBox units currently linked to this active site.</div>
+      </div>
+
+
+      <div class="card">
+        <h3>Wi-Fi Setup</h3>
+
+        <div class="wifi-grid">
+          <div class="wifi-panel">
+            <h4>
+              Current Connection
+              <span id="wifiStatusTag" class="status-pill status-warn">Unknown</span>
+            </h4>
+
+            <div class="list-row">
+              <span>Network</span>
+              <span id="wifiCurrentSsid">Not connected</span>
+            </div>
+
+            <div class="list-row">
+              <span>Signal Strength</span>
+              <span id="wifiSignalText">--</span>
+            </div>
+
+            <div class="signal-wrap" id="wifiSignalBars">
+              <div class="signal-bar"></div>
+              <div class="signal-bar"></div>
+              <div class="signal-bar"></div>
+              <div class="signal-bar"></div>
+            </div>
+
+            <div id="wifiMeta" class="wifi-meta">No Wi-Fi data loaded yet.</div>
+
+            <div class="controls">
+              <button type="button" onclick="searchWirelessNetworks()">Search Wireless Networks</button>
+              <button class="secondary" type="button" onclick="queueWifiRefresh()">Refresh Network</button>
+            </div>
+          </div>
+
+          <div class="wifi-panel">
+            <h4>Connect Device to Wi-Fi</h4>
+
+            <div class="field">
+              <label for="wifiSsid">Wi-Fi SSID</label>
+              <input id="wifiSsid" class="wifi-input" placeholder="Search and select a network">
+            </div>
+
+            <div class="field" style="margin-top:12px;">
+              <label for="wifiPassword">Wi-Fi Password</label>
+              <input id="wifiPassword" class="wifi-input" type="password" placeholder="Enter Wi-Fi password">
+            </div>
+
+            <div class="controls">
+              <button class="success" type="button" onclick="saveWifiConfig()">Connect Wi-Fi</button>
+              <button class="secondary" type="button" onclick="clearWifiForm()">Clear</button>
+            </div>
+
+            <div id="wifiMessage" class="wifi-message"></div>
+          </div>
+        </div>
+
+        <div id="wifiNetworkList" class="wifi-network-list"></div>
+
+        <div class="note">
+          Use this section to connect the selected CodeBox to customer Wi-Fi. LTE and advanced connection settings are handled by support only.
+        </div>
       </div>
 
       <div class="card">
@@ -1266,6 +1448,244 @@
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+    }
+
+    function setWifiMessage(message){
+      const box = document.getElementById("wifiMessage");
+      if(!box) return;
+      box.innerText = message || "";
+      box.classList.add("show");
+    }
+
+    function setWifiSignalBars(strength){
+      const wrap = document.getElementById("wifiSignalBars");
+      if(!wrap) return;
+
+      const value = Math.max(0, Math.min(4, Number(strength || 0)));
+      Array.from(wrap.querySelectorAll(".signal-bar")).forEach((bar, index) => {
+        bar.classList.toggle("on", index < value);
+      });
+    }
+
+    function getDeviceNetworkField(device, names, fallback = ""){
+      for(const name of names){
+        if(device && device[name] !== undefined && device[name] !== null && device[name] !== ""){
+          return device[name];
+        }
+      }
+
+      const network = device?.network || device?.metadata?.network || {};
+      for(const name of names){
+        if(network && network[name] !== undefined && network[name] !== null && network[name] !== ""){
+          return network[name];
+        }
+      }
+
+      return fallback;
+    }
+
+    function estimateWifiBarsFromPercent(percent){
+      const value = Number(percent || 0);
+      if(value >= 76) return 4;
+      if(value >= 51) return 3;
+      if(value >= 26) return 2;
+      if(value >= 1) return 1;
+      return 0;
+    }
+
+    function getPrimaryDevice(){
+      return (window.dashboardPairedDevices || [])[0] || null;
+    }
+
+    function renderWifiSupport(device){
+      const statusTag = document.getElementById("wifiStatusTag");
+      const ssidText = document.getElementById("wifiCurrentSsid");
+      const signalText = document.getElementById("wifiSignalText");
+      const meta = document.getElementById("wifiMeta");
+
+      if(!statusTag || !ssidText || !signalText || !meta) return;
+
+      if(!device){
+        statusTag.className = "status-pill status-off";
+        statusTag.innerText = "No Device";
+        ssidText.innerText = "Not connected";
+        signalText.innerText = "--";
+        meta.innerText = "No CodeBox is paired to this site yet.";
+        setWifiSignalBars(0);
+        renderWirelessNetworks([]);
+        return;
+      }
+
+      const wifiStrength = Number(getDeviceNetworkField(device, ["wifi_strength","wifiStrength","wifi_signal","signal_strength"], 0));
+      const wifiSsid = getDeviceNetworkField(device, ["wifi_ssid","wifiSsid","ssid"], "");
+      const wifiConnected = String(getDeviceNetworkField(device, ["wifi_status","wifiStatus","connection_type"], "")).toLowerCase().includes("wifi")
+        || getDeviceNetworkField(device, ["wifi_connected","wifiConnected"], false) === true
+        || !!wifiSsid;
+
+      statusTag.className = "status-pill " + (wifiConnected ? "status-on" : "status-warn");
+      statusTag.innerText = wifiConnected ? "Connected" : "Needs Check";
+      ssidText.innerText = wifiSsid || "Not connected";
+      signalText.innerText = `${wifiStrength || 0}/4`;
+      setWifiSignalBars(wifiStrength);
+
+      meta.innerText = `SSID: ${wifiSsid || "Unknown"} • Strength: ${wifiStrength || 0}/4 • Device: ${device.device_name || device.name || device.nickname || "CodeBox"}`;
+
+      if(wifiSsid && !document.getElementById("wifiSsid").value){
+        document.getElementById("wifiSsid").value = wifiSsid;
+      }
+
+      const storedNetworks =
+        getDeviceNetworkField(device, ["wifi_networks","wifiNetworks","available_wifi_networks","availableNetworks"], null) ||
+        getDeviceNetworkField(device, ["scan_results","wifi_scan_results","wifiScanResults"], null);
+
+      let parsedNetworks = [];
+
+      if(Array.isArray(storedNetworks)){
+        parsedNetworks = storedNetworks;
+      }else if(typeof storedNetworks === "string" && storedNetworks.trim()){
+        try{
+          parsedNetworks = JSON.parse(storedNetworks);
+        }catch(err){
+          parsedNetworks = [];
+        }
+      }
+
+      renderWirelessNetworks(parsedNetworks);
+    }
+
+    function renderWirelessNetworks(networks){
+      const wrap = document.getElementById("wifiNetworkList");
+      if(!wrap) return;
+
+      wrap.innerHTML = "";
+
+      if(!networks || !networks.length){
+        wrap.innerHTML = `
+          <div class="wifi-network-row">
+            <div>
+              <div class="wifi-network-name">No networks loaded yet</div>
+              <div class="wifi-network-meta">Click Search Wireless Networks to request a scan from the CodeBox.</div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      networks.forEach(network => {
+        const ssid = network.ssid || network.name || "Unnamed Network";
+        const strength = network.strength ?? network.signal ?? network.quality ?? 0;
+        const secured = network.secured === false ? "Open" : "Secured";
+        const safeSsid = escapeHtml(ssid);
+        const clickSsid = String(ssid).replaceAll("\\", "\\\\").replaceAll("'", "\\'").replaceAll("\n", " ");
+
+        wrap.innerHTML += `
+          <div class="wifi-network-row" onclick="selectWirelessNetwork('${clickSsid}')">
+            <div>
+              <div class="wifi-network-name">${safeSsid}</div>
+              <div class="wifi-network-meta">${secured} • Signal: ${escapeHtml(strength)}%</div>
+            </div>
+            <div class="signal-wrap" style="margin-top:0;">
+              ${[1,2,3,4].map(i => `<div class="signal-bar ${i <= estimateWifiBarsFromPercent(strength) ? "on" : ""}"></div>`).join("")}
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function selectWirelessNetwork(ssid){
+      const input = document.getElementById("wifiSsid");
+      if(input) input.value = ssid || "";
+
+      document.querySelectorAll(".wifi-network-row").forEach(row => {
+        const name = row.querySelector(".wifi-network-name")?.innerText || "";
+        row.classList.toggle("selected", name === ssid);
+      });
+
+      setWifiMessage(`Selected ${ssid}. Enter the Wi-Fi password, then click Connect Wi-Fi.`);
+    }
+
+    function clearWifiForm(){
+      const ssid = document.getElementById("wifiSsid");
+      const password = document.getElementById("wifiPassword");
+
+      if(ssid) ssid.value = "";
+      if(password) password.value = "";
+      document.querySelectorAll(".wifi-network-row").forEach(row => row.classList.remove("selected"));
+      setWifiMessage("Wi-Fi form cleared.");
+    }
+
+    async function queueWifiCommand(command, extraPayload = {}){
+      const device = getPrimaryDevice();
+      const activeSiteId = getActiveSiteId();
+
+      if(!activeSiteId){
+        setWifiMessage("No active site selected.");
+        return false;
+      }
+
+      if(!device || !device.id){
+        setWifiMessage("No paired CodeBox found for this site.");
+        return false;
+      }
+
+      const row = {
+        device_id: device.id,
+        site_id: activeSiteId,
+        command,
+        payload: extraPayload || {},
+        status: "pending",
+        created_at: new Date().toISOString()
+      };
+
+      const { error } = await client
+        .from("device_commands")
+        .insert([row]);
+
+      if(error){
+        console.log("Wi-Fi command error:", error);
+        setWifiMessage("Could not queue Wi-Fi command. Make sure device_commands is available.");
+        return false;
+      }
+
+      setWifiMessage(`Queued ${command} for ${device.device_name || device.name || "CodeBox"}.`);
+      return true;
+    }
+
+    async function searchWirelessNetworks(){
+      setWifiMessage("Requesting wireless network scan...");
+      const ok = await queueWifiCommand("scan_wifi_networks", {});
+      if(ok){
+        setWifiMessage("Wireless scan requested. Click Refresh Network after the CodeBox reports scan results.");
+      }
+    }
+
+    async function queueWifiRefresh(){
+      setWifiMessage("Requesting network refresh...");
+      const ok = await queueWifiCommand("refresh_network", {});
+      if(ok){
+        scheduleDashboardRefresh(2000);
+      }
+    }
+
+    async function saveWifiConfig(){
+      const ssid = (document.getElementById("wifiSsid")?.value || "").trim();
+      const password = document.getElementById("wifiPassword")?.value || "";
+
+      if(!ssid){
+        setWifiMessage("Enter or select a Wi-Fi SSID.");
+        return;
+      }
+
+      const ok = await queueWifiCommand("set_wifi_config", {
+        ssid,
+        password: password || null
+      });
+
+      if(ok){
+        document.getElementById("wifiPassword").value = "";
+        setWifiMessage(`Wi-Fi config queued for ${ssid}.`);
+        scheduleDashboardRefresh(2500);
+      }
     }
 
     function activityCode(row){
@@ -2097,7 +2517,9 @@
       renderDailyChart({ labels:[], values:[] });
       renderSystemControl(null, []);
       renderBayEditor([]);
+      window.dashboardPairedDevices = [];
       renderPairedDevices([]);
+      renderWifiSupport(null);
     }
 
     async function loadDashboard(){
@@ -2152,7 +2574,9 @@
         renderTopCodes(codeUsage);
         renderDepartmentChart(departments);
         renderDailyChart(daily);
+        window.dashboardPairedDevices = pairedDevices || [];
         renderPairedDevices(pairedDevices);
+        renderWifiSupport((pairedDevices || [])[0] || null);
         renderSystemControl(control, pairedDevices);
         renderBayEditor(bays);
       }catch(err){
