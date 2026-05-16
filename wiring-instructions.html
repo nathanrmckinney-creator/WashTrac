@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WashTrac Wiring Instructions</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #020617;
+      color: #ffffff;
+      min-height: 100vh;
+    }
+    a { text-decoration: none; color: inherit; }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(2, 6, 23, 0.95);
+      border-bottom: 1px solid #1e293b;
+      padding: 14px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header-logo {
+      width: 220px;
+      max-width: 100%;
+      height: auto;
+      display: block;
+      position: relative;
+      top: -10px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 12px 18px;
+      border-radius: 10px;
+      background: #1b4fd6;
+      color: #ffffff;
+      font-weight: 700;
+      border: none;
+    }
+    .coming-soon-wrap {
+      min-height: calc(100vh - 110px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 70px 20px;
+      background:
+        radial-gradient(circle at top center, rgba(37,99,235,0.25), transparent 45%),
+        linear-gradient(180deg, #020617 0%, #07111f 55%, #020617 100%);
+    }
+    .coming-soon-card {
+      width: 100%;
+      max-width: 880px;
+      text-align: center;
+      background: linear-gradient(180deg, rgba(15,23,42,.86), rgba(17,24,39,.9));
+      border: 1px solid #1e293b;
+      border-radius: 22px;
+      padding: 56px 30px;
+      box-shadow:
+        0 24px 70px rgba(0,0,0,.45),
+        0 0 40px rgba(37,99,235,.12);
+    }
+    .big-logo {
+      width: 520px;
+      max-width: 90%;
+      height: auto;
+      display: block;
+      margin: 0 auto 34px;
+      filter: drop-shadow(0 0 20px rgba(37,99,235,.18));
+    }
+    h1 {
+      margin: 0 0 14px;
+      font-size: 52px;
+      line-height: 1.05;
+    }
+    p {
+      max-width: 680px;
+      margin: 0 auto 26px;
+      color: #94a3b8;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+    .soon-pill {
+      display: inline-block;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(250, 204, 21, 0.12);
+      border: 1px solid rgba(250, 204, 21, 0.35);
+      color: #facc15;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    footer {
+      text-align: center;
+      padding: 26px;
+      color: #64748b;
+      border-top: 1px solid #1e293b;
+    }
+    @media (max-width: 900px) {
+      header { padding: 14px 20px; }
+      .header-logo { width: 180px; }
+      .coming-soon-card { padding: 42px 22px; }
+      .big-logo { width: 360px; }
+      h1 { font-size: 38px; }
+      p { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="index.html">
+      <img src="washtrac-logo.png" alt="WashTrac" class="header-logo">
+    </a>
+    <a href="faq.html" class="btn">Back to Guides</a>
+  </header>
+
+  <main class="coming-soon-wrap">
+    <section class="coming-soon-card">
+      <img src="washtrac-logo.png" alt="WashTrac" class="big-logo">
+      <h1>Wiring Instructions</h1>
+      <p>This guide will include relay output, dry contact wiring, power input, E-STOP monitoring, field wiring, and PCB-specific wiring details once the final board is ready.</p>
+      <div class="soon-pill">Coming Soon</div>
+    </section>
+  </main>
+
+  <footer>
+    WASHTRAC © 2026<br>
+    Control. Track. Manage.
+  </footer>
+</body>
+</html>
