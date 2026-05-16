@@ -100,6 +100,14 @@
     .network-card{background:#0b1220;border:1px solid #1f2937;border-radius:12px;padding:16px;}
     .network-card h4{display:flex;justify-content:space-between;gap:12px;align-items:center;}
     .network-meta{color:#94a3b8;font-size:13px;line-height:1.6;margin-top:8px;}
+    .wifi-network-list{display:grid;gap:10px;margin-top:14px;}
+    .wifi-network-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid #1f2937;border-radius:10px;background:#020617;cursor:pointer;}
+    .wifi-network-row:hover,.wifi-network-row.selected{border-color:#1ea7ff;box-shadow:0 0 12px rgba(30,167,255,.18);}
+    .wifi-network-name{font-weight:800;color:#fff;}
+    .wifi-network-meta{color:#94a3b8;font-size:13px;margin-top:3px;}
+    .wifi-scan-status{margin-top:12px;padding:12px 14px;border-radius:8px;background:#0b1220;border:1px solid #1f2937;color:#cbd5e1;display:none;line-height:1.4;}
+    .wifi-scan-status.show{display:block;}
+
 
     @media (max-width:1200px){.grid-3{grid-template-columns:1fr 1fr;}}
     @media (max-width:1100px){.summary{grid-template-columns:1fr 1fr;}.field-grid{grid-template-columns:1fr 1fr;}.grid-2,.grid-3{grid-template-columns:1fr;}}
@@ -347,10 +355,14 @@ if(!hasAdminSession){
           <div id="wifiMeta" class="network-meta">No Wi‑Fi data loaded yet.</div>
 
           <div class="actions">
-            <button type="button" onclick="saveWifiConfig()">Save Wi‑Fi Config</button>
+            <button type="button" onclick="searchWirelessNetworks()">Search Wireless Networks</button>
+            <button class="success" type="button" onclick="saveWifiConfig()">Save Wi‑Fi Config</button>
             <button class="secondary" type="button" onclick="queueCommandForVisible('refresh_network')">Refresh Network</button>
             <button class="warn" type="button" onclick="queueCommandForVisible('restart_network')">Restart Network</button>
           </div>
+
+          <div id="wifiScanStatus" class="wifi-scan-status"></div>
+          <div id="wifiNetworkList" class="wifi-network-list"></div>
         </div>
 
         <div class="network-card">
@@ -1253,6 +1265,113 @@ function setSignalBars(elementId, strength){
   });
 }
 
+function setWifiScanStatus(message){
+  const box = document.getElementById("wifiScanStatus");
+  if(!box) return;
+  box.innerText = message || "";
+  box.classList.add("show");
+}
+
+function estimateWifiBarsFromPercent(percent){
+  const value = Number(percent || 0);
+  if(value >= 76) return 4;
+  if(value >= 51) return 3;
+  if(value >= 26) return 2;
+  if(value >= 1) return 1;
+  return 0;
+}
+
+function renderWirelessNetworks(networks){
+  const wrap = document.getElementById("wifiNetworkList");
+  if(!wrap) return;
+
+  wrap.innerHTML = "";
+
+  if(!networks || !networks.length){
+    wrap.innerHTML = `
+      <div class="wifi-network-row">
+        <div>
+          <div class="wifi-network-name">No networks loaded yet</div>
+          <div class="wifi-network-meta">Click Search Wireless Networks to request a scan from the selected CodeBox.</div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  networks.forEach(network => {
+    const ssid = network.ssid || network.name || "Unnamed Network";
+    const strength = network.strength ?? network.signal ?? network.quality ?? 0;
+    const secured = network.secured === false ? "Open" : "Secured";
+    const safeSsid = escapeText(ssid);
+    const clickSsid = String(ssid).replaceAll("\\", "\\\\").replaceAll("'", "\\'").replaceAll("\n", " ");
+
+    wrap.innerHTML += `
+      <div class="wifi-network-row" onclick="selectWirelessNetwork('${clickSsid}')">
+        <div>
+          <div class="wifi-network-name">${safeSsid}</div>
+          <div class="wifi-network-meta">${secured} • Signal: ${escapeText(strength)}%</div>
+        </div>
+        <div class="signal-wrap" style="margin-top:0;">
+          ${[1,2,3,4].map(i => `<div class="signal-bar ${i <= estimateWifiBarsFromPercent(strength) ? "on" : ""}"></div>`).join("")}
+        </div>
+      </div>
+    `;
+  });
+}
+
+function selectWirelessNetwork(ssid){
+  const input = document.getElementById("wifiSsid");
+  if(input) input.value = ssid || "";
+
+  document.querySelectorAll(".wifi-network-row").forEach(row => {
+    const name = row.querySelector(".wifi-network-name")?.innerText || "";
+    row.classList.toggle("selected", name === ssid);
+  });
+
+  setWifiScanStatus(`Selected ${ssid}. Enter the Wi‑Fi password, then click Save Wi‑Fi Config.`);
+}
+
+async function searchWirelessNetworks(){
+  clearStatus();
+
+  if(!selectedSite()){
+    setStatus("Select a site first.", "warn");
+    setWifiScanStatus("Select a site first.");
+    return;
+  }
+
+  if(!visibleDevices.length){
+    setStatus("No visible devices to scan from.", "warn");
+    setWifiScanStatus("No visible devices found for this site.");
+    return;
+  }
+
+  setWifiScanStatus("Wireless scan requested. Refresh network status after the CodeBox reports results.");
+
+  await queueCommandForVisible("scan_wifi_networks", false);
+
+  const device = visibleDevices[0] || allDevices[0] || {};
+  const storedNetworks =
+    getNetworkField(device, ["wifi_networks","wifiNetworks","available_wifi_networks","availableNetworks"], null) ||
+    getNetworkField(device, ["scan_results","wifi_scan_results","wifiScanResults"], null);
+
+  let parsedNetworks = [];
+
+  if(Array.isArray(storedNetworks)){
+    parsedNetworks = storedNetworks;
+  }else if(typeof storedNetworks === "string" && storedNetworks.trim()){
+    try{
+      parsedNetworks = JSON.parse(storedNetworks);
+    }catch(err){
+      parsedNetworks = [];
+    }
+  }
+
+  renderWirelessNetworks(parsedNetworks);
+}
+
+
 function getNetworkField(device, names, fallback = ""){
   for(const name of names){
     if(device && device[name] !== undefined && device[name] !== null && device[name] !== ""){
@@ -1306,6 +1425,24 @@ function renderNetworkSupport(){
   document.getElementById("wifiMeta").innerText = device
     ? `SSID: ${wifiSsid || "Unknown"} • Strength: ${wifiStrength || 0}/4 • Device: ${getDeviceName(device)}`
     : "No device selected or visible.";
+
+  const storedNetworks =
+    getNetworkField(device, ["wifi_networks","wifiNetworks","available_wifi_networks","availableNetworks"], null) ||
+    getNetworkField(device, ["scan_results","wifi_scan_results","wifiScanResults"], null);
+
+  let parsedNetworks = [];
+
+  if(Array.isArray(storedNetworks)){
+    parsedNetworks = storedNetworks;
+  }else if(typeof storedNetworks === "string" && storedNetworks.trim()){
+    try{
+      parsedNetworks = JSON.parse(storedNetworks);
+    }catch(err){
+      parsedNetworks = [];
+    }
+  }
+
+  renderWirelessNetworks(parsedNetworks);
 
   document.getElementById("lteMeta").innerText = device
     ? `Carrier: ${carrier || "Unknown"} • SIM: ${sim || "Unknown"} • IMEI: ${imei || "Unknown"} • Strength: ${lteStrength || 0}/4`
