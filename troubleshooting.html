@@ -1,1 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WashTrac Troubleshooting Guide</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #020617;
+      color: #ffffff;
+      line-height: 1.6;
+    }
+
+    a { text-decoration: none; color: inherit; }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(2, 6, 23, 0.95);
+      border-bottom: 1px solid #1e293b;
+      padding: 14px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-logo {
+      width: 220px;
+      max-width: 100%;
+      height: auto;
+      display: block;
+      position: relative;
+      top: -10px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 18px;
+      border-radius: 10px;
+      background: #1b4fd6;
+      color: #ffffff;
+      font-weight: 700;
+      border: none;
+    }
+
+    .hero {
+      padding: 80px 20px 50px;
+      background:
+        radial-gradient(circle at top center, rgba(37,99,235,0.22), transparent 45%),
+        linear-gradient(180deg, #020617 0%, #07111f 55%, #020617 100%);
+      border-bottom: 1px solid #1e293b;
+      text-align: center;
+    }
+
+    .hero .eyebrow {
+      color: #60a5fa;
+      letter-spacing: 2px;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .hero h1 {
+      margin: 0 0 16px;
+      font-size: 54px;
+      line-height: 1.05;
+    }
+
+    .hero p {
+      max-width: 760px;
+      margin: 0 auto;
+      color: #94a3b8;
+      font-size: 19px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 70px 20px;
+    }
+
+    .issue-card {
+      background: linear-gradient(180deg, #0f172a, #111827);
+      border: 1px solid #1e293b;
+      border-radius: 18px;
+      padding: 28px;
+      margin-bottom: 28px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .issue-card h2 {
+      margin: 0 0 12px;
+      font-size: 32px;
+    }
+
+    .issue-card p {
+      margin: 0 0 14px;
+      color: #cbd5e1;
+      font-size: 17px;
+    }
+
+    .issue-card ul {
+      margin: 0;
+      padding-left: 22px;
+      color: #cbd5e1;
+    }
+
+    .issue-card li {
+      margin-bottom: 8px;
+    }
+
+    .image-placeholder {
+      margin-top: 22px;
+      background: linear-gradient(145deg, #111827, #0b1220);
+      border: 2px dashed #334155;
+      border-radius: 14px;
+      min-height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #64748b;
+      font-weight: 700;
+      padding: 20px;
+    }
+
+    .tip {
+      margin-top: 16px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: rgba(37, 99, 235, 0.10);
+      border: 1px solid rgba(37, 99, 235, 0.28);
+      color: #dbeafe;
+      font-size: 15px;
+    }
+
+    .warning {
+      margin-top: 16px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: rgba(239, 68, 68, 0.10);
+      border: 1px solid rgba(239, 68, 68, 0.28);
+      color: #fecaca;
+      font-size: 15px;
+    }
+
+    .next-box {
+      margin-top: 50px;
+      background: linear-gradient(145deg, #0f172a, #111827);
+      border: 1px solid #1e293b;
+      border-radius: 18px;
+      padding: 36px;
+      text-align: center;
+    }
+
+    .next-box h2 {
+      margin-top: 0;
+      font-size: 36px;
+    }
+
+    .next-box p {
+      max-width: 700px;
+      margin: 0 auto 22px;
+      color: #94a3b8;
+      font-size: 18px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px;
+      color: #64748b;
+      border-top: 1px solid #1e293b;
+      margin-top: 40px;
+    }
+
+    @media (max-width: 900px) {
+      header { padding: 14px 20px; }
+      .header-logo { width: 180px; }
+      .hero { padding: 65px 20px 40px; }
+      .hero h1 { font-size: 40px; }
+      .hero p { font-size: 17px; }
+      .container { padding: 50px 20px; }
+      .issue-card { padding: 22px; }
+      .issue-card h2 { font-size: 26px; }
+      .image-placeholder { min-height: 180px; }
+      .next-box { padding: 28px 22px; }
+      .next-box h2 { font-size: 30px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="index.html">
+      <img src="washtrac-logo.png" alt="WashTrac" class="header-logo">
+    </a>
+
+    <a href="faq.html" class="btn">Back to Guides</a>
+  </header>
+
+  <section class="hero">
+    <div class="eyebrow">Support Guide</div>
+    <h1>Troubleshooting</h1>
+    <p>
+      Use this guide to resolve common issues involving connectivity,
+      pairing, access codes, display problems, and system status.
+    </p>
+  </section>
+
+  <div class="container">
+
+    <div class="issue-card">
+      <h2>Device Shows Offline</h2>
+      <p>
+        The device may be powered but not currently connected to the internet.
+      </p>
+      <ul>
+        <li>Verify the unit has power</li>
+        <li>Check Wi-Fi settings in the dashboard</li>
+        <li>Confirm local internet service is working</li>
+        <li>Restart the device if needed</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Offline Device Status
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <h2>Pairing Code Does Not Work</h2>
+      <p>
+        Pairing codes are temporary and must be entered exactly.
+      </p>
+      <ul>
+        <li>Generate a new 6-digit code</li>
+        <li>Confirm you selected 3 = PAIR on the keypad</li>
+        <li>Re-enter the code carefully</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Pairing Code Entry Screen
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <h2>Valid Code Does Not Start the Wash</h2>
+      <p>
+        The access code may be disabled or the output circuit may not be available.
+      </p>
+      <ul>
+        <li>Verify the code is active</li>
+        <li>Check remote shutdown settings</li>
+        <li>Check scheduled lockouts</li>
+        <li>Confirm E-STOP status</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Controls and Monitor Pages
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <h2>Display Is Blank</h2>
+      <p>
+        A blank display usually indicates a power or hardware connection issue.
+      </p>
+      <ul>
+        <li>Verify incoming power</li>
+        <li>Check display cable connections</li>
+        <li>Restart the unit</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Blank Screen Example
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <h2>Cannot Connect to Wi-Fi</h2>
+      <p>
+        Incorrect passwords or weak signal strength are the most common causes.
+      </p>
+      <ul>
+        <li>Confirm the password is correct</li>
+        <li>Run a new wireless scan</li>
+        <li>Move closer to the wireless access point if possible</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Wi-Fi Connection Screen
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <h2>No Activity Appears in the Dashboard</h2>
+      <p>
+        If the device was offline, activity may upload after connectivity is restored.
+      </p>
+      <ul>
+        <li>Confirm the device is online</li>
+        <li>Refresh the dashboard</li>
+        <li>Verify the device is paired to the correct account</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Activity Page
+      </div>
+
+      <div class="tip">
+        WashTrac is designed to continue operating locally even if internet connectivity is temporarily unavailable.
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <h2>E-STOP Is Active</h2>
+      <p>
+        The system may intentionally prevent washes when an emergency stop circuit is detected.
+      </p>
+      <ul>
+        <li>Inspect the emergency stop circuit</li>
+        <li>Reset the wash equipment if required</li>
+        <li>Confirm status returns to normal</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        E-STOP Active Status
+      </div>
+
+      <div class="warning">
+        The WashTrac E-STOP input is intended for monitoring and status visibility and does not replace required safety systems.
+      </div>
+    </div>
+
+    <div class="next-box">
+      <h2>Still Need Help?</h2>
+      <p>
+        If the issue continues after following these steps, contact WashTrac support
+        and include screenshots and a description of the problem.
+      </p>
+
+      <a href="index.html#contact" class="btn">Contact Support</a>
+    </div>
+
+  </div>
+
+  <footer>
+    WASHTRAC © 2026<br>
+    Control. Track. Manage.
+  </footer>
+
+</body>
+</html>
 
