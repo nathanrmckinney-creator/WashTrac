@@ -1,1 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WashTrac Pair Device to Account</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #020617;
+      color: #ffffff;
+      line-height: 1.6;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(2, 6, 23, 0.95);
+      border-bottom: 1px solid #1e293b;
+      padding: 14px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-logo {
+      width: 220px;
+      max-width: 100%;
+      height: auto;
+      display: block;
+      position: relative;
+      top: -10px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 18px;
+      border-radius: 10px;
+      background: #1b4fd6;
+      color: #ffffff;
+      font-weight: 700;
+      border: none;
+    }
+
+    .hero {
+      padding: 80px 20px 50px;
+      background:
+        radial-gradient(circle at top center, rgba(37,99,235,0.22), transparent 45%),
+        linear-gradient(180deg, #020617 0%, #07111f 55%, #020617 100%);
+      border-bottom: 1px solid #1e293b;
+      text-align: center;
+    }
+
+    .hero .eyebrow {
+      color: #60a5fa;
+      letter-spacing: 2px;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .hero h1 {
+      margin: 0 0 16px;
+      font-size: 54px;
+      line-height: 1.05;
+    }
+
+    .hero p {
+      max-width: 760px;
+      margin: 0 auto;
+      color: #94a3b8;
+      font-size: 19px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 70px 20px;
+    }
+
+    .step {
+      background: linear-gradient(180deg, #0f172a, #111827);
+      border: 1px solid #1e293b;
+      border-radius: 18px;
+      padding: 28px;
+      margin-bottom: 28px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .step-number {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: #1b4fd6;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 22px;
+      margin-bottom: 18px;
+      box-shadow: 0 0 20px rgba(37, 99, 235, 0.35);
+    }
+
+    .step h2 {
+      margin: 0 0 12px;
+      font-size: 32px;
+    }
+
+    .step p {
+      margin: 0 0 14px;
+      color: #cbd5e1;
+      font-size: 17px;
+    }
+
+    .step ul {
+      margin: 0;
+      padding-left: 22px;
+      color: #cbd5e1;
+    }
+
+    .step li { margin-bottom: 8px; }
+
+    .image-placeholder {
+      margin-top: 22px;
+      background: linear-gradient(145deg, #111827, #0b1220);
+      border: 2px dashed #334155;
+      border-radius: 14px;
+      min-height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #64748b;
+      font-weight: 700;
+      padding: 20px;
+    }
+
+    .tip {
+      margin-top: 16px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: rgba(37, 99, 235, 0.10);
+      border: 1px solid rgba(37, 99, 235, 0.28);
+      color: #dbeafe;
+      font-size: 15px;
+    }
+
+    .next-box {
+      margin-top: 50px;
+      background: linear-gradient(145deg, #0f172a, #111827);
+      border: 1px solid #1e293b;
+      border-radius: 18px;
+      padding: 36px;
+      text-align: center;
+    }
+
+    .next-box h2 {
+      margin-top: 0;
+      font-size: 36px;
+    }
+
+    .next-box p {
+      max-width: 700px;
+      margin: 0 auto 22px;
+      color: #94a3b8;
+      font-size: 18px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px;
+      color: #64748b;
+      border-top: 1px solid #1e293b;
+      margin-top: 40px;
+    }
+
+    @media (max-width: 900px) {
+      header { padding: 14px 20px; }
+      .header-logo { width: 180px; }
+      .hero { padding: 65px 20px 40px; }
+      .hero h1 { font-size: 40px; }
+      .hero p { font-size: 17px; }
+      .container { padding: 50px 20px; }
+      .step { padding: 22px; }
+      .step h2 { font-size: 26px; }
+      .image-placeholder { min-height: 180px; }
+      .next-box { padding: 28px 22px; }
+      .next-box h2 { font-size: 30px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="index.html">
+      <img src="washtrac-logo.png" alt="WashTrac" class="header-logo">
+    </a>
+
+    <a href="faq.html" class="btn">Back to Guides</a>
+  </header>
+
+  <section class="hero">
+    <div class="eyebrow">Connection Guide</div>
+    <h1>Pair Device to Account</h1>
+    <p>
+      Link your physical WashTrac CodeBox keypad to your online account using
+      a secure 6-digit pairing code generated from the dashboard.
+    </p>
+  </section>
+
+  <div class="container">
+
+    <div class="step">
+      <div class="step-number">1</div>
+      <h2>Log In to the Dashboard</h2>
+      <p>Open the WashTrac client portal and sign in to your account.</p>
+      <ul>
+        <li>Go to thewashtrac.com</li>
+        <li>Select Client Login</li>
+        <li>Enter your email and password</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Client Login Screen
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-number">2</div>
+      <h2>Add or Select a Device</h2>
+      <p>Create a new device or open an existing device you want to pair.</p>
+      <ul>
+        <li>Open the Add Device menu</li>
+        <li>Enter a device name</li>
+        <li>Save the device</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Add Device Screen
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-number">3</div>
+      <h2>Generate the 6-Digit Pairing Code</h2>
+      <p>WashTrac will display a temporary pairing code.</p>
+      <ul>
+        <li>Locate the 6-digit code</li>
+        <li>Write it down or keep the page open</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Example Pairing Code: 123456
+      </div>
+
+      <div class="tip">
+        Pairing codes are temporary and used only to securely link one physical device.
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-number">4</div>
+      <h2>Enter Programming Mode on the Keypad</h2>
+      <p>At the CodeBox keypad, hold the BACK button for several seconds.</p>
+      <ul>
+        <li>Press and hold BACK</li>
+        <li>Programming menu appears</li>
+        <li>Select <strong>3 = PAIR</strong></li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Programming Menu Showing 3 = PAIR
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-number">5</div>
+      <h2>Enter the Pairing Code</h2>
+      <p>Type the 6-digit code from the dashboard and press ENTER.</p>
+      <ul>
+        <li>Enter all six digits</li>
+        <li>Press ENTER</li>
+        <li>Wait for confirmation</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Enter 6-Digit Pairing Code
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-number">6</div>
+      <h2>Device Syncs Automatically</h2>
+      <p>Once paired, the keypad downloads settings and active access codes.</p>
+      <ul>
+        <li>Codes sync to the device</li>
+        <li>Activity begins logging to the dashboard</li>
+        <li>Reports and monitoring are enabled</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Dashboard Showing Connected Device
+      </div>
+    </div>
+
+    <div class="next-box">
+      <h2>Pairing Complete</h2>
+      <p>
+        Your WashTrac device is now securely linked to your account and ready
+        to track wash activity in real time.
+      </p>
+
+      <a href="faq.html" class="btn">Return to FAQ & Guides</a>
+    </div>
+
+  </div>
+
+  <footer>
+    WASHTRAC © 2026<br>
+    Control. Track. Manage.
+  </footer>
+
+</body>
+</html>
 
