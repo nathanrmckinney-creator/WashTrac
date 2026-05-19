@@ -544,21 +544,25 @@
           >
         </div>
 
-      <div class="faq-display" style="font-size:18px; line-height:1.15;">
+      <div class="faq-display" style="font-size:18px; line-height:1.15; position:relative;">
   <div>1=ADD&nbsp;&nbsp;&nbsp;&nbsp;2=DELETE</div>
   <div style="margin-top:2px;">3=PAIR</div>
-</div>
 
+  <!-- Original signal bars -->
   <div style="
     position:absolute;
     top:6px;
     right:8px;
-    color:#2563eb;
-    font-size:18px;
-    font-weight:900;
-    letter-spacing:2px;
+    width:34px;
+    height:20px;
+    display:flex;
+    align-items:flex-end;
+    gap:2px;
   ">
-    ▂▃▄▆
+    <span style="display:block;width:6px;height:4px;background:#2563eb;border-radius:1px;"></span>
+    <span style="display:block;width:6px;height:8px;background:#2563eb;border-radius:1px;"></span>
+    <span style="display:block;width:6px;height:12px;background:#2563eb;border-radius:1px;"></span>
+    <span style="display:block;width:6px;height:16px;background:#2563eb;border-radius:1px;"></span>
   </div>
 </div>
 
