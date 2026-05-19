@@ -134,31 +134,6 @@
       margin-bottom: 8px;
     }
 
-    .step-image {
-      padding: 0;
-      border: none;
-      background: none;
-      float: right;
-      margin-left: 30px;
-    }
-
-    .step-image img {
-      width: 100%;
-      border-radius: 12px;
-      display: block;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.35);
-    }
-
-    .login-image {
-      width: 280px;
-      margin-top: -295px;
-    }
-
-    .manage-image {
-      width: 400px;
-      margin-top: -260px;
-    }
-
     .tip {
       margin-top: 16px;
       padding: 14px 18px;
@@ -167,6 +142,7 @@
       border: 1px solid rgba(37, 99, 235, 0.28);
       color: #dbeafe;
       font-size: 15px;
+      clear: both;
     }
 
     .next-box {
@@ -231,19 +207,6 @@
         font-size: 26px;
       }
 
-      .step-image {
-        float: none;
-        width: 100%;
-        max-width: 400px;
-        margin: 22px auto 0;
-      }
-
-      .login-image,
-      .manage-image {
-        width: 100%;
-        margin-top: 22px;
-      }
-
       .next-box {
         padding: 28px 22px;
       }
@@ -254,6 +217,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <header>
@@ -275,6 +239,7 @@
 
   <div class="container">
 
+    <!-- STEP 1 -->
     <div class="step">
       <div class="step-number">1</div>
       <h2>Log In to the Dashboard</h2>
@@ -285,64 +250,166 @@
         <li>Enter your email and password</li>
       </ul>
 
-      <div class="step-image login-image">
-        <img src="faq-menu3.png" alt="Dashboard Screen">
+      <!-- STEP 1 IMAGE - adjust this one only -->
+      <div style="
+        padding: 0;
+        border: none;
+        background: none;
+        float: right;
+        width: 280px;
+        margin: -320px 0 0 30px;
+      ">
+        <img
+          src="faq-menu3.png"
+          alt="Dashboard Login Screen"
+          style="
+            width: 100%;
+            border-radius: 12px;
+            display: block;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+          "
+        >
       </div>
     </div>
 
+    <!-- STEP 2 -->
     <div class="step">
       <div class="step-number">2</div>
       <h2>Open Manage Sites</h2>
-      <p>From the dashboard, open the site management area.</p>
+      <p>From the dashboard, open the site management screen.</p>
       <ul>
         <li>From the dashboard, open the menu</li>
-        <li>Select <strong>Manage Sites</strong> or <strong>Sites</strong></li>
+        <li>Select <strong>Manage Sites</strong></li>
         <li>Review the sites already connected to your account</li>
       </ul>
 
-      <div class="step-image manage-image">
-        <img src="Manage2.png" alt="Manage Sites Screen">
+      <!-- STEP 2 IMAGE - adjust this one only -->
+      <div style="
+        padding: 0;
+        border: none;
+        background: none;
+        float: right;
+        width: 400px;
+        margin: -260px 0 0 30px;
+      ">
+        <img
+          src="Manage2.png"
+          alt="Manage Sites Menu Screen"
+          style="
+            width: 100%;
+            border-radius: 12px;
+            display: block;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+          "
+        >
       </div>
     </div>
 
+    <!-- STEP 3 -->
     <div class="step">
       <div class="step-number">3</div>
       <h2>Create or Edit a Site</h2>
-      <p>Use the Sites page to add a new wash location or update an existing one.</p>
+      <p>Use the Manage Sites screen to add a new wash location or edit an existing one.</p>
       <ul>
         <li>Click <strong>Add Site</strong> to create a new location</li>
         <li>Enter the site name and site details</li>
         <li>Save the site so devices, codes, and activity can be assigned correctly</li>
       </ul>
 
+      <!-- STEP 3 IMAGE - separate filename and placement -->
+      <div style="
+        padding: 0;
+        border: none;
+        background: none;
+        float: right;
+        width: 400px;
+        margin: -260px 0 0 30px;
+      ">
+        <img
+          src="Manage3.png"
+          alt="Create or Edit Site Screen"
+          style="
+            width: 100%;
+            border-radius: 12px;
+            display: block;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+          "
+        >
+      </div>
+
       <div class="tip">
-        Site information is created during registration for the first location. Use Manage Sites when adding more locations or updating existing site details.
+        The first site is created during registration. Use Manage Sites when adding more locations or updating existing site details.
       </div>
     </div>
 
+    <!-- STEP 4 -->
     <div class="step">
       <div class="step-number">4</div>
       <h2>Invite a User</h2>
       <p>Add users who need access to a specific WashTrac site.</p>
       <ul>
-        <li>Open the selected site</li>
-        <li>Choose the user or invite section</li>
+        <li>Open the site you want to manage</li>
+        <li>Select the user or invite area</li>
         <li>Enter the user’s email address</li>
-        <li>Select the correct role or permission level</li>
+        <li>Send the invite</li>
       </ul>
+
+      <!-- STEP 4 IMAGE - separate filename and placement -->
+      <div style="
+        padding: 0;
+        border: none;
+        background: none;
+        float: right;
+        width: 400px;
+        margin: -275px 0 0 30px;
+      ">
+        <img
+          src="Manage4.png"
+          alt="Invite User Screen"
+          style="
+            width: 100%;
+            border-radius: 12px;
+            display: block;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+          "
+        >
+      </div>
     </div>
 
+    <!-- STEP 5 -->
     <div class="step">
       <div class="step-number">5</div>
       <h2>Assign User Permissions</h2>
-      <p>Control what each user can view or manage.</p>
+      <p>Control what each user can view or manage for the selected site.</p>
       <ul>
-        <li>Managers may need access to reports, activity, and site controls</li>
-        <li>Service or detail users may only need access to wash activity or assigned codes</li>
-        <li>Remove access when a user no longer needs the site</li>
+        <li>Choose the user’s role or permission level</li>
+        <li>Confirm the site they should have access to</li>
+        <li>Save the user settings</li>
       </ul>
+
+      <!-- STEP 5 IMAGE - separate filename and placement -->
+      <div style="
+        padding: 0;
+        border: none;
+        background: none;
+        float: right;
+        width: 400px;
+        margin: -255px 0 0 30px;
+      ">
+        <img
+          src="Manage5.png"
+          alt="User Permissions Screen"
+          style="
+            width: 100%;
+            border-radius: 12px;
+            display: block;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+          "
+        >
+      </div>
     </div>
 
+    <!-- STEP 6 -->
     <div class="step">
       <div class="step-number">6</div>
       <h2>Confirm Site Access</h2>
