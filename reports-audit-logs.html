@@ -16,7 +16,10 @@
       line-height: 1.6;
     }
 
-    a { text-decoration: none; color: inherit; }
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
 
     header {
       position: sticky;
@@ -91,7 +94,9 @@
       border: 1px solid #1e293b;
       border-radius: 18px;
       padding: 28px;
-      margin-bottom: 28px;
+      margin: 0 auto 80px;
+      max-width: 1100px;
+      width: 100%;
       box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
     }
 
@@ -114,21 +119,6 @@
 
     .section-card li {
       margin-bottom: 8px;
-    }
-
-    .image-placeholder {
-      margin-top: 22px;
-      background: linear-gradient(145deg, #111827, #0b1220);
-      border: 2px dashed #334155;
-      border-radius: 14px;
-      min-height: 220px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      color: #64748b;
-      font-weight: 700;
-      padding: 20px;
     }
 
     .tip {
@@ -177,14 +167,17 @@
       .hero h1 { font-size: 40px; }
       .hero p { font-size: 17px; }
       .container { padding: 50px 20px; }
-      .section-card { padding: 22px; }
+      .section-card {
+        padding: 22px;
+        margin-bottom: 50px;
+      }
       .section-card h2 { font-size: 26px; }
-      .image-placeholder { min-height: 180px; }
       .next-box { padding: 28px 22px; }
       .next-box h2 { font-size: 30px; }
     }
   </style>
 </head>
+
 <body>
 
   <header>
@@ -197,7 +190,7 @@
 
   <section class="hero">
     <div class="eyebrow">Reporting Guide</div>
-    <h1>Reports & Audit Logs</h1>
+    <h1>Reports &amp; Audit Logs</h1>
     <p>
       Use WashTrac reporting tools to analyze usage, export data,
       schedule email reports, and maintain a complete audit trail.
@@ -217,10 +210,6 @@
         <li>Date and time of each event</li>
         <li>Code, name, department, and site</li>
       </ul>
-      <div class="image-placeholder">
-        Screenshot Placeholder<br>
-        Activity Log Table
-      </div>
     </div>
 
     <div class="section-card">
@@ -234,10 +223,6 @@
         <li>Top wash codes</li>
         <li>Usage by time of day</li>
       </ul>
-      <div class="image-placeholder">
-        Screenshot Placeholder<br>
-        Reports Dashboard
-      </div>
     </div>
 
     <div class="section-card">
@@ -250,10 +235,6 @@
         <li>Filter by site</li>
         <li>Filter by code, user, or department</li>
       </ul>
-      <div class="image-placeholder">
-        Screenshot Placeholder<br>
-        Report Filters
-      </div>
     </div>
 
     <div class="section-card">
@@ -266,10 +247,6 @@
         <li>Select report frequency</li>
         <li>Set start and end dates</li>
       </ul>
-      <div class="image-placeholder">
-        Screenshot Placeholder<br>
-        Scheduled Report Settings
-      </div>
 
       <div class="tip">
         Reports can be delivered automatically to one or more email addresses on a recurring schedule.
@@ -286,10 +263,6 @@
         <li>Share audit data with management</li>
         <li>Archive records for compliance</li>
       </ul>
-      <div class="image-placeholder">
-        Screenshot Placeholder<br>
-        Export CSV Button
-      </div>
     </div>
 
     <div class="section-card">
@@ -302,10 +275,6 @@
         <li>Display names next to codes</li>
         <li>Spot unusual activity</li>
       </ul>
-      <div class="image-placeholder">
-        Screenshot Placeholder<br>
-        Top Wash Codes Widget
-      </div>
     </div>
 
     <div class="section-card">
@@ -318,10 +287,6 @@
         <li>Average activity by time of day</li>
         <li>Trend analysis</li>
       </ul>
-      <div class="image-placeholder">
-        Screenshot Placeholder<br>
-        Activity Over Time Chart
-      </div>
     </div>
 
     <div class="next-box">
@@ -343,4 +308,3 @@
 
 </body>
 </html>
-
