@@ -3,10 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
- <title>WashTrac</title>
-
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <title>WashTrac Quick Start Guide</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -15,652 +12,172 @@
       margin: 0;
       font-family: Arial, Helvetica, sans-serif;
       background: #020617;
-      color: #fff;
-      overflow-x: visible;
+      color: #ffffff;
+      line-height: 1.6;
     }
 
-        a {
+    a {
       text-decoration: none;
       color: inherit;
     }
 
-        .brand-wrap{
-      display:flex;
-      align-items:center;
-      margin-right:8px;
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(2, 6, 23, 0.95);
+      border-bottom: 1px solid #1e293b;
+      padding: 14px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
-.header-logo{
-  width: 240px;
+    .header-logo {
+  width: 220px;
+  max-width: 100%;
   height: auto;
   display: block;
-  object-fit: contain;
   position: relative;
   top: -10px;
 }
 
-.screen-logo-wrap{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.screen-logo-image{
-  width:145px;
-  height:auto;
-  display:block;
-  object-fit:contain;
-}
-
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 40px;
-      background: rgba(2, 6, 23, 0.92);
-      border-bottom: 1px solid #1e293b;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
-
-    .menu-btn {
-      background: #1b4fd6;
-      color: #fff;
-      border: none;
+    .btn {
+      display: inline-block;
       padding: 12px 18px;
       border-radius: 10px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .menu-panel {
-      position: fixed;
-      top: 78px;
-      right: 20px;
-      width: 240px;
-      background: #0b1220;
-      border: 1px solid #1f2937;
-      border-radius: 14px;
-      padding: 18px;
-      display: none;
-      flex-direction: column;
-      gap: 14px;
-      z-index: 1100;
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
-    }
-
-    .menu-panel a {
-      color: #e5e7eb;
-      font-size: 16px;
-    }
-
-    .menu-panel a:hover {
-      color: #fff;
-    }
-
-    .menu-panel .login-link {
-      color: #2563eb;
-      font-weight: bold;
-    }
-
-    .backdrop {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.35);
-      z-index: 1050;
-    }
-
-    .btn {
-      padding: 12px 18px;
-      border-radius: 8px;
-      background: #163cbd;
+      background: #1b4fd6;
+      color: #ffffff;
+      font-weight: 700;
       border: none;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      display: inline-block;
-    }
-
-    .btn.secondary {
-      background: #334155;
     }
 
     .hero {
-      position: relative;
-      min-height: 100vh;
-    }
-
-    .hero::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: url("/Carwash.png") center center / cover no-repeat;
-      z-index: 0;
-    }
-
-    .hero::after {
-      content: "";
-      position: absolute;
-      inset: 0;
+      padding: 80px 20px 50px;
       background:
-        linear-gradient(
-          90deg,
-          rgba(2,6,23,0.95) 0%,
-          rgba(2,6,23,0.85) 40%,
-          rgba(2,6,23,0.45) 70%,
-          rgba(2,6,23,0.2) 100%
-        ),
-        linear-gradient(
-          to bottom,
-          rgba(2,6,23,0) 35%,
-          rgba(2,6,23,0.55) 60%,
-          rgba(2,6,23,0.85) 82%,
-          rgba(2,6,23,1) 100%
-        );
-      z-index: 1;
+        radial-gradient(circle at top center, rgba(37,99,235,0.22), transparent 45%),
+        linear-gradient(180deg, #020617 0%, #07111f 55%, #020617 100%);
+      border-bottom: 1px solid #1e293b;
+      text-align: center;
     }
 
-    .hero-inner {
-      max-width: 1200px;
-      margin: auto;
-      display: grid;
-      grid-template-columns: 1fr 0.86fr;
-      gap: 40px;
-      align-items: center;
-      width: 100%;
-      position: relative;
-      z-index: 2;
-      min-height: 700px;
-    }
-
-    .eyebrow {
-      color: white;
+    .hero .eyebrow {
+      color: #60a5fa;
       letter-spacing: 2px;
-      font-weight: bold;
-      margin-bottom: 12px;
-      font-size: 15px;
-    }
-
-    .hero h1{
-      font-size:56px;
-      font-weight:700;
-      line-height:1.1;
-      margin-bottom:20px;
-    }
-
-    .brand-accent{
-      color:#2563eb;
-    }
-
-    .hero h2 {
-      letter-spacing: 5px;
-      color: #2563eb;
-      margin-top: 14px;
-      margin-bottom: 0;
-      font-size: 28px;
-    }
-
-    .who-for{
-      background:#020617;
-      padding:70px 30px;
-    }
-
-    .who-inner{
-      max-width:1100px;
-      margin:auto;
-    }
-
-    .who-title{
-      text-align:center;
-      font-size:22px;
-      font-weight:600;
-      margin-bottom:40px;
-      color:white;
-    }
-
-    .who-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-      gap:20px;
-    }
-
-    .who-card{
-      background:#0f172a;
-      padding:22px;
-      border-radius:10px;
-      text-align:center;
-      font-weight:500;
-      border:1px solid #1e293b;
-    }
-
-    .hero p{
-      font-size:20px;
-      color:#94a3b8;
-      max-width:700px;
-      line-height:1.6;
-    }
-
-    .features {
-      margin-top: 30px;
-    }
-
-    .features div {
-      margin: 12px 0;
-      font-size: 18px;
-    }
-
-    .hero-actions {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-      margin-top: 28px;
-    }
-
-.device {
-  background: linear-gradient(145deg, #050b14, #111827);
-  border-radius: 26px;
-  padding: 16px;
-  border: 1px solid #1e293b;
-  width: 390px;
-  max-width: 100%;
-  margin-left: auto;
-  box-shadow:
-    0 24px 60px rgba(0, 0, 0, 0.45),
-    inset 0 0 0 1px rgba(255,255,255,.04);
-}
-
-.screen {
-  background: #000814;
-  border-radius: 20px;
-  padding: 16px;
-  border: 2px solid rgba(37,99,235,.58);
-  box-shadow:
-    0 0 22px rgba(37,99,235,.25),
-    inset 0 0 28px rgba(37,99,235,.08);
-}
-
-.screen-top{
-  position:relative;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-
-
-.signal{
-  position:absolute;
-  right:0;
-  top:-4px;
-  display:flex;
-  align-items:flex-end;
-  gap:3px;
-}
-
-.signal .bar{
-  width:4px;
-  background:#1b4fd6;
-  border-radius:2px;
-  box-shadow:0 0 8px rgba(37,99,235,.45);
-}
-
-.signal .bar:nth-child(1){height:6px;opacity:.55;}
-.signal .bar:nth-child(2){height:10px;opacity:.7;}
-.signal .bar:nth-child(3){height:14px;opacity:.85;}
-.signal .bar:nth-child(4){height:18px;}
-
-.code-display{
-  height:96px;
-  position:relative;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  margin-top:10px;
-  margin-bottom:14px;
-  background:linear-gradient(145deg, #000000, #0a0a0a);
-  border-radius:16px;
-}
-
-.screen-title {
-  text-align:center;
-  font-size:34px;
-  letter-spacing:1px;
-  font-weight:600;
-  color:#ffffff;
-}
-
-.code-line{
-  display:none;
-}
-
-.pad {
-  display:grid;
-  grid-template-columns:repeat(3, 1fr);
-  gap:12px;
-  margin-top:0;
-}
-
-.pad div {
-  height: 64px;
-  background: linear-gradient(
-    180deg,
-    #6f8198 0%,
-    #556983 14%,
-    #3a4c63 55%,
-    #243346 100%
-  );
-  border: 1px solid rgba(255,255,255,0.16);
-  border-radius: 14px;
-
-  text-align: center;
-  font-weight: 800;
-  font-size: 30px;
-  color: #ffffff;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  box-shadow:
-    inset 0 2px 0 rgba(255,255,255,0.22),
-    inset 0 -10px 18px rgba(0,0,0,0.28),
-    0 5px 14px rgba(0,0,0,0.42);
-}
-
-.pad .back{
-  font-size:28px;
-  display:flex;
-  align-items:flex-start;
-  justify-content:center;
-  padding-top:8px;
-}
-
-.pad .clear{
-  font-size:18px;
-  font-weight:800;
-  letter-spacing:.8px;
-}
-
-.start {
-  margin-top: 14px;
-  width: 100%;
-  height: 68px;
-  padding: 0;
-
-  background: linear-gradient(
-    180deg,
-    #4d7cff 0%,
-    #2f5df5 18%,
-    #1b4fd6 55%,
-    #1039a8 100%
-  );
-
-  border: 1px solid rgba(255,255,255,0.18);
-  border-radius: 14px;
-
-  font-size: 28px;
-  color: #ffffff;
-  font-weight: 800;
-  letter-spacing: 0.7px;
-
-  box-shadow:
-    0 0 24px rgba(37,99,235,0.60),
-    inset 0 2px 0 rgba(255,255,255,0.28),
-    inset 0 -12px 20px rgba(0,0,0,0.22),
-    0 6px 14px rgba(0,0,0,0.45);
-}
-
-    .section {
-      padding: 70px 40px;
-      max-width: 1100px;
-      margin: auto;
-    }
-
-    .section h2 {
-      font-size: 40px;
-      margin-top: 0;
-      margin-bottom: 14px;
-    }
-
-    .section-intro {
-      font-size: 18px;
-      color: #94a3b8;
-      line-height: 1.6;
-      max-width: 820px;
-      margin-bottom: 30px;
-    }
-
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 20px;
-    }
-
-    .card {
-      background: #0f172a;
-      padding: 25px;
-      border-radius: 12px;
-      border: 1px solid #1e293b;
-    }
-
-    .card h3 {
-      margin-top: 0;
-      margin-bottom: 10px;
-      font-size: 22px;
-    }
-
-    .card p {
-      margin: 0;
-      color: #94a3b8;
-      line-height: 1.6;
-    }
-
-    .graph-card {
-      background: linear-gradient(180deg, #0f172a, #111827);
-    }
-
-    .mini-graph {
-      display: flex;
-      align-items: end;
-      gap: 10px;
-      height: 120px;
-      margin-top: 18px;
-      padding: 14px;
-      border-radius: 10px;
-      background: #020617;
-      border: 1px solid #1e293b;
-    }
-
-    .mini-bar {
-      flex: 1;
-      border-radius: 8px 8px 0 0;
-      background: linear-gradient(180deg, #1b4fd6, #163cbd);
-      box-shadow: 0 0 12px rgba(56, 189, 248, 0.28);
-    }
-
-    .mini-labels {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-      font-size: 12px;
-      color: #94a3b8;
-    }
-
-    .mini-labels span {
-      flex: 1;
-      text-align: center;
-    }
-
-    .system-demo-wrap {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-      align-items: start;
-    }
-
-    .system-demo-card {
-      background: #111827;
-      border: 1px solid #1e293b;
-      border-radius: 16px;
-      padding: 24px;
-    }
-
-    .system-banner {
-      margin-bottom: 18px;
-      padding: 14px 16px;
-      border-radius: 12px;
-      font-weight: bold;
-      text-align: center;
-    }
-
-    .banner-green {
-      background: rgba(20, 83, 45, 0.28);
-      border: 1px solid rgba(34, 197, 94, 0.35);
-      color: #bbf7d0;
-    }
-
-    .banner-yellow {
-      background: rgba(120, 53, 15, 0.28);
-      border: 1px solid rgba(245, 158, 11, 0.35);
-      color: #fde68a;
-    }
-
-    .banner-red {
-      background: rgba(127, 29, 29, 0.28);
-      border: 1px solid rgba(239, 68, 68, 0.35);
-      color: #fecaca;
-    }
-
-    .status-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-bottom: 18px;
-    }
-
-    .status-box {
-      background: #0b1220;
-      border: 1px solid #1f2937;
-      border-radius: 12px;
-      padding: 16px;
-    }
-
-    .status-box strong {
-      display: block;
-      font-size: 24px;
-      margin-bottom: 6px;
-    }
-
-    .status-box span {
-      color: #94a3b8;
       font-size: 14px;
-    }
-
-    .status-pill {
-      display: inline-block;
-      margin-top: 10px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      font-size: 13px;
-      font-weight: bold;
-    }
-
-    .status-on {
-      background: rgba(34, 197, 94, 0.16);
-      color: #86efac;
-    }
-
-    .status-off {
-      background: rgba(239, 68, 68, 0.16);
-      color: #fca5a5;
-    }
-
-    .status-warn {
-      background: rgba(245, 158, 11, 0.16);
-      color: #fcd34d;
-    }
-
-    .bay-mini-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-
-    .bay-mini {
-      background: #0b1220;
-      border: 1px solid #1f2937;
-      border-radius: 12px;
-      padding: 14px;
-    }
-
-    .bay-mini strong {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 16px;
-    }
-
-    .bay-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      display: inline-block;
-      margin-right: 8px;
-      vertical-align: middle;
-    }
-
-    .dot-ready { background: #22c55e; box-shadow: 0 0 10px rgba(34,197,94,.45); }
-    .dot-running { background: #1b4fd6; box-shadow: 0 0 10px rgba(37,99,235,.45); }
-    .dot-idle { background: #f59e0b; box-shadow: 0 0 10px rgba(245,158,11,.35); }
-    .dot-offline { background: #ef4444; box-shadow: 0 0 10px rgba(239,68,68,.35); }
-
-   .contact {
-  background: #0f172a;
-  padding: 30px;
-  border-radius: 12px;
-  border: 1px solid #1e293b;
-  max-width: 700px;
-  margin: 0 auto;
-}
-
-    #contact {
-  text-align: center;
-}
-
-#contact .contact {
-  margin: 0 auto;
-  text-align: left;
-}
-    
-    .contact-copy {
-      color: #cbd5e1;
-      line-height: 1.6;
-      margin-top: 0;
-      margin-bottom: 22px;
-    }
-
-    input, textarea {
-      width: 100%;
-      padding: 12px;
-      margin-top: 8px;
+      font-weight: 700;
+      text-transform: uppercase;
       margin-bottom: 14px;
-      border-radius: 6px;
-      border: 1px solid #334155;
-      background: #020617;
-      color: white;
+    }
+
+    .hero h1 {
+      margin: 0 0 16px;
+      font-size: 54px;
+      line-height: 1.05;
+    }
+
+    .hero p {
+      max-width: 760px;
+      margin: 0 auto;
+      color: #94a3b8;
+      font-size: 19px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 70px 20px;
+    }
+
+    .step {
+      background: linear-gradient(180deg, #0f172a, #111827);
+      border: 1px solid #1e293b;
+      border-radius: 18px;
+      padding: 28px;
+      margin-bottom: 28px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .step-number {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: #1b4fd6;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 22px;
+      margin-bottom: 18px;
+      box-shadow: 0 0 20px rgba(37, 99, 235, 0.35);
+    }
+
+    .step h2 {
+      margin: 0 0 12px;
+      font-size: 32px;
+    }
+
+    .step p {
+      margin: 0 0 14px;
+      color: #cbd5e1;
+      font-size: 17px;
+    }
+
+    .step ul {
+      margin: 0;
+      padding-left: 22px;
+      color: #cbd5e1;
+    }
+
+    .step li {
+      margin-bottom: 8px;
+    }
+
+    .image-placeholder {
+      margin-top: 22px;
+      background:
+        linear-gradient(145deg, #111827, #0b1220);
+      border: 2px dashed #334155;
+      border-radius: 14px;
+      min-height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #64748b;
+      font-weight: 700;
+      padding: 20px;
+    }
+
+    .tip {
+      margin-top: 16px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: rgba(37, 99, 235, 0.10);
+      border: 1px solid rgba(37, 99, 235, 0.28);
+      color: #dbeafe;
       font-size: 15px;
     }
 
-    textarea {
-      min-height: 120px;
+    .next-box {
+      margin-top: 50px;
+      background: linear-gradient(145deg, #0f172a, #111827);
+      border: 1px solid #1e293b;
+      border-radius: 18px;
+      padding: 36px;
+      text-align: center;
     }
 
-    #status {
-      margin-top: 14px;
-      color: #cbd5e1;
+    .next-box h2 {
+      margin-top: 0;
+      font-size: 36px;
+    }
+
+    .next-box p {
+      max-width: 700px;
+      margin: 0 auto 22px;
+      color: #94a3b8;
+      font-size: 18px;
     }
 
     footer {
@@ -668,814 +185,568 @@
       padding: 30px;
       color: #64748b;
       border-top: 1px solid #1e293b;
-      margin-top: 60px;
-    }
-
-    /* DESKTOP ONLY: keep hero text in original position, move keypad only underneath */
-  @media (min-width: 901px) {
-  .hero {
-    padding: 30px 30px 0;
-  }
-
-  .who-for {
-    margin-top: -60px;
-  }
-
-  .hero-inner {
-    grid-template-columns: 1fr 0.86fr;
-    grid-template-rows: auto auto;
-    align-items: start;
-    min-height: auto;
-    padding: 10px 0 0;
-  }
-      .hero-inner > div:first-child {
-        grid-column: 1;
-        grid-row: 1;
-      }
-
-      .device-wrap {
-        grid-column: 1;
-        grid-row: 2;
-        justify-self: start;
-        display: flex;
-        justify-content: flex-start;
-        transform: scale(0.88);
-        transform-origin: top left;
-        margin-top: 30px;
-      }
-
-      .device {
-        margin-left: 0;
-        margin-right: 0;
-      }
-    }
-
-    @media (max-width: 1100px) {
-      .hero-inner,
-      .system-demo-wrap {
-        grid-template-columns: 1fr;
-      }
-
-      .device {
-        margin-left: 0;
-      }
-
-      .hero h1 {
-        font-size: 58px;
-      }
-
-      .hero::before {
-        transform: none;
-      }
+      margin-top: 40px;
     }
 
     @media (max-width: 900px) {
-      .cards {
-        grid-template-columns: 1fr;
+      header {
+        padding: 14px 20px;
       }
 
-      .hero::before {
-        background-image: url("/Carwash.png") !important;
-        background-position: center top !important;
-        background-size: cover !important;
-        background-repeat: no-repeat !important;
+      .header-logo {
+        width: 180px;
+      }
+
+      .hero {
+        padding: 65px 20px 40px;
+      }
+
+      .hero h1 {
+        font-size: 40px;
+      }
+
+      .hero p {
+        font-size: 17px;
+      }
+
+      .container {
+        padding: 50px 20px;
+      }
+
+      .step {
+        padding: 22px;
+      }
+
+      .step h2 {
+        font-size: 26px;
+      }
+
+      .image-placeholder {
+        min-height: 180px;
+      }
+
+      .next-box {
+        padding: 28px 22px;
+      }
+
+      .next-box h2 {
+        font-size: 30px;
       }
     }
 
-   @media (max-width: 900px) {
-  header {
-    padding: 16px 20px;
-  }
+    .pairing-illustration {
+      margin-top: 22px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 36px;
+      flex-wrap: wrap;
+      padding: 24px;
+      background: linear-gradient(145deg, #111827, #0b1220);
+      border: 2px dashed #334155;
+      border-radius: 14px;
+      overflow: hidden;
+    }
 
-  .header-logo{
-    width:200px;
-  }
+    .faq-device {
+      background: linear-gradient(145deg, #050b14, #111827);
+      border-radius: 26px;
+      padding: 16px;
+      border: 1px solid #1e293b;
+      width: 390px;
+      max-width: 100%;
+      position: relative;
+      left: -70px;
+      z-index: 50;
+      box-shadow:
+        0 24px 60px rgba(0, 0, 0, 0.45),
+        inset 0 0 0 1px rgba(255,255,255,.04);
+    }
 
-  .menu-panel {
-    top: 70px;
-    right: 12px;
-    width: 220px;
-  }
+    .faq-screen {
+      background: #000814;
+      border-radius: 20px;
+      padding: 16px;
+      border: 2px solid rgba(37,99,235,.58);
+      box-shadow:
+        0 0 22px rgba(37,99,235,.25),
+        inset 0 0 28px rgba(37,99,235,.08);
+    }
 
-  .hero {
-    min-height: auto !important;
-    padding: 50px 20px 0;
-  }
-
-  .hero-inner {
-    min-height: auto !important;
-    padding-bottom: 0;
-    gap: 0 !important;
-  }
-
-  .hero h1 {
-    font-size: 48px;
-  }
-
-  .hero h2 {
-    font-size: 22px;
-  }
-
-  .hero p {
-    font-size: 19px;
-  }
-
-  .device-wrap {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 60px auto 40px;
-}
-
-.device {
-  width: 320px;
-   transform: scale(0.9) scaleY(1.1); 
-  transform-origin: top center;
-}
-
-.screen {
-  padding: 12px;
-}
-
-.code-display {
-  height: 70px;
-  margin-top: 6px;
-  margin-bottom: 10px;
-}
-
-.screen-title {
-  font-size: 22px;
-}
-
-.pad {
-  gap: 8px;
-}
-
-.pad div {
-  height: 48px;
-  font-size: 22px;
-}
-
- .pad .back {
-    display:flex;
-    align-items:flex-start;
-    justify-content:center;
-    padding-top:0px;   
-  }
-
-.start {
-  height: 52px;
-  font-size: 22px;
-  margin-top: 10px;
-}
-
-.who-for {
-    padding: 35px 30px 70px;
-    margin-top: 0 !important;
-  }
-
-  .section {
-    padding: 55px 20px;
-  }
-
-  .status-grid,
-  .bay-mini-grid {
-    grid-template-columns: 1fr;
-  }
-}
-  
-    /* Admin Login Modal */
-    .admin-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.65);
-      z-index: 5000;
+    .faq-screen-top {
+      position: relative;
+      display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
     }
 
-    .admin-modal.show {
+    .faq-screen-logo-wrap {
       display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .admin-card {
-      width: 100%;
-      max-width: 420px;
-      background: #111827;
-      border: 1px solid #1f2937;
-      border-radius: 16px;
-      padding: 28px;
-      box-shadow: 0 20px 60px rgba(0,0,0,.55);
-    }
-
-    .admin-card h3 {
-      margin: 0 0 20px 0;
-      font-size: 28px;
-    }
-
-    .admin-card label {
+    .faq-screen-logo-image {
+      width: 145px;
+      height: auto;
       display: block;
-      margin-bottom: 8px;
-      color: #cbd5e1;
-      font-size: 14px;
-      font-weight: bold;
+      object-fit: contain;
     }
 
-    .admin-card input {
-      width: 100%;
-      padding: 14px;
-      margin-bottom: 16px;
-      border-radius: 10px;
-      border: 1px solid #334155;
-      background: #020617;
-      color: #fff;
-      font-size: 15px;
-    }
-
-    .admin-actions {
+    .faq-signal {
+      position: absolute;
+      right: 0;
+      top: -4px;
       display: flex;
-      gap: 12px;
+      align-items: flex-end;
+      gap: 3px;
+    }
+
+    .faq-signal .bar {
+      width: 4px;
+      background: #1b4fd6;
+      border-radius: 2px;
+      box-shadow: 0 0 8px rgba(37,99,235,.45);
+    }
+
+    .faq-signal .bar:nth-child(1){height:6px;opacity:.55;}
+    .faq-signal .bar:nth-child(2){height:10px;opacity:.7;}
+    .faq-signal .bar:nth-child(3){height:14px;opacity:.85;}
+    .faq-signal .bar:nth-child(4){height:18px;}
+
+    .faq-display {
+      height: 96px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      margin-top: 10px;
+      margin-bottom: 14px;
+      background: linear-gradient(145deg, #000000, #0a0a0a);
+      border-radius: 16px;
+      text-align: center;
+      color: #ffffff;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    .faq-menu-line {
+      font-size: 28px;
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+
+    .faq-menu-line.second {
       margin-top: 8px;
     }
 
-    .admin-actions button {
-      flex: 1;
+    .faq-pad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 0;
     }
 
-    .admin-status {
+    .faq-key {
+      height: 64px;
+      background: linear-gradient(
+        180deg,
+        #6f8198 0%,
+        #556983 14%,
+        #3a4c63 55%,
+        #243346 100%
+      );
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 14px;
+      text-align: center;
+      font-weight: 800;
+      font-size: 30px;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow:
+        inset 0 2px 0 rgba(255,255,255,0.22),
+        inset 0 -10px 18px rgba(0,0,0,0.28),
+        0 5px 14px rgba(0,0,0,0.42);
+    }
+
+    .faq-key.back {
+      font-size: 28px;
+      align-items: flex-start;
+      padding-top: 8px;
+    }
+
+    .faq-key.clear {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: .8px;
+    }
+
+    .faq-enter {
       margin-top: 14px;
-      color: #ef4444;
-      min-height: 20px;
-      font-size: 14px;
+      width: 100%;
+      height: 68px;
+      padding: 0;
+      background: linear-gradient(
+        180deg,
+        #4d7cff 0%,
+        #2f5df5 18%,
+        #1b4fd6 55%,
+        #1039a8 100%
+      );
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 14px;
+      font-size: 28px;
+      color: #ffffff;
+      font-weight: 800;
+      letter-spacing: 0.7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow:
+        0 0 24px rgba(37,99,235,0.60),
+        inset 0 2px 0 rgba(255,255,255,0.28),
+        inset 0 -12px 20px rgba(0,0,0,0.22),
+        0 6px 14px rgba(0,0,0,0.45);
     }
 
-</style>
+    .pairing-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      color: #ef4444;
+      font-weight: 800;
+      position: relative;
+      z-index: 100;
+    }
+
+    .arrow-callout {
+      border: 2px solid #ef4444;
+      border-radius: 16px;
+      padding: 18px 24px;
+      background: rgba(0, 0, 0, 0.45);
+      color: #ffffff;
+      font-size: 20px;
+      line-height: 1.45;
+      text-align: center;
+      position: relative;
+      left: -130px;
+      top: 170px;
+    }
+
+    .arrow-callout span {
+      color: #ef4444;
+      font-weight: 900;
+    }
+
+    .pairing-arrow svg {
+      width: 320px;
+      height: 220px;
+      overflow: visible;
+    }
+
+    @media (max-width: 900px) {
+      .pairing-illustration {
+        gap: 18px;
+        padding: 18px;
+      }
+
+      .faq-device {
+        width: 320px;
+        left: 0;
+      }
+
+      .faq-screen {
+        padding: 12px;
+      }
+
+      .faq-display {
+        height: 70px;
+        margin-top: 6px;
+        margin-bottom: 10px;
+      }
+
+      .faq-screen-logo-image {
+        width: 120px;
+      }
+
+      .faq-menu-line {
+        font-size: 18px;
+      }
+
+      .faq-pad {
+        gap: 8px;
+      }
+
+      .faq-key {
+        height: 48px;
+        font-size: 22px;
+      }
+
+      .faq-key.back {
+        padding-top: 0;
+      }
+
+      .faq-enter {
+        height: 52px;
+        font-size: 22px;
+        margin-top: 10px;
+      }
+
+      .pairing-arrow svg {
+        width: 120px;
+        height: 60px;
+      }
+
+      .pairing-arrow {
+        font-size: 16px;
+      }
+
+      .arrow-callout {
+        left: 0;
+        top: 0;
+      }
+    }
+
+
+  </style>
 </head>
-
 <body>
-  <header>
-    <div class="brand-wrap">
-      <img
-        src="washtrac-logo.png"
-        alt="WashTrac"
-        class="header-logo"
-      >
-    </div>
 
-    <button class="menu-btn" onclick="toggleMenu()">&#9776;</button>
+  <header>
+    <a href="index.html">
+      <img src="washtrac-logo.png" alt="WashTrac" class="header-logo">
+    </a>
+
+    <a href="faq.html" class="btn">Back to Guides</a>
   </header>
 
-  <div id="menuPanel" class="menu-panel">
-    <a href="login.html" class="login-link" onclick="closeMenu()">Client Login</a>
-    <a href="faq.html" onclick="closeMenu()">FAQ / Guides</a>
-    <a href="#features" onclick="closeMenu()">Features</a>
-    <a href="#works" onclick="closeMenu()">How It Works</a>
-    <a href="#audit" onclick="closeMenu()">Audit</a>
-    <a href="#monitoring" onclick="closeMenu()">Monitoring</a>
-    <a href="#systemstate" onclick="closeMenu()">Live Demo</a>
-    <a href="#contact" onclick="closeMenu()">Contact</a>
-    <a href="#" onclick="openAdminLogin(); return false;">Admin</a>
-  </div>
-
-  <div id="backdrop" class="backdrop" onclick="closeMenu()"></div>
-
   <section class="hero">
-    <div class="hero-inner">
-      <div>
-       <div class="eyebrow"><span class="brand-accent">SMART</span> Control System</div>
+    <div class="eyebrow">Setup Guide</div>
+    <h1>Quick Start Guide</h1>
+    <p>
+      Follow these simple steps to create your account, add your WashTrac device,
+      and pair your CodeBox keypad to your site.
+    </p>
+  </section>
 
-        <h1>Keypad</h1>
-        <h2>ENTRY TERMINAL</h2>
+  <div class="container">
 
+    <div class="step">
+      <div class="step-number">1</div>
+      <h2>Open the WashTrac Website</h2>
+      <p>
+        Visit the WashTrac website and open the main menu.
+      </p>
+      <ul>
+        <li>Go to <strong>thewashtrac.com</strong></li>
+        <li>Tap the menu button (☰)</li>
+        <li>Select <strong>Client Login</strong></li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Homepage with Menu → Client Login
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-number">2</div>
+      <h2>Create Your Account</h2>
+      <p>
+        If you do not already have an account, select <strong>Sign Up</strong>.
+      </p>
+      <ul>
+        <li>Enter your company information</li>
+        <li>Create your login credentials</li>
+        <li>Submit the registration form</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Client Login / Sign Up Page
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-number">3</div>
+      <h2>Log In to Your Dashboard</h2>
+      <p>
+        After registration, sign in to access your WashTrac dashboard.
+      </p>
+      <ul>
+        <li>Enter your email and password</li>
+        <li>Select <strong>Sign In</strong></li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Login Screen
+      </div>
+    </div>
+
+    <div class="step">
+  <div class="step-number">4</div>
+  <h2>Add the Device</h2>
+  <p>
+    Open the dashboard menu and select <strong>Add Device</strong>.
+  </p>
+  <ul>
+    <li>Click the menu button in the top-right corner of the dashboard</li>
+    <li>Select <strong>Add Device</strong></li>
+    <li>WashTrac will automatically generate a temporary 6-digit pairing code</li>
+  </ul>
+  <div class="image-placeholder">
+    Screenshot Placeholder<br>
+    Add Device Menu
+  </div>
+</div>
+
+    <div class="step">
+      <div class="step-number">5</div>
+      <h2>Retrieve the 6-Digit Pairing Code</h2>
+      <p>
         <p>
-          Control wash access and track every activation in real time.
-          WashTrac Keypad provides secure entry codes, full audit logs,
-          reporting tools, and expanded monitoring for dealerships,
-          service departments, detail teams, and fleet operations.
-        </p>
-
-       <div class="features">
-  <div>✔ Secure Code Entry</div>
-  <div>✔ Instant Wash Activation</div>
-  <div>✔ Full Usage Tracking</div>
-  <div>✔ Department-Level Control</div>
-  <div>✔ Real-Time Monitoring</div>
-  <div>✔ Reports & Audit Logs</div>
-</div>
-
-        <div class="hero-actions">
-          <a class="btn" href="#contact">Request Demo</a>
-        </div>
+  After selecting Add Device, WashTrac will display a temporary 6-digit pairing code.
+</p>
+      </p>
+      <ul>
+        <li>Locate the pairing code on the screen</li>
+        <li>Write it down or keep the page open</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Example Pairing Code: 123456
       </div>
 
-      <div class="device-wrap">
-  <div class="device">
-  <div class="screen">
-
-   <div class="screen-top">
-  <div class="screen-logo-wrap">
-    <img
-      src="washtrac-logo.png"
-      alt="WashTrac"
-      class="screen-logo-image"
-    >
-  </div>
-
-  <div class="signal">
-    <div class="bar"></div>
-    <div class="bar"></div>
-    <div class="bar"></div>
-    <div class="bar"></div>
-  </div>
-</div>
-
-    <div class="code-display">
-      <div class="screen-title">ENTER CODE</div>
-      <div class="code-line"></div>
-    </div>
-
-    <div class="pad">
-      <div>1</div><div>2</div><div>3</div>
-      <div>4</div><div>5</div><div>6</div>
-      <div>7</div><div>8</div><div>9</div>
-      <div class="back">←</div><div>0</div><div class="clear">CLEAR</div>
-    </div>
-
-           <button class="start">ENTER</button>
-  </div>
-</div>
-</div>
-</div>
-</section>
-
-<section class="who-for">
-  <div class="who-inner">
-    <div class="who-title">
-      Trusted by service departments and fleet operations
-    </div>
-
-    <div class="who-grid">
-      <div class="who-card">Dealership Service Departments</div>
-      <div class="who-card">Auto Detail Shops</div>
-      <div class="who-card">Fleet Wash Bays</div>
-      <div class="who-card">Municipal Vehicle Maintenance</div>
-    </div>
-  </div>
-</section>
-
-  <section id="features" class="section">
-    <h2>WashTrac Management System</h2>
-    <p class="section-intro">
-      WashTrac provides full visibility into wash usage so management always knows
-      who is using the wash, when it was activated, and how often each department uses it.
-    </p>
-
-    <div class="cards">
-      <div class="card">
-        <h3>Usage Auditing</h3>
-        <p>Every wash activation is logged with timestamp, code, department, and user information for complete accountability.</p>
-      </div>
-
-      <div class="card">
-        <h3>Department Tracking</h3>
-        <p>Assign codes by department such as Service, Sales, Detail, Manager, Temporary, or any custom department you need.</p>
-      </div>
-
-      <div class="card">
-        <h3>Reporting</h3>
-        <p>Generate CSV exports and email reports to monitor wash activity, usage trends, and operational accountability.</p>
-      </div>
-
-      <div class="card">
-        <h3>Remote Wash Control</h3>
-        <p>Control wash operation remotely with configurable schedules and shutdown controls. Automatically disable the wash after business hours or temporarily lock the system when needed.</p>
+      <div class="tip">
+        Tip: Pairing codes are temporary and are used to securely link a physical keypad to your account.
       </div>
     </div>
-  </section>
+   <div class="step">
+  <div class="step-number">6</div>
+  <h2>Enter the Pairing Code on the Keypad</h2>
+  <p>
+    At the WashTrac CodeBox keypad:
+  </p>
+  <ul>
+    <li>Hold the BACK button to enter programming mode</li>
+    <li>Select <strong>3 = PAIR</strong></li>
+    <li>Enter the 6-digit pairing code</li>
+    <li>Press <strong>ENTER</strong></li>
+  </ul>
 
-  <section id="works" class="section">
-    <h2>How WashTrac Works</h2>
-    <p class="section-intro">
-      WashTrac is built to make access control simple for users and visible for management.
-    </p>
+  <div class="pairing-illustration">
 
-    <div class="cards">
-      <div class="card">
-        <h3>Create Access Codes</h3>
-        <p>Managers assign wash access codes to departments, employees, or temporary users.</p>
+    <!-- LEFT SIDE CALLOUT -->
+    <div class="pairing-arrow">
+      <div class="arrow-callout">
+        Hold <span>BACK</span><br>
+        for 3 Seconds
       </div>
 
-      <div class="card">
-        <h3>Activate the Wash</h3>
-        <p>Users enter their code on the Keypad terminal to activate the wash system quickly and securely.</p>
-      </div>
-
-      <div class="card">
-        <h3>Track Every Activation</h3>
-        <p>Every wash event is logged with timestamps, code usage history, and department tracking.</p>
-      </div>
-
-      <div class="card">
-        <h3>View Reports</h3>
-        <p>Managers can review dashboards, export reports, and receive usage summaries by email.</p>
-      </div>
+      <svg viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M 190 145 L 320 175"
+          fill="none"
+          stroke="#ef4444"
+          stroke-width="6"
+          stroke-linecap="round"
+        />
+        <circle
+          cx="320"
+          cy="175"
+          r="6"
+          fill="#ef4444"
+        />
+      </svg>
     </div>
-  </section>
 
-  <section id="audit" class="section">
-    <h2>Audit & Reporting Visibility</h2>
-    <p class="section-intro">
-      WashTrac is not just a terminal. It is a complete auditing and visibility system built to help managers track usage, reduce abuse, and review activity in real time.
-    </p>
+    <!-- KEYPAD COPIED FROM INDEX STYLE -->
+    <div class="faq-device">
+      <div class="faq-screen">
 
-    <div class="cards">
-      <div class="card">
-        <h3>Timestamped Activity</h3>
-        <p>Every code use can be recorded with date and time so you always know exactly when the wash was activated.</p>
-      </div>
-
-      <div class="card">
-        <h3>Live Monitoring</h3>
-        <p>See activity as it happens through live dashboards, usage tracking, and monitoring screens.</p>
-      </div>
-
-      <div class="card">
-        <h3>Email & CSV Exports</h3>
-        <p>Send reports by email or export usage history for accountability, internal review, and management reporting.</p>
-      </div>
-
-      <div class="card graph-card">
-        <h3>Usage Graphs</h3>
-        <p>Visualize code activity and department trends with clean usage graphs that make patterns easier to spot.</p>
-
-        <div class="mini-graph">
-          <div class="mini-bar" style="height:45%;"></div>
-          <div class="mini-bar" style="height:68%;"></div>
-          <div class="mini-bar" style="height:58%;"></div>
-          <div class="mini-bar" style="height:86%;"></div>
-        </div>
-
-        <div class="mini-labels">
-          <span>Mon</span>
-          <span>Tue</span>
-          <span>Wed</span>
-          <span>Thu</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="monitoring" class="section">
-    <h2>Real-Time Monitoring & Remote Control</h2>
-    <p class="section-intro">
-      WashTrac can support live operational visibility, emergency stop awareness, and remote control options for stronger after-hours protection and management oversight.
-    </p>
-
-    <div class="cards">
-      <div class="card">
-        <h3>Real-Time Monitoring</h3>
-        <p>Monitor active wash events, recent code use, and operational activity live from the dashboard or monitor screen.</p>
-      </div>
-
-      <div class="card">
-        <h3>E-STOP Monitoring</h3>
-        <p>Display emergency stop conditions so operators and managers can see when an E-STOP event has been triggered.</p>
-      </div>
-
-      <div class="card">
-        <h3>Remote Shutdown</h3>
-        <p>Remotely disable wash activation based on business hours, configurable schedules, or management control needs.</p>
-      </div>
-
-      <div class="card">
-        <h3>After-Hours Protection</h3>
-        <p>Help prevent unauthorized usage after hours by combining access control, live visibility, and remote operational shutdown capability.</p>
-      </div>
-    </div>
-  </section>
-
-  <section id="systemstate" class="section">
-    <h2>Live System State</h2>
-    <p class="section-intro">
-      This live demo pulls current system status from WashTrac so operators and managers can instantly see whether the wash is available, locked out, or in an E-STOP condition.
-    </p>
-
-    <div class="system-demo-wrap">
-      <div class="system-demo-card">
-        <div id="systemBanner" class="system-banner banner-green">SYSTEM AVAILABLE</div>
-
-        <div class="status-grid">
-          <div class="status-box">
-            <strong id="demoWashText">Enabled</strong>
-            <span>Wash Status</span>
-            <div><span id="demoWashPill" class="status-pill status-on">Wash Enabled</span></div>
+        <div class="faq-screen-top">
+          <div class="faq-screen-logo-wrap">
+            <img
+              src="washtrac-logo.png"
+              alt="WashTrac"
+              class="faq-screen-logo-image"
+            >
           </div>
 
-          <div class="status-box">
-            <strong id="demoEstopText">Clear</strong>
-            <span>E-STOP Status</span>
-            <div><span id="demoEstopPill" class="status-pill status-on">No Active E-STOP</span></div>
-          </div>
-
-          <div class="status-box">
-            <strong id="demoLockoutText">Off</strong>
-            <span>Scheduled Lockout</span>
-            <div><span id="demoLockoutPill" class="status-pill status-off">No Schedule</span></div>
-          </div>
-
-          <div class="status-box">
-            <strong id="demoLockoutWindow">--:-- to --:--</strong>
-            <span>Lockout Window</span>
+          <div class="faq-signal">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
           </div>
         </div>
-      </div>
 
-      <div class="system-demo-card">
-        <h3 style="margin-top:0;">Live Bay Overview</h3>
-        <div class="bay-mini-grid" id="homepageBayGrid"></div>
+        <div class="faq-display">
+          <div class="faq-menu-line">1=ADD&nbsp;&nbsp;&nbsp;2=DELETE</div>
+          <div class="faq-menu-line second">3=PAIR</div>
+        </div>
+
+        <div class="faq-pad">
+          <div class="faq-key">1</div>
+          <div class="faq-key">2</div>
+          <div class="faq-key">3</div>
+
+          <div class="faq-key">4</div>
+          <div class="faq-key">5</div>
+          <div class="faq-key">6</div>
+
+          <div class="faq-key">7</div>
+          <div class="faq-key">8</div>
+          <div class="faq-key">9</div>
+
+          <div class="faq-key back">←</div>
+          <div class="faq-key">0</div>
+          <div class="faq-key clear">CLEAR</div>
+        </div>
+
+        <div class="faq-enter">ENTER</div>
       </div>
     </div>
-  </section>
 
-  <section id="contact" class="section">
-    <h2>Request Information</h2>
+  </div>
+</div>
 
-    <div class="contact">
-      <p class="contact-copy">
-        Tell us a little about your operation and what you want to control or monitor.
-        We’ll review your request and contact you to discuss the right WashTrac setup for your location.
+
+
+    <div class="step">
+      <div class="step-number">7</div>
+      <h2>Pairing Complete</h2>
+      <p>
+        The keypad will connect to your WashTrac account and begin syncing automatically.
+      </p>
+      <ul>
+        <li>Access codes will download to the keypad</li>
+        <li>Wash activity will begin appearing in the dashboard</li>
+        <li>Reports and monitoring become available immediately</li>
+      </ul>
+      <div class="image-placeholder">
+        Screenshot Placeholder<br>
+        Dashboard Showing Connected Device
+      </div>
+    </div>
+
+    <div class="next-box">
+      <h2>You’re Ready to Go</h2>
+      <p>
+        Your WashTrac system is now connected and ready to manage access,
+        track usage, and monitor wash activity in real time.
       </p>
 
-      <form id="contactForm">
-        <label>Name</label>
-        <input id="name" required />
-
-        <label>Company</label>
-        <input id="company" />
-
-        <label>Email</label>
-        <input id="email" type="email" required />
-
-        <label>Phone</label>
-        <input id="phone" />
-
-        <label>Message</label>
-        <textarea id="message" required placeholder="Tell us about your wash setup, reporting needs, monitoring goals, or remote control requirements."></textarea>
-
-        <button type="submit" class="btn">Request Information</button>
-      </form>
-
-      <div id="status"></div>
+      <a href="faq.html" class="btn">Return to FAQ & Guides</a>
     </div>
-  </section>
+
+  </div>
 
   <footer>
-    WASHTRAC © 2026<br />
+    WASHTRAC © 2026<br>
     Control. Track. Manage.
   </footer>
-
-  <script>
-    const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    function toggleMenu() {
-      const menu = document.getElementById("menuPanel");
-      const backdrop = document.getElementById("backdrop");
-      const isOpen = menu.style.display === "flex";
-
-      menu.style.display = isOpen ? "none" : "flex";
-      backdrop.style.display = isOpen ? "none" : "block";
-    }
-
-    function closeMenu() {
-      document.getElementById("menuPanel").style.display = "none";
-      document.getElementById("backdrop").style.display = "none";
-    }
-
-    function isLockoutActive(control) {
-      if (!control || !control.lockout_enabled) return false;
-      if (!control.lockout_start || !control.lockout_end) return false;
-
-      const now = new Date();
-      const nowMinutes = now.getHours() * 60 + now.getMinutes();
-
-      const start = control.lockout_start.split(":");
-      const end = control.lockout_end.split(":");
-
-      const startMin = parseInt(start[0]) * 60 + parseInt(start[1]);
-      const endMin = parseInt(end[0]) * 60 + parseInt(end[1]);
-
-      if (startMin <= endMin) {
-        return nowMinutes >= startMin && nowMinutes <= endMin;
-      } else {
-        return nowMinutes >= startMin || nowMinutes <= endMin;
-      }
-    }
-
-    function bayDotClass(status) {
-      const value = (status || "").toLowerCase();
-      if (value === "ready") return "dot-ready";
-      if (value === "running") return "dot-running";
-      if (value === "offline") return "dot-offline";
-      return "dot-idle";
-    }
-
-    async function loadLiveSystemState() {
-      const { data: control } = await supabaseClient
-        .from("system_control")
-        .select("*")
-        .limit(1)
-        .single();
-
-      if (control) {
-        document.getElementById("demoWashText").innerText = control.wash_enabled ? "Enabled" : "Disabled";
-        document.getElementById("demoWashPill").className = `status-pill ${control.wash_enabled ? "status-on" : "status-off"}`;
-        document.getElementById("demoWashPill").innerText = control.wash_enabled ? "Wash Enabled" : "Wash Disabled";
-
-        document.getElementById("demoEstopText").innerText = control.estop_active ? "Active" : "Clear";
-        document.getElementById("demoEstopPill").className = `status-pill ${control.estop_active ? "status-warn" : "status-on"}`;
-        document.getElementById("demoEstopPill").innerText = control.estop_active ? "E-STOP Active" : "No Active E-STOP";
-
-        document.getElementById("demoLockoutText").innerText = control.lockout_enabled ? "On" : "Off";
-        document.getElementById("demoLockoutPill").className = `status-pill ${control.lockout_enabled ? "status-warn" : "status-off"}`;
-        document.getElementById("demoLockoutPill").innerText = control.lockout_enabled ? "Schedule Enabled" : "No Schedule";
-
-        document.getElementById("demoLockoutWindow").innerText =
-          `${control.lockout_start || "--:--"} to ${control.lockout_end || "--:--"}`;
-
-        const banner = document.getElementById("systemBanner");
-
-        if (control.estop_active) {
-          banner.className = "system-banner banner-red";
-          banner.innerText = "🚨 EMERGENCY STOP ACTIVE";
-        } else if (!control.wash_enabled) {
-          banner.className = "system-banner banner-red";
-          banner.innerText = "WASH DISABLED";
-        } else if (isLockoutActive(control)) {
-          banner.className = "system-banner banner-yellow";
-          banner.innerText = "AFTER-HOURS LOCKOUT ACTIVE";
-        } else {
-          banner.className = "system-banner banner-green";
-          banner.innerText = "SYSTEM AVAILABLE";
-        }
-      }
-
-      const { data: bays } = await supabaseClient
-        .from("bay_status")
-        .select("*")
-        .order("bay_name", { ascending: true });
-
-      const wrap = document.getElementById("homepageBayGrid");
-      wrap.innerHTML = "";
-
-      (bays || []).forEach((bay) => {
-        wrap.innerHTML += `
-          <div class="bay-mini">
-            <strong>${bay.bay_name}</strong>
-            <div><span class="bay-dot ${bayDotClass(bay.status)}"></span>${bay.status || "Idle"}</div>
-          </div>
-        `;
-      });
-    }
-
-    async function sendContact() {
-      const name = document.getElementById("name").value;
-      const company = document.getElementById("company").value;
-      const email = document.getElementById("email").value;
-      const phone = document.getElementById("phone").value;
-      const message = document.getElementById("message").value;
-      const statusBox = document.getElementById("status");
-
-      statusBox.innerText = "Sending...";
-
-      const { data: saved, error: saveError } = await supabaseClient
-        .from("contact_requests")
-        .insert([{ name, company, email, phone, message }]);
-
-      console.log("DB insert:", saved, saveError);
-
-      if (saveError) {
-        statusBox.innerText = saveError.message;
-        return;
-      }
-
-      const { data, error } = await supabaseClient.functions.invoke("rapid-task", {
-        body: {
-          name,
-          company,
-          email,
-          phone,
-          message
-        }
-      });
-
-      console.log("rapid-task response:", data, error);
-
-      if (error) {
-        statusBox.innerText = "Saved, but email failed";
-        return;
-      }
-
-      statusBox.innerText = "Request sent. We'll be in touch soon.";
-
-      document.getElementById("name").value = "";
-      document.getElementById("company").value = "";
-      document.getElementById("email").value = "";
-      document.getElementById("phone").value = "";
-      document.getElementById("message").value = "";
-    }
-
-
-    function openAdminLogin() {
-      closeMenu();
-      document.getElementById("adminModal").classList.add("show");
-      document.getElementById("adminStatus").innerText = "";
-      document.getElementById("adminUser").value = "";
-      document.getElementById("adminPass").value = "";
-      setTimeout(() => document.getElementById("adminUser").focus(), 50);
-    }
-
-    function closeAdminLogin(event) {
-      if (event && event.target !== document.getElementById("adminModal")) return;
-      document.getElementById("adminModal").classList.remove("show");
-    }
-
-    function adminLogin() {
-      const username = document.getElementById("adminUser").value.trim();
-      const password = document.getElementById("adminPass").value;
-      const status = document.getElementById("adminStatus");
-
-      const ADMIN_USER = "admin";
-      const ADMIN_PASS = "WashTrac2026!";
-
-      if (username === ADMIN_USER && password === ADMIN_PASS) {
-        sessionStorage.setItem("washtracAdmin", "yes");
-        window.location.href = "maintenance.html";
-        return;
-      }
-
-      status.innerText = "Invalid username or password.";
-      document.getElementById("adminPass").value = "";
-      document.getElementById("adminPass").focus();
-    }
-
-
-    document.addEventListener("DOMContentLoaded", function () {
-      const contactForm = document.getElementById("contactForm");
-
-      if (contactForm) {
-        contactForm.addEventListener("submit", async function (e) {
-          e.preventDefault();
-          await sendContact();
-        });
-      }
-
-
-      const adminUser = document.getElementById("adminUser");
-      const adminPass = document.getElementById("adminPass");
-      [adminUser, adminPass].forEach(el => {
-        el.addEventListener("keydown", function(e) {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            adminLogin();
-          }
-          if (e.key === "Escape") {
-            closeAdminLogin();
-          }
-        });
-      });
-
-      loadLiveSystemState();
-
-      supabaseClient
-        .channel("homepage-live-state")
-        .on("postgres_changes", { event: "*", schema: "public", table: "system_control" }, () => loadLiveSystemState())
-        .on("postgres_changes", { event: "*", schema: "public", table: "bay_status" }, () => loadLiveSystemState())
-        .subscribe();
-    });
-  </script>
-
-  <div id="adminModal" class="admin-modal" onclick="closeAdminLogin(event)">
-    <div class="admin-card" onclick="event.stopPropagation()">
-      <h3>Admin Access</h3>
-
-      <label for="adminUser">Username</label>
-      <input id="adminUser" type="text" autocomplete="username">
-
-      <label for="adminPass">Password</label>
-      <input id="adminPass" type="password" autocomplete="current-password">
-
-      <div class="admin-actions">
-        <button class="btn secondary" type="button" onclick="closeAdminLogin()">Cancel</button>
-        <button class="btn" type="button" onclick="adminLogin()">Sign In</button>
-      </div>
-
-      <div id="adminStatus" class="admin-status"></div>
-    </div>
-  </div>
 
 </body>
 </html>
