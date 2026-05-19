@@ -34,13 +34,13 @@
     }
 
     .header-logo {
-  width: 220px;
-  max-width: 100%;
-  height: auto;
-  display: block;
-  position: relative;
-  top: -10px;
-}
+      width: 220px;
+      max-width: 100%;
+      height: auto;
+      display: block;
+      position: relative;
+      top: -10px;
+    }
 
     .btn {
       display: inline-block;
@@ -89,14 +89,17 @@
       padding: 70px 20px;
     }
 
-  .step {
-  background: linear-gradient(180deg, #0f172a, #111827);
-  border: 1px solid #1e293b;
-  border-radius: 18px;
-  padding: 28px;
-  margin-bottom: 80px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
-}
+    .step {
+      background: linear-gradient(180deg, #0f172a, #111827);
+      border: 1px solid #1e293b;
+      border-radius: 18px;
+      padding: 28px;
+      margin: 0 auto 80px;
+      max-width: 1100px;
+      width: 100%;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+      display: flow-root;
+    }
 
     .step-number {
       width: 46px;
@@ -133,20 +136,18 @@
       margin-bottom: 8px;
     }
 
-    .image-placeholder {
-      margin-top: 22px;
-      background:
-        linear-gradient(145deg, #111827, #0b1220);
-      border: 2px dashed #334155;
-      border-radius: 14px;
-      min-height: 220px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      color: #64748b;
-      font-weight: 700;
-      padding: 20px;
+    .guide-image {
+      padding: 0;
+      border: none;
+      background: none;
+      float: right;
+    }
+
+    .guide-image img {
+      width: 100%;
+      border-radius: 12px;
+      display: block;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.35);
     }
 
     .tip {
@@ -157,6 +158,7 @@
       border: 1px solid rgba(37, 99, 235, 0.28);
       color: #dbeafe;
       font-size: 15px;
+      clear: both;
     }
 
     .next-box {
@@ -215,14 +217,24 @@
 
       .step {
         padding: 22px;
+        margin-bottom: 50px;
       }
 
       .step h2 {
         font-size: 26px;
       }
 
-      .image-placeholder {
-        min-height: 180px;
+      .guide-image {
+        float: none !important;
+        width: 100% !important;
+        max-width: 360px !important;
+        margin: 24px auto 0 !important;
+        transform: none !important;
+      }
+
+      .guide-image img {
+        width: 100% !important;
+        height: auto !important;
       }
 
       .next-box {
@@ -233,304 +245,9 @@
         font-size: 30px;
       }
     }
-
- .pairing-illustration {
-  margin-top: 22px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 36px;
-  flex-wrap: wrap;
-  padding: 24px;
-  background: transparent;
-  border: none;
-  border-radius: 14px;
-  overflow: hidden;
-}
-
-    .faq-device {
-      background: linear-gradient(145deg, #050b14, #111827);
-      border-radius: 26px;
-      padding: 16px;
-      border: 1px solid #1e293b;
-      width: 390px;
-      max-width: 100%;
-      position: relative;
-      left: -70px;
-      z-index: 50;
-      box-shadow:
-        0 24px 60px rgba(0, 0, 0, 0.45),
-        inset 0 0 0 1px rgba(255,255,255,.04);
-    }
-
-    .faq-screen {
-      background: #000814;
-      border-radius: 20px;
-      padding: 16px;
-      border: 2px solid rgba(37,99,235,.58);
-      box-shadow:
-        0 0 22px rgba(37,99,235,.25),
-        inset 0 0 28px rgba(37,99,235,.08);
-    }
-
-    .faq-screen-top {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .faq-screen-logo-wrap {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .faq-screen-logo-image {
-      width: 160px;
-      height: auto;
-      display: block;
-      object-fit: contain;
-    }
-
-    .faq-signal {
-      position: absolute;
-      right: 0;
-      top: -4px;
-      display: flex;
-      align-items: flex-end;
-      gap: 3px;
-    }
-
-    .faq-signal .bar {
-      width: 4px;
-      background: #1b4fd6;
-      border-radius: 2px;
-      box-shadow: 0 0 8px rgba(37,99,235,.45);
-    }
-
-    .faq-signal .bar:nth-child(1){height:6px;opacity:.55;}
-    .faq-signal .bar:nth-child(2){height:10px;opacity:.7;}
-    .faq-signal .bar:nth-child(3){height:14px;opacity:.85;}
-    .faq-signal .bar:nth-child(4){height:18px;}
-
-    .faq-display {
-      height: 96px;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      margin-top: 10px;
-      margin-bottom: 14px;
-      background: linear-gradient(145deg, #000000, #0a0a0a);
-      border-radius: 16px;
-      text-align: center;
-      color: #ffffff;
-      font-weight: 800;
-      letter-spacing: 1px;
-    }
-
-.faq-menu-line {
-  font-size: 32px;
-  font-weight: 600;
-  line-height: 1.1;
-  white-space: nowrap;
-  text-align: left;
-  width: 100%;
-  padding-left: 0px;
-}
-
-    .faq-menu-line.second {
-      margin-top: 8px;
-    }
-
-    .faq-pad {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-top: 0;
-    }
-
-    .faq-key {
-      height: 64px;
-      background: linear-gradient(
-        180deg,
-        #6f8198 0%,
-        #556983 14%,
-        #3a4c63 55%,
-        #243346 100%
-      );
-      border: 1px solid rgba(255,255,255,0.16);
-      border-radius: 14px;
-      text-align: center;
-      font-weight: 800;
-      font-size: 30px;
-      color: #ffffff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow:
-        inset 0 2px 0 rgba(255,255,255,0.22),
-        inset 0 -10px 18px rgba(0,0,0,0.28),
-        0 5px 14px rgba(0,0,0,0.42);
-    }
-
-    .faq-key.back {
-      font-size: 32px;
-      align-items: flex-start;
-      padding-top: 0px;
-    }
-
-    .faq-key.clear {
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: .8px;
-    }
-
-    .faq-enter {
-      margin-top: 14px;
-      width: 100%;
-      height: 68px;
-      padding: 0;
-      background: linear-gradient(
-        180deg,
-        #4d7cff 0%,
-        #2f5df5 18%,
-        #1b4fd6 55%,
-        #1039a8 100%
-      );
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 14px;
-      font-size: 28px;
-      color: #ffffff;
-      font-weight: 800;
-      letter-spacing: 0.7px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow:
-        0 0 24px rgba(37,99,235,0.60),
-        inset 0 2px 0 rgba(255,255,255,0.28),
-        inset 0 -12px 20px rgba(0,0,0,0.22),
-        0 6px 14px rgba(0,0,0,0.45);
-    }
-
-    .pairing-arrow {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      color: #ef4444;
-      font-weight: 800;
-      position: relative;
-      z-index: 100;
-    }
-
-    .arrow-callout {
-      border: 2px solid #ef4444;
-      border-radius: 16px;
-      padding: 18px 24px;
-      background: rgba(0, 0, 0, 0.45);
-      color: #ffffff;
-      font-size: 20px;
-      line-height: 1.45;
-      text-align: center;
-      position: relative;
-      left: -112px;
-      top: 230px;
-    }
-
-    .arrow-callout span {
-      color: #ef4444;
-      font-weight: 900;
-    }
-
-    .pairing-arrow svg {
-      width: 320px;
-      height: 220px;
-      overflow: visible;
-    }
-
-    @media (max-width: 900px) {
-      .pairing-illustration {
-        gap: 18px;
-        padding: 18px;
-      }
-
-      .faq-device {
-        width: 320px;
-        left: 0;
-      }
-
-      .faq-screen {
-        padding: 12px;
-      }
-
-      .faq-display {
-        height: 70px;
-        margin-top: 6px;
-        margin-bottom: 10px;
-      }
-
-      .faq-screen-logo-image {
-        width: 120px;
-      }
-
-      .faq-menu-line {
-        font-size: 18px;
-      }
-
-      .faq-pad {
-        gap: 8px;
-      }
-
-      .faq-key {
-        height: 48px;
-        font-size: 22px;
-      }
-
-      .faq-key.back {
-        padding-top: 0;
-      }
-
-      .faq-enter {
-        height: 52px;
-        font-size: 22px;
-        margin-top: 10px;
-      }
-
-      .pairing-arrow svg {
-        width: 120px;
-        height: 60px;
-      }
-
-      .pairing-arrow {
-        font-size: 16px;
-      }
-
-      .arrow-callout {
-        left: 0;
-        top: 0;
-      }
-    }
-
-    @media (max-width: 900px) {
-  .step div[style*="float: right"] {
-    float: none !important;
-    width: 100% !important;
-    max-width: 360px !important;
-    margin: 24px auto 0 !important;
-    transform: none !important;
-  }
-
-  .step div[style*="float: right"] img {
-    width: 100% !important;
-    height: auto !important;
-  }
-}
-
   </style>
 </head>
+
 <body>
 
   <header>
@@ -546,7 +263,7 @@
     <h1>Quick Start Guide</h1>
     <p>
       Follow these simple steps to create your account, add your WashTrac device,
-      and pair your CodeBox keypad to your site.
+      and pair your Keypad to your site.
     </p>
   </section>
 
@@ -563,25 +280,10 @@
         <li>Tap the menu button (☰)</li>
         <li>Select <strong>Client Login</strong></li>
       </ul>
-    <div class="image-placeholder" style="
-  padding: 0;
-  border: none;
-  background: none;
-  float: right;
-  width: 400px;
-  margin: -288px 0 0 30px;
-">
-  <img
-    src="faq-menu1.png"
-    alt="Website Menu"
-    style="
-      width: 100%;
-      border-radius: 12px;
-      display: block;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.35);
-    "
-  >
-</div>
+
+      <div class="guide-image" style="width: 400px; margin: -288px 0 0 30px;">
+        <img src="faq-menu1.png" alt="Website Menu">
+      </div>
     </div>
 
     <div class="step">
@@ -595,25 +297,10 @@
         <li>Create your login credentials</li>
         <li>Submit the registration form</li>
       </ul>
-    <div class="image-placeholder" style="
-  padding: 0;
-  border: none;
-  background: none;
-  float: right;
-  width: 220px;
-  margin: -288px 0 0 30px;
-">
-  <img
-    src="faq-menu2.png"
-    alt="Create Account Page"
-    style="
-      width: 100%;
-      border-radius: 12px;
-      display: block;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.35);
-    "
-  >
-</div>
+
+      <div class="guide-image" style="width: 220px; margin: -288px 0 0 30px;">
+        <img src="faq-menu2.png" alt="Create Account Page">
+      </div>
     </div>
 
     <div class="step">
@@ -626,201 +313,78 @@
         <li>Enter your email and password</li>
         <li>Select <strong>Sign In</strong></li>
       </ul>
-     <div class="image-placeholder" style="
-  padding: 0;
-  border: none;
-  background: none;
-  float: right;
-  width: 250px;
-  margin: -255px 0 0 30px;
-">
-  <img
-    src="faq-menu3.png"
-    alt="Dashboard Screen"
-    style="
-      width: 100%;
-      border-radius: 12px;
-      display: block;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.35);
-    "
-  >
-</div>
+
+      <div class="guide-image" style="width: 250px; margin: -255px 0 0 30px;">
+        <img src="faq-menu3.png" alt="Dashboard Screen">
+      </div>
     </div>
 
     <div class="step">
-  <div class="step-number">4</div>
-  <h2>Add the Device</h2>
-  <p>
-    Open the dashboard menu and select <strong>Add Device</strong>.
-  </p>
-  <ul>
-    <li>Click the menu button in the top-right corner of the dashboard</li>
-    <li>Select <strong>Add Device</strong></li>
-    <li>WashTrac will automatically generate a temporary 6-digit pairing code</li>
-  </ul>
-<div class="image-placeholder" style="
-  padding: 0;
-  border: none;
-  background: none;
-  float: right;
-  width: 400px;
-  margin: -286px 0 0 30px;
-">
-  <img
-    src="faq-menu4.png"
-    alt="Add Device Screen"
-    style="
-      width: 100%;
-      border-radius: 12px;
-      display: block;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.35);
-    "
-  >
-</div>
-</div>
+      <div class="step-number">4</div>
+      <h2>Add the Device</h2>
+      <p>
+        Open the dashboard menu and select <strong>Add Device</strong>.
+      </p>
+      <ul>
+        <li>Click the menu button in the top-right corner of the dashboard</li>
+        <li>Select <strong>Add Device</strong></li>
+        <li>WashTrac will automatically generate a temporary 6-digit pairing code</li>
+      </ul>
+
+      <div class="guide-image" style="width: 400px; margin: -286px 0 0 30px;">
+        <img src="faq-menu4.png" alt="Add Device Screen">
+      </div>
+    </div>
 
     <div class="step">
       <div class="step-number">5</div>
       <h2>Retrieve the 6-Digit Pairing Code</h2>
       <p>
-        <p>
-  After selecting Add Device, WashTrac will display a temporary 6-digit pairing code.
-</p>
+        After selecting Add Device, WashTrac will display a temporary 6-digit pairing code.
       </p>
       <ul>
         <li>Locate the pairing code on the screen</li>
         <li>Write it down or keep the page open</li>
       </ul>
-     <div class="image-placeholder" style="
-  padding: 0;
-  border: none;
-  background: none;
-  float: right;
-  width: 385px;
-  margin: -250px 0 0 30px;
-">
-  <img
-    src="faq-menu5.png"
-    alt="Pairing Code Screen"
-    style="
-      width: 100%;
-      border-radius: 12px;
-      display: block;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.35);
-    "
-  >
-</div>
+
+      <div class="guide-image" style="width: 385px; margin: -250px 0 0 30px;">
+        <img src="faq-menu5.png" alt="Pairing Code Screen">
+      </div>
 
       <div class="tip">
-        Tip: Pairing codes are temporary and are used to securely link a physical keypad to your account.
-      </div>
-    </div>
-   <div class="step">
-  <div class="step-number">6</div>
-  <h2>Enter the Pairing Code on the Keypad</h2>
-  <p>
-    At the WashTrac keypad:
-  </p>
-  <ul>
-    <li>Hold the BACK button to enter programming mode</li>
-    <li>Select <strong>3 = PAIR</strong></li>
-    <li>Enter the 6-digit pairing code</li>
-    <li>Press <strong>ENTER</strong></li>
-  </ul>
-
-  <div class="pairing-illustration">
-
-    <!-- LEFT SIDE CALLOUT -->
-    <div class="pairing-arrow">
-      <div class="arrow-callout">
-        Hold <span>BACK</span><br>
-        for 3 Seconds
-      </div>
-
-      <svg viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg">
-       <path
-  d="M 210 185 L 340 215"
-  fill="none"
-  stroke="#ef4444"
-  stroke-width="6"
-  stroke-linecap="round"
-/>
-
-<circle
-  cx="340"
-  cy="215"
-  r="6"
-  fill="#ef4444"
-/>
-      </svg>
-    </div>
-
-    <!-- KEYPAD COPIED FROM INDEX STYLE -->
-    <div class="faq-device">
-      <div class="faq-screen">
-
-        <div class="faq-screen-top">
-          <div class="faq-screen-logo-wrap">
-            <img
-              src="washtrac-logo.png"
-              alt="WashTrac"
-              class="faq-screen-logo-image"
-            >
-          </div>
-
-          <div class="faq-signal">
-            <div class="bar"></div>
-            <div class="bar"></div>
-            <div class="bar"></div>
-            <div class="bar"></div>
-          </div>
-        </div>
-
-        <div class="faq-display" style="padding-left: 100px; padding-bottom: 10px;">
-          <div class="faq-menu-line first" style="margin-top: 12px;">1=ADD</div>
-          <div class="faq-menu-line second" style="margin-top: 0px;">2=DELETE</div>
-          <div class="faq-menu-line third" style="margin-top: 0px;">3=PAIR</div>
-        </div>
-
-        <div class="faq-pad">
-          <div class="faq-key">1</div>
-          <div class="faq-key">2</div>
-          <div class="faq-key">3</div>
-
-          <div class="faq-key">4</div>
-          <div class="faq-key">5</div>
-          <div class="faq-key">6</div>
-
-          <div class="faq-key">7</div>
-          <div class="faq-key">8</div>
-          <div class="faq-key">9</div>
-
-          <div class="faq-key back">←</div>
-          <div class="faq-key">0</div>
-          <div class="faq-key clear">CLEAR</div>
-        </div>
-
-        <div class="faq-enter">ENTER</div>
+        Tip: Pairing codes are temporary and are used to securely link a physical Keypad to your account.
       </div>
     </div>
 
-  </div>
-</div>
+    <div class="step">
+      <div class="step-number">6</div>
+      <h2>Enter the Pairing Code on the Keypad</h2>
+      <p>
+        At the WashTrac Keypad:
+      </p>
+      <ul>
+        <li>Hold the BACK button to enter programming mode</li>
+        <li>Select <strong>3 = PAIR</strong></li>
+        <li>Enter the 6-digit pairing code</li>
+        <li>Press <strong>ENTER</strong></li>
+      </ul>
 
-
+      <div class="guide-image" style="width: 500px; margin: -320px 0 0 30px;">
+        <img src="programming2.png" alt="Programming Mode Keypad">
+      </div>
+    </div>
 
     <div class="step">
       <div class="step-number">7</div>
       <h2>Pairing Complete</h2>
       <p>
-        The keypad will connect to your WashTrac account and begin syncing automatically.
+        The Keypad will connect to your WashTrac account and begin syncing automatically.
       </p>
       <ul>
-        <li>Access codes will download to the keypad</li>
+        <li>Access codes will download to the Keypad</li>
         <li>Wash activity will begin appearing in the dashboard</li>
         <li>Reports and monitoring become available immediately</li>
       </ul>
-      </div>
     </div>
 
     <div class="next-box">
