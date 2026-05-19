@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WashTrac Manage Sites &amp; Users Guide</title>
+  <title>WashTrac Manage Sites & Users Guide</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -134,29 +134,12 @@
       margin-bottom: 8px;
     }
 
-    .image-placeholder {
-      margin-top: 22px;
-      background: linear-gradient(145deg, #111827, #0b1220);
-      border: 2px dashed #334155;
-      border-radius: 14px;
-      min-height: 220px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      color: #64748b;
-      font-weight: 700;
-      padding: 20px;
-    }
-
     .step-image {
       padding: 0;
       border: none;
       background: none;
       float: right;
       margin-left: 30px;
-      min-height: 0;
-      display: block;
     }
 
     .step-image img {
@@ -168,7 +151,7 @@
 
     .login-image {
       width: 280px;
-      margin-top: -320px;
+      margin-top: -295px;
     }
 
     .manage-image {
@@ -216,25 +199,58 @@
     }
 
     @media (max-width: 900px) {
-      header { padding: 14px 20px; }
-      .header-logo { width: 180px; }
-      .hero { padding: 65px 20px 40px; }
-      .hero h1 { font-size: 40px; }
-      .hero p { font-size: 17px; }
-      .container { padding: 50px 20px; }
-      .step { padding: 22px; }
-      .step h2 { font-size: 26px; }
-      .image-placeholder { min-height: 180px; }
+      header {
+        padding: 14px 20px;
+      }
+
+      .header-logo {
+        width: 180px;
+      }
+
+      .hero {
+        padding: 65px 20px 40px;
+      }
+
+      .hero h1 {
+        font-size: 40px;
+      }
+
+      .hero p {
+        font-size: 17px;
+      }
+
+      .container {
+        padding: 50px 20px;
+      }
+
+      .step {
+        padding: 22px;
+      }
+
+      .step h2 {
+        font-size: 26px;
+      }
+
       .step-image {
         float: none;
-        width: 100% !important;
-        margin: 22px 0 0 0 !important;
+        width: 100%;
+        max-width: 400px;
+        margin: 22px auto 0;
       }
-      .login-image {
-        max-width: 280px;
+
+      .login-image,
+      .manage-image {
+        width: 100%;
+        margin-top: 22px;
       }
-      .next-box { padding: 28px 22px; }
-      .next-box h2 { font-size: 30px; }
+
+      .next-box {
+        padding: 28px 22px;
+      }
+
+      .next-box h2 {
+        font-size: 30px;
+      }
     }
   </style>
 </head>
@@ -264,12 +280,12 @@
       <h2>Log In to the Dashboard</h2>
       <p>Open the WashTrac client portal and sign in to your account.</p>
       <ul>
-        <li>Go to thewashtrac.com</li>
+        <li>Go to <strong>thewashtrac.com</strong></li>
         <li>Select <strong>Client Login</strong></li>
         <li>Enter your email and password</li>
       </ul>
 
-      <div class="image-placeholder step-image login-image">
+      <div class="step-image login-image">
         <img src="faq-menu3.png" alt="Dashboard Screen">
       </div>
     </div>
@@ -277,14 +293,14 @@
     <div class="step">
       <div class="step-number">2</div>
       <h2>Open Manage Sites</h2>
-      <p>From the dashboard, click the site management button.</p>
+      <p>From the dashboard, open the site management area.</p>
       <ul>
-        <li>From the dashboard</li>
+        <li>From the dashboard, open the menu</li>
         <li>Select <strong>Manage Sites</strong> or <strong>Sites</strong></li>
         <li>Review the sites already connected to your account</li>
       </ul>
 
-      <div class="image-placeholder step-image manage-image">
+      <div class="step-image manage-image">
         <img src="Manage2.png" alt="Manage Sites Screen">
       </div>
     </div>
@@ -298,11 +314,6 @@
         <li>Enter the site name and site details</li>
         <li>Save the site so devices, codes, and activity can be assigned correctly</li>
       </ul>
-
-      <div class="image-placeholder">
-        Screenshot Placeholder<br>
-        Add / Edit Site Form
-      </div>
 
       <div class="tip">
         Site information is created during registration for the first location. Use Manage Sites when adding more locations or updating existing site details.
@@ -319,11 +330,6 @@
         <li>Enter the user’s email address</li>
         <li>Select the correct role or permission level</li>
       </ul>
-
-      <div class="image-placeholder">
-        Screenshot Placeholder<br>
-        Invite User Screen
-      </div>
     </div>
 
     <div class="step">
@@ -335,11 +341,6 @@
         <li>Service or detail users may only need access to wash activity or assigned codes</li>
         <li>Remove access when a user no longer needs the site</li>
       </ul>
-
-      <div class="image-placeholder">
-        Screenshot Placeholder<br>
-        User Permissions / Role Selection
-      </div>
     </div>
 
     <div class="step">
@@ -360,7 +361,7 @@
         have access to the right locations.
       </p>
 
-      <a href="faq.html" class="btn">Return to FAQ &amp; Guides</a>
+      <a href="faq.html" class="btn">Return to FAQ & Guides</a>
     </div>
 
   </div>
