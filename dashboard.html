@@ -25,15 +25,24 @@
       min-height:100vh;
     }
 
-    .sidebar{
-      width:220px;
-      background:#0f172a;
-      padding:20px;
-      flex-shrink:0;
-      border-right:1px solid #1e293b;
-      position:relative;
-      overflow:hidden;
-    }
+  .sidebar {
+  width: 220px;
+  background:
+    radial-gradient(
+      circle at 0% 0%,
+      rgba(37, 99, 235, 0.45) 0%,
+      rgba(37, 99, 235, 0.30) 18%,
+      rgba(37, 99, 235, 0.16) 38%,
+      rgba(37, 99, 235, 0.06) 55%,
+      transparent 72%
+    ),
+    linear-gradient(180deg, #0f172a 0%, #111827 100%);
+  padding: 20px;
+  flex-shrink: 0;
+  border-right: 1px solid #1e293b;
+  position: relative;
+  overflow: hidden;
+}
 
     .sidebar::before{
       display:none;
