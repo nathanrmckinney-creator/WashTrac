@@ -333,7 +333,7 @@
   z-index: 100;
 }
 
-   .arrow-callout {
+ .arrow-callout {
   border: 2px solid #ef4444;
   border-radius: 16px;
   padding: 18px 24px;
@@ -342,8 +342,11 @@
   font-size: 20px;
   line-height: 1.45;
   text-align: center;
-  margin-bottom: -60px;
-  margin-right: 80px;
+
+  /* THIS IS WHAT ACTUALLY MOVES THE BOX */
+  position: relative;
+  left: -120px;   /* moves left */
+  top: 80px;      /* moves down */
 }
 
     .arrow-callout span {
