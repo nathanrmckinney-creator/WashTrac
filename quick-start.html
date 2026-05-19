@@ -247,7 +247,7 @@
       border-radius: 14px;
     }
 
-   .faq-device {
+ .faq-device {
   background: linear-gradient(145deg, #050b14, #111827);
   border-radius: 22px;
   padding: 12px;
@@ -255,10 +255,12 @@
   width: 300px;
   position: relative;
   left: -60px;
+  z-index: 10;
   box-shadow:
     0 18px 40px rgba(0,0,0,.45),
     inset 0 0 0 1px rgba(255,255,255,.04);
 }
+   
     .faq-screen {
       background: #000814;
       border-radius: 18px;
@@ -321,13 +323,15 @@
         inset 0 -12px 20px rgba(0,0,0,0.22);
     }
 
-    .pairing-arrow {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      color: #ef4444;
-      font-weight: 800;
-    }
+   .pairing-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  color: #ef4444;
+  font-weight: 800;
+  position: relative;
+  z-index: 20;
+}
 
     .arrow-callout {
       border: 2px solid #ef4444;
