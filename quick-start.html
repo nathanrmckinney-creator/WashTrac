@@ -271,19 +271,25 @@
         inset 0 0 28px rgba(37,99,235,.08);
     }
 
-    .faq-display {
-      height: 72px;
-      margin: 8px 0 10px;
-      border-radius: 12px;
-      background: linear-gradient(145deg, #000, #0a0a0a);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 30px;
-      font-weight: 800;
-      letter-spacing: 1px;
-    }
+    <div class="faq-display" style="
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  line-height: 1.12;
+  text-align: center;
+">
+  <div style="display:flex; gap:22px; justify-content:center; width:100%;">
+    <span>1=ADD</span>
+    <span>2=DELETE</span>
+  </div>
 
+  <div style="margin-top:3px;">
+    3=PAIR
+  </div>
+</div>
     .faq-pad {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
