@@ -247,20 +247,17 @@
       border-radius: 14px;
     }
 
-.faq-device {
-  background: linear-gradient(145deg, #050b14, #111827);
-  border-radius: 22px;
-  padding: 12px;
-  border: 1px solid #1e293b;
-  width: 300px;
-  position: relative;
-  left: -70px;
-  z-index: 50;
-  box-shadow:
-    0 18px 40px rgba(0,0,0,.45),
-    inset 0 0 0 1px rgba(255,255,255,.04);
-}
-   
+    .faq-device {
+      background: linear-gradient(145deg, #050b14, #111827);
+      border-radius: 22px;
+      padding: 12px;
+      border: 1px solid #1e293b;
+      width: 300px;
+      box-shadow:
+        0 18px 40px rgba(0,0,0,.45),
+        inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+
     .faq-screen {
       background: #000814;
       border-radius: 18px;
@@ -271,25 +268,19 @@
         inset 0 0 28px rgba(37,99,235,.08);
     }
 
-    <div class="faq-display" style="
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  font-size: 16px;
-  line-height: 1.12;
-  text-align: center;
-">
-  <div style="display:flex; gap:22px; justify-content:center; width:100%;">
-    <span>1=ADD</span>
-    <span>2=DELETE</span>
-  </div>
+    .faq-display {
+      height: 72px;
+      margin: 8px 0 10px;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #000, #0a0a0a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
 
-  <div style="margin-top:3px;">
-    3=PAIR
-  </div>
-</div>
     .faq-pad {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -329,31 +320,26 @@
         inset 0 -12px 20px rgba(0,0,0,0.22);
     }
 
-   .pairing-arrow {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  color: #ef4444;
-  font-weight: 800;
-  position: relative;
-  z-index: 100;
-}
+    .pairing-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      color: #ef4444;
+      font-weight: 800;
+    }
 
- .arrow-callout {
-  border: 2px solid #ef4444;
-  border-radius: 16px;
-  padding: 18px 24px;
-  background: rgba(0, 0, 0, 0.45);
-  color: #ffffff;
-  font-size: 20px;
-  line-height: 1.45;
-  text-align: center;
-
-  /* THIS IS WHAT ACTUALLY MOVES THE BOX */
-  position: relative;
-  left: -130px;   /* moves left */
-  top: 170px;      /* moves down */
-}
+    .arrow-callout {
+      border: 2px solid #ef4444;
+      border-radius: 16px;
+      padding: 18px 24px;
+      background: rgba(0, 0, 0, 0.45);
+      color: #ffffff;
+      font-size: 20px;
+      line-height: 1.45;
+      text-align: center;
+      margin-bottom: -20px;
+      margin-right: 10px;
+    }
 
     .arrow-callout span {
       color: #ef4444;
@@ -498,111 +484,72 @@
       </div>
     </div>
 
-   <div class="step">
-  <div class="step-number">6</div>
-  <h2>Enter the Pairing Code on the Keypad</h2>
-  <p>
-    At the WashTrac CodeBox keypad:
-  </p>
-  <ul>
-    <li>Hold the BACK button to enter programming mode</li>
-    <li>Select <strong>3 = PAIR</strong></li>
-    <li>Enter the 6-digit pairing code</li>
-    <li>Press <strong>ENTER</strong></li>
-  </ul>
+    <div class="step">
+      <div class="step-number">6</div>
+      <h2>Enter the Pairing Code on the Keypad</h2>
+      <p>
+        At the WashTrac CodeBox keypad:
+      </p>
+      <ul>
+        <li>Hold the BACK button to enter programming mode</li>
+        <li>Select <strong>3 = PAIR</strong></li>
+        <li>Enter the 6-digit pairing code</li>
+        <li>Press <strong>ENTER</strong></li>
+      </ul>
+      <div class="pairing-illustration">
+        <div class="pairing-arrow">
+          <div class="arrow-callout">
+            Hold <span>BACK</span><br>
+            for 3 Seconds
+          </div>
 
-  <div class="pairing-illustration">
+          <svg viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrowhead" markerWidth="14" markerHeight="14" refX="10" refY="7" orient="auto">
+                <polygon points="0 0, 14 7, 0 14" fill="#ef4444"/>
+              </marker>
+            </defs>
 
-    <!-- LEFT SIDE CALLOUT -->
-    <div class="pairing-arrow">
-      <div class="arrow-callout">
-        Hold <span>BACK</span><br>
-        for 3 Seconds
-      </div>
-
-      <svg viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg">
-  <path
-  <path
-  d="M 190 145 L 320 175"
-  fill="none"
-  stroke="#ef4444"
-  stroke-width="6"
-  stroke-linecap="round"
-/>
-
-<circle
-  cx="320"
-  cy="175"
-  r="6"
-  fill="#ef4444"
-/>
-      </svg>
-    </div>
-
-    <!-- KEYPAD -->
-    <div class="faq-device">
-      <div class="faq-screen">
-        <div style="text-align:center;">
-          <img
-            src="washtrac-logo.png"
-            alt="WashTrac"
-            style="width:110px;height:auto;"
-          >
+            <path
+              d="M 270 70 L 200 70 L 75 185"
+              fill="none"
+              stroke="#ef4444"
+              stroke-width="10"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              marker-end="url(#arrowhead)"
+            />
+          </svg>
         </div>
 
- <div class="faq-display" style="
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  font-size: 16px;
-  line-height: 1.15;
-  text-align: center;
-">
-  <div>1=ADD&nbsp;&nbsp;&nbsp;&nbsp;2=DELETE</div>
-  <div style="margin-top: 2px;">3=PAIR</div>
+        <div class="faq-device">
+          <div class="faq-screen">
+            <div style="text-align:center;">
+              <img src="washtrac-logo.png" alt="WashTrac" style="width:110px;height:auto;">
+            </div>
 
-  <!-- Signal bars -->
-  <div style="
-    position: absolute;
-    top: 8px;
-    right: 10px;
-    display: flex;
-    align-items: flex-end;
-    gap: 2px;
-  ">
-    <span style="display:block;width:4px;height:4px;background:#2563eb;border-radius:1px;"></span>
-    <span style="display:block;width:4px;height:7px;background:#2563eb;border-radius:1px;"></span>
-    <span style="display:block;width:4px;height:10px;background:#2563eb;border-radius:1px;"></span>
-    <span style="display:block;width:4px;height:13px;background:#2563eb;border-radius:1px;"></span>
-  </div>
-</div>
+            <div class="faq-display">PAIR</div>
 
-        <div class="faq-pad">
-          <div class="faq-key">1</div>
-          <div class="faq-key">2</div>
-          <div class="faq-key">3</div>
+            <div class="faq-pad">
+              <div class="faq-key">1</div>
+              <div class="faq-key">2</div>
+              <div class="faq-key">3</div>
+              <div class="faq-key">4</div>
+              <div class="faq-key">5</div>
+              <div class="faq-key">6</div>
+              <div class="faq-key">7</div>
+              <div class="faq-key">8</div>
+              <div class="faq-key">9</div>
+              <div class="faq-key">←</div>
+              <div class="faq-key">0</div>
+              <div class="faq-key" style="font-size:14px;">CLEAR</div>
+            </div>
 
-          <div class="faq-key">4</div>
-          <div class="faq-key">5</div>
-          <div class="faq-key">6</div>
-
-          <div class="faq-key">7</div>
-          <div class="faq-key">8</div>
-          <div class="faq-key">9</div>
-
-          <div class="faq-key">←</div>
-          <div class="faq-key">0</div>
-          <div class="faq-key" style="font-size:14px;">CLEAR</div>
+            <div class="faq-enter">ENTER</div>
+          </div>
         </div>
-
-        <div class="faq-enter">ENTER</div>
       </div>
     </div>
-
-  </div>
-</div>
 
     <div class="step">
       <div class="step-number">7</div>
