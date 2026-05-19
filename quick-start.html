@@ -233,6 +233,129 @@
         font-size: 30px;
       }
     }
+  
+    .pairing-illustration {
+      margin-top: 22px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 36px;
+      flex-wrap: wrap;
+      padding: 24px;
+      background: linear-gradient(145deg, #111827, #0b1220);
+      border: 2px dashed #334155;
+      border-radius: 14px;
+    }
+
+    .faq-device {
+      background: linear-gradient(145deg, #050b14, #111827);
+      border-radius: 22px;
+      padding: 12px;
+      border: 1px solid #1e293b;
+      width: 300px;
+      box-shadow:
+        0 18px 40px rgba(0,0,0,.45),
+        inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+
+    .faq-screen {
+      background: #000814;
+      border-radius: 18px;
+      padding: 12px;
+      border: 2px solid rgba(37,99,235,.58);
+      box-shadow:
+        0 0 22px rgba(37,99,235,.25),
+        inset 0 0 28px rgba(37,99,235,.08);
+    }
+
+    .faq-display {
+      height: 72px;
+      margin: 8px 0 10px;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #000, #0a0a0a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    .faq-pad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .faq-key {
+      height: 48px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #6f8198 0%, #556983 14%, #3a4c63 55%, #243346 100%);
+      border: 1px solid rgba(255,255,255,0.16);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 22px;
+      box-shadow:
+        inset 0 2px 0 rgba(255,255,255,0.22),
+        inset 0 -10px 18px rgba(0,0,0,0.28),
+        0 5px 14px rgba(0,0,0,0.42);
+    }
+
+    .faq-enter {
+      margin-top: 10px;
+      height: 52px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #4d7cff 0%, #2f5df5 18%, #1b4fd6 55%, #1039a8 100%);
+      border: 1px solid rgba(255,255,255,0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 22px;
+      box-shadow:
+        0 0 24px rgba(37,99,235,0.60),
+        inset 0 2px 0 rgba(255,255,255,0.28),
+        inset 0 -12px 20px rgba(0,0,0,0.22);
+    }
+
+    .pairing-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #ef4444;
+      font-weight: 800;
+      font-size: 20px;
+      text-align: center;
+    }
+
+    .pairing-arrow svg {
+      width: 180px;
+      height: 80px;
+      overflow: visible;
+    }
+
+    @media (max-width: 900px) {
+      .pairing-illustration {
+        gap: 18px;
+        padding: 18px;
+      }
+
+      .faq-device {
+        width: 260px;
+      }
+
+      .pairing-arrow svg {
+        width: 120px;
+        height: 60px;
+      }
+
+      .pairing-arrow {
+        font-size: 16px;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -357,9 +480,50 @@
         <li>Enter the 6-digit pairing code</li>
         <li>Press <strong>ENTER</strong></li>
       </ul>
-      <div class="image-placeholder">
-        Screenshot Placeholder<br>
-        CodeBox Display Showing PAIR Menu
+      <div class="pairing-illustration">
+        <div class="faq-device">
+          <div class="faq-screen">
+            <div style="text-align:center;">
+              <img src="washtrac-logo.png" alt="WashTrac" style="width:110px;height:auto;">
+            </div>
+
+            <div class="faq-display">PAIR</div>
+
+            <div class="faq-pad">
+              <div class="faq-key">1</div>
+              <div class="faq-key">2</div>
+              <div class="faq-key">3</div>
+              <div class="faq-key">4</div>
+              <div class="faq-key">5</div>
+              <div class="faq-key">6</div>
+              <div class="faq-key">7</div>
+              <div class="faq-key">8</div>
+              <div class="faq-key">9</div>
+              <div class="faq-key">←</div>
+              <div class="faq-key">0</div>
+              <div class="faq-key" style="font-size:14px;">CLEAR</div>
+            </div>
+
+            <div class="faq-enter">ENTER</div>
+          </div>
+        </div>
+
+        <div class="pairing-arrow">
+          <svg viewBox="0 0 180 80" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+                <polygon points="0 0, 12 6, 0 12" fill="#ef4444"/>
+              </marker>
+            </defs>
+            <path d="M170 15 C110 15, 80 30, 28 54"
+                  fill="none"
+                  stroke="#ef4444"
+                  stroke-width="8"
+                  stroke-linecap="round"
+                  marker-end="url(#arrowhead)"/>
+          </svg>
+          Hold BACK<br>for 3 Seconds
+        </div>
       </div>
     </div>
 
