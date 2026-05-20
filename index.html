@@ -53,26 +53,17 @@
 }
 
 
- header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 40px;
-  background:
-    radial-gradient(
-      circle at 9% 0%,
-      rgba(37, 99, 235, 0.60) 0%,
-      rgba(37, 99, 235, 0.27) 3.4%,
-      rgba(37, 99, 235, 0.095) 5.5%,
-      rgba(37, 99, 235, 0.035) 7.2%,
-      transparent 8.8%
-    ),
-    rgba(2, 6, 23, 0.92);
-  border-bottom: 1px solid #1e293b;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 40px;
+      background: rgba(2, 6, 23, 0.92);
+      border-bottom: 1px solid #1e293b;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
 
     .menu-btn {
       background: #1b4fd6;
@@ -336,9 +327,9 @@
 
 .screen-title {
   text-align:center;
-  font-size:34px;
+  font-size:32px;
   letter-spacing:1px;
-  font-weight:600;
+  font-weight:800;
   color:#ffffff;
 }
 
@@ -681,32 +672,22 @@
     }
 
     /* DESKTOP ONLY: keep hero text in original position, move keypad only underneath */
-    @media (min-width: 901px) {
-      .hero {
-        padding: 30px 30px 90px;
-      }
+  @media (min-width: 901px) {
+  .hero {
+    padding: 30px 30px 0;
+  }
 
-      .who-for {
-        padding: 70px 30px;
-        margin-top: 0;
-      }
+  .who-for {
+    margin-top: -60px;
+  }
 
-      .section {
-        padding: 70px 40px;
-      }
-
-      .cards {
-        grid-template-columns: repeat(4, 1fr);
-      }
-
-      .hero-inner {
-        grid-template-columns: 1fr 0.86fr;
-        grid-template-rows: auto auto;
-        align-items: start;
-        min-height: auto;
-        padding: 10px 0 0;
-      }
-
+  .hero-inner {
+    grid-template-columns: 1fr 0.86fr;
+    grid-template-rows: auto auto;
+    align-items: start;
+    min-height: auto;
+    padding: 10px 0 0;
+  }
       .hero-inner > div:first-child {
         grid-column: 1;
         grid-row: 1;
@@ -718,17 +699,14 @@
         justify-self: start;
         display: flex;
         justify-content: flex-start;
+        transform: scale(0.88);
+        transform-origin: top left;
         margin-top: 30px;
-        margin-left: -60px;
-        margin-bottom: 80px;
-        transform: none;
       }
 
       .device {
-        width: 390px;
         margin-left: 0;
         margin-right: 0;
-        transform: none;
       }
     }
 
@@ -752,51 +730,8 @@
     }
 
     @media (max-width: 900px) {
-      header {
-        padding: 16px 20px;
-        background:
-          radial-gradient(
-            circle at 18% 0%,
-            rgba(37, 99, 235, 0.82) 0%,
-            rgba(37, 99, 235, 0.45) 5.5%,
-            rgba(37, 99, 235, 0.18) 9.0%,
-            rgba(37, 99, 235, 0.06) 12.0%,
-            transparent 15.0%
-          ),
-          rgba(2, 6, 23, 0.92);
-      }
-
-      .header-logo {
-        width: 200px;
-      }
-
-      .menu-panel {
-        top: 70px;
-        right: 12px;
-        width: 220px;
-      }
-
-      .hero {
-        min-height: auto !important;
-        padding: 50px 20px 0;
-      }
-
-      .hero-inner {
-        min-height: auto !important;
-        padding-bottom: 0;
-        gap: 0 !important;
-      }
-
-      .hero h1 {
-        font-size: 48px;
-      }
-
-      .hero h2 {
-        font-size: 22px;
-      }
-
-      .hero p {
-        font-size: 19px;
+      .cards {
+        grid-template-columns: 1fr;
       }
 
       .hero::before {
@@ -805,75 +740,110 @@
         background-size: cover !important;
         background-repeat: no-repeat !important;
       }
-
-      .device-wrap {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: 60px auto 40px;
-      }
-
-      .device {
-        width: 320px;
-        transform: scale(0.9) scaleY(1.1);
-        transform-origin: top center;
-      }
-
-      .screen {
-        padding: 12px;
-      }
-
-      .code-display {
-        height: 70px;
-        margin-top: 6px;
-        margin-bottom: 10px;
-      }
-
-      .screen-title {
-        font-size: 22px;
-      }
-
-      .pad {
-        gap: 8px;
-      }
-
-      .pad div {
-        height: 48px;
-        font-size: 22px;
-      }
-
-      .pad .back {
-        display: flex;
-        align-items: flex-start;
-        justify-content: center;
-        padding-top: 0;
-      }
-
-      .start {
-        height: 52px;
-        font-size: 22px;
-        margin-top: 10px;
-      }
-
-      .who-for {
-        padding: 35px 30px 70px;
-        margin-top: 0 !important;
-      }
-
-      .section {
-        padding: 55px 20px;
-      }
-
-      .cards {
-        grid-template-columns: 1fr;
-      }
-
-      .status-grid,
-      .bay-mini-grid {
-        grid-template-columns: 1fr;
-      }
     }
 
+   @media (max-width: 900px) {
+  header {
+    padding: 16px 20px;
+  }
+
+  .header-logo{
+    width:200px;
+  }
+
+  .menu-panel {
+    top: 70px;
+    right: 12px;
+    width: 220px;
+  }
+
+  .hero {
+    min-height: auto !important;
+    padding: 50px 20px 0;
+  }
+
+  .hero-inner {
+    min-height: auto !important;
+    padding-bottom: 0;
+    gap: 0 !important;
+  }
+
+  .hero h1 {
+    font-size: 48px;
+  }
+
+  .hero h2 {
+    font-size: 22px;
+  }
+
+  .hero p {
+    font-size: 19px;
+  }
+
+  .device-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 60px auto 40px;
+}
+
+.device {
+  width: 320px;
+   transform: scale(0.9) scaleY(1.1); 
+  transform-origin: top center;
+}
+
+.screen {
+  padding: 12px;
+}
+
+.code-display {
+  height: 70px;
+  margin-top: 6px;
+  margin-bottom: 10px;
+}
+
+.screen-title {
+  font-size: 22px;
+}
+
+.pad {
+  gap: 8px;
+}
+
+.pad div {
+  height: 48px;
+  font-size: 22px;
+}
+
+ .pad .back {
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding-top:0px;   
+  }
+
+.start {
+  height: 52px;
+  font-size: 22px;
+  margin-top: 10px;
+}
+
+.who-for {
+    padding: 35px 30px 70px;
+    margin-top: 0 !important;
+  }
+
+  .section {
+    padding: 55px 20px;
+  }
+
+  .status-grid,
+  .bay-mini-grid {
+    grid-template-columns: 1fr;
+  }
+}
+  
     /* Admin Login Modal */
     .admin-modal {
       display: none;
