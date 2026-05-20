@@ -687,7 +687,16 @@
       }
 
       .who-for {
+        padding: 70px 30px;
         margin-top: 0;
+      }
+
+      .section {
+        padding: 70px 40px;
+      }
+
+      .cards {
+        grid-template-columns: repeat(4, 1fr);
       }
 
       .hero-inner {
@@ -710,7 +719,7 @@
         display: flex;
         justify-content: flex-start;
         margin-top: 30px;
-        margin-left: -35px;
+        margin-left: -60px;
         margin-bottom: 80px;
         transform: none;
       }
@@ -719,7 +728,7 @@
         width: 390px;
         margin-left: 0;
         margin-right: 0;
-        transform: none !important;
+        transform: none;
       }
     }
 
@@ -743,17 +752,6 @@
     }
 
     @media (max-width: 900px) {
-      .cards {
-        grid-template-columns: 1fr;
-      }
-
-      .hero::before {
-        background-image: url("/Carwash.png") !important;
-        background-position: center top !important;
-        background-size: cover !important;
-        background-repeat: no-repeat !important;
-      }
-
       header {
         padding: 16px 20px;
         background:
@@ -801,6 +799,13 @@
         font-size: 19px;
       }
 
+      .hero::before {
+        background-image: url("/Carwash.png") !important;
+        background-position: center top !important;
+        background-size: cover !important;
+        background-repeat: no-repeat !important;
+      }
+
       .device-wrap {
         display: flex;
         justify-content: center;
@@ -841,7 +846,7 @@
         display: flex;
         align-items: flex-start;
         justify-content: center;
-        padding-top: 0px;
+        padding-top: 0;
       }
 
       .start {
@@ -859,115 +864,13 @@
         padding: 55px 20px;
       }
 
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
       .status-grid,
       .bay-mini-grid {
         grid-template-columns: 1fr;
-      }
-    }
-
-
-    /* DESKTOP RESET: keeps mobile sizing from affecting the main page */
-    @media (min-width: 901px) {
-      .header-logo {
-        width: 240px;
-      }
-
-      .hero {
-        min-height: 100vh;
-        padding: 30px 30px 90px;
-      }
-
-      .hero-inner {
-        max-width: 1200px;
-        grid-template-columns: 1fr 0.86fr;
-        grid-template-rows: auto auto;
-        gap: 40px;
-        align-items: start;
-      }
-
-      .hero h1 {
-        font-size: 56px;
-      }
-
-      .hero h2 {
-        font-size: 28px;
-      }
-
-      .hero p {
-        font-size: 20px;
-      }
-
-      .device-wrap {
-        grid-column: 1;
-        grid-row: 2;
-        justify-self: start;
-        margin-top: 30px;
-        margin-left: -35px;
-        margin-bottom: 80px;
-      }
-
-      .device {
-        width: 390px;
-        transform: none !important;
-      }
-
-      .screen {
-        padding: 16px;
-      }
-
-      .code-display {
-        height: 96px;
-        margin-top: 10px;
-        margin-bottom: 14px;
-      }
-
-      .screen-title {
-        font-size: 34px;
-      }
-
-      .pad {
-        gap: 12px;
-      }
-
-      .pad div {
-        height: 64px;
-        font-size: 30px;
-      }
-
-      .start {
-        height: 68px;
-        font-size: 28px;
-        margin-top: 14px;
-      }
-
-      .who-for {
-        padding: 70px 30px;
-      }
-
-      .section {
-        padding: 70px 40px;
-        max-width: 1100px;
-      }
-
-      .section h2 {
-        font-size: 40px;
-      }
-
-      .section-intro {
-        font-size: 18px;
-      }
-
-      .cards {
-        grid-template-columns: repeat(4, 1fr);
-      }
-
-      .system-demo-wrap {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .status-grid,
-      .bay-mini-grid {
-        grid-template-columns: 1fr 1fr;
       }
     }
 
