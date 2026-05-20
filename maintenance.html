@@ -1547,14 +1547,14 @@ async function saveLteConfig(){
 }
 
 const RELAY_OUTPUT_DEFAULTS = [
-  { output_key:"ss", output_label:"SS Relay", default_name:"Wash Trigger", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds" },
-  { output_key:"relay1", output_label:"Relay 1", default_name:"Spare", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds" },
-  { output_key:"relay2", output_label:"Relay 2", default_name:"Spare", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds" },
-  { output_key:"relay3", output_label:"Relay 3", default_name:"Spare", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds" },
-  { output_key:"relay4", output_label:"Relay 4", default_name:"Spare", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds" },
-  { output_key:"relay5", output_label:"Relay 5", default_name:"Spare", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds" }
+  { output_key:"ss", output_label:"SS Relay", default_name:"Wash Trigger", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:true },
+  { output_key:"relay1", output_label:"Relay 1", default_name:"Spare", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false },
+  { output_key:"relay2", output_label:"Relay 2", default_name:"Spare", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false },
+  { output_key:"relay3", output_label:"Relay 3", default_name:"Spare", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false },
+  { output_key:"relay4", output_label:"Relay 4", default_name:"Spare", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false },
+  { output_key:"relay5", output_label:"Relay 5", default_name:"Spare", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false }
 ];
-
+  
 function setRelayOutputStatus(message, tone=""){
   const box = document.getElementById("relayOutputStatus");
   if(!box) return;
