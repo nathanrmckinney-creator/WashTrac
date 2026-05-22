@@ -271,6 +271,31 @@ async function createFirstSiteForUser() {
   return { data };
 }
 
+async function forgotPassword() {
+  clearStatus();
+
+  const email = document.getElementById("user").value.trim();
+
+  if (!email) {
+    setStatus("Enter your email first.", "error");
+    return;
+  }
+
+  const { error } = await client.auth.resetPasswordForEmail(email, {
+    redirectTo: "https://thewashtrac.com/reset-password.html"
+  });
+
+  if (error) {
+    setStatus(error.message, "error");
+    return;
+  }
+
+  setStatus(
+    "Password reset email sent. Check your inbox.",
+    "success"
+  );
+}
+  
 async function login(event) {
   event.preventDefault();
   clearStatus();
