@@ -959,26 +959,31 @@ height: 100vh;
       .activity-row{grid-template-columns:1fr}
     }
 
-    @media (max-width:900px){
-      .wifi-grid{grid-template-columns:1fr}
+   @media (max-width:900px){
+  .wifi-grid{grid-template-columns:1fr}
 
-      .app{display:block}
-      .sidebar{display:none}
-      .mobile-topbar{display:flex}
-      .main{padding:20px}
-      .dashboard-menu-wrap{display:none}
-      .page-header{
-        padding-right:0;
-      }
-      .page-header h1{font-size:34px}
-      .summary{grid-template-columns:1fr}
-      .cost-allocation-grid,.cost-metric-grid{grid-template-columns:1fr}
-      .department-billing-list{grid-template-columns:1fr;}
-      .department-billing-row:nth-last-child(-n+2){border-bottom:1px solid #1f2937;}
-      .department-billing-row:last-child{border-bottom:none;}
-      .control-grid,.field-grid,.bay-editor-grid,.dashboard-compact-grid{grid-template-columns:1fr}
-      .weekly-lockout-head,.weekly-lockout-row{grid-template-columns:1fr .8fr .8fr}
-    }
+  .app{display:block}
+  .sidebar{display:none}
+  .mobile-topbar{display:flex}
+
+  .main{
+    padding:20px;
+    margin-left:0;
+  }
+
+  .dashboard-menu-wrap{display:none}
+  .page-header{
+    padding-right:0;
+  }
+
+  .page-header h1{font-size:34px}
+  .summary{grid-template-columns:1fr}
+  .cost-allocation-grid,.cost-metric-grid{grid-template-columns:1fr}
+  .department-billing-list{grid-template-columns:1fr;}
+  .department-billing-row:nth-last-child(-n+2){border-bottom:1px solid #1f2937;}
+  .department-billing-row:last-child{border-bottom:none;}
+  .control-grid,.field-grid,.bay-editor-grid,.dashboard-compact-grid{grid-template-columns:1fr}
+}
   </style>
 </head>
 
