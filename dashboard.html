@@ -642,10 +642,10 @@
     }
 
     .cost-department-list{
-      margin-top:14px;
+      margin-top:12px;
       display:grid;
       grid-template-columns:repeat(4,1fr);
-      gap:12px;
+      gap:10px;
     }
 
     .cost-department-card{
@@ -664,10 +664,10 @@
 
     .cost-department-name{
       font-size:14px;
-      font-weight:800;
       color:white;
-      margin:0;
+      font-weight:800;
       line-height:1.2;
+      margin:0;
       white-space:nowrap;
     }
 
@@ -675,17 +675,17 @@
       font-size:14px;
       font-weight:700;
       color:#cbd5e1;
-      margin:0;
       line-height:1.2;
+      margin:0;
       white-space:nowrap;
     }
 
     .cost-department-total{
-      font-size:14px;
-      font-weight:900;
       color:#86efac;
-      margin:0;
+      font-weight:900;
+      font-size:14px;
       line-height:1.2;
+      margin:0;
       white-space:nowrap;
     }
 
@@ -1744,7 +1744,7 @@
     function cleanDeviceDisplayName(value){
       const raw = String(value || "").trim();
       if(!raw) return "Keypad";
-      return raw.replace(/Keypad/gi, "Keypad");
+      return raw.replace(/CodeBox/gi, "Keypad");
     }
 
     function money(value){
@@ -2555,62 +2555,6 @@
       if(input){
         input.value = Number(currentCostPerCar || 0).toFixed(2);
       }
-
-      const now = new Date();
-
-      const departmentTotals = {};
-      BILLING_DEPARTMENT_ORDER.forEach(department => {
-        departmentTotals[department] = {
-          department,
-          count: 0,
-          total: 0
-        };
-      });
-
-      let todayCost = 0;
-      let monthCost = 0;
-
-      (activityRows || []).forEach(row => {
-        if(!isBillableWash(row)) return;
-
-        const eventDate = new Date(row.event_time || row.created_at || Date.now());
-        if(isNaN(eventDate.getTime())) return;
-
-        const department = normalizeBillingDepartment(row.department || row.metadata?.department);
-        if(!department || !departmentTotals[department]) return;
-
-        const storedCost = parseCostPerCar(row.cost_per_car || row.metadata?.cost_per_car);
-        const effectiveCost = storedCost > 0 ? storedCost : currentCostPerCar;
-
-        if(sameLocalMonth(eventDate, now)){
-          departmentTotals[department].count += 1;
-          departmentTotals[department].total += effectiveCost;
-          monthCost += effectiveCost;
-        }
-
-        if(sameLocalDay(eventDate, now)){
-          todayCost += effectiveCost;
-        }
-      });
-
-      if(todayTotal) todayTotal.innerText = money(todayCost);
-      if(monthTotal) monthTotal.innerText = money(monthCost);
-
-      if(list){
-        list.innerHTML = BILLING_DEPARTMENT_ORDER.map(department => {
-          const item = departmentTotals[department] || { count:0, total:0 };
-          const carLabel = item.count === 1 ? "Car" : "Cars";
-
-          return `
-            <div class="cost-department-card">
-              <div class="cost-department-name">${escapeHtml(department)}</div>
-              <div class="cost-department-cars">${item.count} ${carLabel}</div>
-              <div class="cost-department-total">${money(item.total)}</div>
-            </div>
-          `;
-        }).join("");
-      }
-    }
 
       const now = new Date();
 
