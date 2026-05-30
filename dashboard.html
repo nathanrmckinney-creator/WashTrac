@@ -652,18 +652,20 @@
       background:#0b1220;
       border:1px solid #1f2937;
       border-radius:12px;
-      padding:14px;
-      min-height:110px;
+      padding:14px 14px 13px;
+      min-height:96px;
       display:flex;
       flex-direction:column;
-      justify-content:center;
+      justify-content:space-between;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
     }
 
     .cost-department-name{
       font-size:14px;
       color:#94a3b8;
+      font-weight:800;
+      line-height:1.1;
       margin-bottom:8px;
-      font-weight:700;
     }
 
     .cost-department-cars{
@@ -671,13 +673,14 @@
       font-weight:900;
       color:white;
       line-height:1;
+      margin-bottom:7px;
     }
 
     .cost-department-total{
-      margin-top:6px;
-      color:#4ade80;
-      font-weight:800;
+      color:#86efac;
+      font-weight:900;
       font-size:15px;
+      line-height:1;
     }
 
     .brand-accent{
@@ -2537,56 +2540,70 @@
       scheduleDashboardRefresh(500);
     }
 
-    function renderCostAllocation(activity, costPerCar){
+    function renderCostAllocation(activityRows){
       const input = document.getElementById("costPerCarInput");
       const todayTotal = document.getElementById("todayCostTotal");
       const monthTotal = document.getElementById("monthCostTotal");
       const list = document.getElementById("costDepartmentList");
 
-      currentCostPerCar = parseCostPerCar(costPerCar);
-
-      if(input && document.activeElement !== input){
-        input.value = currentCostPerCar.toFixed(2);
+      if(input){
+        input.value = Number(currentCostPerCar || 0).toFixed(2);
       }
 
       const now = new Date();
-      const billableRows = (activity || []).filter(row => {
-        if(!isBillableWash(row) || !row.event_time) return false;
-        const date = new Date(row.event_time);
-        return !isNaN(date.getTime());
+
+      const departmentTotals = {};
+      BILLING_DEPARTMENT_ORDER.forEach(dept => {
+        departmentTotals[dept] = {
+          department: dept,
+          count: 0,
+          total: 0
+        };
       });
 
-      const todayRows = billableRows.filter(row => sameLocalDay(new Date(row.event_time), now));
-      const monthRows = billableRows.filter(row => sameLocalMonth(new Date(row.event_time), now));
+      let todayCost = 0;
+      let monthCost = 0;
 
-      if(todayTotal) todayTotal.innerText = money(todayRows.length * currentCostPerCar);
-      if(monthTotal) monthTotal.innerText = money(monthRows.length * currentCostPerCar);
+      (activityRows || []).forEach(row => {
+        if(!isBillableWash(row)) return;
 
-      if(!list) return;
+        const eventDate = new Date(row.event_time || row.created_at || Date.now());
+        if(isNaN(eventDate.getTime())) return;
 
-      const map = {};
-      monthRows.forEach(row => {
-        const department = normalizeBillingDepartment(row.department);
-        if(!department) return;
+        const department = normalizeBillingDepartment(row.department || row.metadata?.department);
+        if(!department || !departmentTotals[department]) return;
 
-        if(!map[department]) map[department] = { department, cars:0, total:0 };
-        map[department].cars += 1;
-        map[department].total += currentCostPerCar;
+        const storedCost = parseCostPerCar(row.cost_per_car || row.metadata?.cost_per_car);
+        const effectiveCost = storedCost > 0 ? storedCost : currentCostPerCar;
+
+        if(sameLocalMonth(eventDate, now)){
+          departmentTotals[department].count += 1;
+          departmentTotals[department].total += effectiveCost;
+          monthCost += effectiveCost;
+        }
+
+        if(sameLocalDay(eventDate, now)){
+          todayCost += effectiveCost;
+        }
       });
 
-      const departments = sortBillingDepartments(Object.values(map));
+      if(todayTotal) todayTotal.innerText = money(todayCost);
+      if(monthTotal) monthTotal.innerText = money(monthCost);
 
-      if(!departments.length){
-        list.innerHTML = `<div class="list-row"><span>No cost activity this month.</span><span>${money(0)}</span></div>`;
-        return;
+      if(list){
+        list.innerHTML = BILLING_DEPARTMENT_ORDER.map(department => {
+          const item = departmentTotals[department] || { count:0, total:0 };
+          const carLabel = item.count === 1 ? "Car" : "Cars";
+
+          return `
+            <div class="cost-department-card">
+              <div class="cost-department-name">${escapeHtml(department)}</div>
+              <div class="cost-department-cars">${item.count} ${carLabel}</div>
+              <div class="cost-department-total">${money(item.total)}</div>
+            </div>
+          `;
+        }).join("");
       }
-
-      list.innerHTML = departments.map(item => `
-        <div class="list-row">
-          <span>${escapeHtml(item.department)} — ${item.cars} car${item.cars === 1 ? "" : "s"}</span>
-          <span>${money(item.total)}</span>
-        </div>
-      `).join("");
     }
 
     function getLastSeenDate(device){
