@@ -390,6 +390,7 @@
     }
 
     input[type="time"],
+    input[type="number"],
     select{
       width:100%;
       padding:12px;
@@ -564,6 +565,86 @@
   line-height:1;
 }
 
+
+
+    .cost-allocation-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+      align-items:start;
+    }
+
+    .cost-input-row{
+      display:flex;
+      gap:12px;
+      align-items:flex-end;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
+
+    .cost-input-wrap{
+      flex:1;
+      min-width:180px;
+    }
+
+    .cost-input-wrap label{
+      display:block;
+      font-size:13px;
+      color:#94a3b8;
+      margin-bottom:8px;
+    }
+
+    .cost-input-prefix{
+      display:flex;
+      align-items:center;
+      background:#0b1220;
+      border:1px solid #334155;
+      border-radius:8px;
+      overflow:hidden;
+    }
+
+    .cost-input-prefix span{
+      padding:0 12px;
+      color:#94a3b8;
+      font-weight:900;
+    }
+
+    .cost-input-prefix input{
+      border:none;
+      border-left:1px solid #334155;
+      border-radius:0;
+      background:#0b1220;
+    }
+
+    .cost-metric-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-top:14px;
+    }
+
+    .cost-metric{
+      background:#0b1220;
+      border:1px solid #1f2937;
+      border-radius:12px;
+      padding:14px;
+    }
+
+    .cost-metric strong{
+      display:block;
+      font-size:26px;
+      margin-bottom:5px;
+    }
+
+    .cost-metric span{
+      color:#94a3b8;
+      font-size:13px;
+    }
+
+    .cost-department-list{
+      margin-top:14px;
+      border-top:1px solid #1f2937;
+    }
 
     .brand-accent{
       color:#2ea8ff !important;
@@ -795,6 +876,7 @@
       }
       .page-header h1{font-size:34px}
       .summary{grid-template-columns:1fr}
+      .cost-allocation-grid,.cost-metric-grid{grid-template-columns:1fr}
       .control-grid,.field-grid,.bay-editor-grid{grid-template-columns:1fr}
       .weekly-lockout-head,.weekly-lockout-row{grid-template-columns:1fr .8fr .8fr}
     }
@@ -943,11 +1025,55 @@
       </div>
 
       <div class="card">
+        <h3>Cost Allocation</h3>
+
+        <div class="cost-allocation-grid">
+          <div>
+            <div class="cost-input-row">
+              <div class="cost-input-wrap">
+                <label for="costPerCarInput">Cost Per Car for this site</label>
+                <div class="cost-input-prefix">
+                  <span>$</span>
+                  <input id="costPerCarInput" type="number" min="0" step="0.01" value="0.00" inputmode="decimal">
+                </div>
+              </div>
+
+              <button type="button" onclick="saveCostPerCar()">Save</button>
+            </div>
+
+            <div id="costPerCarMessage" class="control-status"></div>
+
+            <div class="note">
+              This is a site-level setting. Each successful car is counted at the saved Cost Per Car and grouped by department for billing reports.
+            </div>
+          </div>
+
+          <div>
+            <div class="cost-metric-grid">
+              <div class="cost-metric">
+                <strong id="todayCostTotal">$0.00</strong>
+                <span>Today Total</span>
+              </div>
+
+              <div class="cost-metric">
+                <strong id="monthCostTotal">$0.00</strong>
+                <span>Month-to-Date Total</span>
+              </div>
+            </div>
+
+            <div class="cost-department-list" id="costDepartmentList">
+              <div class="list-row"><span>No cost activity yet.</span><span>$0.00</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
         <h3>Paired Devices</h3>
         <div id="pairedDevicesList" class="paired-devices-list">
           <div class="list-row"><span>Loading paired devices...</span><span>-</span></div>
         </div>
-        <div class="note">CodeBox units currently linked to this active site.</div>
+        <div class="note">Keypads currently linked to this active site.</div>
       </div>
 
 
@@ -1011,7 +1137,7 @@
         <div id="wifiNetworkList" class="wifi-network-list"></div>
 
         <div class="note">
-          Use this section to connect the selected CodeBox to customer Wi-Fi. LTE and advanced connection settings are handled by support only.
+          Use this section to connect the selected Keypad to customer Wi-Fi. LTE and advanced connection settings are handled by support only.
         </div>
       </div>
 
@@ -1200,7 +1326,7 @@
       <h3>Add Device</h3>
 
       <p style="color:#94a3b8; margin-bottom:6px;">
-  Enter this code on the CodeBox to pair device. A site can only have one active pending code at a time.
+  Enter this code on the Keypad to pair device. A site can only have one active pending code at a time.
 </p>
 
 <div style="
@@ -1252,6 +1378,7 @@
     let dashboardRealtimeChannel = null;
     let dashboardRefreshInProgress = false;
     let lastGoodSystemControl = null;
+    let currentCostPerCar = 0;
 
     const DASHBOARD_REFRESH_DELAY_MS = 1200;
     const DASHBOARD_POLL_MS = 25000;
@@ -1522,7 +1649,7 @@
       }
 
       if(!device || !device.id){
-        setBayStatusMessage("No paired CodeBox found for this site.");
+        setBayStatusMessage("No paired Keypad found for this site.");
         return;
       }
 
@@ -1553,7 +1680,7 @@
         return;
       }
 
-      setBayStatusMessage(`Trigger wash queued for ${device.device_name || device.name || "CodeBox"}.`);
+      setBayStatusMessage(`Trigger wash queued for ${device.device_name || device.name || "Keypad"}.`);
       scheduleDashboardRefresh(1500);
     }
 
@@ -1570,6 +1697,54 @@
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+    }
+
+    function money(value){
+      const number = Number(value || 0);
+      return number.toLocaleString(undefined, {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function parseCostPerCar(value){
+      const number = Number(String(value ?? "0").replace(/[^0-9.]/g, ""));
+      if(!Number.isFinite(number) || number < 0) return 0;
+      return Math.round(number * 100) / 100;
+    }
+
+    function setCostPerCarMessage(message){
+      const box = document.getElementById("costPerCarMessage");
+      if(!box) return;
+      box.innerText = message || "";
+      box.classList.add("show");
+    }
+
+    function isBillableWash(row){
+      const text = `${row.event || ""} ${row.status || ""} ${row.metadata?.status || ""} ${row.metadata?.event || ""}`.toLowerCase();
+
+      if(text.includes("invalid") || text.includes("denied") || text.includes("failed") || text.includes("rejected") || text.includes("error")){
+        return false;
+      }
+
+      if(text.includes("add") || text.includes("delete") || text.includes("pair")){
+        return false;
+      }
+
+      return true;
+    }
+
+    function sameLocalDay(dateA, dateB){
+      return dateA.getFullYear() === dateB.getFullYear() &&
+             dateA.getMonth() === dateB.getMonth() &&
+             dateA.getDate() === dateB.getDate();
+    }
+
+    function sameLocalMonth(dateA, dateB){
+      return dateA.getFullYear() === dateB.getFullYear() &&
+             dateA.getMonth() === dateB.getMonth();
     }
 
     function setWifiMessage(message){
@@ -1650,7 +1825,7 @@
       signalText.innerText = `${wifiStrength || 0}/4`;
       setWifiSignalBars(wifiStrength);
 
-      meta.innerText = `SSID: ${wifiSsid || "Unknown"} • Strength: ${wifiStrength || 0}/4 • Device: ${device.device_name || device.name || device.nickname || "CodeBox"}`;
+      meta.innerText = `SSID: ${wifiSsid || "Unknown"} • Strength: ${wifiStrength || 0}/4 • Device: ${device.device_name || device.name || device.nickname || "Keypad"}`;
 
       if(wifiSsid && !document.getElementById("wifiSsid").value){
         document.getElementById("wifiSsid").value = wifiSsid;
@@ -1746,7 +1921,7 @@
       }
 
       if(!device || !device.id){
-        setWifiMessage("No paired CodeBox found for this site.");
+        setWifiMessage("No paired Keypad found for this site.");
         return false;
       }
 
@@ -1769,7 +1944,7 @@
         return false;
       }
 
-      setWifiMessage(`Queued ${command} for ${device.device_name || device.name || "CodeBox"}.`);
+      setWifiMessage(`Queued ${command} for ${device.device_name || device.name || "Keypad"}.`);
       return true;
     }
 
@@ -1825,7 +2000,10 @@
         department: cleanValue(row.department, cleanValue(row.metadata?.department, "Unassigned")),
         name: activityDevice(row),
         bay: cleanValue(row.bay, cleanValue(row.metadata?.bay, "")),
-        event: cleanValue(row.event, cleanValue(row.status, cleanValue(row.metadata?.event, "")))
+        event: cleanValue(row.event, cleanValue(row.status, cleanValue(row.metadata?.event, ""))),
+        status: cleanValue(row.status, cleanValue(row.metadata?.status, "")),
+        metadata: row.metadata || {},
+        cost_per_car: parseCostPerCar(cleanValue(row.cost_per_car, cleanValue(row.metadata?.cost_per_car, "")))
       };
     }
 
@@ -2213,6 +2391,101 @@
       return data || [];
     }
 
+    async function fetchActiveSiteSettings(siteId){
+      if(!siteId) return null;
+
+      const { data, error } = await client
+        .from("sites")
+        .select("id, cost_per_car")
+        .eq("id", siteId)
+        .maybeSingle();
+
+      if(error){
+        console.log("Cost Per Car load error:", error);
+        return null;
+      }
+
+      return data || null;
+    }
+
+    async function saveCostPerCar(){
+      const siteId = getActiveSiteId();
+      const input = document.getElementById("costPerCarInput");
+
+      if(!siteId){
+        setCostPerCarMessage("No active site selected.");
+        return;
+      }
+
+      const value = parseCostPerCar(input ? input.value : 0);
+
+      const { error } = await client
+        .from("sites")
+        .update({ cost_per_car: value })
+        .eq("id", siteId);
+
+      if(error){
+        console.log("Cost Per Car save error:", error);
+        setCostPerCarMessage("Could not save Cost Per Car. Make sure the sites table has a cost_per_car column.");
+        return;
+      }
+
+      currentCostPerCar = value;
+      if(input) input.value = value.toFixed(2);
+      setCostPerCarMessage(`Saved Cost Per Car at ${money(value)} for this site.`);
+      scheduleDashboardRefresh(500);
+    }
+
+    function renderCostAllocation(activity, costPerCar){
+      const input = document.getElementById("costPerCarInput");
+      const todayTotal = document.getElementById("todayCostTotal");
+      const monthTotal = document.getElementById("monthCostTotal");
+      const list = document.getElementById("costDepartmentList");
+
+      currentCostPerCar = parseCostPerCar(costPerCar);
+
+      if(input && document.activeElement !== input){
+        input.value = currentCostPerCar.toFixed(2);
+      }
+
+      const now = new Date();
+      const billableRows = (activity || []).filter(row => {
+        if(!isBillableWash(row) || !row.event_time) return false;
+        const date = new Date(row.event_time);
+        return !isNaN(date.getTime());
+      });
+
+      const todayRows = billableRows.filter(row => sameLocalDay(new Date(row.event_time), now));
+      const monthRows = billableRows.filter(row => sameLocalMonth(new Date(row.event_time), now));
+
+      if(todayTotal) todayTotal.innerText = money(todayRows.length * currentCostPerCar);
+      if(monthTotal) monthTotal.innerText = money(monthRows.length * currentCostPerCar);
+
+      if(!list) return;
+
+      const map = {};
+      monthRows.forEach(row => {
+        const department = row.department || "Unassigned";
+        if(!map[department]) map[department] = { department, cars:0, total:0 };
+        map[department].cars += 1;
+        map[department].total += currentCostPerCar;
+      });
+
+      const departments = Object.values(map).sort((a,b) => b.total - a.total);
+
+      if(!departments.length){
+        list.innerHTML = `<div class="list-row"><span>No cost activity this month.</span><span>${money(0)}</span></div>`;
+        return;
+      }
+
+      list.innerHTML = departments.map(item => `
+        <div class="list-row">
+          <span>${escapeHtml(item.department)} — ${item.cars} car${item.cars === 1 ? "" : "s"}</span>
+          <span>${money(item.total)}</span>
+        </div>
+      `).join("");
+    }
+
     function getLastSeenDate(device){
       const rawLastSeen = device.last_seen || device.last_heartbeat || device.heartbeat_at || device.updated_at || null;
       return rawLastSeen ? new Date(rawLastSeen) : null;
@@ -2279,7 +2552,7 @@
       }
 
       devices.forEach(device => {
-        const name = escapeHtml(device.name || device.device_name || device.label || "CodeBox");
+        const name = escapeHtml(device.name || device.device_name || device.label || "Keypad");
         const identifier = escapeHtml(device.device_id || device.serial_number || device.serial || device.id || "Unknown");
         const pairedDate = device.created_at ? new Date(device.created_at).toLocaleDateString() : "Unknown date";
         const lastSeen = getLastSeenDate(device);
@@ -2646,6 +2919,7 @@
       window.dashboardPairedDevices = [];
       renderPairedDevices([]);
       renderWifiSupport(null);
+      renderCostAllocation([], 0);
     }
 
     async function loadDashboard(){
@@ -2668,14 +2942,16 @@
           allActivity,
           control,
           bays,
-          pairedDevices
+          pairedDevices,
+          activeSiteSettings
         ] = await Promise.all([
           fetchCodes(activeSiteId),
           fetchRecentActivity(activeSiteId),
           fetchAllActivity(activeSiteId),
           fetchSystemControl(activeSiteId),
           fetchBayStatus(activeSiteId),
-          fetchPairedDevices(activeSiteId)
+          fetchPairedDevices(activeSiteId),
+          fetchActiveSiteSettings(activeSiteId)
         ]);
 
         if(loadToken !== dashboardLoadToken) return;
@@ -2698,6 +2974,7 @@
 
         renderRecentActivity(recentActivity);
         renderTopCodes(codeUsage);
+        renderCostAllocation(allActivity, activeSiteSettings?.cost_per_car ?? 0);
         renderDepartmentChart(departments);
         renderDailyChart(daily);
         window.dashboardPairedDevices = pairedDevices || [];
