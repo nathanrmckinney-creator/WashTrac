@@ -640,53 +640,58 @@
       color:#94a3b8;
       font-size:13px;
     }
-
-    .cost-department-list{
-      margin-top:12px;
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:10px;
-    }
-
-    .cost-department-card{
-      background:#0b1220;
-      border:1px solid #1f2937;
-      border-radius:10px;
-      padding:10px 12px;
-      min-height:auto;
-      display:flex;
-      flex-direction:row;
+    .cost-apply-all-row{
       align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+      margin-top:14px;
+      margin-bottom:0;
     }
 
-    .cost-department-name{
-      font-size:14px;
+    .cost-apply-all-row input{
+      width:16px;
+      height:16px;
+      margin:0;
+      accent-color:#1ea7ff;
+    }
+
+    .department-billing-list{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:0 24px;
+    }
+
+    .department-billing-row{
+      display:grid;
+      grid-template-columns:1.25fr .75fr .75fr .9fr;
+      gap:10px;
+      align-items:center;
+      padding:11px 0;
+      border-bottom:1px solid #1f2937;
+      color:#dbe5fb;
+    }
+
+    .department-billing-row:nth-last-child(-n+2){
+      border-bottom:none;
+    }
+
+    .department-billing-dept{
       color:white;
       font-weight:800;
-      line-height:1.2;
-      margin:0;
-      white-space:nowrap;
+      min-width:0;
     }
 
-    .cost-department-cars{
-      font-size:14px;
-      font-weight:700;
+    .department-billing-cars,
+    .department-billing-rate{
       color:#cbd5e1;
-      line-height:1.2;
-      margin:0;
+      font-size:14px;
       white-space:nowrap;
+      text-align:right;
     }
 
-    .cost-department-total{
+    .department-billing-total{
       color:#86efac;
       font-weight:900;
-      font-size:14px;
-      line-height:1.2;
-      margin:0;
       white-space:nowrap;
+      text-align:right;
     }
 
     .brand-accent{
@@ -920,7 +925,9 @@
       .page-header h1{font-size:34px}
       .summary{grid-template-columns:1fr}
       .cost-allocation-grid,.cost-metric-grid{grid-template-columns:1fr}
-      .cost-department-list{grid-template-columns:1fr 1fr;}
+      .department-billing-list{grid-template-columns:1fr;}
+      .department-billing-row:nth-last-child(-n+2){border-bottom:1px solid #1f2937;}
+      .department-billing-row:last-child{border-bottom:none;}
       .control-grid,.field-grid,.bay-editor-grid{grid-template-columns:1fr}
       .weekly-lockout-head,.weekly-lockout-row{grid-template-columns:1fr .8fr .8fr}
     }
@@ -1068,27 +1075,40 @@
         </div>
       </div>
 
+
       <div class="card">
         <h3>Cost Allocation</h3>
 
         <div class="cost-allocation-grid">
           <div>
-            <div class="cost-input-row">
-              <div class="cost-input-wrap">
-                <label for="costPerCarInput">Cost Per Car for this site</label>
+            <div class="field-grid">
+              <div class="field">
+                <label for="costDepartmentSelect">Department</label>
+                <select id="costDepartmentSelect" onchange="handleCostDepartmentChange()"></select>
+              </div>
+
+              <div class="field">
+                <label for="costPerCarInput">Cost Per Car</label>
                 <div class="cost-input-prefix">
                   <span>$</span>
                   <input id="costPerCarInput" type="number" min="0" step="0.01" value="0.00" inputmode="decimal">
                 </div>
               </div>
+            </div>
 
-              <button type="button" onclick="saveCostPerCar()">Save</button>
+            <label class="checkbox-row cost-apply-all-row" for="applyCostToAll">
+              <input type="checkbox" id="applyCostToAll">
+              <span>Apply this price to all departments</span>
+            </label>
+
+            <div class="controls">
+              <button type="button" onclick="saveCostPerCar()">Save Cost Per Car</button>
             </div>
 
             <div id="costPerCarMessage" class="control-status"></div>
 
             <div class="note">
-              This is a site-level setting. Each successful car is counted at the saved Cost Per Car and grouped by department for billing reports.
+              Choose a department from the dropdown and set its Cost Per Car. Check Apply to all departments if every department should use the same amount.
             </div>
           </div>
 
@@ -1105,8 +1125,20 @@
               </div>
             </div>
 
-            <div class="cost-department-list" id="costDepartmentList"></div>
+            <div class="note">
+              Totals are based on successful washes grouped by the department assigned to each code.
+            </div>
           </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Department Billing</h3>
+        <div class="department-billing-list" id="departmentBillingList">
+          <div class="list-row"><span>Loading department billing...</span><span>-</span></div>
+        </div>
+        <div class="note">
+          Shows month-to-date cars, assigned rate, and total cost for each department.
         </div>
       </div>
 
@@ -1421,6 +1453,7 @@
     let dashboardRefreshInProgress = false;
     let lastGoodSystemControl = null;
     let currentCostPerCar = 0;
+    let currentDepartmentCosts = {};
 
     const DASHBOARD_REFRESH_DELAY_MS = 1200;
     const DASHBOARD_POLL_MS = 25000;
@@ -1821,6 +1854,58 @@
       "unassigned",
       ""
     ]);
+
+    function defaultDepartmentCosts(fallback = 0){
+      const costs = {};
+      BILLING_DEPARTMENT_ORDER.forEach(department => {
+        costs[department] = parseCostPerCar(fallback);
+      });
+      return costs;
+    }
+
+    function normalizeDepartmentCosts(value, fallback = 0){
+      const costs = defaultDepartmentCosts(fallback);
+
+      if(value && typeof value === "object" && !Array.isArray(value)){
+        Object.keys(value).forEach(key => {
+          const department = normalizeBillingDepartment(key);
+          if(department){
+            costs[department] = parseCostPerCar(value[key]);
+          }
+        });
+      }
+
+      return costs;
+    }
+
+    function getDepartmentCost(department){
+      const normalized = normalizeBillingDepartment(department);
+      if(!normalized) return parseCostPerCar(currentCostPerCar);
+      return parseCostPerCar(currentDepartmentCosts?.[normalized] ?? currentCostPerCar);
+    }
+
+    function populateCostDepartmentSelect(){
+      const select = document.getElementById("costDepartmentSelect");
+      if(!select) return;
+
+      const previous = select.value || BILLING_DEPARTMENT_ORDER[0];
+
+      select.innerHTML = BILLING_DEPARTMENT_ORDER.map(department => {
+        return `<option value="${escapeHtml(department)}">${escapeHtml(department)}</option>`;
+      }).join("");
+
+      select.value = BILLING_DEPARTMENT_ORDER.includes(previous) ? previous : BILLING_DEPARTMENT_ORDER[0];
+    }
+
+    function handleCostDepartmentChange(){
+      const select = document.getElementById("costDepartmentSelect");
+      const input = document.getElementById("costPerCarInput");
+      const department = select ? select.value : BILLING_DEPARTMENT_ORDER[0];
+
+      if(input){
+        input.value = getDepartmentCost(department).toFixed(2);
+      }
+    }
 
     function normalizeBillingDepartment(value){
       const raw = String(value || "").trim();
@@ -2506,7 +2591,7 @@
 
       const { data, error } = await client
         .from("sites")
-        .select("id, cost_per_car")
+        .select("id, cost_per_car, department_costs")
         .eq("id", siteId)
         .maybeSingle();
 
@@ -2521,28 +2606,52 @@
     async function saveCostPerCar(){
       const siteId = getActiveSiteId();
       const input = document.getElementById("costPerCarInput");
+      const select = document.getElementById("costDepartmentSelect");
+      const applyAll = document.getElementById("applyCostToAll")?.checked === true;
 
       if(!siteId){
         setCostPerCarMessage("No active site selected.");
         return;
       }
 
+      const selectedDepartment = select ? select.value : BILLING_DEPARTMENT_ORDER[0];
       const value = parseCostPerCar(input ? input.value : 0);
+
+      const nextCosts = normalizeDepartmentCosts(currentDepartmentCosts, currentCostPerCar);
+
+      if(applyAll){
+        BILLING_DEPARTMENT_ORDER.forEach(department => {
+          nextCosts[department] = value;
+        });
+      }else{
+        const department = normalizeBillingDepartment(selectedDepartment) || BILLING_DEPARTMENT_ORDER[0];
+        nextCosts[department] = value;
+      }
 
       const { error } = await client
         .from("sites")
-        .update({ cost_per_car: value })
+        .update({
+          department_costs: nextCosts,
+          cost_per_car: value
+        })
         .eq("id", siteId);
 
       if(error){
         console.log("Cost Per Car save error:", error);
-        setCostPerCarMessage("Could not save Cost Per Car. Make sure the sites table has a cost_per_car column.");
+        setCostPerCarMessage("Could not save Cost Per Car. Make sure the sites table has department_costs and cost_per_car columns.");
         return;
       }
 
+      currentDepartmentCosts = nextCosts;
       currentCostPerCar = value;
+
       if(input) input.value = value.toFixed(2);
-      setCostPerCarMessage(`Saved Cost Per Car at ${money(value)} for this site.`);
+
+      const message = applyAll
+        ? `Saved ${money(value)} Cost Per Car for all departments.`
+        : `Saved ${money(value)} Cost Per Car for ${selectedDepartment}.`;
+
+      setCostPerCarMessage(message);
       scheduleDashboardRefresh(500);
     }
 
@@ -2550,20 +2659,25 @@
       const input = document.getElementById("costPerCarInput");
       const todayTotal = document.getElementById("todayCostTotal");
       const monthTotal = document.getElementById("monthCostTotal");
-      const list = document.getElementById("costDepartmentList");
+      const list = document.getElementById("departmentBillingList");
+
+      populateCostDepartmentSelect();
+
+      const selectedDepartment = document.getElementById("costDepartmentSelect")?.value || BILLING_DEPARTMENT_ORDER[0];
 
       if(input){
-        input.value = Number(currentCostPerCar || 0).toFixed(2);
+        input.value = getDepartmentCost(selectedDepartment).toFixed(2);
       }
 
       const now = new Date();
 
       const departmentTotals = {};
-      BILLING_DEPARTMENT_ORDER.forEach(dept => {
-        departmentTotals[dept] = {
-          department: dept,
+      BILLING_DEPARTMENT_ORDER.forEach(department => {
+        departmentTotals[department] = {
+          department,
           count: 0,
-          total: 0
+          total: 0,
+          rate: getDepartmentCost(department)
         };
       });
 
@@ -2580,7 +2694,7 @@
         if(!department || !departmentTotals[department]) return;
 
         const storedCost = parseCostPerCar(row.cost_per_car || row.metadata?.cost_per_car);
-        const effectiveCost = storedCost > 0 ? storedCost : currentCostPerCar;
+        const effectiveCost = storedCost > 0 ? storedCost : getDepartmentCost(department);
 
         if(sameLocalMonth(eventDate, now)){
           departmentTotals[department].count += 1;
@@ -2598,14 +2712,15 @@
 
       if(list){
         list.innerHTML = BILLING_DEPARTMENT_ORDER.map(department => {
-          const item = departmentTotals[department] || { count:0, total:0 };
+          const item = departmentTotals[department] || { count:0, total:0, rate:getDepartmentCost(department) };
           const carLabel = item.count === 1 ? "Car" : "Cars";
 
           return `
-            <div class="cost-department-card">
-              <div class="cost-department-name">${escapeHtml(department)}</div>
-              <div class="cost-department-cars">${item.count} ${carLabel}</div>
-              <div class="cost-department-total">${money(item.total)}</div>
+            <div class="department-billing-row">
+              <div class="department-billing-dept">${escapeHtml(department)}</div>
+              <div class="department-billing-cars">${item.count} ${carLabel}</div>
+              <div class="department-billing-rate">${money(item.rate)}</div>
+              <div class="department-billing-total">${money(item.total)}</div>
             </div>
           `;
         }).join("");
@@ -3100,9 +3215,12 @@
         document.getElementById("totalBays").innerText = usedBays.length || bays.length;
         document.getElementById("lastUpdated").innerText = new Date().toLocaleTimeString();
 
+        currentCostPerCar = parseCostPerCar(activeSiteSettings?.cost_per_car ?? 0);
+        currentDepartmentCosts = normalizeDepartmentCosts(activeSiteSettings?.department_costs, currentCostPerCar);
+
         renderRecentActivity(recentActivity);
         renderTopCodes(codeUsage);
-        renderCostAllocation(allActivity, activeSiteSettings?.cost_per_car ?? 0);
+        renderCostAllocation(allActivity);
         renderDepartmentChart(departments);
         renderDailyChart(daily);
         window.dashboardPairedDevices = pairedDevices || [];
