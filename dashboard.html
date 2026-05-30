@@ -643,7 +643,41 @@
 
     .cost-department-list{
       margin-top:14px;
-      border-top:1px solid #1f2937;
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+    }
+
+    .cost-department-card{
+      background:#0b1220;
+      border:1px solid #1f2937;
+      border-radius:12px;
+      padding:14px;
+      min-height:110px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+    }
+
+    .cost-department-name{
+      font-size:14px;
+      color:#94a3b8;
+      margin-bottom:8px;
+      font-weight:700;
+    }
+
+    .cost-department-cars{
+      font-size:24px;
+      font-weight:900;
+      color:white;
+      line-height:1;
+    }
+
+    .cost-department-total{
+      margin-top:6px;
+      color:#4ade80;
+      font-weight:800;
+      font-size:15px;
     }
 
     .brand-accent{
@@ -877,6 +911,7 @@
       .page-header h1{font-size:34px}
       .summary{grid-template-columns:1fr}
       .cost-allocation-grid,.cost-metric-grid{grid-template-columns:1fr}
+      .cost-department-list{grid-template-columns:1fr 1fr;}
       .control-grid,.field-grid,.bay-editor-grid{grid-template-columns:1fr}
       .weekly-lockout-head,.weekly-lockout-row{grid-template-columns:1fr .8fr .8fr}
     }
@@ -1061,9 +1096,7 @@
               </div>
             </div>
 
-            <div class="cost-department-list" id="costDepartmentList">
-              <div class="list-row"><span>No cost activity yet.</span><span>$0.00</span></div>
-            </div>
+            <div class="cost-department-list" id="costDepartmentList"></div>
           </div>
         </div>
       </div>
