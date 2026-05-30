@@ -27,16 +27,7 @@
 
 .sidebar {
   width: 220px;
-  background:
-    radial-gradient(
-      circle at 0% 0%,
-      rgba(37, 99, 235, 0.68) 0%,
-      rgba(37, 99, 235, 0.31) 3.9%,
-      rgba(37, 99, 235, 0.11) 6.3%,
-      rgba(37, 99, 235, 0.04) 8.3%,
-      transparent 10.0%
-    ),
-    linear-gradient(180deg, #0f172a 0%, #111827 100%);
+  background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
   padding: 20px;
   border-right: 1px solid #1e293b;
   flex-shrink: 0;
@@ -45,7 +36,27 @@
 }
 
 .sidebar::before{
-  display:none;
+  content:"";
+  position:fixed;
+  top:0;
+  left:0;
+  width:220px;
+  height:220px;
+  background:radial-gradient(
+    circle at 0% 0%,
+    rgba(37, 99, 235, 0.68) 0%,
+    rgba(37, 99, 235, 0.31) 18%,
+    rgba(37, 99, 235, 0.11) 34%,
+    rgba(37, 99, 235, 0.04) 48%,
+    transparent 62%
+  );
+  pointer-events:none;
+  z-index:0;
+}
+
+.sidebar > *{
+  position:relative;
+  z-index:1;
 }
 
     .logo,
