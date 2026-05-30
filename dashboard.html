@@ -694,6 +694,38 @@
       text-align:right;
     }
 
+    .dashboard-compact-grid{
+      display:grid;
+      grid-template-columns:.9fr 1.1fr;
+      gap:20px;
+      margin-bottom:20px;
+    }
+
+    .compact-list-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      padding:9px 0;
+      border-bottom:1px solid #1f2937;
+      color:#dbe5fb;
+      font-size:15px;
+    }
+
+    .compact-list-row:last-child{
+      border-bottom:none;
+    }
+
+    .compact-list-row strong{
+      color:white;
+      font-weight:900;
+    }
+
+    .compact-muted{
+      color:#94a3b8;
+      font-size:13px;
+    }
+
     .brand-accent{
       color:#2ea8ff !important;
     }
@@ -928,7 +960,7 @@
       .department-billing-list{grid-template-columns:1fr;}
       .department-billing-row:nth-last-child(-n+2){border-bottom:1px solid #1f2937;}
       .department-billing-row:last-child{border-bottom:none;}
-      .control-grid,.field-grid,.bay-editor-grid{grid-template-columns:1fr}
+      .control-grid,.field-grid,.bay-editor-grid,.dashboard-compact-grid{grid-template-columns:1fr}
       .weekly-lockout-head,.weekly-lockout-row{grid-template-columns:1fr .8fr .8fr}
     }
   </style>
@@ -1350,47 +1382,21 @@
         <div id="bayStatusMessage" class="control-status"></div>
       </div>
 
-      <div class="grid-2">
+      <div class="dashboard-compact-grid">
         <div class="card">
-          <h3>Recent Activity</h3>
-          <div id="recentActivity"></div>
-          <div class="note">This feed updates automatically when new activity is logged.</div>
+          <h3>System Snapshot</h3>
+          <div class="compact-list-row"><span>Total Activity Records</span><strong id="totalActivityRecords">0</strong></div>
+          <div class="compact-list-row"><span>Total Departments</span><strong id="totalDepartments">0</strong></div>
+          <div class="compact-list-row"><span>Total Bays Used</span><strong id="totalBays">0</strong></div>
+          <div class="compact-list-row"><span>Last Updated</span><strong id="lastUpdated">-</strong></div>
         </div>
 
         <div class="card">
           <h3>Top Codes</h3>
           <div id="topCodesList"></div>
+          <div class="note">Most used codes for the selected site.</div>
         </div>
       </div>
-
-      <div class="grid-2">
-        <div class="card">
-          <h3>Department Usage Chart</h3>
-          <div class="chart-wrap"><canvas id="departmentChart"></canvas></div>
-        </div>
-
-        <div class="card">
-          <h3>Daily Activity Chart</h3>
-          <div class="chart-wrap"><canvas id="dailyChart"></canvas></div>
-        </div>
-      </div>
-
-      <div class="grid-2">
-        <div class="card">
-          <h3>System Snapshot</h3>
-          <div class="list-row"><span>Total Activity Records</span><span id="totalActivityRecords">0</span></div>
-          <div class="list-row"><span>Total Departments</span><span id="totalDepartments">0</span></div>
-          <div class="list-row"><span>Total Bays Used</span><span id="totalBays">0</span></div>
-          <div class="list-row"><span>Last Updated</span><span id="lastUpdated">-</span></div>
-        </div>
-
-        <div class="card">
-          <h3>Quick Links</h3>
-          <div class="list-row"><span>Manage codes</span><span><a href="codes.html" style="color:#93c5fd;">Open</a></span></div>
-          <div class="list-row"><span>View reports</span><span><a href="usage.html" style="color:#93c5fd;">Open</a></span></div>
-          <div class="list-row"><span>Live monitor</span><span><a href="monitor.html" style="color:#93c5fd;">Open</a></span></div>
-          <div class="list-row"><span>Manage sites</span><span><a href="sites.html" style="color:#93c5fd;">Open</a></span></div>
-        </div>
       </div>
     </div>
   </div>
@@ -2874,6 +2880,7 @@
 
     function renderRecentActivity(rows){
       const wrap = document.getElementById("recentActivity");
+      if(!wrap) return;
       wrap.innerHTML = "";
 
       if(!rows.length){
@@ -2894,18 +2901,19 @@
 
     function renderTopCodes(codeUsage){
       const wrap = document.getElementById("topCodesList");
+      if(!wrap) return;
       wrap.innerHTML = "";
 
       if(!codeUsage.length){
-        wrap.innerHTML = `<div class="list-row"><span>No code activity yet.</span><span>0</span></div>`;
+        wrap.innerHTML = `<div class="compact-list-row"><span>No code activity yet.</span><strong>0</strong></div>`;
         return;
       }
 
       codeUsage.slice(0,5).forEach(item => {
         wrap.innerHTML += `
-          <div class="list-row">
-            <span><strong>${escapeHtml(item.code)}</strong> — ${escapeHtml(item.department || "")}</span>
-            <span>${escapeHtml(item.uses || 0)}</span>
+          <div class="compact-list-row">
+            <span><strong>${escapeHtml(item.code)}</strong> <span class="compact-muted">— ${escapeHtml(item.department || "")}</span></span>
+            <strong>${escapeHtml(item.uses || 0)}</strong>
           </div>
         `;
       });
@@ -2913,6 +2921,11 @@
 
     function renderDepartmentChart(departments){
       const ctx = document.getElementById("departmentChart");
+      if(!ctx){
+        if(departmentChartInstance) departmentChartInstance.destroy();
+        departmentChartInstance = null;
+        return;
+      }
       if(departmentChartInstance) departmentChartInstance.destroy();
 
       departmentChartInstance = new Chart(ctx, {
@@ -2935,6 +2948,11 @@
 
     function renderDailyChart(daily){
       const ctx = document.getElementById("dailyChart");
+      if(!ctx){
+        if(dailyChartInstance) dailyChartInstance.destroy();
+        dailyChartInstance = null;
+        return;
+      }
       if(dailyChartInstance) dailyChartInstance.destroy();
 
       dailyChartInstance = new Chart(ctx, {
