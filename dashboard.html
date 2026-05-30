@@ -1475,6 +1475,7 @@
     let lastGoodSystemControl = null;
     let currentCostPerCar = 0;
     let currentDepartmentCosts = {};
+    let currentBillingDepartments = [];
 
     const DASHBOARD_REFRESH_DELAY_MS = 1200;
     const DASHBOARD_POLL_MS = 25000;
@@ -1876,11 +1877,68 @@
       ""
     ]);
 
+    function titleCaseDepartment(value){
+      return String(value || "")
+        .trim()
+        .replace(/\s+/g, " ")
+        .split(" ")
+        .map(word => word ? word.charAt(0).toUpperCase() + word.slice(1) : "")
+        .join(" ");
+    }
+
+    function normalizeBillingDepartment(value){
+      const raw = String(value || "").trim().replace(/\s+/g, " ");
+      const key = raw.toLowerCase();
+
+      if(NON_BILLING_DEPARTMENTS.has(key)) return null;
+      if(BILLING_DEPARTMENT_ALIASES[key]) return BILLING_DEPARTMENT_ALIASES[key];
+
+      // Any user-created/custom department should remain its actual name.
+      // Example: Body Shop, Fleet, Sales, Wholesale, etc.
+      return titleCaseDepartment(raw);
+    }
+
+    function getBillingDepartmentList(activityRows = [], codes = []){
+      const map = new Map();
+
+      BILLING_DEPARTMENT_ORDER.forEach(department => {
+        map.set(department.toLowerCase(), department);
+      });
+
+      Object.keys(currentDepartmentCosts || {}).forEach(key => {
+        const department = normalizeBillingDepartment(key);
+        if(department) map.set(department.toLowerCase(), department);
+      });
+
+      (codes || []).forEach(code => {
+        const department = normalizeBillingDepartment(
+          code.department ||
+          code.dept ||
+          code.department_name ||
+          code.metadata?.department
+        );
+        if(department) map.set(department.toLowerCase(), department);
+      });
+
+      (activityRows || []).forEach(row => {
+        const department = normalizeBillingDepartment(
+          row.department ||
+          row.metadata?.department
+        );
+        if(department) map.set(department.toLowerCase(), department);
+      });
+
+      return sortBillingDepartmentNames(Array.from(map.values()));
+    }
+
     function defaultDepartmentCosts(fallback = 0){
       const costs = {};
-      BILLING_DEPARTMENT_ORDER.forEach(department => {
+      const departments = currentBillingDepartments.length ? currentBillingDepartments : BILLING_DEPARTMENT_ORDER;
+
+      departments.forEach(department => {
         costs[department] = parseCostPerCar(fallback);
       });
+
       return costs;
     }
 
@@ -1909,35 +1967,36 @@
       const select = document.getElementById("costDepartmentSelect");
       if(!select) return;
 
-      const previous = select.value || BILLING_DEPARTMENT_ORDER[0];
+      const departments = currentBillingDepartments.length ? currentBillingDepartments : BILLING_DEPARTMENT_ORDER;
+      const previous = select.value || departments[0] || BILLING_DEPARTMENT_ORDER[0];
 
-      select.innerHTML = BILLING_DEPARTMENT_ORDER.map(department => {
+      select.innerHTML = departments.map(department => {
         return `<option value="${escapeHtml(department)}">${escapeHtml(department)}</option>`;
       }).join("");
 
-      select.value = BILLING_DEPARTMENT_ORDER.includes(previous) ? previous : BILLING_DEPARTMENT_ORDER[0];
+      select.value = departments.includes(previous) ? previous : (departments[0] || BILLING_DEPARTMENT_ORDER[0]);
     }
 
     function handleCostDepartmentChange(){
       const select = document.getElementById("costDepartmentSelect");
       const input = document.getElementById("costPerCarInput");
-      const department = select ? select.value : BILLING_DEPARTMENT_ORDER[0];
+      const department = select ? select.value : (currentBillingDepartments[0] || BILLING_DEPARTMENT_ORDER[0]);
 
       if(input){
         input.value = getDepartmentCost(department).toFixed(2);
       }
     }
 
-    function normalizeBillingDepartment(value){
-      const raw = String(value || "").trim();
-      const key = raw.toLowerCase();
+    function sortBillingDepartmentNames(departments){
+      return departments.sort((a,b) => {
+        const aIndex = BILLING_DEPARTMENT_ORDER.indexOf(a);
+        const bIndex = BILLING_DEPARTMENT_ORDER.indexOf(b);
+        const safeA = aIndex === -1 ? 999 : aIndex;
+        const safeB = bIndex === -1 ? 999 : bIndex;
 
-      if(NON_BILLING_DEPARTMENTS.has(key)) return null;
-      if(BILLING_DEPARTMENT_ALIASES[key]) return BILLING_DEPARTMENT_ALIASES[key];
-
-      if(key.startsWith("custom")) return "Custom";
-
-      return null;
+        if(safeA !== safeB) return safeA - safeB;
+        return String(a).localeCompare(String(b));
+      });
     }
 
     function sortBillingDepartments(items){
@@ -2635,17 +2694,17 @@
         return;
       }
 
-      const selectedDepartment = select ? select.value : BILLING_DEPARTMENT_ORDER[0];
+      const selectedDepartment = select ? select.value : (currentBillingDepartments[0] || BILLING_DEPARTMENT_ORDER[0]);
       const value = parseCostPerCar(input ? input.value : 0);
 
       const nextCosts = normalizeDepartmentCosts(currentDepartmentCosts, currentCostPerCar);
 
       if(applyAll){
-        BILLING_DEPARTMENT_ORDER.forEach(department => {
+        (currentBillingDepartments.length ? currentBillingDepartments : BILLING_DEPARTMENT_ORDER).forEach(department => {
           nextCosts[department] = value;
         });
       }else{
-        const department = normalizeBillingDepartment(selectedDepartment) || BILLING_DEPARTMENT_ORDER[0];
+        const department = normalizeBillingDepartment(selectedDepartment) || (currentBillingDepartments[0] || BILLING_DEPARTMENT_ORDER[0]);
         nextCosts[department] = value;
       }
 
@@ -2676,15 +2735,18 @@
       scheduleDashboardRefresh(500);
     }
 
-    function renderCostAllocation(activityRows){
+    function renderCostAllocation(activityRows, codes = []){
       const input = document.getElementById("costPerCarInput");
       const todayTotal = document.getElementById("todayCostTotal");
       const monthTotal = document.getElementById("monthCostTotal");
       const list = document.getElementById("departmentBillingList");
 
+      currentBillingDepartments = getBillingDepartmentList(activityRows, codes);
+      currentDepartmentCosts = normalizeDepartmentCosts(currentDepartmentCosts, currentCostPerCar);
+
       populateCostDepartmentSelect();
 
-      const selectedDepartment = document.getElementById("costDepartmentSelect")?.value || BILLING_DEPARTMENT_ORDER[0];
+      const selectedDepartment = document.getElementById("costDepartmentSelect")?.value || currentBillingDepartments[0] || BILLING_DEPARTMENT_ORDER[0];
 
       if(input){
         input.value = getDepartmentCost(selectedDepartment).toFixed(2);
@@ -2693,7 +2755,7 @@
       const now = new Date();
 
       const departmentTotals = {};
-      BILLING_DEPARTMENT_ORDER.forEach(department => {
+      currentBillingDepartments.forEach(department => {
         departmentTotals[department] = {
           department,
           count: 0,
@@ -2712,7 +2774,16 @@
         if(isNaN(eventDate.getTime())) return;
 
         const department = normalizeBillingDepartment(row.department || row.metadata?.department);
-        if(!department || !departmentTotals[department]) return;
+        if(!department) return;
+
+        if(!departmentTotals[department]){
+          departmentTotals[department] = {
+            department,
+            count: 0,
+            total: 0,
+            rate: getDepartmentCost(department)
+          };
+        }
 
         const storedCost = parseCostPerCar(row.cost_per_car || row.metadata?.cost_per_car);
         const effectiveCost = storedCost > 0 ? storedCost : getDepartmentCost(department);
@@ -2732,13 +2803,14 @@
       if(monthTotal) monthTotal.innerText = money(monthCost);
 
       if(list){
-        list.innerHTML = BILLING_DEPARTMENT_ORDER.map(department => {
-          const item = departmentTotals[department] || { count:0, total:0, rate:getDepartmentCost(department) };
+        const rows = sortBillingDepartments(Object.values(departmentTotals));
+
+        list.innerHTML = rows.map(item => {
           const carLabel = item.count === 1 ? "Car" : "Cars";
 
           return `
             <div class="department-billing-row">
-              <div class="department-billing-dept">${escapeHtml(department)}</div>
+              <div class="department-billing-dept">${escapeHtml(item.department)}</div>
               <div class="department-billing-cars">${item.count} ${carLabel}</div>
               <div class="department-billing-rate">${money(item.rate)}</div>
               <div class="department-billing-total">${money(item.total)}</div>
@@ -3195,7 +3267,7 @@
       window.dashboardPairedDevices = [];
       renderPairedDevices([]);
       renderWifiSupport(null);
-      renderCostAllocation([], 0);
+      renderCostAllocation([], []);
     }
 
     async function loadDashboard(){
@@ -3253,7 +3325,7 @@
 
         renderRecentActivity(recentActivity);
         renderTopCodes(codeUsage);
-        renderCostAllocation(allActivity);
+        renderCostAllocation(allActivity, activeCodes);
         renderDepartmentChart(departments);
         renderDailyChart(daily);
         window.dashboardPairedDevices = pairedDevices || [];
