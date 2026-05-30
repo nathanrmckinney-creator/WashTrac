@@ -438,7 +438,7 @@ document.addEventListener("DOMContentLoaded", function(){
       <h3>Department Billing Summary</h3>
 
       <div class="note" style="margin-top:0;margin-bottom:14px;">
-        Billing uses the selected report range, the same Current Site / All My Sites scope, and the Cost Per Car saved on the Dashboard.
+        Billing uses the selected report range, the same Current Site / All My Sites scope, and the department Cost Per Car values saved on the Dashboard.
       </div>
 
       <div class="billing-head">
@@ -650,6 +650,7 @@ let cachedDepartmentData = [];
 let cachedRawUses = [];
 let cachedBillingSummary = [];
 let cachedCostPerCar = 0;
+let cachedDepartmentCosts = {};
 let cachedSiteScopeLabel = "Current Site";
 let cachedSiteIds = [];
 let reportHeartbeatTimer = null;
@@ -667,6 +668,114 @@ const columnLabels = {
   rate: "Rate",
   total_cost: "Total Cost"
 };
+
+const BILLING_DEPARTMENT_ORDER = [
+  "New Cars",
+  "Service",
+  "Manager",
+  "Other",
+  "Pre Owned",
+  "Detail",
+  "Temporary",
+  "Custom"
+];
+
+const BILLING_DEPARTMENT_ALIASES = {
+  "new cars": "New Cars",
+  "new car": "New Cars",
+  "new": "New Cars",
+  "pre owned": "Pre Owned",
+  "pre-owned": "Pre Owned",
+  "preowned": "Pre Owned",
+  "used": "Pre Owned",
+  "service": "Service",
+  "detail": "Detail",
+  "manager": "Manager",
+  "management": "Manager",
+  "temporary": "Temporary",
+  "temp": "Temporary",
+  "other": "Other",
+  "custom": "Custom",
+  "custom...": "Custom"
+};
+
+const NON_BILLING_DEPARTMENTS = new Set([
+  "wash",
+  "controls",
+  "maintenance",
+  "unassigned",
+  ""
+]);
+
+function parseCostPerCar(value){
+  const number = Number(String(value ?? "0").replace(/[^0-9.]/g, ""));
+  if(!Number.isFinite(number) || number < 0) return 0;
+  return Math.round(number * 100) / 100;
+}
+
+function cleanDepartmentName(value){
+  return String(value || "").trim().replace(/\s+/g, " ");
+}
+
+function normalizeBillingDepartment(value){
+  const cleaned = cleanDepartmentName(value);
+  const key = cleaned.toLowerCase();
+
+  if(NON_BILLING_DEPARTMENTS.has(key)) return "";
+  if(BILLING_DEPARTMENT_ALIASES[key]) return BILLING_DEPARTMENT_ALIASES[key];
+
+  // Custom departments should remain visible by their real name.
+  return cleaned;
+}
+
+function defaultDepartmentCosts(fallback = 0){
+  const costs = {};
+  BILLING_DEPARTMENT_ORDER.forEach(department => {
+    costs[department] = parseCostPerCar(fallback);
+  });
+  return costs;
+}
+
+function normalizeDepartmentCosts(value, fallback = 0){
+  const costs = defaultDepartmentCosts(fallback);
+
+  if(value && typeof value === "object" && !Array.isArray(value)){
+    Object.keys(value).forEach(key => {
+      const department = normalizeBillingDepartment(key);
+      if(department){
+        costs[department] = parseCostPerCar(value[key]);
+      }
+    });
+  }
+
+  return costs;
+}
+
+function getDepartmentCost(department){
+  const normalized = normalizeBillingDepartment(department);
+  if(!normalized) return parseCostPerCar(cachedCostPerCar);
+  return parseCostPerCar(cachedDepartmentCosts?.[normalized] ?? cachedCostPerCar);
+}
+
+function getBillingDepartmentOrderFromUses(uses){
+  const order = [...BILLING_DEPARTMENT_ORDER];
+
+  (uses || []).forEach(item => {
+    const department = normalizeBillingDepartment(item.department);
+    if(department && !order.includes(department)){
+      order.push(department);
+    }
+  });
+
+  Object.keys(cachedDepartmentCosts || {}).forEach(key => {
+    const department = normalizeBillingDepartment(key);
+    if(department && !order.includes(department)){
+      order.push(department);
+    }
+  });
+
+  return order;
+}
 
 function toggleDesktopMenu(){
   const desktopMenu = document.getElementById("desktopMenu");
@@ -825,7 +934,8 @@ async function getAssignedSites(){
       .map(site => ({
         id: site.id || "",
         name: site.name || site.site_name || "Unnamed Site",
-        cost_per_car: Number(site.cost_per_car || site.rate || site.cost || 0)
+        cost_per_car: parseCostPerCar(site.cost_per_car || site.rate || site.cost || 0),
+        department_costs: normalizeDepartmentCosts(site.department_costs, site.cost_per_car || site.rate || site.cost || 0)
       }))
       .filter(site => site.id);
   }
@@ -855,7 +965,8 @@ async function getAssignedSites(){
       return {
         id: row.site_id || site.id || "",
         name: site.name || "Unnamed Site",
-        cost_per_car: Number(site.cost_per_car || site.rate || site.cost || 0)
+        cost_per_car: parseCostPerCar(site.cost_per_car || site.rate || site.cost || 0),
+        department_costs: normalizeDepartmentCosts(site.department_costs, site.cost_per_car || site.rate || site.cost || 0)
       };
     })
     .filter(site => site.id);
@@ -884,7 +995,8 @@ async function ensureActiveSiteIsValid(){
   return {
     activeSiteId: activeSite.id,
     activeSiteName: activeSite.name,
-    activeSiteCostPerCar: Number(activeSite.cost_per_car || 0),
+    activeSiteCostPerCar: parseCostPerCar(activeSite.cost_per_car || 0),
+    activeSiteDepartmentCosts: normalizeDepartmentCosts(activeSite.department_costs, activeSite.cost_per_car || 0),
     siteIds: sites.map(site => site.id),
     sites
   };
@@ -901,12 +1013,13 @@ async function applySiteScopeToQuery(query){
     return { query:null, noSites:true };
   }
 
-  cachedCostPerCar = Number(siteInfo.activeSiteCostPerCar || 0);
+  cachedCostPerCar = parseCostPerCar(siteInfo.activeSiteCostPerCar || 0);
+  cachedDepartmentCosts = normalizeDepartmentCosts(siteInfo.activeSiteDepartmentCosts, cachedCostPerCar);
 
   if(scope === "all"){
     cachedSiteIds = siteInfo.siteIds;
     cachedSiteScopeLabel = "All My Sites";
-    setSiteScopeSummary(`Reports are using all assigned sites (${siteInfo.siteIds.length}). Billing rate uses the Dashboard Cost Per Car from the current site.`);
+    setSiteScopeSummary(`Reports are using all assigned sites (${siteInfo.siteIds.length}). Billing rates use the Dashboard department Cost Per Car values from the current site.`);
     return { query:query.in("site_id", siteInfo.siteIds), noSites:false };
   }
 
@@ -1181,7 +1294,8 @@ function getDepartmentDataFromUses(uses){
   const deptMap = {};
 
   uses.forEach(item => {
-    const dept = item.department || "Unassigned";
+    const dept = normalizeBillingDepartment(item.department);
+    if(!dept) return;
     deptMap[dept] = (deptMap[dept] || 0) + 1;
   });
 
@@ -1200,28 +1314,57 @@ function formatMoney(value){
 }
 
 function getCostPerCar(){
-  const parsed = Number(cachedCostPerCar || 0);
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+  return parseCostPerCar(cachedCostPerCar || 0);
 }
 
 function getDepartmentBillingFromUses(uses){
-  const costPerCar = getCostPerCar();
-  const deptMap = {};
+  const departmentTotals = {};
 
-  uses.forEach(item => {
-    const dept = item.department || "Unassigned";
-    deptMap[dept] = (deptMap[dept] || 0) + 1;
+  getBillingDepartmentOrderFromUses(uses).forEach(department => {
+    departmentTotals[department] = {
+      department,
+      cars: 0,
+      rate_value: getDepartmentCost(department),
+      total_cost_value: 0
+    };
   });
 
-  return Object.entries(deptMap)
-    .map(([department, cars]) => ({
-      department,
-      cars,
-      rate: `${formatMoney(costPerCar)} / car`,
-      total_cost_value: cars * costPerCar,
-      total_cost: formatMoney(cars * costPerCar)
-    }))
-    .sort((a,b) => b.cars - a.cars);
+  uses.forEach(item => {
+    const department = normalizeBillingDepartment(item.department);
+    if(!department) return;
+
+    if(!departmentTotals[department]){
+      departmentTotals[department] = {
+        department,
+        cars: 0,
+        rate_value: getDepartmentCost(department),
+        total_cost_value: 0
+      };
+    }
+
+    const storedCost = parseCostPerCar(item.cost_per_car || item.metadata?.cost_per_car || 0);
+    const effectiveCost = storedCost > 0 ? storedCost : getDepartmentCost(department);
+
+    departmentTotals[department].cars += 1;
+    departmentTotals[department].total_cost_value += effectiveCost;
+  });
+
+  return getBillingDepartmentOrderFromUses(uses)
+    .filter(department => departmentTotals[department])
+    .map(department => {
+      const item = departmentTotals[department];
+      const displayRate = item.cars > 0
+        ? item.total_cost_value / item.cars
+        : item.rate_value;
+
+      return {
+        department: item.department,
+        cars: item.cars,
+        rate: `${formatMoney(displayRate)} / car`,
+        total_cost_value: item.total_cost_value,
+        total_cost: formatMoney(item.total_cost_value)
+      };
+    });
 }
 
 function getBillingForSelectedRange(){
@@ -1475,14 +1618,17 @@ const uses = rows
       row.name ||
       "";
 
+    const billingDepartment = normalizeBillingDepartment(activityDepartment || matchedCode.department);
+
     return {
       code,
-      department: activityDepartment || matchedCode.department || "Unassigned",
+      department: billingDepartment || "",
       name: activityName || matchedCode.name || getName(row),
       uses: 1,
       last_used: getTime(row),
       site_id: row.site_id || "",
-      event: row.event || ""
+      event: row.event || "",
+      cost_per_car: row.cost_per_car || row.metadata?.cost_per_car || null
     };
   });
 
