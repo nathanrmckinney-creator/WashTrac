@@ -1177,7 +1177,7 @@
         </div>
 
         <div class="note">
-          E-STOP is monitor-only. Its status is read from the connected CodeBox/ESP32 input and cannot be changed from the dashboard.
+          E-STOP is monitor-only. Its status is read from the connected Keypad/ESP32 input and cannot be changed from the dashboard.
         </div>
 
         <div class="checkbox-row">
@@ -1680,7 +1680,7 @@
         return;
       }
 
-      setBayStatusMessage(`Trigger wash queued for ${device.device_name || device.name || "Keypad"}.`);
+      setBayStatusMessage(`Trigger wash queued for ${cleanDeviceDisplayName(device.device_name || device.name || "Keypad")}.`);
       scheduleDashboardRefresh(1500);
     }
 
@@ -1697,6 +1697,12 @@
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+    }
+
+    function cleanDeviceDisplayName(value){
+      const raw = String(value || "").trim();
+      if(!raw) return "Keypad";
+      return raw.replace(/CodeBox/gi, "Keypad");
     }
 
     function money(value){
@@ -1734,6 +1740,68 @@
       }
 
       return true;
+    }
+
+    const BILLING_DEPARTMENT_ORDER = [
+      "New Cars",
+      "Pre Owned",
+      "Service",
+      "Detail",
+      "Manager",
+      "Temporary",
+      "Other",
+      "Custom"
+    ];
+
+    const BILLING_DEPARTMENT_ALIASES = {
+      "new cars": "New Cars",
+      "new car": "New Cars",
+      "new": "New Cars",
+      "pre owned": "Pre Owned",
+      "pre-owned": "Pre Owned",
+      "preowned": "Pre Owned",
+      "used": "Pre Owned",
+      "service": "Service",
+      "detail": "Detail",
+      "manager": "Manager",
+      "management": "Manager",
+      "temporary": "Temporary",
+      "temp": "Temporary",
+      "other": "Other",
+      "custom": "Custom",
+      "custom...": "Custom"
+    };
+
+    const NON_BILLING_DEPARTMENTS = new Set([
+      "wash",
+      "controls",
+      "maintenance",
+      "unassigned",
+      ""
+    ]);
+
+    function normalizeBillingDepartment(value){
+      const raw = String(value || "").trim();
+      const key = raw.toLowerCase();
+
+      if(NON_BILLING_DEPARTMENTS.has(key)) return null;
+      if(BILLING_DEPARTMENT_ALIASES[key]) return BILLING_DEPARTMENT_ALIASES[key];
+
+      if(key.startsWith("custom")) return "Custom";
+
+      return null;
+    }
+
+    function sortBillingDepartments(items){
+      return items.sort((a,b) => {
+        const aIndex = BILLING_DEPARTMENT_ORDER.indexOf(a.department);
+        const bIndex = BILLING_DEPARTMENT_ORDER.indexOf(b.department);
+        const safeA = aIndex === -1 ? 999 : aIndex;
+        const safeB = bIndex === -1 ? 999 : bIndex;
+
+        if(safeA !== safeB) return safeA - safeB;
+        return String(a.department).localeCompare(String(b.department));
+      });
     }
 
     function sameLocalDay(dateA, dateB){
@@ -1807,7 +1875,7 @@
         statusTag.innerText = "No Device";
         ssidText.innerText = "Not connected";
         signalText.innerText = "--";
-        meta.innerText = "No CodeBox is paired to this site yet.";
+        meta.innerText = "No Keypad is paired to this site yet.";
         setWifiSignalBars(0);
         renderWirelessNetworks([]);
         return;
@@ -1825,7 +1893,7 @@
       signalText.innerText = `${wifiStrength || 0}/4`;
       setWifiSignalBars(wifiStrength);
 
-      meta.innerText = `SSID: ${wifiSsid || "Unknown"} • Strength: ${wifiStrength || 0}/4 • Device: ${device.device_name || device.name || device.nickname || "Keypad"}`;
+      meta.innerText = `SSID: ${wifiSsid || "Unknown"} • Strength: ${wifiStrength || 0}/4 • Device: ${cleanDeviceDisplayName(device.device_name || device.name || device.nickname || "Keypad")}`;
 
       if(wifiSsid && !document.getElementById("wifiSsid").value){
         document.getElementById("wifiSsid").value = wifiSsid;
@@ -1861,7 +1929,7 @@
           <div class="wifi-network-row">
             <div>
               <div class="wifi-network-name">No networks loaded yet</div>
-              <div class="wifi-network-meta">Click Search Wireless Networks to request a scan from the CodeBox.</div>
+              <div class="wifi-network-meta">Click Search Wireless Networks to request a scan from the Keypad.</div>
             </div>
           </div>
         `;
@@ -1944,7 +2012,7 @@
         return false;
       }
 
-      setWifiMessage(`Queued ${command} for ${device.device_name || device.name || "Keypad"}.`);
+      setWifiMessage(`Queued ${command} for ${cleanDeviceDisplayName(device.device_name || device.name || "Keypad")}.`);
       return true;
     }
 
@@ -1952,7 +2020,7 @@
       setWifiMessage("Requesting wireless network scan...");
       const ok = await queueWifiCommand("scan_wifi_networks", {});
       if(ok){
-        setWifiMessage("Wireless scan requested. Click Refresh Network after the CodeBox reports scan results.");
+        setWifiMessage("Wireless scan requested. Click Refresh Network after the Keypad reports scan results.");
       }
     }
 
@@ -2465,13 +2533,15 @@
 
       const map = {};
       monthRows.forEach(row => {
-        const department = row.department || "Unassigned";
+        const department = normalizeBillingDepartment(row.department);
+        if(!department) return;
+
         if(!map[department]) map[department] = { department, cars:0, total:0 };
         map[department].cars += 1;
         map[department].total += currentCostPerCar;
       });
 
-      const departments = Object.values(map).sort((a,b) => b.total - a.total);
+      const departments = sortBillingDepartments(Object.values(map));
 
       if(!departments.length){
         list.innerHTML = `<div class="list-row"><span>No cost activity this month.</span><span>${money(0)}</span></div>`;
@@ -2552,7 +2622,7 @@
       }
 
       devices.forEach(device => {
-        const name = escapeHtml(device.name || device.device_name || device.label || "Keypad");
+        const name = escapeHtml(cleanDeviceDisplayName(device.name || device.device_name || device.label || "Keypad"));
         const identifier = escapeHtml(device.device_id || device.serial_number || device.serial || device.id || "Unknown");
         const pairedDate = device.created_at ? new Date(device.created_at).toLocaleDateString() : "Unknown date";
         const lastSeen = getLastSeenDate(device);
@@ -2583,7 +2653,7 @@
 
       activity.forEach(row => {
         const code = row.code || "Unknown";
-        const department = row.department || "Unassigned";
+        const department = normalizeBillingDepartment(row.department) || row.department || "Unassigned";
 
         if(!map[code]){
           map[code] = { code, department, uses:0 };
@@ -2603,12 +2673,14 @@
       const map = {};
 
       activity.forEach(row => {
-        const department = row.department || "Unassigned";
+        const department = normalizeBillingDepartment(row.department);
+        if(!department) return;
+
         if(!map[department]) map[department] = { department, totalUses:0 };
         map[department].totalUses += 1;
       });
 
-      return Object.values(map).sort((a,b) => b.totalUses - a.totalUses);
+      return sortBillingDepartments(Object.values(map));
     }
 
     function buildDailyData(activity){
