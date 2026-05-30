@@ -13,7 +13,7 @@
 body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:white;overflow-x:hidden;}
 .app{display:flex;min-height:100vh;}
 
-  .sidebar {
+ .sidebar {
   width: 220px;
   background:
     radial-gradient(
@@ -28,11 +28,15 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
   padding: 20px;
   border-right: 1px solid #1e293b;
   flex-shrink: 0;
- position: fixed;
-top: 0;
-left: 0;
-height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
   overflow: hidden;
+}
+
+.sidebar::before{
+  display:none;
 }
 
 .logo,
