@@ -115,6 +115,52 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
 .list-row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #1f2937;}
 .list-row:last-child{border-bottom:none;}
 
+.billing-head,
+.billing-row{
+  display:grid;
+  grid-template-columns:1.4fr .7fr .8fr .9fr .9fr;
+  gap:10px;
+  align-items:center;
+}
+
+.billing-head{
+  color:#94a3b8;
+  font-size:12px;
+  font-weight:bold;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  padding:0 0 8px;
+  border-bottom:1px solid #1f2937;
+}
+
+.billing-row{
+  padding:10px 0;
+  border-bottom:1px solid #1f2937;
+  color:#e5e7eb;
+  font-size:14px;
+}
+
+.billing-row:last-child{border-bottom:none;}
+
+.billing-total{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:14px;
+  padding-top:14px;
+  border-top:1px solid #334155;
+  font-size:18px;
+  font-weight:bold;
+}
+
+.billing-controls{
+  display:grid;
+  grid-template-columns:220px 1fr;
+  gap:14px;
+  align-items:end;
+  margin-bottom:14px;
+}
+
 .actions{display:flex;gap:12px;flex-wrap:wrap;}
 button{padding:12px 16px;background:#2563eb;border:none;border-radius:8px;color:white;cursor:pointer;font-weight:bold;}
 button.secondary{background:#334155;}
@@ -278,6 +324,9 @@ button.secondary{background:#334155;}
   .column-grid{grid-template-columns:1fr;}
   .date-grid{grid-template-columns:1fr;}
   .day-grid{grid-template-columns:repeat(2,1fr);}
+  .billing-controls{grid-template-columns:1fr;}
+  .billing-head,
+  .billing-row{grid-template-columns:1.1fr .55fr .75fr .85fr .85fr;font-size:12px;gap:6px;}
   .heartbeat-banner{align-items:flex-start;flex-direction:column;}
 }
 
@@ -390,6 +439,33 @@ document.addEventListener("DOMContentLoaded", function(){
       <div class="card">
         <h3>Top 10 Codes Chart</h3>
         <div class="chart-wrap"><canvas id="topCodesChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Department Billing Summary</h3>
+
+      <div class="billing-controls">
+        <div class="form-row" style="margin-bottom:0;">
+          <label for="costPerCar">Cost Per Car</label>
+          <input id="costPerCar" type="number" min="0" step="0.01" value="0.00" oninput="saveCostPerCar(); renderDepartmentBillingSummary();">
+        </div>
+        <div class="note" style="margin-top:0;">
+          Billing uses the selected report range and the same Current Site / All My Sites scope.
+        </div>
+      </div>
+
+      <div class="billing-head">
+        <div>Department</div>
+        <div>Cars</div>
+        <div>Rate</div>
+        <div>Cost Per Car</div>
+        <div>Total Cost</div>
+      </div>
+      <div id="departmentBillingSummary"></div>
+      <div class="billing-total">
+        <span>Monthly Total</span>
+        <span id="billingMonthlyTotal">$0.00</span>
       </div>
     </div>
 
@@ -587,6 +663,7 @@ let topCodesChartInstance = null;
 let cachedCodes = [];
 let cachedDepartmentData = [];
 let cachedRawUses = [];
+let cachedBillingSummary = [];
 let cachedSiteScopeLabel = "Current Site";
 let cachedSiteIds = [];
 let reportHeartbeatTimer = null;
@@ -599,7 +676,11 @@ const columnLabels = {
   department: "Department",
   name: "Name",
   uses: "Uses",
-  last_used: "Last Used"
+  last_used: "Last Used",
+  cars: "Cars",
+  rate: "Rate",
+  cost_per_car: "Cost Per Car",
+  total_cost: "Total Cost"
 };
 
 function toggleDesktopMenu(){
@@ -1040,6 +1121,10 @@ function updateReportRangeFields(){
   if(info){
     summary.innerText = `Current export range: ${info.label}.`;
   }
+
+  if(cachedRawUses.length){
+    renderDepartmentBillingSummary();
+  }
 }
 
 function updateScheduleRangeFields(){
@@ -1113,6 +1198,105 @@ function getDepartmentDataFromUses(uses){
   return Object.entries(deptMap).sort((a,b) => b[1] - a[1]);
 }
 
+
+function formatMoney(value){
+  const num = Number(value || 0);
+  return num.toLocaleString(undefined, {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+function getCostPerCar(){
+  const input = document.getElementById("costPerCar");
+  const saved = localStorage.getItem("washtracCostPerCar");
+
+  if(input && saved !== null && input.value === "0.00"){
+    input.value = saved;
+  }
+
+  const value = input ? input.value : saved;
+  const parsed = Number(value || 0);
+
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+}
+
+function saveCostPerCar(){
+  const input = document.getElementById("costPerCar");
+  if(input){
+    localStorage.setItem("washtracCostPerCar", input.value || "0");
+  }
+}
+
+function getDepartmentBillingFromUses(uses){
+  const costPerCar = getCostPerCar();
+  const deptMap = {};
+
+  uses.forEach(item => {
+    const dept = item.department || "Unassigned";
+    deptMap[dept] = (deptMap[dept] || 0) + 1;
+  });
+
+  return Object.entries(deptMap)
+    .map(([department, cars]) => ({
+      department,
+      cars,
+      rate: `${formatMoney(costPerCar)} / car`,
+      cost_per_car: formatMoney(costPerCar),
+      total_cost_value: cars * costPerCar,
+      total_cost: formatMoney(cars * costPerCar)
+    }))
+    .sort((a,b) => b.cars - a.cars);
+}
+
+function getBillingForSelectedRange(){
+  const rangeValue = document.getElementById("reportRange").value;
+  const filtered = filterUsesByRange(cachedRawUses, rangeValue, "customStartDate", "customEndDate");
+
+  if(!filtered) return null;
+
+  return {
+    label: filtered.label,
+    summary: getDepartmentBillingFromUses(filtered.uses)
+  };
+}
+
+function renderDepartmentBillingSummary(){
+  const list = document.getElementById("departmentBillingSummary");
+  const total = document.getElementById("billingMonthlyTotal");
+
+  if(!list || !total) return;
+
+  const billing = getBillingForSelectedRange();
+  if(!billing){
+    return;
+  }
+
+  cachedBillingSummary = billing.summary;
+
+  if(!billing.summary.length){
+    list.innerHTML = `<div class="billing-row"><div>No billing data yet.</div><div>0</div><div>$0.00 / car</div><div>$0.00</div><div>$0.00</div></div>`;
+    total.innerText = "$0.00";
+    return;
+  }
+
+  list.innerHTML = billing.summary.map(item => `
+    <div class="billing-row">
+      <div>${item.department}</div>
+      <div>${item.cars}</div>
+      <div>${item.rate}</div>
+      <div>${item.cost_per_car}</div>
+      <div>${item.total_cost}</div>
+    </div>
+  `).join("");
+
+  const monthlyTotal = billing.summary.reduce((sum, item) => sum + Number(item.total_cost_value || 0), 0);
+  total.innerText = formatMoney(monthlyTotal);
+}
+
+
 function getReportCodesForSelectedRange(){
   if(!cachedRawUses.length){
     return {
@@ -1132,7 +1316,8 @@ function getReportCodesForSelectedRange(){
     label: filtered.label,
     scopeLabel: cachedSiteScopeLabel,
     codes: aggregateUses(filtered.uses),
-    departments: getDepartmentDataFromUses(filtered.uses)
+    departments: getDepartmentDataFromUses(filtered.uses),
+    billing: getDepartmentBillingFromUses(filtered.uses)
   };
 }
 
@@ -1226,6 +1411,7 @@ async function loadUsage(){
       renderDepartmentChart([]);
       renderTopCodesChart([]);
       renderTopCodesList([]);
+      renderDepartmentBillingSummary();
 
       setStatus("No assigned sites found.", "warn");
       return;
@@ -1330,6 +1516,7 @@ const uses = rows
     renderDepartmentChart(deptArray);
     renderTopCodesChart(codeArray.slice(0,10));
     renderTopCodesList(codeArray);
+    renderDepartmentBillingSummary();
 
     const nowText = new Date().toLocaleTimeString();
     setStatus(`Loaded ${uses.length} usage events at ${nowText}.`, "success");
@@ -1431,14 +1618,31 @@ function getSelectedColumns(){
   return checked;
 }
 
-function buildCSV(columns, codes, rangeLabel, scopeLabel){
+function buildCSV(columns, codes, rangeLabel, scopeLabel, billingSummary = []){
   let csv = `WashTrac Site Scope,${csvSafe(scopeLabel || cachedSiteScopeLabel)}\n`;
   csv += `WashTrac Report Range,${csvSafe(rangeLabel)}\n`;
+  csv += "\nUsage By Code\n";
   csv += columns.map(col => csvSafe(columnLabels[col] || col)).join(",") + "\n";
 
   codes.forEach(item => {
     csv += columns.map(col => csvSafe(item[col] || "")).join(",") + "\n";
   });
+
+  csv += "\nDepartment Billing Summary\n";
+  csv += ["Department", "Cars", "Rate", "Cost Per Car", "Total Cost"].map(csvSafe).join(",") + "\n";
+
+  billingSummary.forEach(item => {
+    csv += [
+      item.department,
+      item.cars,
+      item.rate,
+      item.cost_per_car,
+      item.total_cost
+    ].map(csvSafe).join(",") + "\n";
+  });
+
+  const monthlyTotal = billingSummary.reduce((sum, item) => sum + Number(item.total_cost_value || 0), 0);
+  csv += ["Monthly Total", "", "", "", formatMoney(monthlyTotal)].map(csvSafe).join(",") + "\n";
 
   return csv;
 }
@@ -1463,7 +1667,7 @@ function exportCSV(){
   }
 
   const columns = ["code", "department", "name", "uses", "last_used"];
-  const csv = buildCSV(columns, report.codes, report.label, report.scopeLabel);
+  const csv = buildCSV(columns, report.codes, report.label, report.scopeLabel, report.billing || []);
   const stamp = new Date().toISOString().slice(0,10);
   downloadCSV(csv, `washtrac-report-${stamp}.csv`);
 }
@@ -1480,12 +1684,12 @@ function exportCustomCSV(){
   const columns = getSelectedColumns();
   if(!columns.length) return;
 
-  const csv = buildCSV(columns, report.codes, report.label, report.scopeLabel);
+  const csv = buildCSV(columns, report.codes, report.label, report.scopeLabel, report.billing || []);
   const stamp = new Date().toISOString().slice(0,10);
   downloadCSV(csv, `washtrac-custom-report-${stamp}.csv`);
 }
 
-function buildReportHtml(columns, codes, departments, rangeLabel, scopeLabel){
+function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel, scopeLabel){
   const esc = (value) => String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
@@ -1497,6 +1701,7 @@ function buildReportHtml(columns, codes, departments, rangeLabel, scopeLabel){
   const totalCodes = codes.length;
   const topCode = codes.length ? codes[0].code : "-";
   const topDept = departments.length ? departments[0][0] : "-";
+  const monthlyTotal = (billingSummary || []).reduce((sum, item) => sum + Number(item.total_cost_value || 0), 0);
 
   const cleanScope = scopeLabel || cachedSiteScopeLabel || "Current Site";
   const isAllSites = cleanScope.toLowerCase().includes("all");
@@ -1549,6 +1754,25 @@ function buildReportHtml(columns, codes, departments, rangeLabel, scopeLabel){
       </div>
     `;
   }).join("") : `<div style="color:#9ca3af;font-size:13px;padding:12px 0;">No department data found.</div>`;
+
+  const billingRowsHtml = (billingSummary || []).length ? billingSummary.map((item, index) => {
+    const bg = index % 2 === 0 ? "rgba(13,32,52,.92)" : "rgba(8,23,39,.92)";
+    return `
+      <tr style="background:${bg};">
+        <td style="padding:12px 14px;border:1px solid rgba(93,139,184,.18);color:#eaf4ff;font-size:13px;">${esc(item.department)}</td>
+        <td style="padding:12px 14px;border:1px solid rgba(93,139,184,.18);color:#eaf4ff;font-size:13px;">${esc(item.cars)}</td>
+        <td style="padding:12px 14px;border:1px solid rgba(93,139,184,.18);color:#eaf4ff;font-size:13px;">${esc(item.rate)}</td>
+        <td style="padding:12px 14px;border:1px solid rgba(93,139,184,.18);color:#eaf4ff;font-size:13px;">${esc(item.cost_per_car)}</td>
+        <td style="padding:12px 14px;border:1px solid rgba(93,139,184,.18);color:#eaf4ff;font-size:13px;font-weight:900;">${esc(item.total_cost)}</td>
+      </tr>
+    `;
+  }).join("") : `
+    <tr>
+      <td colspan="5" style="padding:30px;text-align:center;color:#94a3b8;background:#06111f;border:1px solid rgba(93,139,184,.18);">
+        No billing data found for this range.
+      </td>
+    </tr>
+  `;
 
   function metricCard(label, value, sub, accent){
     return `
@@ -1609,8 +1833,8 @@ function buildReportHtml(columns, codes, departments, rangeLabel, scopeLabel){
                     <tr>
                       ${metricCard("Total Uses", totalUses, "Current range", "#56a8ff")}
                       ${metricCard("Total Codes", totalCodes, "Active in report", "#7ee787")}
-                      ${metricCard("Top Code", topCode, "Most used", "#a855f7")}
                       ${metricCard("Top Department", topDept, "Highest usage", "#facc15")}
+                      ${metricCard("Monthly Total", formatMoney(monthlyTotal), "Billing total", "#7ee787")}
                     </tr>
                   </table>
 
@@ -1635,6 +1859,25 @@ function buildReportHtml(columns, codes, departments, rangeLabel, scopeLabel){
                       </td>
                     </tr>
                   </table>
+
+                  <div style="border-radius:12px;border:1px solid rgba(86,138,192,.42);background:rgba(7,23,39,.92);padding:16px;margin:7px 7px 18px;">
+                    <div style="display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:12px;">
+                      <div style="color:#4ea1ff;font-size:20px;font-weight:900;letter-spacing:.8px;">DEPARTMENT BILLING SUMMARY</div>
+                      <div style="color:#ffffff;font-size:16px;font-weight:900;">Monthly Total: ${esc(formatMoney(monthlyTotal))}</div>
+                    </div>
+                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:13px;overflow:hidden;border-radius:8px;">
+                      <thead>
+                        <tr>
+                          <th style="padding:13px 14px;border:1px solid rgba(93,139,184,.25);color:#ffffff;background:rgba(2,8,23,.74);font-size:12px;text-align:left;letter-spacing:.5px;text-transform:uppercase;">Department</th>
+                          <th style="padding:13px 14px;border:1px solid rgba(93,139,184,.25);color:#ffffff;background:rgba(2,8,23,.74);font-size:12px;text-align:left;letter-spacing:.5px;text-transform:uppercase;">Cars</th>
+                          <th style="padding:13px 14px;border:1px solid rgba(93,139,184,.25);color:#ffffff;background:rgba(2,8,23,.74);font-size:12px;text-align:left;letter-spacing:.5px;text-transform:uppercase;">Rate</th>
+                          <th style="padding:13px 14px;border:1px solid rgba(93,139,184,.25);color:#ffffff;background:rgba(2,8,23,.74);font-size:12px;text-align:left;letter-spacing:.5px;text-transform:uppercase;">Cost Per Car</th>
+                          <th style="padding:13px 14px;border:1px solid rgba(93,139,184,.25);color:#ffffff;background:rgba(2,8,23,.74);font-size:12px;text-align:left;letter-spacing:.5px;text-transform:uppercase;">Total Cost</th>
+                        </tr>
+                      </thead>
+                      <tbody>${billingRowsHtml}</tbody>
+                    </table>
+                  </div>
 
                   <div style="border-radius:12px;border:1px solid rgba(86,138,192,.42);background:rgba(7,23,39,.92);padding:16px;margin:7px 7px 18px;">
                     <div style="color:#4ea1ff;font-size:20px;font-weight:900;letter-spacing:.8px;margin-bottom:12px;">SELECTED REPORT COLUMNS</div>
@@ -1698,7 +1941,7 @@ async function emailReport(){
   if(!email) return;
 
   const columns = ["code", "department", "name", "uses", "last_used"];
-  const html = buildReportHtml(columns, report.codes, report.departments, report.label, report.scopeLabel);
+  const html = buildReportHtml(columns, report.codes, report.departments, report.billing || [], report.label, report.scopeLabel);
 
   await sendReportToEmail(email, "WashTrac Report", html);
 }
@@ -1718,7 +1961,7 @@ async function emailCustomReport(){
   const email = document.getElementById("scheduleEmail").value.trim() || prompt("Enter the email address for this report:");
   if(!email) return;
 
-  const html = buildReportHtml(columns, report.codes, report.departments, report.label, report.scopeLabel);
+  const html = buildReportHtml(columns, report.codes, report.departments, report.billing || [], report.label, report.scopeLabel);
   await sendReportToEmail(email, "WashTrac Custom Report", html);
 }
 
@@ -1809,6 +2052,8 @@ async function saveReportSchedule(){
     time,
     customDays,
     columns,
+    includeBillingSummary: true,
+    costPerCar: getCostPerCar(),
     savedAt: new Date().toISOString()
   };
 
@@ -1837,6 +2082,8 @@ async function saveReportSchedule(){
       send_time: schedule.time,
       custom_days: schedule.customDays || [],
       columns: schedule.columns || [],
+      include_billing_summary: true,
+      cost_per_car: getCostPerCar(),
       enabled: schedule.frequency !== "off",
       updated_at: new Date().toISOString()
     };
@@ -1949,7 +2196,7 @@ function renderScheduleSummary(){
 
   const scopeText = schedule.reportSiteScope === "all" ? "All My Sites" : "Current Site";
 
-  box.innerText = `${details} at ${schedule.time} to ${schedule.email}. Scope: ${scopeText}. Range: ${rangeText}. Columns: ${selectedCols}.`;
+  box.innerText = `${details} at ${schedule.time} to ${schedule.email}. Scope: ${scopeText}. Range: ${rangeText}. Columns: ${selectedCols}. Billing summary included.`;
 }
 
 function loadSavedSchedule(){
@@ -1985,6 +2232,11 @@ function loadSavedSchedule(){
 }
 
 async function initializeReportsPage(){
+  const savedCostPerCar = localStorage.getItem("washtracCostPerCar");
+  if(savedCostPerCar !== null && document.getElementById("costPerCar")){
+    document.getElementById("costPerCar").value = savedCostPerCar;
+  }
+
   populateMonthDays();
   updateReportRangeFields();
   updateScheduleRangeFields();
