@@ -331,6 +331,18 @@ let activityLoadToken = 0;
 let lastFilteredActivityRows = [];
 let lastRawActivityCount = 0;
 const HEARTBEAT_ONLINE_MINUTES = 5;
+const ACTIVITY_SEARCH_STORAGE_KEY = "washtracActivitySearchSettings";
+const ACTIVITY_SEARCH_FIELD_IDS = [
+  "datePreset",
+  "startDate",
+  "endDate",
+  "rowLimit",
+  "filterCode",
+  "filterDepartment",
+  "filterName",
+  "filterBay",
+  "filterEvent"
+];
 
 function getActiveSiteId(){
   return currentSiteId || localStorage.getItem("activeSiteId") || "";
@@ -401,6 +413,44 @@ function getEndOfDay(date){
   return d;
 }
 
+function saveActivitySearchSettings(){
+  const settings = {};
+
+  ACTIVITY_SEARCH_FIELD_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) settings[id] = el.value || "";
+  });
+
+  localStorage.setItem(ACTIVITY_SEARCH_STORAGE_KEY, JSON.stringify(settings));
+}
+
+function restoreActivitySearchSettings(){
+  const saved = localStorage.getItem(ACTIVITY_SEARCH_STORAGE_KEY);
+  if(!saved) return false;
+
+  try{
+    const settings = JSON.parse(saved);
+    if(!settings || typeof settings !== "object") return false;
+
+    ACTIVITY_SEARCH_FIELD_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if(el && Object.prototype.hasOwnProperty.call(settings, id)){
+        el.value = settings[id] || "";
+      }
+    });
+
+    return true;
+  }catch(err){
+    console.log("Activity search restore error:", err);
+    localStorage.removeItem(ACTIVITY_SEARCH_STORAGE_KEY);
+    return false;
+  }
+}
+
+function clearSavedActivitySearchSettings(){
+  localStorage.removeItem(ACTIVITY_SEARCH_STORAGE_KEY);
+}
+
 function applyDatePreset(){
   const preset = document.getElementById("datePreset").value;
   const startInput = document.getElementById("startDate");
@@ -412,10 +462,14 @@ function applyDatePreset(){
   if(preset === "all"){
     startInput.value = "";
     endInput.value = "";
+    saveActivitySearchSettings();
     return;
   }
 
-  if(preset === "custom") return;
+  if(preset === "custom"){
+    saveActivitySearchSettings();
+    return;
+  }
 
   if(preset === "today"){
     start = now;
@@ -437,11 +491,13 @@ function applyDatePreset(){
 
   startInput.value = start ? toDateInputValue(start) : "";
   endInput.value = end ? toDateInputValue(end) : "";
+  saveActivitySearchSettings();
 }
 
 function setCustomPreset(){
   const preset = document.getElementById("datePreset");
   if(preset) preset.value = "custom";
+  saveActivitySearchSettings();
 }
 
 function getDateRange(){
@@ -514,7 +570,7 @@ function getHeartbeatStatus(devices){
     return {
       online:false,
       title:"SYSTEM OFFLINE",
-      detail:"No CodeBox is paired to this active site yet. Activity history is still available."
+      detail:"No Keypad is paired to this active site yet. Activity history is still available."
     };
   }
 
@@ -533,8 +589,8 @@ function getHeartbeatStatus(devices){
   if(onlineCount > 0){
     return {
       online:true,
-      title:"CODEBOX ONLINE",
-      detail:`${onlineCount} active CodeBox heartbeat${onlineCount === 1 ? "" : "s"}. Activity is available. Use Apply / Refresh for latest rows.`
+      title:"KEYPAD ONLINE",
+      detail:`${onlineCount} active Keypad heartbeat${onlineCount === 1 ? "" : "s"}. Activity is available. Use Apply / Refresh for latest rows.`
     };
   }
 
@@ -542,8 +598,8 @@ function getHeartbeatStatus(devices){
     online:false,
     title:"SYSTEM OFFLINE",
     detail:newest
-      ? `Last CodeBox heartbeat: ${newest.toLocaleString()}. Activity history is still available.`
-      : "No heartbeat has been received from the paired CodeBox yet. Activity history is still available."
+      ? `Last Keypad heartbeat: ${newest.toLocaleString()}. Activity history is still available.`
+      : "No heartbeat has been received from the paired Keypad yet. Activity history is still available."
   };
 }
 
@@ -877,6 +933,7 @@ async function loadActivity(){
     return;
   }
 
+  saveActivitySearchSettings();
   setLoading(true);
   setStatus("Loading activity...");
   document.getElementById("activityTableBody").innerHTML = `<tr><td colspan="6">Loading activity...</td></tr>`;
@@ -993,6 +1050,7 @@ function exportFilteredActivity(){
 }
 
 function clearFilters(){
+  clearSavedActivitySearchSettings();
   document.getElementById("filterCode").value = "";
   document.getElementById("filterDepartment").value = "";
   document.getElementById("filterName").value = "";
@@ -1001,8 +1059,23 @@ function clearFilters(){
   document.getElementById("datePreset").value = "7days";
   document.getElementById("rowLimit").value = "250";
   applyDatePreset();
+  saveActivitySearchSettings();
   loadActivity();
 }
+
+ACTIVITY_SEARCH_FIELD_IDS.forEach(id => {
+  document.addEventListener("change", event => {
+    if(event.target && event.target.id === id){
+      saveActivitySearchSettings();
+    }
+  });
+
+  document.addEventListener("input", event => {
+    if(event.target && event.target.id === id){
+      saveActivitySearchSettings();
+    }
+  });
+});
 
 ["filterCode","filterDepartment","filterName","filterBay","filterEvent"].forEach(id => {
   document.addEventListener("keydown", event => {
@@ -1030,7 +1103,11 @@ window.addEventListener("beforeunload", function(){
 });
 
 window.onload = async function(){
-  applyDatePreset();
+  const restored = restoreActivitySearchSettings();
+  if(!restored){
+    applyDatePreset();
+  }
+
   const siteId = await loadSites();
   if(!siteId){
     resetActivityEmpty();
