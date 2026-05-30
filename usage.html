@@ -1459,10 +1459,26 @@ const uses = rows
     const code = String(getCode(row) || "").trim();
     const matchedCode = codeLookup[code] || {};
 
+    /*
+      Department billing must follow the actual department saved on each wash
+      activity record. The access_codes lookup is only a fallback for older
+      rows that may not have department/name metadata saved on the activity.
+    */
+    const activityDepartment =
+      row.metadata?.department ||
+      row.department ||
+      "";
+
+    const activityName =
+      row.metadata?.name ||
+      row.metadata?.assigned_to ||
+      row.name ||
+      "";
+
     return {
       code,
-      department: matchedCode.department || getDepartment(row),
-      name: matchedCode.name || getName(row),
+      department: activityDepartment || matchedCode.department || "Unassigned",
+      name: activityName || matchedCode.name || getName(row),
       uses: 1,
       last_used: getTime(row),
       site_id: row.site_id || "",
@@ -1733,7 +1749,7 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
         <td style="padding:12px 14px;border:1px solid rgba(93,139,184,.18);color:#eaf4ff;font-size:13px;">${esc(item.department)}</td>
         <td style="padding:12px 14px;border:1px solid rgba(93,139,184,.18);color:#eaf4ff;font-size:13px;">${esc(item.cars)}</td>
         <td style="padding:12px 14px;border:1px solid rgba(93,139,184,.18);color:#eaf4ff;font-size:13px;">${esc(item.rate)}</td>
-        <td style="padding:12px 14px;border:1px solid rgba(93,139,184.18);color:#eaf4ff;font-size:13px;font-weight:900;">${esc(item.total_cost)}</td>
+        <td style="padding:12px 14px;border:1px solid rgba(93,139,184,.18);color:#eaf4ff;font-size:13px;font-weight:900;">${esc(item.total_cost)}</td>
       </tr>
     `;
   }).join("") : `
