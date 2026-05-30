@@ -269,6 +269,77 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
   text-align:right;
 }
 
+.billing-compact-head,
+.billing-compact-row{
+  display:grid;
+  grid-template-columns:1.25fr .7fr .75fr .9fr;
+  gap:10px;
+  align-items:center;
+}
+
+.billing-compact-head{
+  color:#93c5fd;
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  font-weight:bold;
+  padding:8px 0 10px;
+  border-bottom:1px solid #1f2937;
+}
+
+.billing-compact-row{
+  padding:9px 0;
+  border-bottom:1px solid #1f2937;
+  color:#dbe5fb;
+  font-size:14px;
+}
+
+.billing-compact-row:last-child{
+  border-bottom:none;
+}
+
+.billing-compact-dept{
+  color:white;
+  font-weight:800;
+  min-width:0;
+}
+
+.billing-compact-cars,
+.billing-compact-rate{
+  text-align:right;
+  color:#cbd5e1;
+  white-space:nowrap;
+}
+
+.billing-compact-total{
+  text-align:right;
+  color:#86efac;
+  font-weight:900;
+  white-space:nowrap;
+}
+
+.billing-live-total{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid #334155;
+  font-size:17px;
+  font-weight:900;
+}
+
+.billing-live-total span:last-child{
+  color:#86efac;
+}
+
+.billing-live-note{
+  margin-top:10px;
+  color:#94a3b8;
+  font-size:13px;
+  line-height:1.45;
+}
+
 .empty-state{
   color:#94a3b8;
   padding:6px 0;
@@ -293,6 +364,9 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
   .activity-header{display:none;}
   .activity-row{grid-template-columns:1fr;gap:6px;}
   .activity-code,.activity-department,.activity-name,.activity-event{text-align:left;}
+  .billing-compact-head{display:none;}
+  .billing-compact-row{grid-template-columns:1fr;gap:5px;}
+  .billing-compact-cars,.billing-compact-rate,.billing-compact-total{text-align:left;}
 }
 </style>
 </head>
@@ -406,6 +480,18 @@ document.addEventListener("DOMContentLoaded", function(){
       </div>
 
       <div class="card card-span-full">
+        <h3>Live Department Billing</h3>
+        <div id="liveDepartmentBilling"></div>
+        <div class="billing-live-total">
+          <span>Today's Billing Total</span>
+          <span id="liveBillingTotal">$0.00</span>
+        </div>
+        <div class="billing-live-note">
+          Uses today's successful washes, the actual department on each wash event, and the Cost Per Car saved on the Dashboard.
+        </div>
+      </div>
+
+      <div class="card card-span-full">
         <h3>Device Status</h3>
         <div id="deviceStatus" class="device-monitor-list"></div>
       </div>
@@ -437,6 +523,8 @@ let assignedSiteIds = [];
 let refreshTimer = null;
 let heartbeatTimer = null;
 let monitorLoadInProgress = false;
+let currentCostPerCar = 0;
+let currentDepartmentCosts = {};
 
 const MONITOR_REFRESH_DELAY_MS = 350;
 const MONITOR_HEARTBEAT_REFRESH_MS = 30000;
@@ -570,6 +658,109 @@ function escapeText(value){
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function money(value){
+  const number = Number(value || 0);
+  return number.toLocaleString(undefined, {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+function parseCostPerCar(value){
+  const number = Number(String(value ?? "0").replace(/[^0-9.]/g, ""));
+  if(!Number.isFinite(number) || number < 0) return 0;
+  return Math.round(number * 100) / 100;
+}
+
+function sameLocalDay(dateA, dateB){
+  return dateA.getFullYear() === dateB.getFullYear() &&
+         dateA.getMonth() === dateB.getMonth() &&
+         dateA.getDate() === dateB.getDate();
+}
+
+function isBillableWash(row){
+  const text = `${row.event || ""} ${row.status || ""} ${row.metadata?.status || ""} ${row.metadata?.event || ""}`.toLowerCase();
+
+  if(text.includes("invalid") || text.includes("denied") || text.includes("failed") || text.includes("rejected") || text.includes("error")){
+    return false;
+  }
+
+  if(text.includes("add") || text.includes("delete") || text.includes("pair")){
+    return false;
+  }
+
+  return true;
+}
+
+const BILLING_DEPARTMENT_ORDER = [
+  "New Cars",
+  "Pre Owned",
+  "Service",
+  "Detail",
+  "Manager",
+  "Temporary",
+  "Other"
+];
+
+const BILLING_DEPARTMENT_ALIASES = {
+  "new cars": "New Cars",
+  "new car": "New Cars",
+  "new": "New Cars",
+  "pre owned": "Pre Owned",
+  "pre-owned": "Pre Owned",
+  "preowned": "Pre Owned",
+  "used": "Pre Owned",
+  "service": "Service",
+  "detail": "Detail",
+  "manager": "Manager",
+  "management": "Manager",
+  "temporary": "Temporary",
+  "temp": "Temporary",
+  "other": "Other"
+};
+
+const NON_BILLING_DEPARTMENTS = new Set([
+  "wash",
+  "controls",
+  "maintenance",
+  "unassigned",
+  ""
+]);
+
+function normalizeBillingDepartment(value){
+  const raw = String(value || "").trim();
+  const key = raw.toLowerCase();
+
+  if(NON_BILLING_DEPARTMENTS.has(key)) return null;
+  if(BILLING_DEPARTMENT_ALIASES[key]) return BILLING_DEPARTMENT_ALIASES[key];
+
+  return raw || null;
+}
+
+function sortBillingDepartments(items){
+  return items.sort((a,b) => {
+    const aIndex = BILLING_DEPARTMENT_ORDER.indexOf(a.department);
+    const bIndex = BILLING_DEPARTMENT_ORDER.indexOf(b.department);
+    const safeA = aIndex === -1 ? 999 : aIndex;
+    const safeB = bIndex === -1 ? 999 : bIndex;
+
+    if(safeA !== safeB) return safeA - safeB;
+    return String(a.department).localeCompare(String(b.department));
+  });
+}
+
+function getDepartmentCost(department){
+  const normalized = normalizeBillingDepartment(department);
+  if(!normalized) return parseCostPerCar(currentCostPerCar);
+
+  const exact = currentDepartmentCosts?.[normalized];
+  const lowerMatchKey = Object.keys(currentDepartmentCosts || {}).find(key => key.toLowerCase() === normalized.toLowerCase());
+
+  return parseCostPerCar(exact ?? currentDepartmentCosts?.[lowerMatchKey] ?? currentCostPerCar);
 }
 
 function renderBays(bays){
@@ -778,6 +969,7 @@ function renderNoSite(){
   renderBays([]);
   renderDevices([]);
   renderActivity([]);
+  renderLiveDepartmentBilling([]);
 
   const banner = document.getElementById("systemBanner");
   banner.className = "banner yellow";
@@ -890,6 +1082,141 @@ async function loadAssignedSites(){
 function hasAccessToActiveSite(){
   const activeSiteId = getActiveSiteId();
   return !!activeSiteId && assignedSiteIds.includes(activeSiteId);
+}
+
+async function fetchActiveSiteSettings(){
+  const activeSiteId = getActiveSiteId();
+
+  if(!activeSiteId || !hasAccessToActiveSite()){
+    currentCostPerCar = 0;
+    currentDepartmentCosts = {};
+    return null;
+  }
+
+  const { data, error } = await client
+    .from("sites")
+    .select("id, cost_per_car, department_costs")
+    .eq("id", activeSiteId)
+    .maybeSingle();
+
+  if(error){
+    console.log("site billing settings error:", error);
+    currentCostPerCar = 0;
+    currentDepartmentCosts = {};
+    return null;
+  }
+
+  currentCostPerCar = parseCostPerCar(data?.cost_per_car || 0);
+  currentDepartmentCosts = data?.department_costs && typeof data.department_costs === "object" ? data.department_costs : {};
+
+  return data || null;
+}
+
+async function fetchTodayBillingActivity(){
+  const activeSiteId = getActiveSiteId();
+
+  if(!activeSiteId || !hasAccessToActiveSite()){
+    return [];
+  }
+
+  const start = new Date();
+  start.setHours(0,0,0,0);
+
+  let result = await client
+    .from("wash_activity")
+    .select("*")
+    .eq("site_id", activeSiteId)
+    .gte("event_time", start.toISOString())
+    .order("event_time", { ascending:false })
+    .limit(500);
+
+  if(result.error){
+    console.log("today billing event_time error:", result.error);
+
+    result = await client
+      .from("wash_activity")
+      .select("*")
+      .eq("site_id", activeSiteId)
+      .gte("created_at", start.toISOString())
+      .order("created_at", { ascending:false })
+      .limit(500);
+  }
+
+  if(result.error){
+    console.log("today billing activity error:", result.error);
+    return [];
+  }
+
+  return result.data || [];
+}
+
+function renderLiveDepartmentBilling(rows){
+  const wrap = document.getElementById("liveDepartmentBilling");
+  const totalEl = document.getElementById("liveBillingTotal");
+
+  if(!wrap || !totalEl) return;
+
+  const today = new Date();
+  const map = {};
+
+  (rows || []).forEach(row => {
+    if(!isBillableWash(row)) return;
+
+    const eventDate = new Date(row.event_time || row.created_at || Date.now());
+    if(Number.isNaN(eventDate.getTime()) || !sameLocalDay(eventDate, today)) return;
+
+    const department = normalizeBillingDepartment(row.department || row.metadata?.department);
+    if(!department) return;
+
+    const storedCost = parseCostPerCar(row.cost_per_car || row.metadata?.cost_per_car);
+    const rate = storedCost > 0 ? storedCost : getDepartmentCost(department);
+
+    if(!map[department]){
+      map[department] = {
+        department,
+        cars: 0,
+        rate,
+        total: 0
+      };
+    }
+
+    map[department].cars += 1;
+    map[department].rate = rate;
+    map[department].total += rate;
+  });
+
+  const items = sortBillingDepartments(Object.values(map));
+  const dayTotal = items.reduce((sum, item) => sum + Number(item.total || 0), 0);
+
+  totalEl.innerText = money(dayTotal);
+
+  if(!items.length){
+    wrap.innerHTML = `<div class="empty-state">No billable washes recorded today.</div>`;
+    return;
+  }
+
+  wrap.innerHTML = `
+    <div class="billing-compact-head">
+      <div>Department</div>
+      <div style="text-align:right;">Cars Today</div>
+      <div style="text-align:right;">Rate</div>
+      <div style="text-align:right;">Total</div>
+    </div>
+    ${items.map(item => `
+      <div class="billing-compact-row">
+        <div class="billing-compact-dept">${escapeText(item.department)}</div>
+        <div class="billing-compact-cars">${item.cars}</div>
+        <div class="billing-compact-rate">${money(item.rate)}</div>
+        <div class="billing-compact-total">${money(item.total)}</div>
+      </div>
+    `).join("")}
+  `;
+}
+
+async function loadDepartmentBilling(){
+  await fetchActiveSiteSettings();
+  const rows = await fetchTodayBillingActivity();
+  renderLiveDepartmentBilling(rows);
 }
 
 async function fetchControl(){
@@ -1010,7 +1337,8 @@ async function loadMonitor(){
       fetchControl(),
       fetchDevices(),
       loadBays(),
-      loadActivity()
+      loadActivity(),
+      loadDepartmentBilling()
     ]);
 
     const hasPairedDevice = Array.isArray(devices) && devices.length > 0;
@@ -1075,7 +1403,10 @@ function setupRealtime(){
       table:"wash_activity",
       filter:`site_id=eq.${activeSiteId}`
     }, () => {
-      if(!document.hidden) loadActivity();
+      if(!document.hidden){
+        loadActivity();
+        loadDepartmentBilling();
+      }
     })
 
     .on("postgres_changes", {
