@@ -2241,6 +2241,10 @@ async function saveReportSchedule(){
   return;
 }
 
+const scheduleUserId = user.is_admin_session
+  ? "00000000-0000-0000-0000-000000000000"
+  : user.id;
+
     const payload = {
       user_id: user.id,
       email: schedule.email,
