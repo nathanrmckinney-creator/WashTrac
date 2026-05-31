@@ -474,6 +474,7 @@ document.addEventListener("DOMContentLoaded", function(){
         <div class="note" id="siteScopeSummary">Reports are using the current selected site.</div>
 
         <div class="actions">
+          <button onclick="exportCustomCSV()">Export Selected Columns</button>
           <button class="secondary" onclick="emailReport()">Email Report</button>
         </div>
 
@@ -532,9 +533,7 @@ document.addEventListener("DOMContentLoaded", function(){
             <label><input type="checkbox" class="report-column" value="last_used" checked> Last Used</label>
           </div>
 
-         <div class="actions">
-  <button onclick="exportCustomCSV()">Export Selected Columns</button>
-</div>
+
         </div>
 
         <div class="builder-section">
