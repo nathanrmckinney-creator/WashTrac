@@ -2140,24 +2140,6 @@ async function emailReport(){
   await sendReportToEmail(email, "WashTrac Report", html);
 }
 
-  const columns = getSelectedColumns();
-  if(!columns.length) return;
-
-  const email = getManualReportEmail();
-  if(!email){
-    setManualEmailStatus("Enter an email address first.", "warn");
-    return;
-  }
-
-  if(!isValidEmailAddress(email)){
-    setManualEmailStatus("Enter a valid email address.", "error");
-    return;
-  }
-
-  const html = buildReportHtml(columns, report.codes, report.departments, report.billing || [], report.label, report.scopeLabel);
-  await sendReportToEmail(email, "WashTrac Custom Report", html);
-}
-
 function populateMonthDays(){
   const select = document.getElementById("monthDay");
   select.innerHTML = "";
