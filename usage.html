@@ -1903,7 +1903,7 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
   const loginUrl = `https://www.thewashtrac.com/login.html?redirect=${encodeURIComponent(reportUrl)}`;
 
   const tableHeaders = columns.map(col => `
-    <th style="padding:13px 14px;border:1px solid rgba(93,139,184,.25);color:#ffffff;background:rgba(2,8,23,.74);font-size:12px;text-align:left;letter-spacing:.5px;text-transform:uppercase;">
+    <th style="padding:13px 14px;border:1px solid #2563eb;color:#ffffff;background:rgba(2,8,23,.74);font-size:12px;text-align:left;letter-spacing:.5px;text-transform:uppercase;">
       ${esc(columnLabels[col] || col)}
     </th>
   `).join("");
@@ -1913,7 +1913,7 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
     return `
       <tr style="background:${bg};">
         ${columns.map(col => `
-          <td style="padding:12px 14px;border:1px solid rgba(93,139,184,.18);color:#eaf4ff;font-size:13px;">
+          <td style="padding:12px 14px;border:1px solid #1d4ed8;color:#eaf4ff;font-size:13px;">
             ${esc(item[col] || "")}
           </td>
         `).join("")}
@@ -1921,7 +1921,7 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
     `;
   }).join("") : `
     <tr>
-      <td colspan="${columns.length}" style="padding:30px;text-align:center;color:#94a3b8;background:#06111f;border:1px solid rgba(93,139,184,.18);">
+      <td colspan="${columns.length}" style="padding:30px;text-align:center;color:#94a3b8;background:#06111f;border:1px solid #1d4ed8;">
         No report data found for this range.
       </td>
     </tr>
@@ -1947,15 +1947,15 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
     const bg = index % 2 === 0 ? "rgba(13,32,52,.92)" : "rgba(8,23,39,.92)";
     return `
       <tr style="background:${bg};">
-        <td style="padding:12px 14px;border:1px solid rgba(93,139,184,.18);color:#eaf4ff;font-size:13px;">${esc(item.department)}</td>
-        <td style="padding:12px 14px;border:1px solid rgba(93,139,184,.18);color:#eaf4ff;font-size:13px;">${esc(item.cars)}</td>
-        <td style="padding:12px 14px;border:1px solid rgba(93,139,184,.18);color:#eaf4ff;font-size:13px;">${esc(item.rate)}</td>
-        <td style="padding:12px 14px;border:1px solid rgba(93,139,184,.18);color:#4ade80;font-size:13px;font-weight:900;">${esc(item.total_cost)}</td>
+        <td style="padding:12px 14px;border:1px solid #1d4ed8;color:#eaf4ff;font-size:13px;">${esc(item.department)}</td>
+        <td style="padding:12px 14px;border:1px solid #1d4ed8;color:#eaf4ff;font-size:13px;">${esc(item.cars)}</td>
+        <td style="padding:12px 14px;border:1px solid #1d4ed8;color:#eaf4ff;font-size:13px;">${esc(item.rate)}</td>
+        <td style="padding:12px 14px;border:1px solid #1d4ed8;color:#4ade80;font-size:13px;font-weight:900;">${esc(item.total_cost)}</td>
       </tr>
     `;
   }).join("") : `
     <tr>
-      <td colspan="4" style="padding:30px;text-align:center;color:#94a3b8;background:#06111f;border:1px solid rgba(93,139,184,.18);">
+      <td colspan="4" style="padding:30px;text-align:center;color:#94a3b8;background:#06111f;border:1px solid #1d4ed8;">
         No billing data found for this range.
       </td>
     </tr>
@@ -1964,7 +1964,7 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
   function metricCard(label, value, sub, accent){
     return `
       <td width="25%" style="padding:7px;vertical-align:top;">
-        <div style="min-height:132px;border-radius:14px;background:linear-gradient(145deg,rgba(9,27,45,.96),rgba(5,18,31,.98));border:1px solid rgba(37,99,235,.75);box-shadow:inset 0 0 24px rgba(56,189,248,.04),0 0 22px rgba(0,0,0,.28);padding:18px 12px;text-align:center;">
+        <div style="min-height:132px;border-radius:14px;background:linear-gradient(145deg,rgba(9,27,45,.96),rgba(5,18,31,.98));border:1px solid #2563eb;box-shadow:inset 0 0 24px rgba(56,189,248,.04),0 0 22px rgba(0,0,0,.28);padding:18px 12px;text-align:center;">
           <div style="font-size:13px;letter-spacing:.5px;color:#ffffff;text-transform:uppercase;font-weight:800;min-height:30px;">${esc(label)}</div>
           <div style="font-size:36px;line-height:1;font-weight:900;color:${accent};margin-top:8px;">${esc(value)}</div>
           <div style="font-size:13px;color:${accent};font-weight:800;margin-top:10px;">${esc(sub)}</div>
@@ -1991,7 +1991,7 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
         <td align="center" style="padding:26px 10px;background:radial-gradient(circle at 50% 0%,#0b2540 0%,#020817 42%,#00040c 100%);">
           <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:980px;border-collapse:collapse;">
             <tr>
-              <td style="border-radius:16px;overflow:hidden;background:linear-gradient(180deg,#050d19 0%,#071727 48%,#020817 100%);border:1px solid rgba(37,99,235,.82);box-shadow:0 0 42px rgba(0,119,255,.22),0 30px 80px rgba(0,0,0,.68);">
+              <td style="border-radius:16px;overflow:hidden;background:linear-gradient(180deg,#050d19 0%,#071727 48%,#020817 100%);border:1px solid #2563eb;box-shadow:0 0 42px rgba(0,119,255,.22),0 30px 80px rgba(0,0,0,.68);">
 
                 <div style="padding:28px 24px 18px;text-align:center;background:radial-gradient(circle at 50% 8%,rgba(35,136,255,.28),rgba(2,8,23,0) 42%);">
                   <img src="https://thewashtrac.com/washtrac-logo.png" alt="WashTrac" width="380" style="display:block;margin:0 auto 10px auto;height:auto;max-width:88%;">
@@ -2028,7 +2028,7 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
                   <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:14px;">
                     <tr>
                       <td width="60%" style="padding:7px;vertical-align:top;">
-                        <div style="border-radius:12px;border:1px solid rgba(37,99,235,.75);background:rgba(7,23,39,.92);padding:18px;min-height:220px;">
+                        <div style="border-radius:12px;border:1px solid #2563eb;background:rgba(7,23,39,.92);padding:18px;min-height:220px;">
                           <div style="color:#4ea1ff;font-size:20px;font-weight:900;letter-spacing:.8px;margin-bottom:16px;">REPORT SUMMARY</div>
                           <div style="color:#cbd5e1;font-size:15px;line-height:1.8;">
                             <div><strong style="color:#ffffff;">Scope:</strong> ${esc(cleanScope)}</div>
@@ -2039,7 +2039,7 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
                         </div>
                       </td>
                       <td width="40%" style="padding:7px;vertical-align:top;">
-                        <div style="border-radius:12px;border:1px solid rgba(37,99,235,.75);background:rgba(7,23,39,.92);padding:18px;min-height:220px;">
+                        <div style="border-radius:12px;border:1px solid #2563eb;background:rgba(7,23,39,.92);padding:18px;min-height:220px;">
                           <div style="color:#4ea1ff;font-size:20px;font-weight:900;letter-spacing:.8px;margin-bottom:16px;">TOP DEPARTMENTS</div>
                           ${deptHtml}
                         </div>
@@ -2047,7 +2047,7 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
                     </tr>
                   </table>
 
-                  <div style="border-radius:12px;border:1px solid rgba(37,99,235,.75);background:rgba(7,23,39,.92);padding:16px;margin:7px 7px 18px;">
+                  <div style="border-radius:12px;border:1px solid #2563eb;background:rgba(7,23,39,.92);padding:16px;margin:7px 7px 18px;">
                     <div style="display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:12px;">
                       <div style="color:#4ea1ff;font-size:20px;font-weight:900;letter-spacing:.8px;">DEPARTMENT BILLING SUMMARY</div>
                       <div style="color:#ffffff;font-size:16px;font-weight:900;">Monthly Total: <span style="color:#4ade80;">${esc(formatMoney(monthlyTotal))}</span></div>
@@ -2055,17 +2055,17 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
                     <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:13px;overflow:hidden;border-radius:8px;">
                       <thead>
                         <tr>
-                          <th style="padding:13px 14px;border:1px solid rgba(93,139,184,.25);color:#ffffff;background:rgba(2,8,23,.74);font-size:12px;text-align:left;letter-spacing:.5px;text-transform:uppercase;">Department</th>
-                          <th style="padding:13px 14px;border:1px solid rgba(93,139,184,.25);color:#ffffff;background:rgba(2,8,23,.74);font-size:12px;text-align:left;letter-spacing:.5px;text-transform:uppercase;">Cars</th>
-                          <th style="padding:13px 14px;border:1px solid rgba(93,139,184,.25);color:#ffffff;background:rgba(2,8,23,.74);font-size:12px;text-align:left;letter-spacing:.5px;text-transform:uppercase;">Rate</th>
-                          <th style="padding:13px 14px;border:1px solid rgba(93,139,184,.25);color:#ffffff;background:rgba(2,8,23,.74);font-size:12px;text-align:left;letter-spacing:.5px;text-transform:uppercase;">Total Cost</th>
+                          <th style="padding:13px 14px;border:1px solid #2563eb;color:#ffffff;background:rgba(2,8,23,.74);font-size:12px;text-align:left;letter-spacing:.5px;text-transform:uppercase;">Department</th>
+                          <th style="padding:13px 14px;border:1px solid #2563eb;color:#ffffff;background:rgba(2,8,23,.74);font-size:12px;text-align:left;letter-spacing:.5px;text-transform:uppercase;">Cars</th>
+                          <th style="padding:13px 14px;border:1px solid #2563eb;color:#ffffff;background:rgba(2,8,23,.74);font-size:12px;text-align:left;letter-spacing:.5px;text-transform:uppercase;">Rate</th>
+                          <th style="padding:13px 14px;border:1px solid #2563eb;color:#ffffff;background:rgba(2,8,23,.74);font-size:12px;text-align:left;letter-spacing:.5px;text-transform:uppercase;">Total Cost</th>
                         </tr>
                       </thead>
                       <tbody>${billingRowsHtml}</tbody>
                     </table>
                   </div>
 
-                  <div style="border-radius:12px;border:1px solid rgba(37,99,235,.75);background:rgba(7,23,39,.92);padding:16px;margin:7px 7px 18px;">
+                  <div style="border-radius:12px;border:1px solid #2563eb;background:rgba(7,23,39,.92);padding:16px;margin:7px 7px 18px;">
                     <div style="color:#4ea1ff;font-size:20px;font-weight:900;letter-spacing:.8px;margin-bottom:12px;">SELECTED REPORT COLUMNS</div>
                     <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:13px;overflow:hidden;border-radius:8px;">
                       <thead><tr>${tableHeaders}</tr></thead>
@@ -2213,37 +2213,53 @@ async function saveReportSchedule(){
     }
   }
 
-  const schedule = {
-    email,
-    frequency,
-    reportSiteScope,
-    activeSiteId: getActiveSiteId(),
-    siteIds: cachedSiteIds,
-    scheduleRange,
-    scheduleStartDate: document.getElementById("scheduleStartDate").value,
-    scheduleEndDate: document.getElementById("scheduleEndDate").value,
-    weeklyDay,
-    monthDay,
-    time,
-    customDays,
-    columns,
-    includeBillingSummary: true,
-    savedAt: new Date().toISOString()
-  };
-
   setStatus("Saving live report schedule...", "warn");
 
   try{
+    const siteInfo = await ensureActiveSiteIsValid();
+    const activeSiteId = siteInfo.activeSiteId || getActiveSiteId();
+
+    if(!activeSiteId){
+      setStatus("No active site found. Choose a site on the dashboard first.", "error");
+      return;
+    }
+
     const user = await getCurrentUser();
 
-   if(!user){
-  setStatus("User account not found.", "error");
-  return;
-}
+    if(!user){
+      setStatus("User account not found.", "error");
+      return;
+    }
 
-const scheduleUserId = user.is_admin_session
-  ? "00000000-0000-0000-0000-000000000000"
-  : user.id;
+    /*
+      Admin mode does not always have a Supabase auth session, so it uses a
+      stable system UUID. Normal customer users use their real Supabase user id.
+    */
+    const scheduleUserId = user.is_admin_session
+      ? "00000000-0000-0000-0000-000000000000"
+      : user.id;
+
+    const selectedSiteIds = reportSiteScope === "all"
+      ? (siteInfo.siteIds || [])
+      : [activeSiteId];
+
+    const schedule = {
+      email,
+      frequency,
+      reportSiteScope,
+      activeSiteId,
+      siteIds: selectedSiteIds,
+      scheduleRange,
+      scheduleStartDate: document.getElementById("scheduleStartDate").value,
+      scheduleEndDate: document.getElementById("scheduleEndDate").value,
+      weeklyDay,
+      monthDay,
+      time,
+      customDays,
+      columns,
+      includeBillingSummary: true,
+      savedAt: new Date().toISOString()
+    };
 
     const payload = {
       user_id: scheduleUserId,
@@ -2251,6 +2267,7 @@ const scheduleUserId = user.is_admin_session
       frequency: schedule.frequency,
       report_site_scope: schedule.reportSiteScope,
       active_site_id: schedule.activeSiteId || null,
+      site_id: schedule.activeSiteId || null,
       site_ids: schedule.siteIds || [],
       report_range: schedule.scheduleRange,
       schedule_range: schedule.scheduleRange,
@@ -2263,12 +2280,63 @@ const scheduleUserId = user.is_admin_session
       columns: schedule.columns || [],
       include_billing_summary: true,
       enabled: schedule.frequency !== "off",
+      last_sent_at: null,
       updated_at: new Date().toISOString()
     };
 
-    const { error } = await client
+    /*
+      Do NOT upsert on user_id. That breaks scheduled reports when multiple
+      sites/users need their own send times. Instead, keep one schedule per
+      user + active site and update that row.
+    */
+    const { data: existingRows, error: lookupError } = await client
       .from("report_schedules")
-      .upsert(payload, { onConflict: "user_id" });
+      .select("id")
+      .eq("user_id", scheduleUserId)
+      .eq("active_site_id", activeSiteId)
+      .order("updated_at", { ascending:false })
+      .limit(10);
+
+    if(lookupError){
+      console.log("Schedule lookup error:", lookupError);
+      setStatus("Schedule failed to save.", "error");
+      return;
+    }
+
+    let error = null;
+
+    if(existingRows && existingRows.length){
+      const keepId = existingRows[0].id;
+
+      const updateResult = await client
+        .from("report_schedules")
+        .update(payload)
+        .eq("id", keepId);
+
+      error = updateResult.error;
+
+      /*
+        Clean up accidental duplicate schedule rows for the same user/site.
+        This prevents two emails from sending for one saved schedule.
+      */
+      const duplicateIds = existingRows.slice(1).map(row => row.id);
+      if(!error && duplicateIds.length){
+        const deleteResult = await client
+          .from("report_schedules")
+          .delete()
+          .in("id", duplicateIds);
+
+        if(deleteResult.error){
+          console.log("Duplicate schedule cleanup error:", deleteResult.error);
+        }
+      }
+    }else{
+      const insertResult = await client
+        .from("report_schedules")
+        .insert(payload);
+
+      error = insertResult.error;
+    }
 
     if(error){
       console.log("Schedule save error:", error);
@@ -2285,7 +2353,6 @@ const scheduleUserId = user.is_admin_session
     setStatus("Unexpected schedule save error.", "error");
   }
 }
-
 function clearReportSchedule(){
   localStorage.removeItem("washtracReportSchedule");
 
