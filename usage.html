@@ -478,6 +478,13 @@ document.addEventListener("DOMContentLoaded", function(){
           <button class="secondary" onclick="emailReport()">Email Report</button>
         </div>
 
+        <div class="form-row" style="margin-top:14px;">
+          <label for="manualReportEmail">Send Report To</label>
+          <input id="manualReportEmail" type="email" placeholder="name@email.com">
+        </div>
+
+        <div class="status" id="manualEmailStatus"></div>
+
         <div class="note">
           Choose a date range, select columns, download a CSV, email a report, or save an automatic reporting schedule.
         </div>
@@ -1049,6 +1056,31 @@ function setStatus(message, tone = ""){
   }
 }
 
+function setManualEmailStatus(message, tone = ""){
+  const box = document.getElementById("manualEmailStatus");
+  if(!box) return;
+
+  box.innerText = message || "";
+  box.className = "status show";
+
+  if(tone === "success"){
+    box.classList.add("success");
+  }else if(tone === "warn"){
+    box.classList.add("warn");
+  }else if(tone === "error" || tone === true){
+    box.classList.add("error");
+  }
+}
+
+function getManualReportEmail(){
+  const input = document.getElementById("manualReportEmail");
+  return input ? input.value.trim() : "";
+}
+
+function isValidEmailAddress(email){
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim());
+}
+
 function getCode(row){
   return (
     row.metadata?.code ||
@@ -1058,18 +1090,47 @@ function getCode(row){
   );
 }
 
+function isDevicePlaceholderName(value){
+  const key = String(value || "").trim().toLowerCase();
+
+  if(!key) return false;
+
+  return [
+    "keypad",
+    "codebox",
+    "washtrac",
+    "device",
+    "washtrac keypad",
+    "washtrac device"
+  ].includes(key);
+}
+
+function cleanReportName(value){
+  const name = String(value || "").trim();
+  if(!name) return "";
+  if(isDevicePlaceholderName(name)) return "";
+  return name;
+}
+
 function getName(row){
-  return (
-    row.metadata?.name ||
-    row.name ||
-    row.customer_name ||
-    row.employee_name ||
-    row.employee ||
-    row.metadata?.customer_name ||
-    row.metadata?.employee_name ||
-    row.metadata?.employee ||
-    ""
-  );
+  const candidates = [
+    row.metadata?.assigned_to,
+    row.assigned_to,
+    row.metadata?.customer_name,
+    row.customer_name,
+    row.metadata?.employee_name,
+    row.employee_name,
+    row.employee,
+    row.name,
+    row.metadata?.name
+  ];
+
+  for(const candidate of candidates){
+    const clean = cleanReportName(candidate);
+    if(clean) return clean;
+  }
+
+  return "";
 }
 
 function getDepartment(row){
@@ -1272,7 +1333,7 @@ function aggregateUses(uses){
       };
     }
 
-    if(item.name && !codeMap[code].name){
+    if(item.name && (!codeMap[code].name || isDevicePlaceholderName(codeMap[code].name))){
       codeMap[code].name = item.name;
     }
 
@@ -1612,18 +1673,15 @@ const uses = rows
       row.department ||
       "";
 
-    const activityName =
-      row.metadata?.name ||
-      row.metadata?.assigned_to ||
-      row.name ||
-      "";
+    const activityName = getName(row);
+    const matchedName = cleanReportName(matchedCode.name);
 
     const billingDepartment = normalizeBillingDepartment(activityDepartment || matchedCode.department);
 
     return {
       code,
       department: billingDepartment || "",
-      name: activityName || matchedCode.name || getName(row),
+      name: activityName || matchedName,
       uses: 1,
       last_used: getTime(row),
       site_id: row.site_id || "",
@@ -2042,7 +2100,7 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
 }
 
 async function sendReportToEmail(email, subject, html){
-  setStatus("Sending report...", "warn");
+  setManualEmailStatus("Sending report...", "warn");
 
   const { data, error } = await client.functions.invoke("send-report", {
     body: { to: email, subject: subject, html: html }
@@ -2050,12 +2108,12 @@ async function sendReportToEmail(email, subject, html){
 
   if(error){
     console.log(error);
-    setStatus("Email failed.", "error");
+    setManualEmailStatus("Email failed. Please check the address and try again.", "error");
     return false;
   }
 
   console.log(data);
-  setStatus("Report sent.", "success");
+  setManualEmailStatus(`Report sent to ${email}.`, "success");
   return true;
 }
 
@@ -2064,12 +2122,20 @@ async function emailReport(){
   if(!report) return;
 
   if(!report.codes.length){
-    alert("No data to email for this date range.");
+    setManualEmailStatus("No data to email for this date range.", "warn");
     return;
   }
 
-  const email = prompt("Enter the email address for this report:");
-  if(!email) return;
+  const email = getManualReportEmail();
+  if(!email){
+    setManualEmailStatus("Enter an email address first.", "warn");
+    return;
+  }
+
+  if(!isValidEmailAddress(email)){
+    setManualEmailStatus("Enter a valid email address.", "error");
+    return;
+  }
 
   const columns = ["code", "department", "name", "uses", "last_used"];
   const html = buildReportHtml(columns, report.codes, report.departments, report.billing || [], report.label, report.scopeLabel);
@@ -2082,15 +2148,23 @@ async function emailCustomReport(){
   if(!report) return;
 
   if(!report.codes.length){
-    alert("No data to email for this date range.");
+    setManualEmailStatus("No data to email for this date range.", "warn");
     return;
   }
 
   const columns = getSelectedColumns();
   if(!columns.length) return;
 
-  const email = document.getElementById("scheduleEmail").value.trim() || prompt("Enter the email address for this report:");
-  if(!email) return;
+  const email = getManualReportEmail();
+  if(!email){
+    setManualEmailStatus("Enter an email address first.", "warn");
+    return;
+  }
+
+  if(!isValidEmailAddress(email)){
+    setManualEmailStatus("Enter a valid email address.", "error");
+    return;
+  }
 
   const html = buildReportHtml(columns, report.codes, report.departments, report.billing || [], report.label, report.scopeLabel);
   await sendReportToEmail(email, "WashTrac Custom Report", html);
