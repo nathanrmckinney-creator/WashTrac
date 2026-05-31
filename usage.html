@@ -1149,11 +1149,13 @@ function getTime(row){
 
 function isUseEvent(row){
   const event = String(row.event || row.status || "").toLowerCase();
+  const metaStatus = String(row.metadata?.status || "").toLowerCase();
+  const result = `${event} ${metaStatus}`;
 
-  if(event.includes("denied")) return false;
-  if(event.includes("invalid")) return false;
-  if(event.includes("failed")) return false;
-  if(event.includes("error")) return false;
+  if(result.includes("denied")) return false;
+  if(result.includes("invalid")) return false;
+  if(result.includes("failed")) return false;
+  if(result.includes("error")) return false;
 
   return true;
 }
