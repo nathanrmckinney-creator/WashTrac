@@ -1887,7 +1887,6 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
 
   const totalUses = codes.reduce((sum, item) => sum + Number(item.uses || 0), 0);
   const totalCodes = codes.length;
-  const topCode = codes.length ? codes[0].code : "-";
   const topDept = departments.length ? departments[0][0] : "-";
   const monthlyTotal = (billingSummary || []).reduce((sum, item) => sum + Number(item.total_cost_value || 0), 0);
 
@@ -1902,18 +1901,43 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
 
   const loginUrl = `https://www.thewashtrac.com/login.html?redirect=${encodeURIComponent(reportUrl)}`;
 
+  const cardCell = (label, value, sub, color) => `
+    <td width="25%" valign="top" style="padding:6px;">
+      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#071426;border:1px solid #2563eb;">
+        <tr>
+          <td align="center" style="padding:18px 10px 16px;">
+            <div style="font-size:12px;line-height:16px;letter-spacing:.6px;color:#dbeafe;text-transform:uppercase;font-weight:700;">${esc(label)}</div>
+            <div style="font-size:32px;line-height:38px;font-weight:900;color:${color};padding-top:6px;">${esc(value)}</div>
+            <div style="font-size:12px;line-height:16px;color:${color};font-weight:700;padding-top:6px;">${esc(sub)}</div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  `;
+
+  const topDeptRows = departments.length ? departments.slice(0,5).map((item, index) => `
+    <tr>
+      <td style="padding:9px 8px;border-bottom:1px solid #1d4ed8;color:#ffffff;font-size:13px;">${index + 1}. ${esc(item[0])}</td>
+      <td align="right" style="padding:9px 8px;border-bottom:1px solid #1d4ed8;color:#ffffff;font-size:13px;font-weight:700;">${esc(item[1])}</td>
+    </tr>
+  `).join("") : `
+    <tr>
+      <td colspan="2" style="padding:14px 8px;color:#94a3b8;font-size:13px;">No department data found.</td>
+    </tr>
+  `;
+
   const tableHeaders = columns.map(col => `
-    <th style="padding:13px 14px;border:1px solid #2563eb;color:#ffffff;background:rgba(2,8,23,.74);font-size:12px;text-align:left;letter-spacing:.5px;text-transform:uppercase;">
+    <th align="left" style="padding:12px 12px;border:1px solid #2563eb;background:#020817;color:#ffffff;font-size:12px;line-height:16px;text-transform:uppercase;letter-spacing:.4px;">
       ${esc(columnLabels[col] || col)}
     </th>
   `).join("");
 
   const tableRows = codes.length ? codes.map((item, index) => {
-    const bg = index % 2 === 0 ? "rgba(13,32,52,.92)" : "rgba(8,23,39,.92)";
+    const bg = index % 2 === 0 ? "#071426" : "#06111f";
     return `
-      <tr style="background:${bg};">
+      <tr>
         ${columns.map(col => `
-          <td style="padding:12px 14px;border:1px solid #1d4ed8;color:#eaf4ff;font-size:13px;">
+          <td style="padding:11px 12px;border:1px solid #1d4ed8;background:${bg};color:#eaf4ff;font-size:13px;line-height:18px;">
             ${esc(item[col] || "")}
           </td>
         `).join("")}
@@ -1921,57 +1945,29 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
     `;
   }).join("") : `
     <tr>
-      <td colspan="${columns.length}" style="padding:30px;text-align:center;color:#94a3b8;background:#06111f;border:1px solid #1d4ed8;">
+      <td colspan="${columns.length}" align="center" style="padding:28px;border:1px solid #1d4ed8;background:#06111f;color:#94a3b8;font-size:13px;">
         No report data found for this range.
       </td>
     </tr>
   `;
 
-  const maxDept = departments.length ? Number(departments[0][1] || 1) : 1;
-  const deptHtml = departments.length ? departments.slice(0,5).map((item, index) => {
-    const width = Math.max(10, Math.round((Number(item[1] || 0) / maxDept) * 100));
-    return `
-      <div style="margin:0 0 13px;">
-        <div style="display:flex;justify-content:space-between;gap:14px;color:#ffffff;font-size:14px;line-height:1.2;">
-          <span>${index + 1}.&nbsp; ${esc(item[0])}</span>
-          <strong>${esc(item[1])}</strong>
-        </div>
-        <div style="height:4px;background:rgba(90,126,163,.22);border-radius:99px;margin-top:7px;overflow:hidden;">
-          <div style="height:4px;width:${width}%;border-radius:99px;background:linear-gradient(90deg,#38bdf8,#2563eb);box-shadow:0 0 12px rgba(37,99,235,.72);"></div>
-        </div>
-      </div>
-    `;
-  }).join("") : `<div style="color:#9ca3af;font-size:13px;padding:12px 0;">No department data found.</div>`;
-
   const billingRowsHtml = (billingSummary || []).length ? billingSummary.map((item, index) => {
-    const bg = index % 2 === 0 ? "rgba(13,32,52,.92)" : "rgba(8,23,39,.92)";
+    const bg = index % 2 === 0 ? "#071426" : "#06111f";
     return `
-      <tr style="background:${bg};">
-        <td style="padding:12px 14px;border:1px solid #1d4ed8;color:#eaf4ff;font-size:13px;">${esc(item.department)}</td>
-        <td style="padding:12px 14px;border:1px solid #1d4ed8;color:#eaf4ff;font-size:13px;">${esc(item.cars)}</td>
-        <td style="padding:12px 14px;border:1px solid #1d4ed8;color:#eaf4ff;font-size:13px;">${esc(item.rate)}</td>
-        <td style="padding:12px 14px;border:1px solid #1d4ed8;color:#4ade80;font-size:13px;font-weight:900;">${esc(item.total_cost)}</td>
+      <tr>
+        <td style="padding:11px 12px;border:1px solid #1d4ed8;background:${bg};color:#eaf4ff;font-size:13px;">${esc(item.department)}</td>
+        <td style="padding:11px 12px;border:1px solid #1d4ed8;background:${bg};color:#eaf4ff;font-size:13px;">${esc(item.cars)}</td>
+        <td style="padding:11px 12px;border:1px solid #1d4ed8;background:${bg};color:#eaf4ff;font-size:13px;">${esc(item.rate)}</td>
+        <td style="padding:11px 12px;border:1px solid #1d4ed8;background:${bg};color:#22c55e;font-size:13px;font-weight:900;">${esc(item.total_cost)}</td>
       </tr>
     `;
   }).join("") : `
     <tr>
-      <td colspan="4" style="padding:30px;text-align:center;color:#94a3b8;background:#06111f;border:1px solid #1d4ed8;">
+      <td colspan="4" align="center" style="padding:28px;border:1px solid #1d4ed8;background:#06111f;color:#94a3b8;font-size:13px;">
         No billing data found for this range.
       </td>
     </tr>
   `;
-
-  function metricCard(label, value, sub, accent){
-    return `
-      <td width="25%" style="padding:7px;vertical-align:top;">
-        <div style="min-height:132px;border-radius:14px;background:linear-gradient(145deg,rgba(9,27,45,.96),rgba(5,18,31,.98));border:1px solid #2563eb;box-shadow:inset 0 0 24px rgba(56,189,248,.04),0 0 22px rgba(0,0,0,.28);padding:18px 12px;text-align:center;">
-          <div style="font-size:13px;letter-spacing:.5px;color:#ffffff;text-transform:uppercase;font-weight:800;min-height:30px;">${esc(label)}</div>
-          <div style="font-size:36px;line-height:1;font-weight:900;color:${accent};margin-top:8px;">${esc(value)}</div>
-          <div style="font-size:13px;color:${accent};font-weight:800;margin-top:10px;">${esc(sub)}</div>
-        </div>
-      </td>
-    `;
-  }
 
   return `
 <!doctype html>
@@ -1981,110 +1977,125 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
     <meta name="color-scheme" content="dark">
     <meta name="supported-color-schemes" content="dark">
   </head>
-  <body style="margin:0;padding:0;background:#000712;font-family:Arial,Helvetica,sans-serif;color:#ffffff;">
+  <body style="margin:0;padding:0;background:#020617;font-family:Arial,Helvetica,sans-serif;color:#ffffff;">
     <div style="display:none;max-height:0;overflow:hidden;opacity:0;">
       WashTrac ${esc(rangeLabel)} report for ${esc(cleanScope)}.
     </div>
 
-    <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0;padding:0;background:#000712;">
+    <table width="100%" cellpadding="0" cellspacing="0" role="presentation" bgcolor="#020617" style="border-collapse:collapse;background:#020617;">
       <tr>
-        <td align="center" style="padding:26px 10px;background:radial-gradient(circle at 50% 0%,#0b2540 0%,#020817 42%,#00040c 100%);">
-          <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:980px;border-collapse:collapse;">
+        <td align="center" style="padding:24px 10px;">
+          <table width="980" cellpadding="0" cellspacing="0" role="presentation" style="width:980px;max-width:980px;border-collapse:collapse;background:#050d19;border:1px solid #2563eb;">
             <tr>
-              <td style="border-radius:16px;overflow:hidden;background:linear-gradient(180deg,#050d19 0%,#071727 48%,#020817 100%);border:1px solid #2563eb;box-shadow:0 0 42px rgba(0,119,255,.22),0 30px 80px rgba(0,0,0,.68);">
+              <td align="center" style="padding:28px 24px 18px;background:#071426;border-bottom:1px solid #2563eb;">
+                <img src="https://thewashtrac.com/washtrac-logo.png" alt="WashTrac" width="340" style="display:block;margin:0 auto 12px;height:auto;max-width:88%;border:0;">
+                <div style="font-size:28px;line-height:34px;font-weight:900;color:#ffffff;letter-spacing:.2px;">${esc(cleanScope)}</div>
+                <div style="font-size:16px;line-height:22px;font-weight:900;color:#60a5fa;letter-spacing:3px;padding-top:4px;">USAGE REPORT</div>
+                <div style="font-size:14px;line-height:20px;color:#cbd5e1;padding-top:10px;">Range: <strong style="color:#ffffff;">${esc(rangeLabel)}</strong></div>
+                <table cellpadding="0" cellspacing="0" role="presentation" style="margin-top:16px;border-collapse:collapse;">
+                  <tr>
+                    <td bgcolor="#2563eb" style="background:#2563eb;padding:11px 18px;">
+                      <a href="${loginUrl}" style="color:#ffffff;text-decoration:none;font-size:14px;font-weight:900;">View Full Interactive Report</a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
 
-                <div style="padding:28px 24px 18px;text-align:center;background:radial-gradient(circle at 50% 8%,rgba(35,136,255,.28),rgba(2,8,23,0) 42%);">
-                  <img src="https://thewashtrac.com/washtrac-logo.png" alt="WashTrac" width="380" style="display:block;margin:0 auto 10px auto;height:auto;max-width:88%;">
+            <tr>
+              <td style="padding:18px 18px 8px;background:#050d19;">
+                <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;">
+                  <tr>
+                    ${cardCell("Total Uses", totalUses, "Current range", "#60a5fa")}
+                    ${cardCell("Total Codes", totalCodes, "Active in report", "#22c55e")}
+                    ${cardCell("Top Department", topDept, "Highest usage", "#facc15")}
+                    ${cardCell("Monthly Total", formatMoney(monthlyTotal), "Billing total", "#22c55e")}
+                  </tr>
+                </table>
+              </td>
+            </tr>
 
-                  <div style="height:1px;background:linear-gradient(90deg,rgba(37,99,235,0),rgba(59,130,246,.95),rgba(37,99,235,0));box-shadow:0 0 18px rgba(59,130,246,.85);max-width:720px;margin:14px auto 14px;"></div>
-
-                  <div style="font-family:Arial Black,Arial,sans-serif;font-size:30px;line-height:1;font-weight:900;color:#ffffff;letter-spacing:.3px;">
-                    ${esc(cleanScope)}
-                  </div>
-
-                  <div style="margin-top:8px;color:#248bff;font-size:18px;letter-spacing:4px;font-weight:900;">
-                    USAGE REPORT
-                  </div>
-
-                  <div style="margin-top:14px;color:#c5ccd6;font-size:15px;">
-                    Range: <strong style="color:#ffffff;">${esc(rangeLabel)}</strong>
-                  </div>
-
-                  <a href="${loginUrl}" style="display:inline-block;margin-top:18px;padding:12px 18px;background:#2563eb;color:#ffffff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:900;">
-                    View Full Interactive Report
-                  </a>
-                </div>
-
-                <div style="padding:0 24px 22px;">
-                  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:14px;">
-                    <tr>
-                      ${metricCard("Total Uses", totalUses, "Current range", "#56a8ff")}
-                      ${metricCard("Total Codes", totalCodes, "Active in report", "#7ee787")}
-                      ${metricCard("Top Department", topDept, "Highest usage", "#facc15")}
-                      ${metricCard("Monthly Total", formatMoney(monthlyTotal), "Billing total", "#7ee787")}
-                    </tr>
-                  </table>
-
-                  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:14px;">
-                    <tr>
-                      <td width="60%" style="padding:7px;vertical-align:top;">
-                        <div style="border-radius:12px;border:1px solid #2563eb;background:rgba(7,23,39,.92);padding:18px;min-height:220px;">
-                          <div style="color:#4ea1ff;font-size:20px;font-weight:900;letter-spacing:.8px;margin-bottom:16px;">REPORT SUMMARY</div>
-                          <div style="color:#cbd5e1;font-size:15px;line-height:1.8;">
-                            <div><strong style="color:#ffffff;">Scope:</strong> ${esc(cleanScope)}</div>
-                            <div><strong style="color:#ffffff;">Range:</strong> ${esc(rangeLabel)}</div>
-                            <div><strong style="color:#ffffff;">Generated:</strong> ${esc(generatedAt)}</div>
-                            <div><strong style="color:#ffffff;">Columns:</strong> ${esc(columns.map(col => columnLabels[col] || col).join(", "))}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td width="40%" style="padding:7px;vertical-align:top;">
-                        <div style="border-radius:12px;border:1px solid #2563eb;background:rgba(7,23,39,.92);padding:18px;min-height:220px;">
-                          <div style="color:#4ea1ff;font-size:20px;font-weight:900;letter-spacing:.8px;margin-bottom:16px;">TOP DEPARTMENTS</div>
-                          ${deptHtml}
-                        </div>
-                      </td>
-                    </tr>
-                  </table>
-
-                  <div style="border-radius:12px;border:1px solid #2563eb;background:rgba(7,23,39,.92);padding:16px;margin:7px 7px 18px;">
-                    <div style="display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:12px;">
-                      <div style="color:#4ea1ff;font-size:20px;font-weight:900;letter-spacing:.8px;">DEPARTMENT BILLING SUMMARY</div>
-                      <div style="color:#ffffff;font-size:16px;font-weight:900;">Monthly Total: <span style="color:#4ade80;">${esc(formatMoney(monthlyTotal))}</span></div>
-                    </div>
-                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:13px;overflow:hidden;border-radius:8px;">
-                      <thead>
+            <tr>
+              <td style="padding:4px 18px 10px;background:#050d19;">
+                <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;">
+                  <tr>
+                    <td width="60%" valign="top" style="padding:6px;">
+                      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#071426;border:1px solid #2563eb;">
                         <tr>
-                          <th style="padding:13px 14px;border:1px solid #2563eb;color:#ffffff;background:rgba(2,8,23,.74);font-size:12px;text-align:left;letter-spacing:.5px;text-transform:uppercase;">Department</th>
-                          <th style="padding:13px 14px;border:1px solid #2563eb;color:#ffffff;background:rgba(2,8,23,.74);font-size:12px;text-align:left;letter-spacing:.5px;text-transform:uppercase;">Cars</th>
-                          <th style="padding:13px 14px;border:1px solid #2563eb;color:#ffffff;background:rgba(2,8,23,.74);font-size:12px;text-align:left;letter-spacing:.5px;text-transform:uppercase;">Rate</th>
-                          <th style="padding:13px 14px;border:1px solid #2563eb;color:#ffffff;background:rgba(2,8,23,.74);font-size:12px;text-align:left;letter-spacing:.5px;text-transform:uppercase;">Total Cost</th>
+                          <td style="padding:18px;">
+                            <div style="color:#60a5fa;font-size:20px;line-height:24px;font-weight:900;letter-spacing:.8px;">REPORT SUMMARY</div>
+                            <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;margin-top:12px;">
+                              <tr><td style="padding:4px 0;color:#cbd5e1;font-size:14px;"><strong style="color:#ffffff;">Scope:</strong> ${esc(cleanScope)}</td></tr>
+                              <tr><td style="padding:4px 0;color:#cbd5e1;font-size:14px;"><strong style="color:#ffffff;">Range:</strong> ${esc(rangeLabel)}</td></tr>
+                              <tr><td style="padding:4px 0;color:#cbd5e1;font-size:14px;"><strong style="color:#ffffff;">Generated:</strong> ${esc(generatedAt)}</td></tr>
+                              <tr><td style="padding:4px 0;color:#cbd5e1;font-size:14px;"><strong style="color:#ffffff;">Columns:</strong> ${esc(columns.map(col => columnLabels[col] || col).join(", "))}</td></tr>
+                            </table>
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>${billingRowsHtml}</tbody>
-                    </table>
-                  </div>
+                      </table>
+                    </td>
+                    <td width="40%" valign="top" style="padding:6px;">
+                      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#071426;border:1px solid #2563eb;">
+                        <tr>
+                          <td style="padding:18px;">
+                            <div style="color:#60a5fa;font-size:20px;line-height:24px;font-weight:900;letter-spacing:.8px;">TOP DEPARTMENTS</div>
+                            <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;margin-top:10px;">
+                              ${topDeptRows}
+                            </table>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
 
-                  <div style="border-radius:12px;border:1px solid #2563eb;background:rgba(7,23,39,.92);padding:16px;margin:7px 7px 18px;">
-                    <div style="color:#4ea1ff;font-size:20px;font-weight:900;letter-spacing:.8px;margin-bottom:12px;">SELECTED REPORT COLUMNS</div>
-                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:13px;overflow:hidden;border-radius:8px;">
-                      <thead><tr>${tableHeaders}</tr></thead>
-                      <tbody>${tableRows}</tbody>
-                    </table>
-                  </div>
+            <tr>
+              <td style="padding:10px 24px 6px;background:#050d19;">
+                <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#071426;border:1px solid #2563eb;">
+                  <tr>
+                    <td style="padding:18px;">
+                      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;">
+                        <tr>
+                          <td align="left" style="color:#60a5fa;font-size:20px;line-height:24px;font-weight:900;letter-spacing:.8px;">DEPARTMENT BILLING SUMMARY</td>
+                          <td align="right" style="color:#ffffff;font-size:17px;line-height:22px;font-weight:900;">Monthly Total: <span style="color:#22c55e;">${esc(formatMoney(monthlyTotal))}</span></td>
+                        </tr>
+                      </table>
+                      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;margin-top:12px;">
+                        <tr>
+                          <th align="left" style="padding:12px;border:1px solid #2563eb;background:#020817;color:#ffffff;font-size:12px;text-transform:uppercase;">Department</th>
+                          <th align="left" style="padding:12px;border:1px solid #2563eb;background:#020817;color:#ffffff;font-size:12px;text-transform:uppercase;">Cars</th>
+                          <th align="left" style="padding:12px;border:1px solid #2563eb;background:#020817;color:#ffffff;font-size:12px;text-transform:uppercase;">Rate</th>
+                          <th align="left" style="padding:12px;border:1px solid #2563eb;background:#020817;color:#ffffff;font-size:12px;text-transform:uppercase;">Total Cost</th>
+                        </tr>
+                        ${billingRowsHtml}
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
 
-                  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-top:8px;">
-                    <tr>
-                      <td style="border-top:1px solid rgba(37,99,235,.55);box-shadow:0 -1px 12px rgba(37,99,235,.35);font-size:0;line-height:0;">&nbsp;</td>
-                      <td width="430" align="center" style="color:#c8ced8;font-size:14px;line-height:1.7;padding:0 16px;">
-                        This is an automated WashTrac report.<br>
-                        © ${new Date().getFullYear()} WashTrac. All rights reserved.
-                      </td>
-                      <td style="border-top:1px solid rgba(37,99,235,.55);box-shadow:0 -1px 12px rgba(37,99,235,.35);font-size:0;line-height:0;">&nbsp;</td>
-                    </tr>
-                  </table>
-                </div>
+            <tr>
+              <td style="padding:10px 24px 24px;background:#050d19;">
+                <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#071426;border:1px solid #2563eb;">
+                  <tr>
+                    <td style="padding:18px;">
+                      <div style="color:#60a5fa;font-size:20px;line-height:24px;font-weight:900;letter-spacing:.8px;">USAGE BY CODE</div>
+                      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;margin-top:12px;">
+                        <tr>${tableHeaders}</tr>
+                        ${tableRows}
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
 
+            <tr>
+              <td align="center" style="padding:14px 24px 24px;background:#050d19;color:#94a3b8;font-size:12px;line-height:18px;border-top:1px solid #1d4ed8;">
+                WashTrac • Control. Track. Manage.
               </td>
             </tr>
           </table>
@@ -2094,24 +2105,6 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
   </body>
 </html>
   `;
-}
-
-async function sendReportToEmail(email, subject, html){
-  setManualEmailStatus("Sending report...", "warn");
-
-  const { data, error } = await client.functions.invoke("send-report", {
-    body: { to: email, subject: subject, html: html }
-  });
-
-  if(error){
-    console.log(error);
-    setManualEmailStatus("Email failed. Please check the address and try again.", "error");
-    return false;
-  }
-
-  console.log(data);
-  setManualEmailStatus(`Report sent to ${email}.`, "success");
-  return true;
 }
 
 async function emailReport(){
