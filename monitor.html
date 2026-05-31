@@ -272,7 +272,7 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
 .billing-compact-head,
 .billing-compact-row{
   display:grid;
-  grid-template-columns:1.25fr .7fr .75fr .9fr;
+  grid-template-columns:1.25fr .65fr .75fr .8fr .8fr 1fr;
   gap:10px;
   align-items:center;
 }
@@ -486,8 +486,12 @@ document.addEventListener("DOMContentLoaded", function(){
           <span>Today's Billing Total</span>
           <span id="liveBillingTotal">$0.00</span>
         </div>
+        <div class="billing-live-total" style="margin-top:8px;padding-top:8px;">
+          <span>Monthly Billing Total</span>
+          <span id="liveMonthlyBillingTotal">$0.00</span>
+        </div>
         <div class="billing-live-note">
-          Uses today's successful washes, the actual department on each wash event, and the Cost Per Car saved on the Dashboard.
+          Uses today's and month-to-date successful washes, the actual department on each wash event, and the Cost Per Car saved on the Dashboard.
         </div>
       </div>
 
@@ -680,6 +684,11 @@ function sameLocalDay(dateA, dateB){
   return dateA.getFullYear() === dateB.getFullYear() &&
          dateA.getMonth() === dateB.getMonth() &&
          dateA.getDate() === dateB.getDate();
+}
+
+function sameLocalMonth(dateA, dateB){
+  return dateA.getFullYear() === dateB.getFullYear() &&
+         dateA.getMonth() === dateB.getMonth();
 }
 
 function isBillableWash(row){
@@ -1112,7 +1121,7 @@ async function fetchActiveSiteSettings(){
   return data || null;
 }
 
-async function fetchTodayBillingActivity(){
+async function fetchBillingActivity(){
   const activeSiteId = getActiveSiteId();
 
   if(!activeSiteId || !hasAccessToActiveSite()){
@@ -1120,6 +1129,7 @@ async function fetchTodayBillingActivity(){
   }
 
   const start = new Date();
+  start.setDate(1);
   start.setHours(0,0,0,0);
 
   let result = await client
@@ -1131,7 +1141,7 @@ async function fetchTodayBillingActivity(){
     .limit(500);
 
   if(result.error){
-    console.log("today billing event_time error:", result.error);
+    console.log("billing event_time error:", result.error);
 
     result = await client
       .from("wash_activity")
@@ -1143,7 +1153,7 @@ async function fetchTodayBillingActivity(){
   }
 
   if(result.error){
-    console.log("today billing activity error:", result.error);
+    console.log("billing activity error:", result.error);
     return [];
   }
 
@@ -1152,9 +1162,10 @@ async function fetchTodayBillingActivity(){
 
 function renderLiveDepartmentBilling(rows){
   const wrap = document.getElementById("liveDepartmentBilling");
-  const totalEl = document.getElementById("liveBillingTotal");
+  const todayTotalEl = document.getElementById("liveBillingTotal");
+  const monthTotalEl = document.getElementById("liveMonthlyBillingTotal");
 
-  if(!wrap || !totalEl) return;
+  if(!wrap || !todayTotalEl) return;
 
   const today = new Date();
   const map = {};
@@ -1163,7 +1174,7 @@ function renderLiveDepartmentBilling(rows){
     if(!isBillableWash(row)) return;
 
     const eventDate = new Date(row.event_time || row.created_at || Date.now());
-    if(Number.isNaN(eventDate.getTime()) || !sameLocalDay(eventDate, today)) return;
+    if(Number.isNaN(eventDate.getTime()) || !sameLocalMonth(eventDate, today)) return;
 
     const department = normalizeBillingDepartment(row.department || row.metadata?.department);
     if(!department) return;
@@ -1174,24 +1185,33 @@ function renderLiveDepartmentBilling(rows){
     if(!map[department]){
       map[department] = {
         department,
-        cars: 0,
-        rate,
-        total: 0
+        carsToday: 0,
+        todayTotal: 0,
+        carsMonth: 0,
+        monthTotal: 0,
+        rate
       };
     }
 
-    map[department].cars += 1;
     map[department].rate = rate;
-    map[department].total += rate;
+    map[department].carsMonth += 1;
+    map[department].monthTotal += rate;
+
+    if(sameLocalDay(eventDate, today)){
+      map[department].carsToday += 1;
+      map[department].todayTotal += rate;
+    }
   });
 
   const items = sortBillingDepartments(Object.values(map));
-  const dayTotal = items.reduce((sum, item) => sum + Number(item.total || 0), 0);
+  const dayTotal = items.reduce((sum, item) => sum + Number(item.todayTotal || 0), 0);
+  const monthTotal = items.reduce((sum, item) => sum + Number(item.monthTotal || 0), 0);
 
-  totalEl.innerText = money(dayTotal);
+  todayTotalEl.innerText = money(dayTotal);
+  if(monthTotalEl) monthTotalEl.innerText = money(monthTotal);
 
   if(!items.length){
-    wrap.innerHTML = `<div class="empty-state">No billable washes recorded today.</div>`;
+    wrap.innerHTML = `<div class="empty-state">No billable washes recorded this month.</div>`;
     return;
   }
 
@@ -1199,15 +1219,19 @@ function renderLiveDepartmentBilling(rows){
     <div class="billing-compact-head">
       <div>Department</div>
       <div style="text-align:right;">Cars Today</div>
+      <div style="text-align:right;">Today Total</div>
+      <div style="text-align:right;">Cars Month</div>
       <div style="text-align:right;">Rate</div>
-      <div style="text-align:right;">Total</div>
+      <div style="text-align:right;">Monthly Total</div>
     </div>
     ${items.map(item => `
       <div class="billing-compact-row">
         <div class="billing-compact-dept">${escapeText(item.department)}</div>
-        <div class="billing-compact-cars">${item.cars}</div>
+        <div class="billing-compact-cars">${item.carsToday}</div>
+        <div class="billing-compact-total">${money(item.todayTotal)}</div>
+        <div class="billing-compact-cars">${item.carsMonth}</div>
         <div class="billing-compact-rate">${money(item.rate)}</div>
-        <div class="billing-compact-total">${money(item.total)}</div>
+        <div class="billing-compact-total">${money(item.monthTotal)}</div>
       </div>
     `).join("")}
   `;
@@ -1215,7 +1239,7 @@ function renderLiveDepartmentBilling(rows){
 
 async function loadDepartmentBilling(){
   await fetchActiveSiteSettings();
-  const rows = await fetchTodayBillingActivity();
+  const rows = await fetchBillingActivity();
   renderLiveDepartmentBilling(rows);
 }
 
