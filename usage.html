@@ -2236,10 +2236,10 @@ async function saveReportSchedule(){
   try{
     const user = await getCurrentUser();
 
-    if(!user || user.is_admin_session){
-      setStatus("Admin preview mode cannot save customer report schedules.", "warn");
-      return;
-    }
+   if(!user){
+  setStatus("User account not found.", "error");
+  return;
+}
 
     const payload = {
       user_id: user.id,
