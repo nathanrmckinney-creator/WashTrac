@@ -2142,15 +2142,6 @@ async function emailReport(){
   await sendReportToEmail(email, "WashTrac Report", html);
 }
 
-async function emailCustomReport(){
-  const report = getReportCodesForSelectedRange();
-  if(!report) return;
-
-  if(!report.codes.length){
-    setManualEmailStatus("No data to email for this date range.", "warn");
-    return;
-  }
-
   const columns = getSelectedColumns();
   if(!columns.length) return;
 
