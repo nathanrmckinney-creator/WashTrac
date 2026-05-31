@@ -2246,7 +2246,7 @@ const scheduleUserId = user.is_admin_session
   : user.id;
 
     const payload = {
-      user_id: user.id,
+      user_id: scheduleUserId,
       email: schedule.email,
       frequency: schedule.frequency,
       report_site_scope: schedule.reportSiteScope,
