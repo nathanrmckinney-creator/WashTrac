@@ -2697,6 +2697,18 @@
       const selectedDepartment = select ? select.value : (currentBillingDepartments[0] || BILLING_DEPARTMENT_ORDER[0]);
       const value = parseCostPerCar(input ? input.value : 0);
 
+      /*
+        IMPORTANT:
+        Price allocation must persist month-to-month.
+        Monthly wash counts are calculated from wash_activity dates and may reset visually,
+        but site pricing must never be reset by a monthly rollover or by saving one department.
+
+        department_costs = permanent department price allocation
+        cost_per_car = fallback/default price only
+
+        Only update cost_per_car when "Apply this price to all departments" is checked.
+        Saving a single department should update department_costs only.
+      */
       const nextCosts = normalizeDepartmentCosts(currentDepartmentCosts, currentCostPerCar);
 
       if(applyAll){
@@ -2708,12 +2720,17 @@
         nextCosts[department] = value;
       }
 
+      const updatePayload = {
+        department_costs: nextCosts
+      };
+
+      if(applyAll){
+        updatePayload.cost_per_car = value;
+      }
+
       const { error } = await client
         .from("sites")
-        .update({
-          department_costs: nextCosts,
-          cost_per_car: value
-        })
+        .update(updatePayload)
         .eq("id", siteId);
 
       if(error){
@@ -2723,7 +2740,10 @@
       }
 
       currentDepartmentCosts = nextCosts;
-      currentCostPerCar = value;
+
+      if(applyAll){
+        currentCostPerCar = value;
+      }
 
       if(input) input.value = value.toFixed(2);
 
