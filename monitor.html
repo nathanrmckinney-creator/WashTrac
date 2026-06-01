@@ -158,7 +158,7 @@ body{
 .monitor-grid{
   min-height:0;
   display:grid;
-  grid-template-columns:1.05fr 1.25fr 1.1fr;
+  grid-template-columns:1.08fr .72fr 1.35fr;
   grid-template-rows:auto 1fr;
   gap:10px;
 }
@@ -204,7 +204,7 @@ body{
 .warn{background:#78350f;color:#fcd34d;}
 
 .billing-card{grid-column:1 / 2;}
-.device-card{grid-column:2 / 3;}
+.daily-count-card{grid-column:2 / 3;}
 .activity-card{grid-column:3 / 4;}
 
 .device-monitor-list{display:grid;gap:10px;max-height:100%;overflow:hidden;}
@@ -212,6 +212,67 @@ body{
 .device-monitor-name{font-weight:900;color:white;margin-bottom:4px;font-size:15px;}
 .device-monitor-meta{color:#94a3b8;font-size:12px;line-height:1.35;}
 .device-monitor-status{flex-shrink:0;font-size:12px;font-weight:900;padding:8px 11px;border-radius:999px;}
+.compact-device-list{
+  display:block;
+}
+
+.device-status-compact .device-monitor-row{
+  padding:0;
+  border:none;
+  background:transparent;
+  border-radius:0;
+}
+
+.device-status-compact .device-monitor-name,
+.device-status-compact .device-monitor-meta{
+  display:none;
+}
+
+.device-status-compact .device-monitor-status{
+  font-size:14px;
+  padding:8px 13px;
+}
+
+.daily-count-card{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.daily-count-main{
+  font-size:74px;
+  line-height:.95;
+  font-weight:900;
+  color:#ffffff;
+  text-shadow:0 0 18px rgba(37,99,235,.38);
+  letter-spacing:1px;
+}
+
+.daily-count-label{
+  color:#93c5fd;
+  font-size:15px;
+  font-weight:800;
+  margin-top:8px;
+  margin-bottom:16px;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+}
+
+.daily-count-mini{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:9px 0;
+  border-top:1px solid #1f2937;
+  color:#cbd5e1;
+  font-size:14px;
+  font-weight:800;
+}
+
+.daily-count-mini strong{
+  color:#86efac;
+}
+
 
 .activity-header,
 .activity-row{display:grid;grid-template-columns:.8fr .6fr .9fr .9fr .8fr;gap:10px;align-items:center;}
@@ -401,6 +462,11 @@ document.addEventListener("DOMContentLoaded", function(){
             <h3>Lockout Window</h3>
             <div id="lockoutWindow"></div>
           </div>
+
+          <div class="card status-card device-status-compact">
+            <h3>Device Status</h3>
+            <div id="deviceStatus" class="device-monitor-list compact-device-list"></div>
+          </div>
         </div>
 
         <div class="card billing-card">
@@ -419,9 +485,18 @@ document.addEventListener("DOMContentLoaded", function(){
           </div>
         </div>
 
-        <div class="card device-card">
-          <h3>Device Status</h3>
-          <div id="deviceStatus" class="device-monitor-list"></div>
+        <div class="card daily-count-card">
+          <h3>Daily Wash Count</h3>
+          <div class="daily-count-main" id="dailyWashCount">0</div>
+          <div class="daily-count-label">Billable washes today</div>
+          <div class="daily-count-mini">
+            <span>Today Billing</span>
+            <strong id="dailyCountBillingMirror">$0.00</strong>
+          </div>
+          <div class="daily-count-mini">
+            <span>Month Billing</span>
+            <strong id="dailyCountMonthlyMirror">$0.00</strong>
+          </div>
         </div>
 
         <div class="card activity-card">
@@ -987,7 +1062,11 @@ function renderNoSite(){
   renderActivity([]);
   renderLiveDepartmentBilling([]);
   const dailyCountEl = document.getElementById("dailyWashCount");
+  const dailyBillingMirror = document.getElementById("dailyCountBillingMirror");
+  const monthlyBillingMirror = document.getElementById("dailyCountMonthlyMirror");
   if(dailyCountEl) dailyCountEl.innerText = "0";
+  if(dailyBillingMirror) dailyBillingMirror.innerText = "$0.00";
+  if(monthlyBillingMirror) monthlyBillingMirror.innerText = "$0.00";
 
   const banner = document.getElementById("systemBanner");
   banner.className = "banner yellow";
@@ -1255,6 +1334,11 @@ function renderLiveDepartmentBilling(rows, codes = []){
   todayTotalEl.innerText = money(dayTotal);
   if(monthTotalEl) monthTotalEl.innerText = money(monthTotal);
   if(dailyCountEl) dailyCountEl.innerText = String(dailyWashCount);
+
+  const dailyBillingMirror = document.getElementById("dailyCountBillingMirror");
+  const monthlyBillingMirror = document.getElementById("dailyCountMonthlyMirror");
+  if(dailyBillingMirror) dailyBillingMirror.innerText = money(dayTotal);
+  if(monthlyBillingMirror) monthlyBillingMirror.innerText = money(monthTotal);
 
   if(!items.length){
     wrap.innerHTML = `<div class="empty-state">No billing departments found.</div>`;
