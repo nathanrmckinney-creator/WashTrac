@@ -331,29 +331,206 @@ body{
 }
 
 @media (max-width:900px){
-  body{overflow-x:hidden;}
-  .app{display:block;}
-  .sidebar{display:none;}
-  .desktop-menu-wrap{display:none;}
-  .mobile-topbar{display:flex;}
-  .main{padding:20px;margin-left:0;min-height:auto;}
-  .monitor-shell{height:auto;display:block;overflow:visible;}
-  .monitor-top{display:block;padding-right:0;}
-  .page-header{padding-right:0;margin-bottom:20px;}
-  .page-header h1{font-size:34px;}
-  .page-header p{display:block;font-size:14px;}
-  .banner{font-size:24px;margin-bottom:20px;min-height:auto;}
-  .bay-grid{grid-template-columns:1fr;gap:20px;margin-bottom:20px;}
-  .monitor-grid{display:grid;grid-template-columns:1fr;gap:20px;}
-  .status-row{display:grid;grid-template-columns:1fr;gap:20px;}
-  .card{padding:20px;margin-bottom:0;}
-  .activity-header{display:none;}
-  .activity-row{grid-template-columns:1fr;gap:6px;white-space:normal;}
-  .activity-time,.activity-code,.activity-department,.activity-name,.activity-event{white-space:normal;text-align:left;}
-  .billing-compact-head{display:none;}
-  .billing-compact-row{grid-template-columns:1fr;gap:5px;font-size:14px;}
-  .billing-compact-cars,.billing-compact-rate,.billing-compact-total{text-align:left;}
-  .billing-live-note{display:block;}
+  body{
+    overflow-x:hidden;
+    overflow-y:auto;
+  }
+
+  .app{
+    display:block;
+    min-height:auto;
+  }
+
+  .sidebar{
+    display:none;
+  }
+
+  .desktop-menu-wrap{
+    display:none;
+  }
+
+  .mobile-topbar{
+    display:flex;
+  }
+
+  .main{
+    padding:20px;
+    margin-left:0;
+    min-height:auto;
+  }
+
+  .monitor-shell{
+    height:auto;
+    display:block;
+    overflow:visible;
+  }
+
+  .monitor-top{
+    display:block;
+    padding-right:0;
+  }
+
+  .page-header{
+    padding:16px;
+    margin-bottom:14px;
+  }
+
+  .page-header h1{
+    font-size:34px;
+  }
+
+  .page-header p{
+    display:block;
+    font-size:14px;
+    line-height:1.45;
+  }
+
+  .banner{
+    font-size:22px;
+    line-height:1.2;
+    min-height:auto;
+    padding:14px 16px;
+    margin-bottom:16px;
+  }
+
+  .bay-grid{
+    grid-template-columns:1fr;
+    gap:14px;
+    margin-bottom:16px;
+  }
+
+  .bay-card{
+    min-height:auto;
+    padding:16px;
+  }
+
+  .bay-card h3{
+    font-size:20px;
+  }
+
+  .bay-status{
+    font-size:18px;
+  }
+
+  .monitor-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    grid-template-rows:auto;
+    gap:16px;
+    min-height:auto;
+  }
+
+  .status-row{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:16px;
+    grid-column:1 / -1;
+  }
+
+  .billing-card,
+  .daily-count-card,
+  .activity-card{
+    grid-column:1 / -1;
+  }
+
+  .card{
+    padding:18px;
+    margin-bottom:0;
+    overflow:visible;
+  }
+
+  .status-card{
+    min-height:auto;
+    align-items:flex-start;
+  }
+
+  .status-card h3{
+    font-size:14px;
+  }
+
+  .status-card > div:not(.device-monitor-list){
+    font-size:18px;
+  }
+
+  .device-status-compact .device-monitor-row{
+    padding:0;
+  }
+
+  .daily-count-card{
+    align-items:center;
+    text-align:center;
+  }
+
+  .daily-count-main{
+    font-size:64px;
+  }
+
+  .daily-count-label{
+    font-size:14px;
+  }
+
+  .monthly-count-wrap{
+    width:100%;
+    margin-top:18px;
+    padding-top:16px;
+  }
+
+  .monthly-count-main{
+    font-size:44px;
+  }
+
+  #activity,
+  #liveDepartmentBilling,
+  .device-monitor-list{
+    max-height:none;
+    overflow:visible;
+  }
+
+  .activity-header{
+    display:none;
+  }
+
+  .activity-row{
+    grid-template-columns:1fr;
+    gap:6px;
+    white-space:normal;
+    padding:12px 0;
+    font-size:14px;
+  }
+
+  .activity-time,
+  .activity-code,
+  .activity-department,
+  .activity-name,
+  .activity-event{
+    white-space:normal;
+    text-align:left;
+  }
+
+  .billing-compact-head{
+    display:none;
+  }
+
+  .billing-compact-row{
+    grid-template-columns:1fr;
+    gap:5px;
+    font-size:14px;
+    padding:12px 0;
+  }
+
+  .billing-compact-cars,
+  .billing-compact-rate,
+  .billing-compact-total{
+    text-align:left;
+  }
+
+  .billing-live-total{
+    font-size:15px;
+  }
+
+  .billing-live-note{
+    display:block;
+  }
 }
 </style>
 </head>
