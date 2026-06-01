@@ -428,6 +428,29 @@ document.addEventListener("DOMContentLoaded", function(){
         <input id="customDepartmentInput" placeholder="Enter custom department">
       </div>
 
+<div id="temporaryOptions" class="hidden" style="margin-top:12px;">
+
+  <div class="form-grid">
+
+    <div class="field">
+      <label for="tempExpiration">Expiration Date / Time</label>
+      <input id="tempExpiration" type="datetime-local">
+    </div>
+
+    <div class="field">
+      <label for="tempMaxUses">Maximum Uses</label>
+      <input
+        id="tempMaxUses"
+        type="number"
+        min="1"
+        placeholder="Unlimited if blank"
+      >
+    </div>
+
+  </div>
+
+</div>
+      
       <div class="status" id="statusBox"></div>
     </div>
 
