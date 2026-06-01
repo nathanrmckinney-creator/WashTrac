@@ -93,11 +93,15 @@
     input::placeholder{color:#6b7280;}
     .hidden{display:none;}
     .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;}
+    .quick-code-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 18px 0;}
+    .random-code-btn{font-size:18px;padding:16px 22px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#1ea7ff);box-shadow:0 0 16px rgba(30,167,255,.28);}
+    .quick-code-note{color:#94a3b8;font-size:14px;}
+    .temp-help{margin-top:8px;color:#94a3b8;font-size:13px;line-height:1.45;}
     button{padding:12px 16px;background:#2563eb;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold;}
     button.secondary{background:#334155;}
     button.remove-btn{background:#dc2626;padding:10px 14px;}
     .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-    table{width:100%;border-collapse:collapse;min-width:780px;}
+    table{width:100%;border-collapse:collapse;min-width:980px;}
     th, td{padding:14px 10px;border-bottom:1px solid #1f2937;text-align:left;vertical-align:middle;}
     th{color:#93c5fd;font-size:13px;text-transform:uppercase;letter-spacing:.5px;}
     .tag{display:inline-block;padding:6px 10px;border-radius:999px;background:#1e293b;color:#cbd5e1;font-size:12px;font-weight:bold;white-space:nowrap;}
@@ -392,6 +396,12 @@ document.addEventListener("DOMContentLoaded", function(){
 
     <div class="card">
       <h3>Add New Code</h3>
+
+      <div class="quick-code-row">
+        <button class="random-code-btn" type="button" onclick="generateRandomCode()">Generate Random 4-Digit Code</button>
+        <span class="quick-code-note">Fills the code box below without duplicating an existing active code.</span>
+      </div>
+
       <div class="form-grid">
         <div class="field">
           <label for="codeInput">Code</label>
@@ -430,26 +440,35 @@ document.addEventListener("DOMContentLoaded", function(){
 
 <div id="temporaryOptions" class="hidden" style="margin-top:12px;">
 
-  <div class="form-grid">
+        <div class="form-grid">
 
-    <div class="field">
-      <label for="tempExpiration">Expiration Date / Time</label>
-      <input id="tempExpiration" type="datetime-local">
-    </div>
+          <div class="field">
+            <label for="tempDays">Expires After (Days)</label>
+            <input
+              id="tempDays"
+              type="number"
+              min="1"
+              placeholder="Example: 7"
+            >
+          </div>
 
-    <div class="field">
-      <label for="tempMaxUses">Maximum Uses</label>
-      <input
-        id="tempMaxUses"
-        type="number"
-        min="1"
-        placeholder="Unlimited if blank"
-      >
-    </div>
+          <div class="field">
+            <label for="tempMaxUses">Maximum Uses</label>
+            <input
+              id="tempMaxUses"
+              type="number"
+              min="1"
+              placeholder="Example: 1"
+            >
+          </div>
 
-  </div>
+        </div>
 
-</div>
+        <div class="temp-help">
+          Temporary codes require days, maximum uses, or both. Whichever limit is reached first will expire the code once app.py enforcement is added.
+        </div>
+
+      </div>
       
       <div class="status" id="statusBox"></div>
     </div>
@@ -491,6 +510,8 @@ document.addEventListener("DOMContentLoaded", function(){
               <th>Name</th>
               <th>Uses</th>
               <th>Last Used</th>
+              <th>Expires</th>
+              <th>Limit</th>
               <th>Activity</th>
               <th>Remove</th>
             </tr>
@@ -781,7 +802,7 @@ function handleDepartmentChange(){
     tempWrap.classList.remove("hidden");
   } else {
     tempWrap.classList.add("hidden");
-    document.getElementById("tempExpiration").value = "";
+    document.getElementById("tempDays").value = "";
     document.getElementById("tempMaxUses").value = "";
   }
 }
@@ -836,6 +857,31 @@ function getCodeName(item){
 
 function getIsActive(item){
   return item.is_active !== false;
+}
+
+function getCodeExpiresAt(item){
+  return cleanValue(item.expires_at, "");
+}
+
+function getCodeMaxUses(item){
+  return item.max_uses === null || item.max_uses === undefined || item.max_uses === "" ? "" : item.max_uses;
+}
+
+function getCodeCurrentUses(item){
+  return item.current_uses === null || item.current_uses === undefined || item.current_uses === "" ? 0 : Number(item.current_uses || 0);
+}
+
+function formatExpiration(value){
+  if(!value) return "-";
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString();
+}
+
+function formatLimit(item){
+  const maxUses = getCodeMaxUses(item);
+  if(maxUses === "") return "-";
+  return `${getCodeCurrentUses(item)} / ${maxUses}`;
 }
 
 function getCodeStats(code){
@@ -1143,7 +1189,7 @@ function resetCodesEmpty(){
   document.getElementById("activeDepartments").innerText = "0";
   document.getElementById("topUsedCode").innerText = "-";
   document.getElementById("totalUses").innerText = "0";
-  document.getElementById("codesTableBody").innerHTML = `<tr><td colspan="7" class="muted">No active site selected.</td></tr>`;
+  document.getElementById("codesTableBody").innerHTML = `<tr><td colspan="9" class="muted">No active site selected.</td></tr>`;
   renderSystemHeartbeat([]);
 }
 
@@ -1301,13 +1347,13 @@ function renderCodes(){
   tbody.innerHTML = "";
 
   if(!getActiveSiteId()){
-    tbody.innerHTML = `<tr><td colspan="7" class="muted">No active site selected.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" class="muted">No active site selected.</td></tr>`;
     return;
   }
 
   if(!filtered.length){
     lastRenderedCodes = [];
-    tbody.innerHTML = `<tr><td colspan="7" class="muted">No matching codes found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" class="muted">No matching codes found.</td></tr>`;
     return;
   }
 
@@ -1326,6 +1372,8 @@ function renderCodes(){
       <td>${escapeText(getCodeName(item))}</td>
       <td>${stats.uses || 0}</td>
       <td>${escapeText(lastUsed)}</td>
+      <td>${escapeText(formatExpiration(getCodeExpiresAt(item)))}</td>
+      <td>${escapeText(formatLimit(item))}</td>
       <td><button class="view-btn" type="button">View Activity</button></td>
       <td><button class="remove-btn" type="button" title="${escapeText(systemOnlineReason)}">Remove</button></td>
     `;
@@ -1359,7 +1407,7 @@ function exportCodesCsv(){
     return;
   }
 
-  const headers = ["Code","Department","Name","Uses","Last Used","Active"];
+  const headers = ["Code","Department","Name","Uses","Last Used","Expires At","Max Uses","Current Uses","Active"];
   const csvRows = rows.map(item => {
     const code = getCodeValue(item);
     const stats = getCodeStats(code);
@@ -1371,6 +1419,9 @@ function exportCodesCsv(){
       getCodeName(item),
       stats.uses || 0,
       lastUsed,
+      getCodeExpiresAt(item),
+      getCodeMaxUses(item),
+      getCodeCurrentUses(item),
       getIsActive(item) ? "Yes" : "No"
     ];
   });
@@ -1394,6 +1445,31 @@ function exportCodesCsv(){
   setStatus(`Exported ${rows.length} code${rows.length === 1 ? "" : "s"}.`, "success");
 }
 
+function generateRandomCode(){
+  clearStatus();
+
+  const usedCodes = new Set(
+    allCodes
+      .filter(getIsActive)
+      .map(item => String(getCodeValue(item)).trim())
+      .filter(Boolean)
+  );
+
+  for(let attempt = 0; attempt < 200; attempt++){
+    const code = String(Math.floor(Math.random() * 10000)).padStart(4, "0");
+
+    if(code === "0000") continue;
+
+    if(!usedCodes.has(code)){
+      document.getElementById("codeInput").value = code;
+      setStatus(`Random code ${code} generated. Fill in department/name and click Add Code to save.`, "success");
+      return;
+    }
+  }
+
+  setStatus("Could not generate a unique code. Try again.", "warn");
+}
+
 async function addCode(){
   clearStatus();
 
@@ -1411,11 +1487,49 @@ async function addCode(){
   const code = document.getElementById("codeInput").value.trim();
   const department = getDepartmentValue().trim();
   const name = document.getElementById("nameInput").value.trim();
+  const tempDays = document.getElementById("tempDays")?.value.trim() || "";
+  const tempMaxUses = document.getElementById("tempMaxUses")?.value.trim() || "";
+  const isTemporary = department === "Temporary";
 
   if(!code){ setStatus("Enter a code.", "warn"); return; }
   if(!/^\d{4}$/.test(code)){ setStatus("Code must be 4 digits.", "warn"); return; }
+  if(code === "0000"){ setStatus("0000 is reserved for the programming master code.", "warn"); return; }
   if(!department){ setStatus("Select a department or enter a custom one.", "warn"); return; }
   if(!name){ setStatus("Enter a name.", "warn"); return; }
+
+  let expiresAt = null;
+  let maxUses = null;
+
+  if(isTemporary){
+    if(!tempDays && !tempMaxUses){
+      setStatus("Temporary codes require days, maximum uses, or both.", "warn");
+      return;
+    }
+
+    if(tempDays){
+      const daysNumber = Number(tempDays);
+
+      if(!Number.isInteger(daysNumber) || daysNumber < 1){
+        setStatus("Temporary days must be 1 or higher.", "warn");
+        return;
+      }
+
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + daysNumber);
+      expiresAt = expirationDate.toISOString();
+    }
+
+    if(tempMaxUses){
+      const usesNumber = Number(tempMaxUses);
+
+      if(!Number.isInteger(usesNumber) || usesNumber < 1){
+        setStatus("Maximum uses must be 1 or higher.", "warn");
+        return;
+      }
+
+      maxUses = usesNumber;
+    }
+  }
 
   const existing = allCodes.find(item => String(getCodeValue(item)).trim() === code);
 
@@ -1431,7 +1545,10 @@ async function addCode(){
         department,
         assigned_to: name,
         is_active: true,
-        site_id: activeSiteId
+        site_id: activeSiteId,
+        expires_at: expiresAt,
+        max_uses: maxUses,
+        current_uses: 0
       })
       .eq("id", existing.id)
       .eq("site_id", activeSiteId);
@@ -1447,7 +1564,10 @@ async function addCode(){
       code,
       department,
       assigned_to: name,
-      is_active: true
+      is_active: true,
+      expires_at: expiresAt,
+      max_uses: maxUses,
+      current_uses: 0
     };
 
     if(currentOrganizationId){
@@ -1470,6 +1590,9 @@ async function addCode(){
   document.getElementById("nameInput").value = "";
   document.getElementById("customDepartmentInput").value = "";
   document.getElementById("customDepartmentWrap").classList.add("hidden");
+  document.getElementById("tempDays").value = "";
+  document.getElementById("tempMaxUses").value = "";
+  document.getElementById("temporaryOptions").classList.add("hidden");
 
   setStatus("Code added.", "success");
   await loadCodesPage();
@@ -1550,7 +1673,7 @@ document.addEventListener("click", function(event){
 
 // Realtime subscriptions removed for stability.
 
-["codeInput","nameInput","customDepartmentInput"].forEach(id => {
+["codeInput","nameInput","customDepartmentInput","tempDays","tempMaxUses"].forEach(id => {
   document.addEventListener("keydown", function(event){
     if(event.target && event.target.id === id && event.key === "Enter"){
       addCode();
