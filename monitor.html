@@ -17,6 +17,12 @@ body{
   color:white;
   overflow-x:hidden;
 }
+
+@media (min-width:901px){
+  body{
+    overflow:hidden;
+  }
+}
 .app{display:flex;min-height:100vh;}
 
 .sidebar {
@@ -85,10 +91,10 @@ body{
 .backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1100;}
 
 .monitor-shell{
-  height:calc(100vh - 24px);
+  height:calc(100vh - 10px);
   display:grid;
   grid-template-rows:auto auto 1fr;
-  gap:9px;
+  gap:8px;
   overflow:hidden;
 }
 
@@ -102,26 +108,26 @@ body{
 
 .page-header{
   margin:0;
-  padding:10px 16px;
+  padding:7px 14px;
   border:1px solid #1f2937;
   border-radius:14px;
   background:linear-gradient(145deg,rgba(15,23,42,.96),rgba(9,17,31,.96));
 }
-.page-header h1{margin:0;font-size:30px;line-height:1.05;letter-spacing:.2px;}
-.page-header p{margin:5px 0 0;color:#94a3b8;line-height:1.25;font-size:13px;}
+.page-header h1{margin:0;font-size:26px;line-height:1.03;letter-spacing:.2px;}
+.page-header p{margin:3px 0 0;color:#94a3b8;line-height:1.2;font-size:12px;}
 
 .banner{
   width:100%;
-  padding:10px 16px;
+  padding:7px 14px;
   text-align:center;
-  font-size:27px;
+  font-size:23px;
   font-weight:900;
   border-radius:14px;
   margin:0;
   display:flex;
   align-items:center;
   justify-content:center;
-  min-height:66px;
+  min-height:52px;
   letter-spacing:.6px;
   border:1px solid rgba(255,255,255,.12);
 }
@@ -300,10 +306,10 @@ body{
 .empty-state{color:#94a3b8;padding:6px 0;}
 
 @media (min-width:1500px){
-  .main{padding:20px 26px 18px 54px;}
-  .page-header h1{font-size:40px;}
-  .page-header p{font-size:15px;}
-  .banner{font-size:32px;min-height:72px;}
+  .main{padding:16px 24px 14px 54px;}
+  .page-header h1{font-size:34px;}
+  .page-header p{font-size:13px;}
+  .banner{font-size:28px;min-height:58px;}
   .bay-card{min-height:72px;}
   .bay-card h3{font-size:20px;}
   .bay-status{font-size:17px;}
