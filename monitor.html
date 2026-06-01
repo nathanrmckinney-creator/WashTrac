@@ -1220,7 +1220,7 @@ function renderControl(control, hasOnlineDevice = false, hasPairedDevice = false
     banner.innerText = "SYSTEM OFFLINE — NO CODEBOX PAIRED";
   } else if(!hasOnlineDevice){
     banner.className = "banner red";
-    banner.innerText = "SYSTEM OFFLINE — CODEBOX HEARTBEAT LOST";
+    banner.innerText = "SYSTEM OFFLINE — KEYPAD HEARTBEAT LOST";
   } else if(estopActive){
     banner.className = "banner red";
     banner.innerText = "🚨 EMERGENCY STOP ACTIVE";
