@@ -767,6 +767,7 @@ function clearStatus(){
 function handleDepartmentChange(){
   const select = document.getElementById("departmentSelect");
   const wrap = document.getElementById("customDepartmentWrap");
+  const tempWrap = document.getElementById("temporaryOptions");
 
   if(select.value === "__custom__"){
     wrap.classList.remove("hidden");
@@ -774,6 +775,14 @@ function handleDepartmentChange(){
   } else {
     wrap.classList.add("hidden");
     document.getElementById("customDepartmentInput").value = "";
+  }
+
+  if(select.value === "Temporary"){
+    tempWrap.classList.remove("hidden");
+  } else {
+    tempWrap.classList.add("hidden");
+    document.getElementById("tempExpiration").value = "";
+    document.getElementById("tempMaxUses").value = "";
   }
 }
 
