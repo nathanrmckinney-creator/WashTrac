@@ -1154,7 +1154,12 @@ if(currentOrganizationId){
   const activeSite = exists ? sites.find(site => site.id === saved) : sites[0];
 
   currentSiteId = activeSite.id;
-  localStorage.setItem("activeSiteId", currentSiteId);
+localStorage.setItem("activeSiteId", currentSiteId);
+
+currentOrganizationId = activeSite.organization_id || activeSite.org_id || activeSite.company_id || null;
+if(currentOrganizationId){
+  localStorage.setItem("activeOrganizationId", currentOrganizationId);
+}
 
   const orgId = activeSite.organization_id || activeSite.org_id || activeSite.company_id || null;
   if(orgId) localStorage.setItem("activeOrganizationId", orgId);
