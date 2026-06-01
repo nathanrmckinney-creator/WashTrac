@@ -1159,7 +1159,7 @@ function renderDevices(devices){
   }
 
   devices.forEach(device => {
-    const name = escapeText(device.device_name || device.name || "CodeBox");
+    const name = escapeText(device.device_name || device.name || "Keypad");
     const serial = escapeText(device.serial_number || device.device_id || device.id || "Unknown");
     const isOnline = deviceOnlineFromLastSeen(device.last_seen);
     const statusClass = isOnline ? "on" : "off";
