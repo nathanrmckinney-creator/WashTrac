@@ -200,7 +200,7 @@ body{
 
 .card{
   background:
-    radial-gradient(circle at 12% 0%, rgba(37,99,235,.14), transparent 45%),
+    radial-gradient(circle at 50% 50%, rgba(37,99,235,.11), transparent 58%),
     linear-gradient(180deg,rgba(15,23,42,.98),rgba(7,17,31,.98));
   border:1px solid var(--line);
   border-radius:12px;
@@ -211,60 +211,69 @@ body{
 }
 
 .status-card{
-  display:grid;
-  grid-template-columns:90px 1fr;
-  align-items:center;
-  text-align:left;
   position:relative;
   min-height:118px;
-}
-  .status-card .status-title,
-.status-card .status-value{
-  grid-column:1 / -1;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
   text-align:center;
-  width:100%;
+  padding:16px 92px;
 }
+
+/* centered hue behind each status card */
 .status-card::before{
   content:"";
   position:absolute;
-  inset:0;
-  background:radial-gradient(circle at 14% 50%, rgba(37,99,235,.24), transparent 42%);
+  left:50%;
+  top:50%;
+  width:86%;
+  height:160%;
+  transform:translate(-50%, -50%);
+  background:radial-gradient(circle, rgba(37,99,235,.24), rgba(37,99,235,.08) 42%, transparent 72%);
   pointer-events:none;
+  z-index:0;
 }
+
+/* independent left icon position */
 .status-card::after{
   content:"";
-  grid-column:1;
+  position:absolute;
+  left:30px;
+  top:50%;
   width:56px;
   height:56px;
   border-radius:16px;
-  justify-self:center;
-  align-self:center;
-  position:relative;
+  transform:translateY(-50%);
   z-index:1;
   background:rgba(37,99,235,.15);
   border:1px solid rgba(59,130,246,.35);
   box-shadow:0 0 22px rgba(37,99,235,.22);
-  transform:translateY(-42px);
 }
+
 .status-card h3{
-  grid-column:2;
   margin:0 0 8px 0;
   color:#38bdf8;
   font-size:15px;
   text-transform:uppercase;
   letter-spacing:.8px;
   position:relative;
-  z-index:1;
+  z-index:2;
+  width:100%;
+  text-align:center;
 }
+
 .status-card > div:not(.device-monitor-list){
-  grid-column:2;
   color:#ffffff;
   font-size:25px;
   font-weight:950;
   position:relative;
-  z-index:1;
+  z-index:2;
+  width:100%;
+  text-align:center;
 }
 
+/* icon styles */
 #washStatusCard::after{
   content:"⏻";
   display:flex;
@@ -272,10 +281,11 @@ body{
   justify-content:center;
   font-size:44px;
   color:#ef4444;
-  background:rgba(127,29,29,.20);
-  border-color:rgba(239,68,68,.40);
-  box-shadow:0 0 30px rgba(239,68,68,.35);
+  background:rgba(127,29,29,.22);
+  border-color:rgba(239,68,68,.44);
+  box-shadow:0 0 30px rgba(239,68,68,.36);
 }
+
 .status-row .status-card:nth-child(2)::after{
   content:"🛡";
   display:flex;
@@ -283,9 +293,11 @@ body{
   justify-content:center;
   font-size:38px;
   color:#22c55e;
-  background:rgba(20,83,45,.18);
-  border-color:rgba(34,197,94,.30);
+  background:rgba(20,83,45,.20);
+  border-color:rgba(34,197,94,.34);
+  box-shadow:0 0 30px rgba(34,197,94,.18);
 }
+
 .status-row .status-card:nth-child(3)::after{
   content:"🔒";
   display:flex;
@@ -293,9 +305,11 @@ body{
   justify-content:center;
   font-size:34px;
   color:#ef4444;
-  background:rgba(127,29,29,.18);
-  border-color:rgba(239,68,68,.34);
+  background:rgba(127,29,29,.20);
+  border-color:rgba(239,68,68,.38);
+  box-shadow:0 0 30px rgba(239,68,68,.22);
 }
+
 .status-row .status-card:nth-child(4)::after{
   content:"◷";
   display:flex;
@@ -303,9 +317,28 @@ body{
   justify-content:center;
   font-size:42px;
   color:#3b82f6;
-  background:rgba(37,99,235,.18);
-  border-color:rgba(59,130,246,.38);
+  background:rgba(37,99,235,.20);
+  border-color:rgba(59,130,246,.42);
+  box-shadow:0 0 30px rgba(37,99,235,.24);
 }
+
+/* card-specific centered hue colors */
+#washStatusCard::before{
+  background:radial-gradient(circle, rgba(239,68,68,.26), rgba(127,29,29,.10) 45%, transparent 72%);
+}
+
+.status-row .status-card:nth-child(2)::before{
+  background:radial-gradient(circle, rgba(34,197,94,.18), rgba(20,83,45,.08) 45%, transparent 72%);
+}
+
+.status-row .status-card:nth-child(3)::before{
+  background:radial-gradient(circle, rgba(239,68,68,.20), rgba(127,29,29,.08) 45%, transparent 72%);
+}
+
+.status-row .status-card:nth-child(4)::before{
+  background:radial-gradient(circle, rgba(59,130,246,.24), rgba(37,99,235,.08) 45%, transparent 72%);
+}
+
 .status-pill{
   display:inline-flex;
   align-items:center;
@@ -316,6 +349,7 @@ body{
   min-width:126px;
   text-align:center;
 }
+
 .wash-status-ready{background:linear-gradient(145deg,#14532d,#166534);color:#86efac;box-shadow:0 0 22px rgba(34,197,94,.18);}
 .wash-status-active{background:linear-gradient(145deg,#075985,#0369a1);color:#bae6fd;box-shadow:0 0 22px rgba(14,165,233,.18);}
 .wash-status-waiting{background:linear-gradient(145deg,#78350f,#92400e);color:#fde68a;box-shadow:0 0 22px rgba(245,158,11,.16);}
@@ -665,8 +699,15 @@ body{
   .banner{font-size:16px;line-height:1.2;min-height:auto;padding:8px 12px;margin-bottom:16px;}
   .banner::before,.banner::after{display:none;}
   .status-row{display:grid;grid-template-columns:1fr;gap:16px;grid-column:1 / -1;margin-bottom:16px;}
-  .status-card{grid-template-columns:70px 1fr;min-height:auto;}
-  .status-card::after{width:46px;height:46px;}
+  .status-card{
+    min-height:auto;
+    padding:18px 18px 18px 80px;
+  }
+  .status-card::after{
+    width:46px;
+    height:46px;
+    left:18px;
+  }
   .monitor-grid{display:grid;grid-template-columns:1fr;grid-template-rows:auto;gap:16px;min-height:auto;}
   .billing-card,.daily-count-card,.activity-card{grid-column:1 / -1;}
   .card{padding:18px;margin-bottom:0;overflow:visible;}
