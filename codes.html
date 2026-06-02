@@ -1073,8 +1073,13 @@ if(currentOrganizationId){
 }
 
     const orgId = activeSite.organization_id || activeSite.org_id || activeSite.company_id || null;
-    if(orgId) localStorage.setItem("activeOrganizationId", orgId);
+    currentOrganizationId = orgId;
 
+if(orgId){
+  localStorage.setItem("activeOrganizationId", orgId);
+}else{
+  localStorage.removeItem("activeOrganizationId");
+}
     select.value = currentSiteId;
     return currentSiteId;
   }
