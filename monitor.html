@@ -12,21 +12,15 @@
 *{box-sizing:border-box;}
 
 :root{
-  --logo-x: 16px;
-  --logo-y: -8px;
-  --logo-width: 240px;
+  /* HEADER CONTROLS */
+  --header-logo-width: 240px;
+  --header-title-size: 48px;
+  --header-top-padding: 18px;
+  --header-gap: 10px;
 
-  --title-x: 0px;
-  --title-y: -55px;
-
-  --banner-x: 0px;
-  --banner-y: -8px;
-
+  /* CONTENT CONTROLS */
   --content-x: 0px;
   --content-y: 0px;
-
-  --top-space: 58px;
-  --page-side-padding: 0px;
 }
 body{
   margin:0;
@@ -120,37 +114,41 @@ body{
 
 .monitor-top{
   display:grid;
-  grid-template-columns:1fr;
-  gap:8px;
-  align-items:stretch;
+  grid-template-columns:1fr auto;
+  grid-template-rows:auto auto;
+  align-items:center;
+  column-gap:24px;
+  row-gap:var(--header-gap);
+  padding-top:var(--header-top-padding);
   padding-right:64px;
-  position:relative;
-  padding-top:var(--top-space);
 }
 
 .monitor-brand-logo{
-  position:absolute;
-  top:var(--logo-y);
-  left:var(--logo-x);
-  width:var(--logo-width);
+  grid-column:2;
+  grid-row:1;
+  position:static;
+  width:var(--header-logo-width);
   height:auto;
   display:block;
-  z-index:3;
+  justify-self:end;
+  align-self:center;
 }
 
 .page-header{
+  grid-column:1;
+  grid-row:1;
   margin:0;
-  padding:0 var(--page-side-padding) 0;
+  padding:0;
   border:none;
   border-radius:0;
   background:transparent;
-  text-align:center;
-  transform:translate(var(--title-x), var(--title-y));
+  text-align:left;
+  transform:none;
 }
 
 .page-header h1{
   margin:0;
-  font-size:44px;
+  font-size:var(--header-title-size);
   font-weight:900;
   line-height:1;
   white-space:nowrap;
@@ -158,6 +156,8 @@ body{
 .page-header p{display:none;}
 
 .banner{
+  grid-column:1 / -1;
+  grid-row:2;
   width:100%;
   padding:5px 12px;
   text-align:center;
@@ -165,7 +165,7 @@ body{
   font-weight:900;
   border-radius:10px;
   margin:0;
-  transform:translate(var(--banner-x), var(--banner-y));
+  transform:none;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -362,7 +362,7 @@ body{
 @media (min-width:1500px){
   .main{padding:16px 24px 14px 54px;}
   .page-header p{font-size:13px;}
-  .monitor-brand-logo{width:var(--logo-width);}
+  .monitor-brand-logo{width:var(--header-logo-width);}
   .banner{font-size:18px;min-height:34px;}
   .bay-card{min-height:72px;}
   .bay-card h3{font-size:20px;}
@@ -387,10 +387,10 @@ body{
 @media (max-width:900px){
 
   :root{
-    --title-x:0px;
-    --title-y:0px;
-    --banner-x:0px;
-    --banner-y:0px;
+    --header-logo-width:210px;
+    --header-title-size:34px;
+    --header-top-padding:0px;
+    --header-gap:10px;
     --content-x:0px;
     --content-y:0px;
   }
@@ -438,6 +438,7 @@ body{
     position:static;
     width:210px;
     margin:0 auto 10px;
+    justify-self:center;
   }
 
   .page-header{
