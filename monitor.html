@@ -71,7 +71,7 @@ body{
 
 .main{
   flex:1;
-  padding:18px 22px 18px 52px;
+  padding:16px 22px 14px 52px;
   position:relative;
   margin-left:0;
   min-height:100vh;
@@ -92,8 +92,8 @@ body{
 .backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1100;}
 
 .monitor-shell{
-  height:calc(100vh - 36px);
-  min-height:calc(100vh - 36px);
+  height:calc(100vh - 30px);
+  min-height:calc(100vh - 30px);
   display:grid;
   grid-template-rows:auto 1fr;
   gap:12px;
@@ -103,17 +103,18 @@ body{
 .monitor-top{
   display:grid;
   grid-template-columns:1fr;
-  gap:10px;
+  gap:8px;
   align-items:stretch;
-  padding-right:0;
+  padding-right:64px;
   position:relative;
+  padding-top:72px;
 }
 
 .monitor-brand-logo{
   position:absolute;
-  top:0;
-  left:0;
-  width:230px;
+  top:2px;
+  left:16px;
+  width:240px;
   height:auto;
   display:block;
   z-index:3;
@@ -121,18 +122,18 @@ body{
 
 .page-header{
   margin:0;
-  padding:0 250px 0;
+  padding:0 270px 0;
   border:none;
   border-radius:0;
   background:transparent;
   text-align:center;
 }
-.page-header h1{margin:0;font-size:32px;line-height:1.05;letter-spacing:.2px;}
+.page-header h1{margin:0;font-size:34px;line-height:1.05;letter-spacing:.2px;}
 .page-header p{display:none;}
 
 .banner{
   width:100%;
-  padding:4px 12px;
+  padding:5px 12px;
   text-align:center;
   font-size:16px;
   font-weight:900;
@@ -208,7 +209,7 @@ body{
 }
 
 .status-card{
-  min-height:86px;
+  min-height:84px;
   display:flex;
   flex-direction:column;
   justify-content:center;
@@ -327,13 +328,14 @@ body{
 .billing-live-total span:last-child{color:#86efac;}
 .billing-live-note{display:none;}
 #liveDepartmentBilling{max-height:calc(100% - 68px);overflow:hidden;}
+.monitor-footer-fill{height:1px;}
 .empty-state{color:#94a3b8;padding:6px 0;}
 
 @media (min-width:1500px){
   .main{padding:16px 24px 14px 54px;}
   .page-header h1{font-size:34px;}
   .page-header p{font-size:13px;}
-  .monitor-brand-logo{width:250px;}
+  .monitor-brand-logo{width:260px;}
   .page-header h1{font-size:36px;}
   .banner{font-size:18px;min-height:34px;}
   .bay-card{min-height:72px;}
@@ -709,6 +711,7 @@ document.addEventListener("DOMContentLoaded", function(){
           <div id="activity"></div>
         </div>
       </div>
+      <div class="monitor-footer-fill"></div>
     </div>
   </div>
 </div>
