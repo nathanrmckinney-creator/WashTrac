@@ -16,6 +16,7 @@ body{
   background:#020617;
   color:white;
   overflow-x:hidden;
+  min-height:100vh;
 }
 
 @media (min-width:901px){
@@ -70,7 +71,7 @@ body{
 
 .main{
   flex:1;
-  padding:14px 22px 12px 52px;
+  padding:18px 22px 18px 52px;
   position:relative;
   margin-left:0;
   min-height:100vh;
@@ -91,19 +92,20 @@ body{
 .backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1100;}
 
 .monitor-shell{
-  height:calc(100vh - 10px);
+  height:calc(100vh - 36px);
+  min-height:calc(100vh - 36px);
   display:grid;
-  grid-template-rows:auto auto 1fr;
-  gap:8px;
+  grid-template-rows:auto 1fr;
+  gap:12px;
   overflow:hidden;
 }
 
 .monitor-top{
   display:grid;
   grid-template-columns:1fr;
-  gap:8px;
+  gap:10px;
   align-items:stretch;
-  padding-right:58px;
+  padding-right:0;
   position:relative;
 }
 
@@ -111,7 +113,7 @@ body{
   position:absolute;
   top:0;
   left:0;
-  width:168px;
+  width:230px;
   height:auto;
   display:block;
   z-index:3;
@@ -119,14 +121,14 @@ body{
 
 .page-header{
   margin:0;
-  padding:2px 190px 4px;
+  padding:0 250px 0;
   border:none;
   border-radius:0;
   background:transparent;
   text-align:center;
 }
-.page-header h1{margin:0;font-size:28px;line-height:1.05;letter-spacing:.2px;}
-.page-header p{margin:3px auto 0;color:#94a3b8;line-height:1.2;font-size:12px;max-width:900px;}
+.page-header h1{margin:0;font-size:32px;line-height:1.05;letter-spacing:.2px;}
+.page-header p{display:none;}
 
 .banner{
   width:100%;
@@ -172,6 +174,7 @@ body{
 
 .monitor-grid{
   min-height:0;
+  height:100%;
   display:grid;
   grid-template-columns:1.08fr .72fr 1.35fr;
   grid-template-rows:auto 1fr;
@@ -205,7 +208,7 @@ body{
 }
 
 .status-card{
-  min-height:78px;
+  min-height:86px;
   display:flex;
   flex-direction:column;
   justify-content:center;
@@ -330,8 +333,9 @@ body{
   .main{padding:16px 24px 14px 54px;}
   .page-header h1{font-size:34px;}
   .page-header p{font-size:13px;}
-  .monitor-brand-logo{width:184px;}
-  .banner{font-size:18px;min-height:32px;}
+  .monitor-brand-logo{width:250px;}
+  .page-header h1{font-size:36px;}
+  .banner{font-size:18px;min-height:34px;}
   .bay-card{min-height:72px;}
   .bay-card h3{font-size:20px;}
   .bay-status{font-size:17px;}
@@ -394,7 +398,7 @@ body{
 
   .monitor-brand-logo{
     position:static;
-    width:170px;
+    width:210px;
     margin:0 auto 10px;
   }
 
@@ -409,9 +413,7 @@ body{
   }
 
   .page-header p{
-    display:block;
-    font-size:14px;
-    line-height:1.45;
+    display:none;
   }
 
   .banner{
