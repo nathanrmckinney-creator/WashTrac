@@ -1546,6 +1546,21 @@ async function addCode(){
     }
   }
 
+  const { data: activeSiteRow, error: activeSiteError } = await client
+  .from("sites")
+  .select("id, organization_id")
+  .eq("id", activeSiteId)
+  .maybeSingle();
+
+if(activeSiteError || !activeSiteRow?.organization_id){
+  console.log("active site org lookup error:", activeSiteError);
+  setStatus("Could not verify selected site's organization.", "error");
+  return;
+}
+
+currentOrganizationId = activeSiteRow.organization_id;
+localStorage.setItem("activeOrganizationId", currentOrganizationId);
+  
   const existing = allCodes.find(item => String(getCodeValue(item)).trim() === code);
 
   if(existing && getIsActive(existing)){
