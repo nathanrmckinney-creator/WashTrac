@@ -13,22 +13,21 @@
 
 :root{
   /* MAIN POSITION CONTROLS - adjust these only */
- :root{
-  --logo-x: 900px;
-  --logo-y: -20px;
+  --logo-x: 16px;
+  --logo-y: -8px;
   --logo-width: 240px;
 
-  --title-x: -250px;
+  --title-x: 0px;
   --title-y: -55px;
 
   --banner-x: 0px;
-  --banner-y: 0px;
+  --banner-y: -8px;
 
   --content-x: 0px;
   --content-y: 0px;
 
-  --top-space: 65px;
-  --page-side-padding: 270px;
+  --top-space: 58px;
+  --page-side-padding: 0px;
 }
 body{
   margin:0;
@@ -151,8 +150,9 @@ body{
 }
 .page-header h1{
   margin:0;
-  font-size:44px;
-  line-height:1.05;
+  font-size:60px;
+  font-weight:900;
+  line-height:1;
   letter-spacing:.2px;
 }
 .page-header p{display:none;}
@@ -207,14 +207,14 @@ body{
   display:grid;
   grid-template-columns:1.08fr .72fr 1.35fr;
   grid-template-rows:auto 1fr;
-  gap:10px;
+  gap:14px;
 }
 
 .status-row{
   grid-column:1 / -1;
   display:grid;
   grid-template-columns:repeat(4,1fr);
-  gap:10px;
+  gap:14px;
 }
 
 .monitor-grid .card{
@@ -599,13 +599,6 @@ body{
   .billing-live-note{
     display:block;
   }
-  .page-header h1{
-  margin:0;
-  font-size:60px;
-  font-weight:800;
-  line-height:1;
-  letter-spacing:.2px;
-}
 }
 </style>
 </head>
@@ -689,14 +682,14 @@ document.addEventListener("DOMContentLoaded", function(){
     </div>
 
     <div class="monitor-shell">
-  <div class="monitor-top">
+      <div class="monitor-top">
+        <img src="washtrac-logo.png" alt="WashTrac" class="monitor-brand-logo">
 
-    <div class="page-header">
-      <h1>System Monitor</h1>
-      <p>Live wall-display view for wash status, E-STOP state, lockout window, bay status, devices, billing, and recent wash activity.</p>
-    </div>
+        <div class="page-header">
+          <h1>System Monitor</h1>
+          <p>Live wall-display view for wash status, E-STOP state, lockout window, bay status, devices, billing, and recent wash activity.</p>
+        </div>
 
-    <img src="washtrac-logo.png" alt="WashTrac" class="monitor-brand-logo">
         <div id="systemBanner" class="banner green">SYSTEM ONLINE</div>
       </div>
 
