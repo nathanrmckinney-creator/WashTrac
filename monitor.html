@@ -690,7 +690,10 @@ body{
   letter-spacing:.4px;
   box-shadow:0 14px 30px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.035);
 }
-.monitor-footer-fill::before{content:"⌁  SYSTEM OFFLINE";color:#ef4444;}
+.monitor-footer-fill::before{
+  content:"↻  LAST HEARTBEAT: --";
+  color:#38bdf8;
+}
 .monitor-footer-fill::after{content:"↻  LAST UPDATED: --";justify-self:end;color:#38bdf8;}
 .monitor-footer-fill{position:relative;}
 .monitor-footer-fill span{justify-self:center;color:#ef4444;}
