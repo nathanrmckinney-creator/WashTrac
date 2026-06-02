@@ -100,35 +100,47 @@ body{
 
 .monitor-top{
   display:grid;
-  grid-template-columns:1fr minmax(360px, .8fr);
-  gap:10px;
+  grid-template-columns:1fr;
+  gap:8px;
   align-items:stretch;
   padding-right:58px;
+  position:relative;
+}
+
+.monitor-brand-logo{
+  position:absolute;
+  top:0;
+  left:0;
+  width:168px;
+  height:auto;
+  display:block;
+  z-index:3;
 }
 
 .page-header{
   margin:0;
-  padding:7px 14px;
-  border:1px solid #1f2937;
-  border-radius:14px;
-  background:linear-gradient(145deg,rgba(15,23,42,.96),rgba(9,17,31,.96));
+  padding:2px 190px 4px;
+  border:none;
+  border-radius:0;
+  background:transparent;
+  text-align:center;
 }
-.page-header h1{margin:0;font-size:26px;line-height:1.03;letter-spacing:.2px;}
-.page-header p{margin:3px 0 0;color:#94a3b8;line-height:1.2;font-size:12px;}
+.page-header h1{margin:0;font-size:28px;line-height:1.05;letter-spacing:.2px;}
+.page-header p{margin:3px auto 0;color:#94a3b8;line-height:1.2;font-size:12px;max-width:900px;}
 
 .banner{
   width:100%;
-  padding:7px 14px;
+  padding:4px 12px;
   text-align:center;
-  font-size:23px;
+  font-size:16px;
   font-weight:900;
-  border-radius:14px;
+  border-radius:10px;
   margin:0;
   display:flex;
   align-items:center;
   justify-content:center;
-  min-height:52px;
-  letter-spacing:.6px;
+  min-height:28px;
+  letter-spacing:.55px;
   border:1px solid rgba(255,255,255,.12);
 }
 .green{background:#14532d;color:#86efac;box-shadow:0 0 22px rgba(34,197,94,.14);}
@@ -136,10 +148,7 @@ body{
 .yellow{background:#78350f;color:#fde68a;box-shadow:0 0 22px rgba(245,158,11,.14);}
 
 .bay-grid{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:10px;
-  margin:0;
+  display:none;
 }
 
 .bay-card{
@@ -172,7 +181,7 @@ body{
 .status-row{
   grid-column:1 / -1;
   display:grid;
-  grid-template-columns:repeat(5,1fr);
+  grid-template-columns:repeat(4,1fr);
   gap:10px;
 }
 
@@ -200,11 +209,19 @@ body{
   display:flex;
   flex-direction:column;
   justify-content:center;
+  align-items:center;
+  text-align:center;
 }
-.status-card h3{font-size:15px;color:#93c5fd;text-transform:uppercase;letter-spacing:.5px;}
-.status-card > div:not(.device-monitor-list){font-size:18px;font-weight:900;}
+.status-card h3{font-size:15px;color:#93c5fd;text-transform:uppercase;letter-spacing:.5px;text-align:center;width:100%;}
+.status-card > div:not(.device-monitor-list){font-size:18px;font-weight:900;text-align:center;width:100%;}
 
-.status-pill{display:inline-block;padding:7px 12px;border-radius:999px;font-weight:bold;}
+.status-pill{display:inline-flex;align-items:center;justify-content:center;padding:7px 12px;border-radius:999px;font-weight:bold;min-width:118px;text-align:center;}
+.wash-status-ready{background:linear-gradient(145deg,#14532d,#166534);color:#86efac;box-shadow:0 0 22px rgba(34,197,94,.18);}
+.wash-status-active{background:linear-gradient(145deg,#075985,#0369a1);color:#bae6fd;box-shadow:0 0 22px rgba(14,165,233,.18);}
+.wash-status-waiting{background:linear-gradient(145deg,#78350f,#92400e);color:#fde68a;box-shadow:0 0 22px rgba(245,158,11,.16);}
+.wash-status-full{background:linear-gradient(145deg,#7f1d1d,#991b1b);color:#fecaca;box-shadow:0 0 22px rgba(239,68,68,.18);}
+.wash-status-offline{background:linear-gradient(145deg,#450a0a,#7f1d1d);color:#fecaca;box-shadow:0 0 22px rgba(239,68,68,.18);}
+.wash-status-disabled{background:linear-gradient(145deg,#334155,#475569);color:#e2e8f0;}
 .on{background:#14532d;color:#86efac;}
 .off{background:#7f1d1d;color:#fca5a5;}
 .warn{background:#78350f;color:#fcd34d;}
@@ -243,6 +260,8 @@ body{
   display:flex;
   flex-direction:column;
   justify-content:center;
+  align-items:center;
+  text-align:center;
 }
 
 .daily-count-main{
@@ -264,9 +283,11 @@ body{
 }
 
 .monthly-count-wrap{
+  width:100%;
   margin-top:24px;
   padding-top:20px;
   border-top:1px solid #334155;
+  text-align:center;
 }
 
 .monthly-count-main{
@@ -309,7 +330,8 @@ body{
   .main{padding:16px 24px 14px 54px;}
   .page-header h1{font-size:34px;}
   .page-header p{font-size:13px;}
-  .banner{font-size:28px;min-height:58px;}
+  .monitor-brand-logo{width:184px;}
+  .banner{font-size:18px;min-height:32px;}
   .bay-card{min-height:72px;}
   .bay-card h3{font-size:20px;}
   .bay-status{font-size:17px;}
@@ -370,9 +392,16 @@ body{
     padding-right:0;
   }
 
+  .monitor-brand-logo{
+    position:static;
+    width:170px;
+    margin:0 auto 10px;
+  }
+
   .page-header{
-    padding:16px;
-    margin-bottom:14px;
+    padding:0;
+    margin-bottom:10px;
+    text-align:center;
   }
 
   .page-header h1{
@@ -386,17 +415,15 @@ body{
   }
 
   .banner{
-    font-size:22px;
+    font-size:16px;
     line-height:1.2;
     min-height:auto;
-    padding:14px 16px;
+    padding:8px 12px;
     margin-bottom:16px;
   }
 
   .bay-grid{
-    grid-template-columns:1fr;
-    gap:14px;
-    margin-bottom:16px;
+    display:none;
   }
 
   .bay-card{
@@ -441,7 +468,8 @@ body{
 
   .status-card{
     min-height:auto;
-    align-items:flex-start;
+    align-items:center;
+    text-align:center;
   }
 
   .status-card h3{
@@ -615,6 +643,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
     <div class="monitor-shell">
       <div class="monitor-top">
+        <img src="washtrac-logo.png" alt="WashTrac" class="monitor-brand-logo">
         <div class="page-header">
           <h1>System Monitor</h1>
           <p>Live wall-display view for wash status, E-STOP state, lockout window, bay status, devices, billing, and recent wash activity.</p>
@@ -623,33 +652,26 @@ document.addEventListener("DOMContentLoaded", function(){
         <div id="systemBanner" class="banner green">SYSTEM ONLINE</div>
       </div>
 
-      <div class="bay-grid" id="bayGrid"></div>
-
       <div class="monitor-grid">
         <div class="status-row">
-          <div class="card status-card">
+          <div class="card status-card wash-status-card" id="washStatusCard">
             <h3>Wash Status</h3>
             <div id="washStatus"></div>
           </div>
 
           <div class="card status-card">
-            <h3>E-STOP</h3>
+            <h3>E-STOP Status</h3>
             <div id="estopStatus"></div>
           </div>
 
           <div class="card status-card">
-            <h3>Lockout</h3>
+            <h3>Lockout Status</h3>
             <div id="lockoutStatus"></div>
           </div>
 
           <div class="card status-card">
             <h3>Lockout Window</h3>
             <div id="lockoutWindow"></div>
-          </div>
-
-          <div class="card status-card device-status-compact">
-            <h3>Device Status</h3>
-            <div id="deviceStatus" class="device-monitor-list compact-device-list"></div>
           </div>
         </div>
 
@@ -1037,6 +1059,7 @@ function getDepartmentCost(department){
 
 function renderBays(bays){
   const wrap = document.getElementById("bayGrid");
+  if(!wrap) return;
   wrap.innerHTML = "";
 
   if(!bays || !bays.length){
@@ -1179,11 +1202,42 @@ function renderDevices(devices){
   });
 }
 
+function setWashStatus(text, className){
+  const card = document.getElementById("washStatusCard");
+  const value = document.getElementById("washStatus");
+  if(!value) return;
+
+  if(card){
+    card.classList.remove(
+      "wash-status-ready",
+      "wash-status-active",
+      "wash-status-waiting",
+      "wash-status-full",
+      "wash-status-offline",
+      "wash-status-disabled"
+    );
+    card.classList.add(className || "wash-status-ready");
+  }
+
+  value.innerHTML = `<span class="status-pill">${escapeText(text || "READY")}</span>`;
+}
+
+function getDisplayWashStatus(control, hasOnlineDevice, hasPairedDevice){
+  if(!hasPairedDevice || !hasOnlineDevice) return { text:"OFFLINE", className:"wash-status-offline" };
+  if(!control) return { text:"OFFLINE", className:"wash-status-offline" };
+  if(control.estop_active === true) return { text:"E-STOP ACTIVE", className:"wash-status-full" };
+  if(control.wash_enabled === false) return { text:"DISABLED", className:"wash-status-disabled" };
+  if(checkLockout(control)) return { text:"LOCKOUT ACTIVE", className:"wash-status-waiting" };
+
+  // Placeholder until the keypad/local Flask app sends real stack state tomorrow.
+  return { text:"READY", className:"wash-status-ready" };
+}
+
 function renderControl(control, hasOnlineDevice = false, hasPairedDevice = false){
   const banner = document.getElementById("systemBanner");
 
   if(!control){
-    document.getElementById("washStatus").innerHTML = '<span class="status-pill off">Unknown</span>';
+    setWashStatus("OFFLINE", "wash-status-offline");
     document.getElementById("estopStatus").innerHTML = '<span class="status-pill off">Unknown</span>';
     document.getElementById("lockoutStatus").innerHTML = '<span class="status-pill off">Unknown</span>';
     document.getElementById("lockoutWindow").innerText = "--:-- to --:--";
@@ -1197,10 +1251,8 @@ function renderControl(control, hasOnlineDevice = false, hasPairedDevice = false
   const estopActive = control.estop_active === true;
   const lockoutEnabled = control.lockout_enabled === true;
 
-  document.getElementById("washStatus").innerHTML =
-    washEnabled
-      ? '<span class="status-pill on">Enabled</span>'
-      : '<span class="status-pill off">Disabled</span>';
+  const displayWashStatus = getDisplayWashStatus(control, hasOnlineDevice, hasPairedDevice);
+  setWashStatus(displayWashStatus.text, displayWashStatus.className);
 
   document.getElementById("estopStatus").innerHTML =
     estopActive
