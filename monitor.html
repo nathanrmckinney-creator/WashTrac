@@ -10,6 +10,25 @@
 
 <style>
 *{box-sizing:border-box;}
+
+:root{
+  /* MAIN POSITION CONTROLS - adjust these only */
+  --logo-x: 16px;
+  --logo-y: 2px;
+  --logo-width: 240px;
+
+  --title-x: 0px;
+  --title-y: 0px;
+
+  --banner-x: 0px;
+  --banner-y: 0px;
+
+  --content-x: 0px;
+  --content-y: 0px;
+
+  --top-space: 65px;
+  --page-side-padding: 270px;
+}
 body{
   margin:0;
   font-family:Arial, Helvetica, sans-serif;
@@ -107,29 +126,30 @@ body{
   align-items:stretch;
   padding-right:64px;
   position:relative;
-  padding-top:65px;
+  padding-top:var(--top-space);
 }
 
 .monitor-brand-logo{
   position:absolute;
-  top:2px;
-  left:16px;
-  width:240px;
+  top:var(--logo-y);
+  left:var(--logo-x);
+  width:var(--logo-width);
   height:auto;
   display:block;
   z-index:3;
 }
 
 .page-header{
-  margin:-12px 0 0 0;
-  padding:0 270px 0;
+  margin:0;
+  padding:0 var(--page-side-padding) 0;
   border:none;
   border-radius:0;
   background:transparent;
   text-align:center;
+  transform:translate(var(--title-x), var(--title-y));
 }
 .page-header h1{
-  margin:-25px 0 0 0;
+  margin:0;
   font-size:34px;
   line-height:1.05;
   letter-spacing:.2px;
@@ -144,6 +164,7 @@ body{
   font-weight:900;
   border-radius:10px;
   margin:0;
+  transform:translate(var(--banner-x), var(--banner-y));
   display:flex;
   align-items:center;
   justify-content:center;
@@ -179,6 +200,7 @@ body{
 .bay-status{font-size:16px;font-weight:bold;}
 
 .monitor-grid{
+  transform:translate(var(--content-x), var(--content-y));
   min-height:0;
   height:100%;
   display:grid;
@@ -340,7 +362,7 @@ body{
   .main{padding:16px 24px 14px 54px;}
   .page-header h1{font-size:34px;}
   .page-header p{font-size:13px;}
-  .monitor-brand-logo{width:260px;}
+  .monitor-brand-logo{width:var(--logo-width);}
   .page-header h1{font-size:36px;}
   .banner{font-size:18px;min-height:34px;}
   .bay-card{min-height:72px;}
@@ -364,6 +386,16 @@ body{
 }
 
 @media (max-width:900px){
+
+  :root{
+    --title-x:0px;
+    --title-y:0px;
+    --banner-x:0px;
+    --banner-y:0px;
+    --content-x:0px;
+    --content-y:0px;
+  }
+
   body{
     overflow-x:hidden;
     overflow-y:auto;
