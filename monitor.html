@@ -265,14 +265,14 @@ body{
 
 .billing-card{grid-column:1 / 2;grid-row:3;}
 .daily-count-card{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  grid-template-rows:auto 1fr;
+  grid-column:2 / 3;
+  grid-row:auto;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-start;
   align-items:center;
   text-align:center;
-  padding:18px 28px 22px;
-  position:relative;
-  overflow:hidden;
+  padding-top:45px;
 }
 .daily-count-card::before{
   content:"";
