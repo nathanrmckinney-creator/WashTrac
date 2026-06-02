@@ -717,6 +717,53 @@ body{
   .monthly-count-main{width:220px;height:176px;font-size:86px;}
 }
 
+  @media (max-height:850px) and (min-width:901px){
+  .monitor-shell{
+    grid-template-rows:68px 40px 108px 1fr 50px;
+    gap:8px;
+  }
+
+  .main{
+    padding-top:6px;
+    padding-bottom:6px;
+  }
+
+  .banner{
+    min-height:40px;
+    font-size:18px;
+  }
+
+  .status-row{
+    min-height:108px;
+  }
+
+  .status-card{
+    min-height:108px;
+    padding-top:12px;
+    padding-bottom:12px;
+  }
+
+  .daily-count-main{
+    width:210px;
+    height:210px;
+    font-size:108px;
+  }
+
+  .monthly-count-main{
+    width:190px;
+    height:150px;
+    font-size:76px;
+  }
+
+  .monitor-footer-fill{
+    min-height:50px;
+  }
+
+  .activity-row,
+  .billing-compact-row{
+    padding:8px 0;
+  }
+  
 @media (max-width:1200px){
   body{overflow-y:auto;}
   .monitor-shell{height:auto;overflow:visible;grid-template-rows:auto;gap:14px;}
