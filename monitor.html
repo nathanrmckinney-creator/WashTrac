@@ -12,20 +12,20 @@
 *{box-sizing:border-box;}
 
 :root{
-  --logo-x: calc(100% - 310px);
-  --logo-y: 8px;
+  --logo-x: 16px;
+  --logo-y: -8px;
   --logo-width: 240px;
 
-  --title-x: 40px;
-  --title-y: 8px;
+  --title-x: 0px;
+  --title-y: -55px;
 
   --banner-x: 0px;
-  --banner-y: 0px;
+  --banner-y: -8px;
 
   --content-x: 0px;
   --content-y: 0px;
 
-  --top-space: 92px;
+  --top-space: 58px;
   --page-side-padding: 0px;
 }
 body{
@@ -140,8 +140,11 @@ body{
 
 .page-header{
   margin:0;
-  padding:0;
-  text-align:left;
+  padding:0 var(--page-side-padding) 0;
+  border:none;
+  border-radius:0;
+  background:transparent;
+  text-align:center;
   transform:translate(var(--title-x), var(--title-y));
 }
 
