@@ -1615,7 +1615,7 @@ function renderControl(control, hasOnlineDevice = false, hasPairedDevice = false
   const estopActive = control.estop_active === true;
   const lockoutEnabled = control.lockout_enabled === true;
 
-  const displayWashStatus = getDisplayWashStatus(control, hasOnlineDevice, hasPairedDevice);
+  const displayWashStatus = getDisplayWashStatus(control, hasOnlineDevice, hasPairedDevice, window.latestMonitorDevices || []);
   setWashStatus(displayWashStatus.text, displayWashStatus.className);
 
   document.getElementById("estopStatus").innerHTML =
