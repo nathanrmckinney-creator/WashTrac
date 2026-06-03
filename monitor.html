@@ -690,15 +690,29 @@ body{
   letter-spacing:.4px;
   box-shadow:0 14px 30px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.035);
 }
-.monitor-footer-fill::before{
-  content:"↻  LAST HEARTBEAT: --";
-  color:#ef4444;
+.monitor-footer-fill::before,
+.monitor-footer-fill::after{
+  display:none;
+  content:none;
 }
-.monitor-footer-fill::after{content:"↻  LAST UPDATED: --";justify-self:end;color:#38bdf8;}
 .monitor-footer-fill{position:relative;}
 .monitor-footer-fill span{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.monitor-footer-heartbeat{
+  justify-self:start;
+  color:#ef4444;
+}
+.monitor-footer-wash{
   justify-self:center;
   color:#ffffff;
+}
+.monitor-footer-updated{
+  justify-self:end;
+  color:#38bdf8;
 }
 .empty-state{color:#94a3b8;padding:6px 0;}
 
@@ -979,7 +993,11 @@ document.addEventListener("DOMContentLoaded", function(){
         </div>
       </div>
 
-      <div class="monitor-footer-fill"><span>⌁ LAST WASH: --</span></div>
+      <div class="monitor-footer-fill">
+        <span class="monitor-footer-heartbeat" id="lastHeartbeatFooter">↻ LAST HEARTBEAT: --</span>
+        <span class="monitor-footer-wash" id="lastWashFooter">⌁ LAST WASH: --</span>
+        <span class="monitor-footer-updated" id="lastUpdatedFooter">↻ LAST UPDATED: --</span>
+      </div>
     </div>
   </div>
 </div>
@@ -1443,6 +1461,58 @@ function formatLastSeen(lastSeenValue){
   return `${diffHours}h ago`;
 }
 
+function formatFooterDateTime(value){
+  if(!value) return "--";
+
+  const date = value instanceof Date ? value : new Date(value);
+  if(Number.isNaN(date.getTime())) return "--";
+
+  return date.toLocaleString(undefined, {
+    month:"short",
+    day:"numeric",
+    hour:"numeric",
+    minute:"2-digit",
+    second:"2-digit"
+  });
+}
+
+function setFooterValue(id, label, value){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.innerText = `${label}: ${value || "--"}`;
+}
+
+function updateFooterLastUpdated(){
+  setFooterValue("lastUpdatedFooter", "↻ LAST UPDATED", formatFooterDateTime(new Date()));
+}
+
+function updateFooterHeartbeat(devices = []){
+  let newestLastSeen = null;
+
+  (devices || []).forEach(device => {
+    if(!device?.last_seen) return;
+
+    const lastSeen = new Date(device.last_seen);
+    if(Number.isNaN(lastSeen.getTime())) return;
+
+    if(!newestLastSeen || lastSeen > newestLastSeen){
+      newestLastSeen = lastSeen;
+    }
+  });
+
+  setFooterValue("lastHeartbeatFooter", "↻ LAST HEARTBEAT", newestLastSeen ? formatFooterDateTime(newestLastSeen) : "--");
+}
+
+function updateFooterLastWash(row){
+  if(!row){
+    setFooterValue("lastWashFooter", "⌁ LAST WASH", "--");
+    return;
+  }
+
+  const washTime = getActivityTime(row);
+  setFooterValue("lastWashFooter", "⌁ LAST WASH", formatFooterDateTime(washTime));
+}
+
 function renderDevices(devices){
   const wrap = document.getElementById("deviceStatus");
   if(!wrap) return;
@@ -1571,6 +1641,9 @@ function renderNoSite(){
   const monthlyCountEl = document.getElementById("monthlyWashCount");
   if(dailyCountEl) dailyCountEl.innerText = "0";
   if(monthlyCountEl) monthlyCountEl.innerText = "0";
+  updateFooterHeartbeat([]);
+  updateFooterLastWash(null);
+  updateFooterLastUpdated();
 
   const banner = document.getElementById("systemBanner");
   banner.className = "banner yellow";
@@ -1944,6 +2017,43 @@ async function fetchDevices(){
   return data || [];
 }
 
+async function loadLastBillableWash(){
+  const activeSiteId = getActiveSiteId();
+
+  if(!activeSiteId || !hasAccessToActiveSite()){
+    updateFooterLastWash(null);
+    return null;
+  }
+
+  let result = await client
+    .from("wash_activity")
+    .select("*")
+    .eq("site_id", activeSiteId)
+    .order("event_time", { ascending:false })
+    .limit(50);
+
+  if(result.error){
+    console.log("last billable wash event_time error:", result.error);
+
+    result = await client
+      .from("wash_activity")
+      .select("*")
+      .eq("site_id", activeSiteId)
+      .order("created_at", { ascending:false })
+      .limit(50);
+  }
+
+  if(result.error){
+    console.log("last billable wash error:", result.error);
+    updateFooterLastWash(null);
+    return null;
+  }
+
+  const lastWash = (result.data || []).find(row => isBillableWash(row)) || null;
+  updateFooterLastWash(lastWash);
+  return lastWash;
+}
+
 async function loadActivity(){
   const activeSiteId = getActiveSiteId();
 
@@ -1997,7 +2107,8 @@ async function loadMonitor(){
       fetchDevices(),
       loadBays(),
       loadActivity(),
-      loadDepartmentBilling()
+      loadDepartmentBilling(),
+      loadLastBillableWash()
     ]);
 
     const hasPairedDevice = Array.isArray(devices) && devices.length > 0;
@@ -2005,6 +2116,8 @@ async function loadMonitor(){
 
     renderDevices(devices || []);
     renderControl(control, hasOnlineDevice, hasPairedDevice);
+    updateFooterHeartbeat(devices || []);
+    updateFooterLastUpdated();
   }catch(err){
     console.log("monitor load error:", err);
   }finally{
@@ -2065,6 +2178,8 @@ function setupRealtime(){
       if(!document.hidden){
         loadActivity();
         loadDepartmentBilling();
+        loadLastBillableWash();
+        updateFooterLastUpdated();
       }
     })
 
