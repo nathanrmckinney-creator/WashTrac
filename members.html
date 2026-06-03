@@ -1251,14 +1251,11 @@ async function deleteMemberFromEdit(){
     `Delete ${memberName}?\\n\\nPlate: ${plate}\\nCode: ${code}\\n\\nThis removes the member entry. Membership wash history stays in activity records.`
   );
 
-  if(!firstConfirm) return;
+ const confirmed = confirm(
+  `Delete ${memberName}?\n\nPlate: ${plate}\nCode: ${code}`
+);
 
-  const typed = prompt(`Type DELETE to permanently delete ${memberName}.`);
-
-  if(String(typed || "").trim().toUpperCase() !== "DELETE"){
-    setEditStatus("Delete cancelled.", "warn");
-    return;
-  }
+if(!confirmed) return;
 
   const { error } = await client
     .from("memberships")
