@@ -126,6 +126,7 @@
     button.edit-btn{background:#334155;padding:10px 14px;}
     button.reactivate-btn{background:#16a34a;padding:10px 14px;}
     button.deactivate-btn{background:#7f1d1d;padding:10px 14px;}
+    button.delete-member-btn{background:#dc2626;padding:12px 16px;}
     button:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.35);}
 
     .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
@@ -489,6 +490,7 @@ document.addEventListener("DOMContentLoaded", function(){
     <div class="actions">
       <button type="button" onclick="saveMemberEdits()">Save Changes</button>
       <button class="secondary" type="button" onclick="closeEditMember()">Cancel</button>
+      <button class="delete-member-btn" type="button" onclick="deleteMemberFromEdit()">Delete Member</button>
     </div>
 
     <div class="status" id="editStatusBox"></div>
@@ -1225,6 +1227,53 @@ async function toggleMemberActive(memberId){
   }
 
   setStatus(nextActive ? "Member reactivated." : "Member deactivated.", "success");
+  await loadMembersPage();
+}
+
+
+async function deleteMemberFromEdit(){
+  clearEditStatus();
+
+  const orgId = getActiveOrganizationId();
+  const memberId = document.getElementById("editMemberId").value;
+  const member = allMembers.find(item => String(item.id) === String(memberId));
+
+  if(!memberId || !orgId || !member){
+    setEditStatus("Missing member/account information.", "error");
+    return;
+  }
+
+  const memberName = getMemberName(member) || "this member";
+  const plate = displayPlate(member.license_plate);
+  const code = getMemberCode(member);
+
+  const firstConfirm = confirm(
+    `Delete ${memberName}?\\n\\nPlate: ${plate}\\nCode: ${code}\\n\\nThis removes the member entry. Membership wash history stays in activity records.`
+  );
+
+  if(!firstConfirm) return;
+
+  const typed = prompt(`Type DELETE to permanently delete ${memberName}.`);
+
+  if(String(typed || "").trim().toUpperCase() !== "DELETE"){
+    setEditStatus("Delete cancelled.", "warn");
+    return;
+  }
+
+  const { error } = await client
+    .from("memberships")
+    .delete()
+    .eq("id", memberId)
+    .eq("organization_id", orgId);
+
+  if(error){
+    console.log("deleteMemberFromEdit error:", error);
+    setEditStatus("Could not delete member. Check RLS policy or linked activity references.", "error");
+    return;
+  }
+
+  closeEditMember();
+  setStatus("Member deleted.", "success");
   await loadMembersPage();
 }
 
