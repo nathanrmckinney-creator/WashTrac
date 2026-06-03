@@ -1,19 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WashTrac Activity</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WashTrac Codes</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
-
-<style>
-*{box-sizing:border-box;}
-body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:white;overflow-x:hidden;}
-.app{display:flex;min-height:100vh;}
-
- .sidebar {
+  <style>
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:#fff;overflow-x:hidden;}
+    .app{display:flex;min-height:100vh;}
+    
+   .sidebar {
   width: 220px;
   background:
     radial-gradient(
@@ -38,124 +37,253 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
 .sidebar::before{
   display:none;
 }
+    
+    .logo,
+    .mobile-logo{
+      margin-bottom:24px;
+    }
 
-.sidebar > *{
-  position:relative;
-  z-index:1;
-}
+    .logo-image{
+      width:180px;
+      height:auto;
+      display:block;
+    }
 
-.logo,
-.mobile-logo{
-  margin-bottom:24px;
-}
+    .logo-image-mobile{
+      width:150px;
+      height:auto;
+      display:block;
+    }
 
-.logo-image{
-  width:180px;
-  height:auto;
-  display:block;
-}
-
-.logo-image-mobile{
-  width:150px;
-  height:auto;
-  display:block;
-}
-
-.nav a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
-.nav a:hover,
-.nav a.active{color:white;}
-
-.main{
+    .nav a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
+    .nav a:hover,
+    .nav a.active{color:#fff;}
+    .main{
   flex:1;
   padding:30px;
   position:relative;
   margin-left:220px;
 }
+    .desktop-menu-wrap{position:absolute;top:24px;right:30px;z-index:1200;}
+    .menu-btn{background:#2563eb;border:none;color:#fff;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:bold;}
+    .hamburger-menu{display:none;position:absolute;top:46px;right:0;width:220px;background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:12px 16px;box-shadow:0 12px 30px rgba(0,0,0,.45);z-index:1500;}
+    .hamburger-menu a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
+    .hamburger-menu a:hover{color:#fff;}
+    .hamburger-menu a.logout-link{color:#f87171;}
+    .mobile-topbar{display:none;align-items:center;justify-content:space-between;padding:16px 20px;background:#0f172a;border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:1400;}
+    .mobile-logo{margin-bottom:0;}
+    .mobile-menu{display:none;position:fixed;top:64px;right:16px;width:240px;background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:12px 16px;box-shadow:0 12px 30px rgba(0,0,0,.45);z-index:1500;}
+    .mobile-menu a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
+    .mobile-menu a:hover{color:#fff;}
+    .mobile-menu a.logout-link{color:#f87171;}
+    .backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1100;}
+    .page-header{margin-bottom:24px;padding-right:80px;}
+    .page-header h1{margin:0 0 10px 0;font-size:42px;}
+    .page-header p{margin:0;color:#94a3b8;line-height:1.5;}
+    .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;}
+    .summary-box{background:#111827;padding:18px;border-radius:12px;}
+    .summary-box strong{display:block;font-size:30px;margin-bottom:6px;}
+    .summary-box span{color:#94a3b8;font-size:14px;}
+    .card{background:#111827;padding:20px;border-radius:12px;margin-bottom:20px;}
+    .card h3{margin:0 0 16px 0;}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end;}
+    .field{display:flex;flex-direction:column;gap:8px;}
+    .field label{font-size:13px;color:#94a3b8;}
+    input, select{width:100%;padding:12px;border-radius:8px;border:1px solid #334155;background:#0b1220;color:#fff;font-size:15px;}
+    input::placeholder{color:#6b7280;}
+    .hidden{display:none;}
+    .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;}
+    .quick-code-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 18px 0;}
+    .random-code-btn{font-size:18px;padding:16px 22px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#1ea7ff);box-shadow:0 0 16px rgba(30,167,255,.28);}
+    .quick-code-note{color:#94a3b8;font-size:14px;}
+    .temp-help{margin-top:8px;color:#94a3b8;font-size:13px;line-height:1.45;}
+    button{padding:12px 16px;background:#2563eb;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold;}
+    button.secondary{background:#334155;}
+    button.remove-btn{background:#dc2626;padding:10px 14px;}
+    .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    table{width:100%;border-collapse:collapse;min-width:980px;}
+    th, td{padding:14px 10px;border-bottom:1px solid #1f2937;text-align:left;vertical-align:middle;}
+    th{color:#93c5fd;font-size:13px;text-transform:uppercase;letter-spacing:.5px;}
+    .tag{display:inline-block;padding:6px 10px;border-radius:999px;background:#1e293b;color:#cbd5e1;font-size:12px;font-weight:bold;white-space:nowrap;}
+    .muted{color:#94a3b8;}
+    .search-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+    .status{margin-top:14px;padding:12px 14px;border-radius:8px;background:#0b1220;border:1px solid #1f2937;color:#cbd5e1;display:none;}
+    .status.show{display:block;}
+    .status.success{border-color:rgba(34,197,94,.35);color:#86efac;}
+    .status.warn{border-color:rgba(245,158,11,.35);color:#fde68a;}
+    .status.error{border-color:rgba(239,68,68,.35);color:#fecaca;}
 
-.desktop-menu-wrap{position:absolute;top:24px;right:30px;z-index:1200;}
-.menu-btn{background:#2563eb;border:none;color:white;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:bold;}
-.hamburger-menu{display:none;position:absolute;top:46px;right:0;width:220px;background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:12px 16px;box-shadow:0 12px 30px rgba(0,0,0,.45);z-index:1500;}
-.hamburger-menu a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
-.hamburger-menu a:hover{color:white;}
-.hamburger-menu a.logout-link{color:#f87171;}
+    .system-banner{
+      display:none;
+      margin-bottom:20px;
+      padding:14px 16px;
+      border-radius:12px;
+      font-weight:bold;
+      letter-spacing:.2px;
+      line-height:1.45;
+    }
 
-.mobile-topbar{display:none;align-items:center;justify-content:space-between;padding:16px 20px;background:#0f172a;border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:1400;}
-.mobile-logo{margin-bottom:0;}
-.mobile-menu{display:none;position:fixed;top:64px;right:16px;width:240px;background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:12px 16px;box-shadow:0 12px 30px rgba(0,0,0,.45);z-index:1500;}
-.mobile-menu a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
-.mobile-menu a:hover{color:white;}
-.mobile-menu a.logout-link{color:#f87171;}
-.backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1100;}
-.page-header{margin-bottom:18px;padding-right:80px;}
-.page-header h1{margin:0 0 10px 0;font-size:42px;}
-.page-header p{margin:0;color:#94a3b8;line-height:1.5;}
+    .system-banner.show{display:block;}
 
-.site-switcher-row{margin-top:14px;margin-bottom:22px;max-width:640px;display:flex;gap:10px;}
-.site-switcher-row select{
-  flex:1;padding:12px;border-radius:10px;background:#0b1220;color:white;border:1px solid #1ea7ff;
-  box-shadow:0 0 6px rgba(30,167,255,0.4);font-size:15px;font-weight:600;outline:none;
-}
-.site-switcher-row button{white-space:nowrap;}
+    .system-banner.offline{
+      background:rgba(127,29,29,.28);
+      border:1px solid rgba(239,68,68,.35);
+      color:#fecaca;
+    }
 
-.system-banner{display:none;margin-bottom:18px;padding:14px 16px;border-radius:10px;font-weight:bold;line-height:1.45;}
-.system-banner.show{display:block;}
-.system-banner.online{background:rgba(20,83,45,.28);border:1px solid rgba(34,197,94,.35);color:#bbf7d0;}
-.system-banner.offline{background:rgba(127,29,29,.28);border:1px solid rgba(239,68,68,.35);color:#fecaca;}
-.system-banner.warn{background:rgba(120,53,15,.28);border:1px solid rgba(245,158,11,.35);color:#fde68a;}
-.system-banner small{display:block;margin-top:4px;color:inherit;opacity:.9;font-weight:normal;}
+    .system-banner.online{
+      background:rgba(20,83,45,.28);
+      border:1px solid rgba(34,197,94,.35);
+      color:#bbf7d0;
+    }
 
-.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;}
-.summary-box{background:#111827;padding:18px;border-radius:10px;border:1px solid #1f2937;}
-.summary-box strong{display:block;font-size:30px;margin-bottom:6px;}
-.summary-box span{color:#94a3b8;font-size:14px;}
+    button:disabled,
+    button.disabled-btn{
+      opacity:.45;
+      cursor:not-allowed;
+      filter:grayscale(.35);
+    }
 
-.card{background:#111827;padding:20px;border-radius:10px;margin-bottom:20px;border:1px solid #1f2937;}
-.card h3{margin-top:0;margin-bottom:14px;}
+    .view-btn{background:#334155;padding:10px 14px;}
+    .view-btn:hover{background:#475569;}
 
-.filters{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:12px;}
-.date-filters{display:grid;grid-template-columns:1.1fr 1fr 1fr .8fr;gap:12px;margin-bottom:12px;}
-input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #334155;background:#0b1220;color:white;}
-button{padding:12px 16px;background:#2563eb;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:bold;}
-button.secondary{background:#334155;}
-button.danger{background:#7f1d1d;}
-button:disabled{opacity:.65;cursor:not-allowed;}
-.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;align-items:center;}
-.status-line{color:#94a3b8;font-size:14px;margin-left:auto;}
+    .activity-modal{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(2,6,23,.78);
+      z-index:3000;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
 
-.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-table{width:100%;border-collapse:collapse;min-width:760px;margin-top:10px;}
-th,td{padding:12px 8px;border-bottom:1px solid #1f2937;text-align:left;vertical-align:top;}
-th{color:#93c5fd;font-size:13px;text-transform:uppercase;letter-spacing:.5px;}
-td{color:#e5e7eb;}
-.notice{margin-top:14px;color:#94a3b8;font-size:14px;line-height:1.5;}
-.error-text{color:#fecaca;}
-.success-text{color:#86efac;}
-.warn-text{color:#fde68a;}
+    .activity-modal.show{display:flex;}
 
-@media (max-width:1100px){
-  .summary{grid-template-columns:1fr 1fr;}
-  .filters{grid-template-columns:1fr 1fr;}
-  .date-filters{grid-template-columns:1fr 1fr;}
-}
+    .activity-box{
+      width:100%;
+      max-width:980px;
+      max-height:88vh;
+      overflow:auto;
+      background:#111827;
+      border:1px solid #1e293b;
+      border-radius:16px;
+      padding:22px;
+      box-shadow:
+        0 0 0 1px rgba(30,167,255,.14),
+        0 22px 70px rgba(0,0,0,.6);
+    }
 
-@media (max-width:900px){
-  .app{display:block;}
-  .sidebar{display:none;}
-  .desktop-menu-wrap{display:none;}
-  .mobile-topbar{display:flex;}
-  .main{
+    .activity-modal-header{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:16px;
+    }
+
+    .activity-modal-header h3{
+      margin:0 0 6px 0;
+      font-size:24px;
+    }
+
+    .close-modal-btn{
+      background:#334155;
+      padding:10px 13px;
+      border-radius:8px;
+      line-height:1;
+    }
+
+    .activity-summary-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+      margin:16px 0;
+    }
+
+    .activity-summary-box{
+      background:#0b1220;
+      border:1px solid #1f2937;
+      border-radius:12px;
+      padding:14px;
+    }
+
+    .activity-summary-box strong{
+      display:block;
+      font-size:24px;
+      margin-bottom:4px;
+    }
+
+    .activity-summary-box span{
+      color:#94a3b8;
+      font-size:13px;
+    }
+
+    .activity-filter-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr 1fr;
+      gap:12px;
+      margin:16px 0;
+    }
+
+    .activity-detail-table{
+      min-width:860px;
+    }
+
+    .pill-granted{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(34,197,94,.16);
+      color:#86efac;
+      font-size:12px;
+      font-weight:bold;
+      white-space:nowrap;
+    }
+
+    .pill-denied{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(239,68,68,.16);
+      color:#fca5a5;
+      font-size:12px;
+      font-weight:bold;
+      white-space:nowrap;
+    }
+
+    .pill-neutral{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background:#1e293b;
+      color:#cbd5e1;
+      font-size:12px;
+      font-weight:bold;
+      white-space:nowrap;
+    }
+    @media (max-width:1100px){
+      .summary{grid-template-columns:1fr 1fr;}
+      .form-grid,.search-grid{grid-template-columns:1fr 1fr;}
+      .activity-summary-grid,.activity-filter-grid{grid-template-columns:1fr 1fr;}
+    }
+
+    @media (max-width:900px){
+      .app{display:block;}
+      .sidebar{display:none;}
+      .desktop-menu-wrap{display:none;}
+      .mobile-topbar{display:flex;}
+     .main{
   padding:20px;
   margin-left:0;
 }
-  .page-header{padding-right:0;}
-  .page-header h1{font-size:34px;}
-  .summary{grid-template-columns:1fr;}
-  .filters,.date-filters{grid-template-columns:1fr;}
-  .site-switcher-row{display:grid;grid-template-columns:1fr;}
-  .status-line{margin-left:0;width:100%;}
-  table{min-width:680px;}
-}
-</style>
+      .page-header{padding-right:0;}
+      .page-header h1{font-size:34px;}
+      .summary{grid-template-columns:1fr;}
+      .form-grid,.search-grid{grid-template-columns:1fr;}
+      .activity-summary-grid,.activity-filter-grid{grid-template-columns:1fr;}
+    }
+  </style>
 </head>
 
 <body>
@@ -200,6 +328,14 @@ document.addEventListener("DOMContentLoaded", function(){
   <a class="active" href="activity.html">Activity</a>
   <a href="usage.html">Reports</a>
   <a href="monitor.html">Monitor</a>
+
+  <hr style="
+    border:none;
+    border-top:1px solid #1e293b;
+    margin:16px 0;
+  ">
+
+  <a href="membership.html">Membership</a>
   <a href="maintenance.html" class="admin-only-link" style="display:none;">Maintenance</a>
   <a href="#" onclick="goHome(event)">Back to Homepage</a>
   <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
@@ -222,6 +358,14 @@ document.addEventListener("DOMContentLoaded", function(){
       <a class="active" href="activity.html">Activity</a>
       <a href="usage.html">Reports</a>
       <a href="monitor.html">Monitor</a>
+
+      <hr style="
+      border:none;
+      border-top:1px solid #1e293b;
+      margin:16px 0;
+    ">
+
+      <a href="membership.html">Membership</a>
       <a href="maintenance.html" class="admin-only-link" style="display:none;">Maintenance</a>
     </div>
   </div>
@@ -229,19 +373,30 @@ document.addEventListener("DOMContentLoaded", function(){
   <div class="main">
     <div class="desktop-menu-wrap">
       <button class="menu-btn" type="button" onclick="toggleDesktopMenu()">☰</button>
-      <div class="hamburger-menu" id="desktopMenu">
-        <a href="#" onclick="goHome(event)">Back to Homepage</a>
-        <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
-      </div>
+    <div class="hamburger-menu" id="desktopMenu">
+  <a href="#" onclick="goHome(event)">Back to Homepage</a>
+  <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
+</div>
     </div>
 
     <div class="page-header">
-      <h1>Activity</h1>
-      <p>Search wash activity by code, department, name, bay, event, and date range without heavy live refresh.</p>
+      <h1>Code Manager</h1>
+      <p>Create, organize, and remove access codes with a cleaner WashTrac admin layout.</p>
     </div>
 
-    <div class="site-switcher-row">
-      <select id="siteSwitcher" onchange="switchSite(this.value)">
+    <div style="margin-top:14px; margin-bottom:24px; max-width:520px; display:flex; gap:10px;">
+      <select id="siteSwitcher" onchange="switchSite(this.value)" style="
+        flex:1;
+        padding:12px;
+        border-radius:10px;
+        background:#0b1220;
+        color:white;
+        border:1px solid #1ea7ff;
+        box-shadow:0 0 6px rgba(30,167,255,0.4);
+        font-size:15px;
+        font-weight:600;
+        outline:none;
+      ">
         <option>Loading sites...</option>
       </select>
     </div>
@@ -249,71 +404,214 @@ document.addEventListener("DOMContentLoaded", function(){
     
 
     <div class="summary">
-      <div class="summary-box"><strong id="totalEvents">0</strong><span>Loaded Events</span></div>
-      <div class="summary-box"><strong id="uniqueCodes">0</strong><span>Unique Codes</span></div>
-      <div class="summary-box"><strong id="uniqueDepartments">0</strong><span>Departments</span></div>
-      <div class="summary-box"><strong id="uniqueBays">0</strong><span>Bays</span></div>
+      <div class="summary-box"><strong id="totalCodes">0</strong><span>Total Codes</span></div>
+      <div class="summary-box"><strong id="activeDepartments">0</strong><span>Departments</span></div>
+      <div class="summary-box"><strong id="topUsedCode">-</strong><span>Top Used Code</span></div>
+      <div class="summary-box"><strong id="totalUses">0</strong><span>Total Uses</span></div>
     </div>
 
     <div class="card">
-      <h3>Search Activity</h3>
+      <h3>Add New Code</h3>
 
-      <div class="date-filters">
-        <select id="datePreset" onchange="applyDatePreset()">
-          <option value="today">Today</option>
-          <option value="yesterday">Yesterday</option>
-          <option value="7days" selected>Last 7 Days</option>
-          <option value="14days">Last 14 Days</option>
-          <option value="30days">Last 30 Days</option>
-          <option value="custom">Custom Range</option>
-          <option value="all">Latest Loaded Only</option>
-        </select>
-        <input id="startDate" type="date" onchange="setCustomPreset()">
-        <input id="endDate" type="date" onchange="setCustomPreset()">
-        <select id="rowLimit">
-          <option value="100">100 rows</option>
-          <option value="250" selected>250 rows</option>
-          <option value="500">500 rows</option>
-        </select>
+      <div class="quick-code-row">
+        <button class="random-code-btn" type="button" onclick="generateRandomCode()">Generate Random 4-Digit Code</button>
+        <span class="quick-code-note">Fills the code box below without duplicating an existing active code.</span>
       </div>
 
-      <div class="filters">
-        <input id="filterCode" placeholder="Filter by code">
-        <input id="filterDepartment" placeholder="Filter by department">
-        <input id="filterName" placeholder="Filter by name">
-        <input id="filterBay" placeholder="Filter by bay">
-        <input id="filterEvent" placeholder="Filter by event">
+      <div class="form-grid">
+        <div class="field">
+          <label for="codeInput">Code</label>
+          <input id="codeInput" placeholder="Enter code" maxlength="4" inputmode="numeric">
+        </div>
+
+        <div class="field">
+          <label for="departmentSelect">Department</label>
+          <select id="departmentSelect" onchange="handleDepartmentChange()">
+            <option value="">Select department</option>
+            <option value="New Cars">New Cars</option>
+            <option value="Pre Owned">Pre Owned</option>
+            <option value="Service">Service</option>
+            <option value="Detail">Detail</option>
+            <option value="Manager">Manager</option>
+            <option value="Temporary">Temporary</option>
+            <option value="Other">Other</option>
+            <option value="__custom__">Custom...</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="nameInput">Name</label>
+          <input id="nameInput" placeholder="Enter name">
+        </div>
+
+        <div class="field">
+          <button id="addCodeButton" type="button" onclick="addCode()">Add Code</button>
+        </div>
+      </div>
+
+      <div class="field hidden" id="customDepartmentWrap" style="margin-top:12px;">
+        <label for="customDepartmentInput">Custom Department</label>
+        <input id="customDepartmentInput" placeholder="Enter custom department">
+      </div>
+
+<div id="temporaryOptions" class="hidden" style="margin-top:12px;">
+
+        <div class="form-grid">
+
+          <div class="field">
+            <label for="tempDays">Expires After (Days)</label>
+            <input
+              id="tempDays"
+              type="number"
+              min="1"
+              placeholder="Example: 7"
+            >
+          </div>
+
+          <div class="field">
+            <label for="tempMaxUses">Maximum Uses</label>
+            <input
+              id="tempMaxUses"
+              type="number"
+              min="1"
+              placeholder="Example: 1"
+            >
+          </div>
+
+        </div>
+
+        <div class="temp-help">
+          Temporary codes require days, maximum uses, or both. Whichever limit is reached first will expire the code once app.py enforcement is added.
+        </div>
+
+      </div>
+      
+      <div class="status" id="statusBox"></div>
+    </div>
+
+    <div class="card">
+      <h3>Search Codes</h3>
+      <div class="search-grid">
+        <div class="field">
+          <label for="searchCode">Search by code</label>
+          <input id="searchCode" placeholder="Code" oninput="renderCodes()">
+        </div>
+
+        <div class="field">
+          <label for="searchDepartment">Search by department</label>
+          <input id="searchDepartment" placeholder="Department" oninput="renderCodes()">
+        </div>
+
+        <div class="field">
+          <label for="searchName">Search by name</label>
+          <input id="searchName" placeholder="Name" oninput="renderCodes()">
+        </div>
       </div>
 
       <div class="actions">
-        <button type="button" id="applyBtn" onclick="loadActivity()">Apply / Refresh</button>
-        <button class="secondary" type="button" onclick="clearFilters()">Clear Filters</button>
-        <button class="secondary" type="button" onclick="exportFilteredActivity()">Export CSV</button>
-        <button class="secondary" type="button" onclick="window.print()">Print</button>
-        <span class="status-line" id="activityStatus">Ready.</span>
+        <button class="secondary" type="button" onclick="clearSearch()">Clear Search</button>
+        <button class="secondary" type="button" onclick="exportCodesCsv()">Export CSV</button>
+        <button class="secondary" type="button" onclick="loadCodesPage()">Refresh</button>
       </div>
+    </div>
 
+    <div class="card">
+      <h3>Active Codes</h3>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Time</th>
               <th>Code</th>
               <th>Department</th>
               <th>Name</th>
-              <th>Bay</th>
-              <th>Event</th>
+              <th>Uses</th>
+              <th>Last Used</th>
+              <th>Expires</th>
+              <th>Limit</th>
+              <th>Activity</th>
+              <th>Remove</th>
             </tr>
           </thead>
-          <tbody id="activityTableBody">
-            <tr><td colspan="6">Loading activity...</td></tr>
-          </tbody>
+          <tbody id="codesTableBody"></tbody>
         </table>
       </div>
+    </div>
+  </div>
+</div>
 
-      <div class="notice">
-        This page does not use realtime subscriptions or automatic polling. Use Apply / Refresh when you want updated history.
+<div id="codeActivityModal" class="activity-modal">
+  <div class="activity-box">
+    <div class="activity-modal-header">
+      <div>
+        <h3 id="activityModalTitle">Code Activity</h3>
+        <div id="activityModalSubtitle" class="muted">Breakdown of usage for this code.</div>
       </div>
+      <button class="close-modal-btn" type="button" onclick="closeCodeActivity()">✕</button>
+    </div>
+
+    <div class="activity-summary-grid">
+      <div class="activity-summary-box">
+        <strong id="modalTotalEvents">0</strong>
+        <span>Total Events</span>
+      </div>
+      <div class="activity-summary-box">
+        <strong id="modalGrantedEvents">0</strong>
+        <span>Granted Uses</span>
+      </div>
+      <div class="activity-summary-box">
+        <strong id="modalDeniedEvents">0</strong>
+        <span>Denied Events</span>
+      </div>
+      <div class="activity-summary-box">
+        <strong id="modalLastEvent">-</strong>
+        <span>Last Event</span>
+      </div>
+    </div>
+
+    <div class="activity-filter-grid">
+      <div class="field">
+        <label for="activityEventFilter">Event type</label>
+        <select id="activityEventFilter" onchange="renderCodeActivityDetails()">
+          <option value="">All events</option>
+          <option value="granted">Granted only</option>
+          <option value="denied">Denied only</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="activityBayFilter">Bay</label>
+        <input id="activityBayFilter" placeholder="Bay" oninput="renderCodeActivityDetails()">
+      </div>
+
+      <div class="field">
+        <label for="activityStartDate">Start date</label>
+        <input id="activityStartDate" type="date" onchange="renderCodeActivityDetails()">
+      </div>
+
+      <div class="field">
+        <label for="activityEndDate">End date</label>
+        <input id="activityEndDate" type="date" onchange="renderCodeActivityDetails()">
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="secondary" type="button" onclick="clearActivityFilters()">Clear Activity Filters</button>
+    </div>
+
+    <div class="table-wrap" style="margin-top:14px;">
+      <table class="activity-detail-table">
+        <thead>
+          <tr>
+            <th>Date / Time</th>
+            <th>Code</th>
+            <th>Department</th>
+            <th>Bay</th>
+            <th>Event</th>
+            <th>Device</th>
+          </tr>
+        </thead>
+        <tbody id="codeActivityTableBody"></tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -331,187 +629,95 @@ if(!isClientLogin && !isAdminLogin){
   }
 });
 
+let allCodes = [];
+let allActivity = [];
+let lastRenderedCodes = [];
+let codesLoadInProgress = false;
 let currentSiteId = null;
-let activityLoadToken = 0;
-let lastFilteredActivityRows = [];
-let lastRawActivityCount = 0;
+let currentOrganizationId = null;
+let codesLoadToken = 0;
+let refreshTimer = null;
+let selectedActivityCode = "";
+let systemOnline = false;
+let systemOnlineReason = "No recent CodeBox heartbeat detected.";
 const HEARTBEAT_ONLINE_MINUTES = 5;
-const ACTIVITY_SEARCH_STORAGE_KEY = "washtracActivitySearchSettings";
-const ACTIVITY_SEARCH_FIELD_IDS = [
-  "datePreset",
-  "startDate",
-  "endDate",
-  "rowLimit",
-  "filterCode",
-  "filterDepartment",
-  "filterName",
-  "filterBay",
-  "filterEvent"
-];
 
 function getActiveSiteId(){
   return currentSiteId || localStorage.getItem("activeSiteId") || "";
 }
 
-function escapeText(value){
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
+function requireSite(){
+  const siteId = getActiveSiteId();
 
-function cleanValue(value, fallback = ""){
-  if(value === null || value === undefined || value === "") return fallback;
-  return value;
-}
-
-function setStatus(message, tone = ""){
-  const el = document.getElementById("activityStatus");
-  if(!el) return;
-
-  el.textContent = message;
-
-  if(tone === true || tone === "error"){
-    el.className = "status-line error-text";
-  }else if(tone === "success"){
-    el.className = "status-line success-text";
-  }else if(tone === "warn"){
-    el.className = "status-line warn-text";
-  }else{
-    el.className = "status-line";
+  if(!siteId){
+    throw new Error("No active site selected.");
   }
+
+  return siteId;
 }
 
-function setLoading(isLoading){
-  const btn = document.getElementById("applyBtn");
-  if(btn){
-    btn.disabled = isLoading;
-    btn.textContent = isLoading ? "Loading..." : "Apply / Refresh";
-  }
+function getHeartbeatTimestamp(device){
+  return device?.last_seen || device?.last_heartbeat || device?.heartbeat_at || device?.updated_at || "";
 }
 
-function formatTime(value){
-  if(!value) return "";
-  const date = new Date(value);
-  if(Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString();
-}
-
-function toDateInputValue(date){
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function getStartOfDay(date){
-  const d = new Date(date);
-  d.setHours(0,0,0,0);
-  return d;
-}
-
-function getEndOfDay(date){
-  const d = new Date(date);
-  d.setHours(23,59,59,999);
-  return d;
-}
-
-function saveActivitySearchSettings(){
-  const settings = {};
-
-  ACTIVITY_SEARCH_FIELD_IDS.forEach(id => {
-    const el = document.getElementById(id);
-    if(el) settings[id] = el.value || "";
-  });
-
-  localStorage.setItem(ACTIVITY_SEARCH_STORAGE_KEY, JSON.stringify(settings));
-}
-
-function restoreActivitySearchSettings(){
-  const saved = localStorage.getItem(ACTIVITY_SEARCH_STORAGE_KEY);
-  if(!saved) return false;
-
-  try{
-    const settings = JSON.parse(saved);
-    if(!settings || typeof settings !== "object") return false;
-
-    ACTIVITY_SEARCH_FIELD_IDS.forEach(id => {
-      const el = document.getElementById(id);
-      if(el && Object.prototype.hasOwnProperty.call(settings, id)){
-        el.value = settings[id] || "";
-      }
-    });
-
-    return true;
-  }catch(err){
-    console.log("Activity search restore error:", err);
-    localStorage.removeItem(ACTIVITY_SEARCH_STORAGE_KEY);
-    return false;
-  }
-}
-
-function clearSavedActivitySearchSettings(){
-  localStorage.removeItem(ACTIVITY_SEARCH_STORAGE_KEY);
-}
-
-function applyDatePreset(){
-  const preset = document.getElementById("datePreset").value;
-  const startInput = document.getElementById("startDate");
-  const endInput = document.getElementById("endDate");
+function getOnlineDevices(devices){
   const now = new Date();
-  let start = null;
-  let end = now;
 
-  if(preset === "all"){
-    startInput.value = "";
-    endInput.value = "";
-    saveActivitySearchSettings();
-    return;
-  }
+  return (devices || []).filter(device => {
+    const heartbeat = getHeartbeatTimestamp(device);
+    if(!heartbeat) return false;
 
-  if(preset === "custom"){
-    saveActivitySearchSettings();
-    return;
-  }
+    const seen = new Date(heartbeat);
+    if(Number.isNaN(seen.getTime())) return false;
 
-  if(preset === "today"){
-    start = now;
-    end = now;
-  }else if(preset === "yesterday"){
-    start = new Date(now);
-    start.setDate(start.getDate() - 1);
-    end = new Date(start);
-  }else if(preset === "7days"){
-    start = new Date(now);
-    start.setDate(start.getDate() - 6);
-  }else if(preset === "14days"){
-    start = new Date(now);
-    start.setDate(start.getDate() - 13);
-  }else if(preset === "30days"){
-    start = new Date(now);
-    start.setDate(start.getDate() - 29);
-  }
-
-  startInput.value = start ? toDateInputValue(start) : "";
-  endInput.value = end ? toDateInputValue(end) : "";
-  saveActivitySearchSettings();
+    const diffMinutes = (now - seen) / 60000;
+    return diffMinutes <= HEARTBEAT_ONLINE_MINUTES;
+  });
 }
 
-function setCustomPreset(){
-  const preset = document.getElementById("datePreset");
-  if(preset) preset.value = "custom";
-  saveActivitySearchSettings();
+function renderSystemHeartbeat(devices){
+  const pairedDevices = devices || [];
+  const onlineDevices = getOnlineDevices(pairedDevices);
+
+  systemOnline = onlineDevices.length > 0;
+  systemOnlineReason = systemOnline
+    ? `${onlineDevices.length} CodeBox heartbeat${onlineDevices.length === 1 ? "" : "s"} active.`
+    : pairedDevices.length
+      ? "CodeBox heartbeat not currently online. Cloud code management is still available."
+      : "No CodeBox paired to this site yet. Cloud code management is still available.";
+
+  const addBtn = document.getElementById("addCodeButton");
+  if(addBtn){
+    addBtn.disabled = false;
+    addBtn.title = systemOnlineReason;
+  }
 }
 
-function getDateRange(){
-  const startValue = document.getElementById("startDate").value;
-  const endValue = document.getElementById("endDate").value;
-  return {
-    start: startValue ? getStartOfDay(new Date(startValue + "T00:00:00")) : null,
-    end: endValue ? getEndOfDay(new Date(endValue + "T00:00:00")) : null
-  };
+async function fetchPairedDevices(siteId){
+  if(!siteId) return [];
+
+  const { data, error } = await client
+    .from("devices")
+    .select("*")
+    .eq("site_id", siteId)
+    .order("created_at", { ascending:false });
+
+  if(error){
+    console.log("fetchPairedDevices error:", error);
+    systemOnline = false;
+    systemOnlineReason = "Could not load CodeBox heartbeat status.";
+    return [];
+  }
+
+  return data || [];
+}
+
+function ensureSystemOnlineForCodeChanges(){
+  /*
+    Codes are cloud-managed, so they should stay editable even when the Pi/CodeBox is offline.
+    The kiosk sync/enforcement catches up when the hardware returns online.
+  */
+  return true;
 }
 
 function toggleDesktopMenu(){
@@ -519,6 +725,7 @@ function toggleDesktopMenu(){
   const mobileMenu = document.getElementById("mobileMenu");
   const backdrop = document.getElementById("backdrop");
   const isOpen = desktopMenu.style.display === "block";
+
   mobileMenu.style.display = "none";
   desktopMenu.style.display = isOpen ? "none" : "block";
   backdrop.style.display = isOpen ? "none" : "block";
@@ -529,6 +736,7 @@ function toggleMobileMenu(){
   const mobileMenu = document.getElementById("mobileMenu");
   const backdrop = document.getElementById("backdrop");
   const isOpen = mobileMenu.style.display === "block";
+
   desktopMenu.style.display = "none";
   mobileMenu.style.display = isOpen ? "none" : "block";
   backdrop.style.display = isOpen ? "none" : "block";
@@ -542,7 +750,9 @@ function closeMenus(){
 
 function goHome(event){
   if(event) event.preventDefault();
+
   closeMenus();
+
   localStorage.removeItem("washtracLoggedIn");
   sessionStorage.removeItem("washtracAdmin");
   localStorage.removeItem("washtracAdmin");
@@ -552,8 +762,15 @@ function goHome(event){
 
 async function logout(event){
   if(event) event.preventDefault();
+
   closeMenus();
-  try{ await client.auth.signOut(); }catch(err){ console.log("logout error:", err); }
+
+  try{
+    await client.auth.signOut();
+  }catch(err){
+    console.log("logout error:", err);
+  }
+
   localStorage.removeItem("washtracLoggedIn");
   localStorage.removeItem("activeSiteId");
   localStorage.removeItem("washtracActiveSiteId");
@@ -564,66 +781,264 @@ async function logout(event){
   window.location.replace("login.html");
 }
 
-function getDeviceLastSeen(device){
-  return device.last_seen || device.last_heartbeat || device.updated_at || device.created_at || null;
+function setStatus(message, tone = ""){
+  const box = document.getElementById("statusBox");
+  box.innerText = message;
+  box.className = "status show";
+
+  if(tone === "success"){
+    box.classList.add("success");
+  }else if(tone === "warn"){
+    box.classList.add("warn");
+  }else if(tone === "error" || tone === true){
+    box.classList.add("error");
+  }
 }
 
-function getHeartbeatStatus(devices){
-  const now = Date.now();
+function clearStatus(){
+  const box = document.getElementById("statusBox");
+  box.innerText = "";
+  box.className = "status";
+}
 
-  if(!devices || !devices.length){
-    return {
-      online:false,
-      title:"SYSTEM OFFLINE",
-      detail:"No Keypad is paired to this active site yet. Activity history is still available."
-    };
+function handleDepartmentChange(){
+  const select = document.getElementById("departmentSelect");
+  const wrap = document.getElementById("customDepartmentWrap");
+  const tempWrap = document.getElementById("temporaryOptions");
+
+  if(select.value === "__custom__"){
+    wrap.classList.remove("hidden");
+    document.getElementById("customDepartmentInput").focus();
+  } else {
+    wrap.classList.add("hidden");
+    document.getElementById("customDepartmentInput").value = "";
   }
 
-  let newest = null;
-  let onlineCount = 0;
-
-  devices.forEach(device => {
-    const value = getDeviceLastSeen(device);
-    if(!value) return;
-    const seen = new Date(value);
-    if(Number.isNaN(seen.getTime())) return;
-    if(!newest || seen > newest) newest = seen;
-    if((now - seen.getTime()) / 60000 <= HEARTBEAT_ONLINE_MINUTES) onlineCount += 1;
-  });
-
-  if(onlineCount > 0){
-    return {
-      online:true,
-      title:"KEYPAD ONLINE",
-      detail:`${onlineCount} active Keypad heartbeat${onlineCount === 1 ? "" : "s"}. Activity is available. Use Apply / Refresh for latest rows.`
-    };
+  if(select.value === "Temporary"){
+    tempWrap.classList.remove("hidden");
+  } else {
+    tempWrap.classList.add("hidden");
+    document.getElementById("tempDays").value = "";
+    document.getElementById("tempMaxUses").value = "";
   }
+}
 
+function getDepartmentValue(){
+  const selectValue = document.getElementById("departmentSelect").value;
+  const customValue = document.getElementById("customDepartmentInput").value.trim();
+
+  if(selectValue === "__custom__") return customValue;
+  return selectValue;
+}
+
+function cleanValue(value, fallback = ""){
+  if(value === null || value === undefined || value === "") return fallback;
+  return value;
+}
+
+function activityCode(row){
+  return cleanValue(row.metadata?.code, cleanValue(row.code, cleanValue(row.access_code, "")));
+}
+
+function activityName(row){
+  return cleanValue(row.metadata?.name, cleanValue(row.metadata?.device, cleanValue(row.name, "")));
+}
+
+function normalizeActivity(row){
   return {
-    online:false,
-    title:"SYSTEM OFFLINE",
-    detail:newest
-      ? `Last Keypad heartbeat: ${newest.toLocaleString()}. Activity history is still available.`
-      : "No heartbeat has been received from the paired Keypad yet. Activity history is still available."
+    event_time: cleanValue(row.event_time, cleanValue(row.created_at, "")),
+    code: activityCode(row),
+    department: cleanValue(row.department, cleanValue(row.metadata?.department, "Unassigned")),
+    name: activityName(row),
+    bay: cleanValue(row.bay, ""),
+    event: cleanValue(row.event, cleanValue(row.status, ""))
   };
 }
 
-function renderHeartbeatBanner(devices){ return; }
+function getCodeId(item){
+  return item.id;
+}
 
-async function fetchDevices(siteId){
-  if(!siteId) return [];
-  const { data, error } = await client
-    .from("devices")
-    .select("id,name,site_id,last_seen,last_heartbeat,updated_at,created_at")
-    .eq("site_id", siteId)
-    .order("created_at", { ascending:false })
-    .limit(20);
+function getCodeValue(item){
+  return String(cleanValue(item.code, "")).trim();
+}
 
-  if(error){
-    console.log("Devices fetch error:", error);
-    return [];
+function getCodeDepartment(item){
+  return cleanValue(item.department, "Unassigned");
+}
+
+function getCodeName(item){
+  return cleanValue(item.assigned_to, cleanValue(item.name, ""));
+}
+
+function getIsActive(item){
+  return item.is_active !== false;
+}
+
+function getCodeExpiresAt(item){
+  return cleanValue(item.expires_at, "");
+}
+
+function getCodeMaxUses(item){
+  return item.max_uses === null || item.max_uses === undefined || item.max_uses === "" ? "" : item.max_uses;
+}
+
+function getCodeCurrentUses(item){
+  return item.current_uses === null || item.current_uses === undefined || item.current_uses === "" ? 0 : Number(item.current_uses || 0);
+}
+
+function formatExpiration(value){
+  if(!value) return "-";
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString();
+}
+
+function formatLimit(item){
+  const maxUses = getCodeMaxUses(item);
+  if(maxUses === "") return "-";
+  return `${getCodeCurrentUses(item)} / ${maxUses}`;
+}
+
+function getCodeStats(code){
+  const rows = getActivityRowsForCode(code).filter(isGrantedActivity);
+  const uses = rows.length;
+  const last = rows
+    .filter(row => row.event_time)
+    .sort((a,b) => new Date(b.event_time) - new Date(a.event_time))[0];
+
+  return {
+    uses,
+    lastUsed: last ? last.event_time : ""
+  };
+}
+
+function isGrantedActivity(row){
+  const event = String(row.event || "").toLowerCase();
+  const status = String(row.status || "").toLowerCase();
+
+  if(event.includes("denied") || event.includes("invalid") || event.includes("failed") || event.includes("error")) return false;
+  if(status.includes("denied") || status.includes("invalid") || status.includes("failed") || status.includes("error")) return false;
+
+  return true;
+}
+
+function getActivityDevice(row){
+  return cleanValue(row.name, cleanValue(row.metadata?.device, cleanValue(row.device, "")));
+}
+
+function formatDateTime(value){
+  if(!value) return "-";
+  return new Date(value).toLocaleString();
+}
+
+function getActivityRowsForCode(code){
+  const target = String(code || "").trim();
+
+  return allActivity
+    .filter(row => String(row.code || "").trim() === target)
+    .sort((a,b) => new Date(b.event_time || 0) - new Date(a.event_time || 0));
+}
+
+function openCodeActivity(code){
+  selectedActivityCode = String(code || "").trim();
+
+  const matchingCode = allCodes.find(item => String(getCodeValue(item)).trim() === selectedActivityCode);
+  const department = matchingCode ? getCodeDepartment(matchingCode) : "Unassigned";
+  const name = matchingCode ? getCodeName(matchingCode) : "";
+
+  document.getElementById("activityModalTitle").innerText = `Code ${selectedActivityCode}`;
+  document.getElementById("activityModalSubtitle").innerText =
+    `${department}${name ? " • " + name : ""}`;
+
+  document.getElementById("activityEventFilter").value = "";
+  document.getElementById("activityBayFilter").value = "";
+  document.getElementById("activityStartDate").value = "";
+  document.getElementById("activityEndDate").value = "";
+
+  document.getElementById("codeActivityModal").classList.add("show");
+  renderCodeActivityDetails();
+}
+
+function closeCodeActivity(){
+  selectedActivityCode = "";
+  document.getElementById("codeActivityModal").classList.remove("show");
+}
+
+function clearActivityFilters(){
+  document.getElementById("activityEventFilter").value = "";
+  document.getElementById("activityBayFilter").value = "";
+  document.getElementById("activityStartDate").value = "";
+  document.getElementById("activityEndDate").value = "";
+  renderCodeActivityDetails();
+}
+
+function renderCodeActivityDetails(){
+  const tbody = document.getElementById("codeActivityTableBody");
+  if(!tbody) return;
+
+  const eventFilter = document.getElementById("activityEventFilter").value;
+  const bayFilter = document.getElementById("activityBayFilter").value.trim().toLowerCase();
+  const startDate = document.getElementById("activityStartDate").value;
+  const endDate = document.getElementById("activityEndDate").value;
+
+  const allRows = getActivityRowsForCode(selectedActivityCode);
+  const grantedRows = allRows.filter(isGrantedActivity);
+  const deniedRows = allRows.filter(row => !isGrantedActivity(row));
+  const lastRow = allRows[0];
+
+  document.getElementById("modalTotalEvents").innerText = allRows.length;
+  document.getElementById("modalGrantedEvents").innerText = grantedRows.length;
+  document.getElementById("modalDeniedEvents").innerText = deniedRows.length;
+  document.getElementById("modalLastEvent").innerText = lastRow?.event_time ? new Date(lastRow.event_time).toLocaleDateString() : "-";
+
+  let rows = [...allRows];
+
+  if(eventFilter === "granted"){
+    rows = rows.filter(isGrantedActivity);
   }
-  return data || [];
+
+  if(eventFilter === "denied"){
+    rows = rows.filter(row => !isGrantedActivity(row));
+  }
+
+  if(bayFilter){
+    rows = rows.filter(row => String(row.bay || "").toLowerCase().includes(bayFilter));
+  }
+
+  if(startDate){
+    const start = new Date(startDate + "T00:00:00");
+    rows = rows.filter(row => row.event_time && new Date(row.event_time) >= start);
+  }
+
+  if(endDate){
+    const end = new Date(endDate + "T23:59:59");
+    rows = rows.filter(row => row.event_time && new Date(row.event_time) <= end);
+  }
+
+  tbody.innerHTML = "";
+
+  if(!rows.length){
+    tbody.innerHTML = `<tr><td colspan="6" class="muted">No activity found for these filters.</td></tr>`;
+    return;
+  }
+
+  rows.forEach(row => {
+    const granted = isGrantedActivity(row);
+    const pillClass = granted ? "pill-granted" : "pill-denied";
+    const eventText = row.event || (granted ? "Granted" : "Denied");
+
+    tbody.innerHTML += `
+      <tr>
+        <td>${escapeText(formatDateTime(row.event_time))}</td>
+        <td><strong>${escapeText(row.code || selectedActivityCode)}</strong></td>
+        <td>${escapeText(row.department || "Unassigned")}</td>
+        <td>${escapeText(row.bay || "-")}</td>
+        <td><span class="${pillClass}">${escapeText(eventText)}</span></td>
+        <td>${escapeText(getActivityDevice(row) || "-")}</td>
+      </tr>
+    `;
+  });
 }
 
 async function loadSites(){
@@ -651,6 +1066,8 @@ async function loadSites(){
 
     if(!sites.length){
       select.innerHTML = `<option value="">No sites found</option>`;
+      localStorage.removeItem("activeSiteId");
+      localStorage.removeItem("activeOrganizationId");
       currentSiteId = null;
       return "";
     }
@@ -664,11 +1081,21 @@ async function loadSites(){
     const activeSite = exists ? sites.find(site => site.id === saved) : sites[0];
 
     currentSiteId = activeSite.id;
-    localStorage.setItem("activeSiteId", currentSiteId);
+localStorage.setItem("activeSiteId", currentSiteId);
+
+currentOrganizationId = activeSite.organization_id || activeSite.org_id || activeSite.company_id || null;
+if(currentOrganizationId){
+  localStorage.setItem("activeOrganizationId", currentOrganizationId);
+}
 
     const orgId = activeSite.organization_id || activeSite.org_id || activeSite.company_id || null;
-    if(orgId) localStorage.setItem("activeOrganizationId", orgId);
+    currentOrganizationId = orgId;
 
+if(orgId){
+  localStorage.setItem("activeOrganizationId", orgId);
+}else{
+  localStorage.removeItem("activeOrganizationId");
+}
     select.value = currentSiteId;
     return currentSiteId;
   }
@@ -748,7 +1175,12 @@ async function loadSites(){
   const activeSite = exists ? sites.find(site => site.id === saved) : sites[0];
 
   currentSiteId = activeSite.id;
-  localStorage.setItem("activeSiteId", currentSiteId);
+localStorage.setItem("activeSiteId", currentSiteId);
+
+currentOrganizationId = activeSite.organization_id || activeSite.org_id || activeSite.company_id || null;
+if(currentOrganizationId){
+  localStorage.setItem("activeOrganizationId", currentOrganizationId);
+}
 
   const orgId = activeSite.organization_id || activeSite.org_id || activeSite.company_id || null;
   if(orgId) localStorage.setItem("activeOrganizationId", orgId);
@@ -776,239 +1208,218 @@ async function switchSite(siteId){
     if(orgId) localStorage.setItem("activeOrganizationId", orgId);
   }
 
-  await loadActivity();
+  clearStatus();
+  await loadCodesPage();
 }
 
-function getActivityCode(row){
-  return String(cleanValue(row.metadata?.code, cleanValue(row.code, cleanValue(row.access_code, "")))).trim();
+function resetCodesEmpty(){
+  allCodes = [];
+  allActivity = [];
+
+  document.getElementById("totalCodes").innerText = "0";
+  document.getElementById("activeDepartments").innerText = "0";
+  document.getElementById("topUsedCode").innerText = "-";
+  document.getElementById("totalUses").innerText = "0";
+  document.getElementById("codesTableBody").innerHTML = `<tr><td colspan="9" class="muted">No active site selected.</td></tr>`;
+  renderSystemHeartbeat([]);
 }
 
-function mapActivityRow(row){
-  const code = getActivityCode(row);
-  return {
-    id: row.id || "",
-    event_time: cleanValue(getRowTimeValue(row), ""),
-    code,
-    department: cleanValue(row.department, cleanValue(row.metadata?.department, "")),
-    name: cleanValue(row.metadata?.name, cleanValue(row.metadata?.assigned_to, cleanValue(row.assigned_to, ""))),
-    bay: cleanValue(row.bay, cleanValue(row.metadata?.bay, "")),
-    event: cleanValue(row.event, cleanValue(row.status, cleanValue(row.metadata?.event, "")))
-  };
-}
+async function fetchCodes(siteId){
+  if(!siteId) return [];
 
-function resetActivityEmpty(message = "No active site selected."){
-  document.getElementById("totalEvents").innerText = "0";
-  document.getElementById("uniqueCodes").innerText = "0";
-  document.getElementById("uniqueDepartments").innerText = "0";
-  document.getElementById("uniqueBays").innerText = "0";
-  document.getElementById("activityTableBody").innerHTML = `<tr><td colspan="6">${escapeText(message)}</td></tr>`;
-}
+  const { data, error } = await client
+    .from("access_codes")
+    .select("*")
+    .eq("site_id", siteId)
+    .order("created_at", { ascending:false });
 
-function updateSummary(rows){
-  document.getElementById("totalEvents").innerText = rows.length;
-  document.getElementById("uniqueCodes").innerText = new Set(rows.map(r => r.code).filter(Boolean)).size;
-  document.getElementById("uniqueDepartments").innerText = new Set(rows.map(r => r.department).filter(Boolean)).size;
-  document.getElementById("uniqueBays").innerText = new Set(rows.map(r => r.bay).filter(Boolean)).size;
-}
-
-function renderRows(rows){
-  const tbody = document.getElementById("activityTableBody");
-  tbody.innerHTML = "";
-
-  if(!rows.length){
-    tbody.innerHTML = `<tr><td colspan="6">No matching activity found. Try clearing text filters or expanding the date range.</td></tr>`;
-    updateSummary([]);
-    return;
+  if(error){
+    console.log("fetchCodes error:", error);
+    setStatus("Could not load codes.", "error");
+    return [];
   }
 
-  rows.forEach(row => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${escapeText(formatTime(row.event_time))}</td>
-      <td>${escapeText(row.code || "")}</td>
-      <td>${escapeText(row.department || "")}</td>
-      <td>${escapeText(row.name || "")}</td>
-      <td>${escapeText(row.bay || "")}</td>
-      <td>${escapeText(row.event || "")}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-
-  updateSummary(rows);
+  return data || [];
 }
 
-function getRowTimeValue(row){
-  return row.event_time || row.created_at || row.timestamp || row.time || row.inserted_at || "";
-}
+async function fetchActivity(siteId){
+  if(!siteId) return [];
 
-function rowIsInsideSelectedDate(row){
-  const { start, end } = getDateRange();
-  const raw = getRowTimeValue(row);
-  if(!raw) return true;
-
-  const date = new Date(raw);
-  if(Number.isNaN(date.getTime())) return true;
-
-  if(start && date < start) return false;
-  if(end && date > end) return false;
-  return true;
-}
-
-function buildBaseActivityQuery(siteId){
-  return client
+  let result = await client
     .from("wash_activity")
     .select("*")
-    .eq("site_id", siteId);
-}
-
-async function tryActivityQuery(siteId, limit, orderColumn, useDateFilter){
-  const range = getDateRange();
-
-  let query = buildBaseActivityQuery(siteId);
-
-  if(useDateFilter && range.start){
-    query = query.gte(orderColumn, range.start.toISOString());
-  }
-
-  if(useDateFilter && range.end){
-    query = query.lte(orderColumn, range.end.toISOString());
-  }
-
-  return await query
-    .order(orderColumn, { ascending:false })
-    .limit(limit);
-}
-
-async function runActivityQuery(siteId, limit){
-  /*
-    HARDENED ACTIVITY QUERY:
-    - First tries event_time with the selected date range.
-    - Falls back to created_at with the same date range if needed.
-    - Final fallback loads latest rows without date filtering, then filters in browser.
-    This prevents the confusing "0 of 250" problem when the latest rows are outside the selected day.
-  */
-  let result = await tryActivityQuery(siteId, limit, "event_time", true);
-
-  if(!result.error){
-    result.__queryMode = "event_time_date";
-    return result;
-  }
-
-  console.log("Activity event_time date query failed:", result.error);
-
-  result = await tryActivityQuery(siteId, limit, "created_at", true);
-
-  if(!result.error){
-    result.__queryMode = "created_at_date";
-    return result;
-  }
-
-  console.log("Activity created_at date query failed:", result.error);
-
-  result = await tryActivityQuery(siteId, limit, "event_time", false);
-
-  if(!result.error){
-    result.__queryMode = "event_time_latest";
-    return result;
-  }
-
-  console.log("Activity latest event_time query failed:", result.error);
-
-  result = await tryActivityQuery(siteId, limit, "created_at", false);
+    .eq("site_id", siteId)
+    .order("event_time", { ascending:false })
+    .limit(1000);
 
   if(result.error){
-    console.log("Activity final fallback query failed:", result.error);
-  }else{
-    result.__queryMode = "created_at_latest";
+    console.log("event_time activity query failed:", result.error);
+
+    result = await client
+      .from("wash_activity")
+      .select("*")
+      .eq("site_id", siteId)
+      .order("created_at", { ascending:false })
+      .limit(1000);
   }
 
-  return result;
+  if(result.error){
+    console.log("created_at activity query failed:", result.error);
+
+    result = await client
+      .from("wash_activity")
+      .select("*")
+      .eq("site_id", siteId)
+      .limit(1000);
+  }
+
+  if(result.error){
+    console.log("fetchActivity error:", result.error);
+    return [];
+  }
+
+  return (result.data || []).map(normalizeActivity);
 }
 
-async function loadActivity(){
-  const token = ++activityLoadToken;
-  const siteId = getActiveSiteId();
+async function loadCodesPage(){
+  if(codesLoadInProgress) return;
 
-  if(!siteId){
-    resetActivityEmpty();
-    renderHeartbeatBanner([]);
-    lastFilteredActivityRows = [];
-    lastRawActivityCount = 0;
-    setStatus("No active site selected.", "error");
+  const loadToken = ++codesLoadToken;
+  const activeSiteId = getActiveSiteId();
+
+  if(!activeSiteId){
+    resetCodesEmpty();
     return;
   }
 
-  saveActivitySearchSettings();
-  setLoading(true);
-  setStatus("Loading activity...");
-  document.getElementById("activityTableBody").innerHTML = `<tr><td colspan="6">Loading activity...</td></tr>`;
+  codesLoadInProgress = true;
 
   try{
-    const limit = Number(document.getElementById("rowLimit").value || 250);
-    const preset = document.getElementById("datePreset").value;
-
-    const [activityResult, devices] = await Promise.all([
-      runActivityQuery(siteId, limit),
-      fetchDevices(siteId)
+    const [codes, activity, devices] = await Promise.all([
+      fetchCodes(activeSiteId),
+      fetchActivity(activeSiteId),
+      fetchPairedDevices(activeSiteId)
     ]);
 
-    if(token !== activityLoadToken || siteId !== getActiveSiteId()) return;
+    if(loadToken !== codesLoadToken) return;
+    if(activeSiteId !== getActiveSiteId()) return;
 
-    renderHeartbeatBanner(devices);
+    allCodes = codes;
+    allActivity = activity;
 
-    if(activityResult.error){
-      console.log("Activity fetch error:", activityResult.error);
-      resetActivityEmpty("Could not load activity. Check the browser console for details.");
-      lastFilteredActivityRows = [];
-      lastRawActivityCount = 0;
-      setStatus("Could not load activity.", "error");
-      return;
-    }
-
-    const rawRows = activityResult.data || [];
-    const dateRows = rawRows.filter(rowIsInsideSelectedDate);
-    const mappedRows = dateRows.map(mapActivityRow);
-    const filteredRows = applyTextFilters(mappedRows);
-
-    lastFilteredActivityRows = filteredRows;
-    lastRawActivityCount = rawRows.length;
-
-    renderRows(filteredRows);
-
-    const nowText = new Date().toLocaleTimeString();
-    const rowWord = rawRows.length === 1 ? "row" : "rows";
-
-    if(!filteredRows.length && rawRows.length){
-      setStatus(`No matching rows in this filter. Loaded ${rawRows.length} ${rowWord} at ${nowText}.`, "warn");
-    }else if(!filteredRows.length && preset === "today"){
-      setStatus(`No activity found for today. Try Yesterday or Last 7 Days. Checked at ${nowText}.`, "warn");
-    }else{
-      setStatus(`Showing ${filteredRows.length} of ${rawRows.length} loaded ${rowWord} at ${nowText}.`, "success");
-    }
+    renderSystemHeartbeat(devices);
+    renderCodes();
+    renderSummary();
   }catch(err){
-    console.log("Load activity error:", err);
-    resetActivityEmpty("Activity load failed.");
-    lastFilteredActivityRows = [];
-    lastRawActivityCount = 0;
-    setStatus("Activity load failed.", "error");
+    console.log("loadCodesPage error:", err);
+    setStatus("Could not load codes page.", "error");
   }finally{
-    if(token === activityLoadToken) setLoading(false);
+    if(loadToken === codesLoadToken){
+      codesLoadInProgress = false;
+    }
   }
 }
-function applyTextFilters(rows){
-  const codeFilter = document.getElementById("filterCode").value.trim().toLowerCase();
-  const departmentFilter = document.getElementById("filterDepartment").value.trim().toLowerCase();
-  const nameFilter = document.getElementById("filterName").value.trim().toLowerCase();
-  const bayFilter = document.getElementById("filterBay").value.trim().toLowerCase();
-  const eventFilter = document.getElementById("filterEvent").value.trim().toLowerCase();
 
-  return rows.filter(row => {
-    return String(row.code || "").toLowerCase().includes(codeFilter)
-      && String(row.department || "").toLowerCase().includes(departmentFilter)
-      && String(row.name || "").toLowerCase().includes(nameFilter)
-      && String(row.bay || "").toLowerCase().includes(bayFilter)
-      && String(row.event || "").toLowerCase().includes(eventFilter);
+function renderSummary(){
+  const activeCodes = allCodes.filter(getIsActive);
+
+  document.getElementById("totalCodes").innerText = activeCodes.length;
+
+  const departments = [...new Set(
+    activeCodes
+      .map(item => String(getCodeDepartment(item)).trim())
+      .filter(Boolean)
+  )];
+
+  document.getElementById("activeDepartments").innerText = departments.length;
+
+  const codeUsage = activeCodes.map(item => {
+    const code = getCodeValue(item);
+    const stats = getCodeStats(code);
+
+    return {
+      code,
+      uses: stats.uses
+    };
   });
+
+  const totalUses = codeUsage.reduce((sum, item) => sum + Number(item.uses || 0), 0);
+  document.getElementById("totalUses").innerText = totalUses;
+
+  const top = [...codeUsage].sort((a,b) => Number(b.uses || 0) - Number(a.uses || 0))[0];
+  document.getElementById("topUsedCode").innerText = top && top.uses > 0 ? top.code : "-";
+}
+
+function escapeText(value){
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function renderCodes(){
+  const codeSearch = document.getElementById("searchCode").value.trim().toLowerCase();
+  const deptSearch = document.getElementById("searchDepartment").value.trim().toLowerCase();
+  const nameSearch = document.getElementById("searchName").value.trim().toLowerCase();
+
+  const filtered = allCodes.filter(item => {
+    if(!getIsActive(item)) return false;
+
+    const code = String(getCodeValue(item)).toLowerCase();
+    const dept = String(getCodeDepartment(item)).toLowerCase();
+    const name = String(getCodeName(item)).toLowerCase();
+
+    return code.includes(codeSearch) && dept.includes(deptSearch) && name.includes(nameSearch);
+  });
+
+  const tbody = document.getElementById("codesTableBody");
+  tbody.innerHTML = "";
+
+  if(!getActiveSiteId()){
+    tbody.innerHTML = `<tr><td colspan="9" class="muted">No active site selected.</td></tr>`;
+    return;
+  }
+
+  if(!filtered.length){
+    lastRenderedCodes = [];
+    tbody.innerHTML = `<tr><td colspan="9" class="muted">No matching codes found.</td></tr>`;
+    return;
+  }
+
+  lastRenderedCodes = filtered;
+
+  filtered.forEach(item => {
+    const code = getCodeValue(item);
+    const stats = getCodeStats(code);
+    const lastUsed = stats.lastUsed ? new Date(stats.lastUsed).toLocaleString() : "-";
+    const id = getCodeId(item);
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><strong>${escapeText(code)}</strong></td>
+      <td><span class="tag">${escapeText(getCodeDepartment(item))}</span></td>
+      <td>${escapeText(getCodeName(item))}</td>
+      <td>${stats.uses || 0}</td>
+      <td>${escapeText(lastUsed)}</td>
+      <td>${escapeText(formatExpiration(getCodeExpiresAt(item)))}</td>
+      <td>${escapeText(formatLimit(item))}</td>
+      <td><button class="view-btn" type="button">View Activity</button></td>
+      <td><button class="remove-btn" type="button" title="${escapeText(systemOnlineReason)}">Remove</button></td>
+    `;
+
+    tr.querySelector(".view-btn").addEventListener("click", () => openCodeActivity(code));
+    tr.querySelector(".remove-btn").addEventListener("click", () => removeCode(id, code));
+    tbody.appendChild(tr);
+  });
+}
+
+function clearSearch(){
+  document.getElementById("searchCode").value = "";
+  document.getElementById("searchDepartment").value = "";
+  document.getElementById("searchName").value = "";
+  renderCodes();
 }
 
 function csvEscape(value){
@@ -1019,23 +1430,34 @@ function csvEscape(value){
   return text;
 }
 
-function exportFilteredActivity(){
-  if(!lastFilteredActivityRows.length){
-    setStatus("No filtered activity to export.", "warn");
+function exportCodesCsv(){
+  const rows = lastRenderedCodes || [];
+
+  if(!rows.length){
+    setStatus("No codes to export.", "warn");
     return;
   }
 
-  const headers = ["Time","Code","Department","Name","Bay","Event"];
-  const rows = lastFilteredActivityRows.map(row => [
-    formatTime(row.event_time),
-    row.code || "",
-    row.department || "",
-    row.name || "",
-    row.bay || "",
-    row.event || ""
-  ]);
+  const headers = ["Code","Department","Name","Uses","Last Used","Expires At","Max Uses","Current Uses","Active"];
+  const csvRows = rows.map(item => {
+    const code = getCodeValue(item);
+    const stats = getCodeStats(code);
+    const lastUsed = stats.lastUsed ? new Date(stats.lastUsed).toLocaleString() : "";
 
-  const csv = [headers, ...rows]
+    return [
+      code,
+      getCodeDepartment(item),
+      getCodeName(item),
+      stats.uses || 0,
+      lastUsed,
+      getCodeExpiresAt(item),
+      getCodeMaxUses(item),
+      getCodeCurrentUses(item),
+      getIsActive(item) ? "Yes" : "No"
+    ];
+  });
+
+  const csv = [headers, ...csvRows]
     .map(line => line.map(csvEscape).join(","))
     .join("\n");
 
@@ -1045,81 +1467,275 @@ function exportFilteredActivity(){
   const dateStamp = new Date().toISOString().slice(0,10);
 
   link.href = url;
-  link.download = `washtrac-activity-${dateStamp}.csv`;
+  link.download = `washtrac-codes-${dateStamp}.csv`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 
-  setStatus(`Exported ${lastFilteredActivityRows.length} filtered row${lastFilteredActivityRows.length === 1 ? "" : "s"}.`, "success");
+  setStatus(`Exported ${rows.length} code${rows.length === 1 ? "" : "s"}.`, "success");
 }
 
-function clearFilters(){
-  clearSavedActivitySearchSettings();
-  document.getElementById("filterCode").value = "";
-  document.getElementById("filterDepartment").value = "";
-  document.getElementById("filterName").value = "";
-  document.getElementById("filterBay").value = "";
-  document.getElementById("filterEvent").value = "";
-  document.getElementById("datePreset").value = "7days";
-  document.getElementById("rowLimit").value = "250";
-  applyDatePreset();
-  saveActivitySearchSettings();
-  loadActivity();
+function generateRandomCode(){
+  clearStatus();
+
+  const usedCodes = new Set(
+    allCodes
+      .filter(getIsActive)
+      .map(item => String(getCodeValue(item)).trim())
+      .filter(Boolean)
+  );
+
+  for(let attempt = 0; attempt < 200; attempt++){
+    const code = String(Math.floor(Math.random() * 10000)).padStart(4, "0");
+
+    if(code === "0000") continue;
+
+    if(!usedCodes.has(code)){
+      document.getElementById("codeInput").value = code;
+      setStatus(`Random code ${code} generated. Fill in department/name and click Add Code to save.`, "success");
+      return;
+    }
+  }
+
+  setStatus("Could not generate a unique code. Try again.", "warn");
 }
 
-ACTIVITY_SEARCH_FIELD_IDS.forEach(id => {
-  document.addEventListener("change", event => {
-    if(event.target && event.target.id === id){
-      saveActivitySearchSettings();
-    }
-  });
+async function addCode(){
+  clearStatus();
 
-  document.addEventListener("input", event => {
-    if(event.target && event.target.id === id){
-      saveActivitySearchSettings();
-    }
-  });
-});
+  if(!ensureSystemOnlineForCodeChanges()) return;
 
-["filterCode","filterDepartment","filterName","filterBay","filterEvent"].forEach(id => {
-  document.addEventListener("keydown", event => {
-    if(event.target && event.target.id === id && event.key === "Enter"){
-      loadActivity();
+  let activeSiteId = "";
+
+  try{
+    activeSiteId = requireSite();
+  }catch(err){
+    setStatus("No active site selected.", "error");
+    return;
+  }
+
+  const code = document.getElementById("codeInput").value.trim();
+  const department = getDepartmentValue().trim();
+  const name = document.getElementById("nameInput").value.trim();
+  const tempDays = document.getElementById("tempDays")?.value.trim() || "";
+  const tempMaxUses = document.getElementById("tempMaxUses")?.value.trim() || "";
+  const isTemporary = department === "Temporary";
+
+  if(!code){ setStatus("Enter a code.", "warn"); return; }
+  if(!/^\d{4}$/.test(code)){ setStatus("Code must be 4 digits.", "warn"); return; }
+  if(code === "0000"){ setStatus("0000 is reserved for the programming master code.", "warn"); return; }
+  if(!department){ setStatus("Select a department or enter a custom one.", "warn"); return; }
+  if(!name){ setStatus("Enter a name.", "warn"); return; }
+
+  let expiresAt = null;
+  let maxUses = null;
+
+  if(isTemporary){
+    if(!tempDays && !tempMaxUses){
+      setStatus("Temporary codes require days, maximum uses, or both.", "warn");
+      return;
     }
-  });
-});
+
+    if(tempDays){
+      const daysNumber = Number(tempDays);
+
+      if(!Number.isInteger(daysNumber) || daysNumber < 1){
+        setStatus("Temporary days must be 1 or higher.", "warn");
+        return;
+      }
+
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + daysNumber);
+      expiresAt = expirationDate.toISOString();
+    }
+
+    if(tempMaxUses){
+      const usesNumber = Number(tempMaxUses);
+
+      if(!Number.isInteger(usesNumber) || usesNumber < 1){
+        setStatus("Maximum uses must be 1 or higher.", "warn");
+        return;
+      }
+
+      maxUses = usesNumber;
+    }
+  }
+
+  const { data: activeSiteRow, error: activeSiteError } = await client
+  .from("sites")
+  .select("id, organization_id")
+  .eq("id", activeSiteId)
+  .maybeSingle();
+
+if(activeSiteError || !activeSiteRow?.organization_id){
+  console.log("active site org lookup error:", activeSiteError);
+  setStatus("Could not verify selected site's organization.", "error");
+  return;
+}
+
+currentOrganizationId = activeSiteRow.organization_id;
+localStorage.setItem("activeOrganizationId", currentOrganizationId);
+  
+  const existing = allCodes.find(item => String(getCodeValue(item)).trim() === code);
+
+  if(existing && getIsActive(existing)){
+    setStatus("That code already exists on this site.", "warn");
+    return;
+  }
+
+  if(existing && !getIsActive(existing)){
+    const { error } = await client
+      .from("access_codes")
+      .update({
+        department,
+        assigned_to: name,
+        is_active: true,
+        site_id: activeSiteId,
+        expires_at: expiresAt,
+        max_uses: maxUses,
+        current_uses: 0
+      })
+      .eq("id", existing.id)
+      .eq("site_id", activeSiteId);
+
+    if(error){
+      console.log("reactivate code error:", error);
+      setStatus("Could not add code.", "error");
+      return;
+    }
+  } else {
+    const insertRow = {
+      site_id: activeSiteId,
+      code,
+      department,
+      assigned_to: name,
+      is_active: true,
+      expires_at: expiresAt,
+      max_uses: maxUses,
+      current_uses: 0
+    };
+
+    if(currentOrganizationId){
+      insertRow.organization_id = currentOrganizationId;
+    }
+
+    const { error } = await client
+      .from("access_codes")
+      .insert([insertRow]);
+
+    if(error){
+      console.log("add code error:", error);
+      setStatus("Could not add code.", "error");
+      return;
+    }
+  }
+
+  document.getElementById("codeInput").value = "";
+  document.getElementById("departmentSelect").value = "";
+  document.getElementById("nameInput").value = "";
+  document.getElementById("customDepartmentInput").value = "";
+  document.getElementById("customDepartmentWrap").classList.add("hidden");
+  document.getElementById("tempDays").value = "";
+  document.getElementById("tempMaxUses").value = "";
+  document.getElementById("temporaryOptions").classList.add("hidden");
+
+  setStatus("Code added.", "success");
+  await loadCodesPage();
+}
+
+async function removeCode(id, code){
+  clearStatus();
+
+  if(!ensureSystemOnlineForCodeChanges()) return;
+
+  let activeSiteId = "";
+
+  try{
+    activeSiteId = requireSite();
+  }catch(err){
+    setStatus("No active site selected.", "error");
+    return;
+  }
+
+  const confirmed = confirm(`Remove code ${code}?`);
+  if(!confirmed) return;
+
+  const { data, error } = await client
+    .from("access_codes")
+    .update({ is_active: false })
+    .eq("id", id)
+    .eq("site_id", activeSiteId)
+    .select();
+
+  if(error){
+    console.log("remove code error:", error);
+    setStatus("Could not remove code.", "error");
+    return;
+  }
+
+  if(!data || !data.length){
+    setStatus("Could not remove code.", "error");
+    return;
+  }
+
+  setStatus("Code removed.", "success");
+  await loadCodesPage();
+}
+
+function scheduleCodesRefresh(){
+  return;
+}
 
 document.addEventListener("keydown", function(event){
-  if(event.key === "Escape") closeMenus();
+  if(event.key === "Escape"){
+    closeMenus();
+    closeCodeActivity();
+  }
+});
+
+document.getElementById("codeActivityModal").addEventListener("click", function(event){
+  if(event.target.id === "codeActivityModal"){
+    closeCodeActivity();
+  }
 });
 
 document.addEventListener("click", function(event){
   const desktopWrap = document.querySelector(".desktop-menu-wrap");
   const mobileMenu = document.getElementById("mobileMenu");
   const mobileTopbar = document.querySelector(".mobile-topbar");
-  if(desktopWrap && mobileMenu && mobileTopbar && !desktopWrap.contains(event.target) && !mobileMenu.contains(event.target) && !mobileTopbar.contains(event.target)){
+
+  if(
+    desktopWrap &&
+    mobileMenu &&
+    mobileTopbar &&
+    !desktopWrap.contains(event.target) &&
+    !mobileMenu.contains(event.target) &&
+    !mobileTopbar.contains(event.target)
+  ){
     closeMenus();
   }
 });
 
-window.addEventListener("beforeunload", function(){
-  // No polling or realtime subscriptions on Activity.
+// Realtime subscriptions removed for stability.
+
+["codeInput","nameInput","customDepartmentInput","tempDays","tempMaxUses"].forEach(id => {
+  document.addEventListener("keydown", function(event){
+    if(event.target && event.target.id === id && event.key === "Enter"){
+      addCode();
+    }
+  });
 });
 
 window.onload = async function(){
-  const restored = restoreActivitySearchSettings();
-  if(!restored){
-    applyDatePreset();
-  }
-
   const siteId = await loadSites();
+
   if(!siteId){
-    resetActivityEmpty();
-    renderHeartbeatBanner([]);
+    resetCodesEmpty();
     return;
   }
-  await loadActivity();
+
+  await loadCodesPage();
 };
 </script>
 </body>
