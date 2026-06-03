@@ -2135,6 +2135,7 @@ async function loadMonitor(){
     const hasPairedDevice = Array.isArray(devices) && devices.length > 0;
     const hasOnlineDevice = hasPairedDevice && devices.some(device => deviceOnlineFromLastSeen(device.last_seen));
 
+    window.latestMonitorDevices = devices || [];
     renderDevices(devices || []);
     renderControl(control, hasOnlineDevice, hasPairedDevice);
     updateFooterHeartbeat(devices || []);
