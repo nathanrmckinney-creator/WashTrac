@@ -1571,7 +1571,7 @@ function setWashStatus(text, className){
     card.classList.add(className || "wash-status-ready");
   }
 
-  value.innerHTML = `<span class="status-pill">${escapeText(text || "READY")}</span>`;
+  value.innerHTML = `<span class="status-pill">${escapeText(text || "READY").replaceAll("\n", "<br>")}</span>`;
 }
 
 function getDisplayWashStatus(control, hasOnlineDevice, hasPairedDevice, devices = []){
