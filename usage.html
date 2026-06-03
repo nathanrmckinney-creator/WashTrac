@@ -102,6 +102,28 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
 .page-header h1{margin:0 0 10px 0;font-size:40px;}
 .page-header p{margin:0;color:#94a3b8;}
 
+.report-site-row{
+  margin-top:18px;
+  margin-bottom:20px;
+  max-width:520px;
+  display:flex;
+  gap:10px;
+}
+
+#topSiteSwitcher{
+  flex:1;
+  padding:12px;
+  border-radius:10px;
+  background:#0b1220;
+  color:white;
+  border:1px solid #1ea7ff;
+  box-shadow:0 0 6px rgba(30,167,255,0.4);
+  font-size:15px;
+  font-weight:600;
+  outline:none;
+}
+
+
 .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:20px 0;}
 .summary-box{background:#111827;padding:18px;border-radius:10px;}
 .summary-box strong{font-size:28px;display:block;margin-bottom:6px;}
@@ -314,6 +336,7 @@ button.secondary{background:#334155;}
   margin-left:0;
 }
   .page-header{padding-right:0;}
+  .report-site-row{display:grid;grid-template-columns:1fr;max-width:none;}
   .column-grid{grid-template-columns:1fr;}
   .date-grid{grid-template-columns:1fr;}
   .day-grid{grid-template-columns:repeat(2,1fr);}
@@ -421,6 +444,12 @@ document.addEventListener("DOMContentLoaded", function(){
     <div class="page-header">
       <h1>Reports</h1>
       <p>Usage analytics and reporting.</p>
+    </div>
+
+    <div class="report-site-row">
+      <select id="topSiteSwitcher" onchange="switchReportSite(this.value)">
+        <option>Loading sites...</option>
+      </select>
     </div>
 
     <div class="heartbeat-banner" id="heartbeatBanner">
@@ -547,6 +576,7 @@ document.addEventListener("DOMContentLoaded", function(){
             <label><input type="checkbox" class="report-column" value="name" checked> Name</label>
             <label><input type="checkbox" class="report-column" value="uses" checked> Uses</label>
             <label><input type="checkbox" class="report-column" value="last_used" checked> Last Used</label>
+            <label><input type="checkbox" class="report-column" value="membership"> Membership</label>
           </div>
 
 
@@ -677,6 +707,7 @@ let reportHeartbeatTimer = null;
 let lastHeartbeatDevices = [];
 let reportsLoadToken = 0;
 let reportsLoadInProgress = false;
+let reportsAssignedSites = [];
 
 const columnLabels = {
   code: "Code",
@@ -684,6 +715,7 @@ const columnLabels = {
   name: "Name",
   uses: "Uses",
   last_used: "Last Used",
+  membership: "Membership",
   cars: "Cars",
   rate: "Rate",
   total_cost: "Total Cost"
@@ -894,6 +926,60 @@ function setActiveSiteId(siteId){
   localStorage.setItem("washtracActiveSiteId", siteId);
 }
 
+
+async function loadReportSiteSwitcher(){
+  const select = document.getElementById("topSiteSwitcher");
+  if(!select) return;
+
+  select.innerHTML = `<option>Loading sites...</option>`;
+
+  reportsAssignedSites = await getAssignedSites();
+
+  if(!reportsAssignedSites.length){
+    select.innerHTML = `<option value="">No sites found</option>`;
+    localStorage.removeItem("activeSiteId");
+    localStorage.removeItem("washtracActiveSiteId");
+    localStorage.removeItem("activeOrganizationId");
+    return;
+  }
+
+  const savedSiteId = getActiveSiteId();
+  const savedSite = savedSiteId ? reportsAssignedSites.find(site => site.id === savedSiteId) : null;
+  const activeSite = savedSite || reportsAssignedSites[0];
+
+  setActiveSiteId(activeSite.id);
+
+  if(activeSite.organization_id || activeSite.org_id || activeSite.company_id){
+    localStorage.setItem("activeOrganizationId", activeSite.organization_id || activeSite.org_id || activeSite.company_id);
+  }
+
+  select.innerHTML = reportsAssignedSites.map(site => {
+    return `<option value="${site.id}">${site.name || site.site_name || "Unnamed Site"}</option>`;
+  }).join("");
+
+  select.value = activeSite.id;
+}
+
+async function switchReportSite(siteId){
+  if(!siteId) return;
+
+  setActiveSiteId(siteId);
+
+  const selectedSite = reportsAssignedSites.find(site => site.id === siteId);
+  if(selectedSite && (selectedSite.organization_id || selectedSite.org_id || selectedSite.company_id)){
+    localStorage.setItem("activeOrganizationId", selectedSite.organization_id || selectedSite.org_id || selectedSite.company_id);
+  }
+
+  const scopeSelect = document.getElementById("reportSiteScope");
+  if(scopeSelect){
+    scopeSelect.value = "current";
+  }
+
+  await loadUsage();
+  await loadHeartbeatStatus();
+}
+
+
 function applyReportUrlParams(){
   const params = new URLSearchParams(window.location.search);
   const scope = params.get("reportScope");
@@ -954,6 +1040,7 @@ async function getAssignedSites(){
       .map(site => ({
         id: site.id || "",
         name: site.name || site.site_name || "Unnamed Site",
+        organization_id: site.organization_id || site.org_id || site.company_id || "",
         cost_per_car: parseCostPerCar(site.cost_per_car || site.rate || site.cost || 0),
         department_costs: normalizeDepartmentCosts(site.department_costs, site.cost_per_car || site.rate || site.cost || 0)
       }))
@@ -984,7 +1071,8 @@ async function getAssignedSites(){
       const site = row.sites || {};
       return {
         id: row.site_id || site.id || "",
-        name: site.name || "Unnamed Site",
+        name: site.name || site.site_name || "Unnamed Site",
+        organization_id: site.organization_id || site.org_id || site.company_id || "",
         cost_per_car: parseCostPerCar(site.cost_per_car || site.rate || site.cost || 0),
         department_costs: normalizeDepartmentCosts(site.department_costs, site.cost_per_car || site.rate || site.cost || 0)
       };
@@ -1344,7 +1432,8 @@ function aggregateUses(uses){
         department: item.department || "Unassigned",
         name: item.name || "",
         uses: 0,
-        last_used: item.last_used || ""
+        last_used: item.last_used || "",
+        membership: item.membership || "No"
       };
     }
 
@@ -1354,6 +1443,10 @@ function aggregateUses(uses){
 
     if(item.department && (!codeMap[code].department || codeMap[code].department === "Unassigned")){
       codeMap[code].department = item.department;
+    }
+
+    if(item.membership === "Yes"){
+      codeMap[code].membership = "Yes";
     }
 
     codeMap[code].uses += 1;
@@ -1701,7 +1794,8 @@ const uses = rows
       last_used: getTime(row),
       site_id: row.site_id || "",
       event: row.event || "",
-      cost_per_car: row.cost_per_car || row.metadata?.cost_per_car || null
+      cost_per_car: row.cost_per_car || row.metadata?.cost_per_car || null,
+      membership: row.metadata?.membership === true || row.metadata?.membership === "true" || row.metadata?.type === "membership" ? "Yes" : "No"
     };
   });
 
@@ -2525,6 +2619,7 @@ async function initializeReportsPage(){
   updateScheduleRangeFields();
   loadSavedSchedule();
   applyReportUrlParams();
+  await loadReportSiteSwitcher();
   await loadUsage();
   await loadHeartbeatStatus();
 
