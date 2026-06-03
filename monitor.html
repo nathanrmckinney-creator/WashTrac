@@ -1574,14 +1574,26 @@ function setWashStatus(text, className){
   value.innerHTML = `<span class="status-pill">${escapeText(text || "READY")}</span>`;
 }
 
-function getDisplayWashStatus(control, hasOnlineDevice, hasPairedDevice){
+function getDisplayWashStatus(control, hasOnlineDevice, hasPairedDevice, devices = []){
   if(!hasPairedDevice || !hasOnlineDevice) return { text:"OFFLINE", className:"wash-status-offline" };
   if(!control) return { text:"OFFLINE", className:"wash-status-offline" };
   if(control.estop_active === true) return { text:"E-STOP ACTIVE", className:"wash-status-full" };
   if(control.wash_enabled === false) return { text:"DISABLED", className:"wash-status-disabled" };
   if(checkLockout(control)) return { text:"LOCKOUT ACTIVE", className:"wash-status-waiting" };
 
-  // Placeholder until the keypad/local Flask app sends real stack state tomorrow.
+  const onlineDevice = (devices || []).find(device => deviceOnlineFromLastSeen(device.last_seen)) || {};
+  const status = String(onlineDevice.wash_status || "ready").toLowerCase();
+  const queueCount = Number(onlineDevice.wash_queue_count || 0);
+
+  if(status === "washing" || status === "active" || status === "running"){
+    if(queueCount >= 2) return { text:"STACKED 2X", className:"wash-status-full" };
+    if(queueCount === 1) return { text:"STACKED 1X", className:"wash-status-waiting" };
+    return { text:"WASHING", className:"wash-status-active" };
+  }
+
+  if(queueCount >= 2) return { text:"STACKED 2X", className:"wash-status-full" };
+  if(queueCount === 1) return { text:"STACKED 1X", className:"wash-status-waiting" };
+
   return { text:"READY", className:"wash-status-ready" };
 }
 
