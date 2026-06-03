@@ -1586,8 +1586,8 @@ function getDisplayWashStatus(control, hasOnlineDevice, hasPairedDevice, devices
   const queueCount = Number(onlineDevice.wash_queue_count || 0);
 
   if(status === "washing" || status === "active" || status === "running"){
-    if(queueCount >= 2) return { text:"STACKED 2X", className:"wash-status-full" };
-    if(queueCount === 1) return { text:"STACKED 1X", className:"wash-status-waiting" };
+    if(queueCount >= 2) return { text:"WASHING\nSTACKED 2X", className:"wash-status-full" };
+    if(queueCount === 1) return { text:"WASHING\nSTACKED 1X", className:"wash-status-waiting" };
     return { text:"WASHING", className:"wash-status-active" };
   }
 
