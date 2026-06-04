@@ -3348,96 +3348,53 @@
 
     async function fetchDashboardMembershipStats(){
       const siteId = getActiveSiteId();
-      const orgId = getActiveOrganizationId();
+      let orgId = getActiveOrganizationId();
 
-      if(!siteId && !orgId){
+      if(!orgId && siteId){
+        const { data: siteRow, error: siteError } = await client
+          .from("sites")
+          .select("organization_id,org_id,company_id")
+          .eq("id", siteId)
+          .maybeSingle();
+
+        if(siteError){
+          console.log("Dashboard membership site organization lookup error:", siteError);
+        }else if(siteRow){
+          orgId = siteRow.organization_id || siteRow.org_id || siteRow.company_id || "";
+          if(orgId){
+            currentOrganizationId = orgId;
+            localStorage.setItem("activeOrganizationId", orgId);
+          }
+        }
+      }
+
+      if(!orgId){
         return {
           currentMembers: 0,
           memberWashesMonth: 0
         };
       }
 
-      async function loadMembersBySite(){
-        return await client
-          .from("memberships")
-          .select("id,is_active,expiration_date,site_id,organization_id")
-          .eq("site_id", siteId)
-          .limit(5000);
+      const { data: members, error: membersError } = await client
+        .from("memberships")
+        .select("id,is_active,expiration_date,organization_id")
+        .eq("organization_id", orgId)
+        .limit(5000);
+
+      if(membersError){
+        console.log("Dashboard memberships organization load error:", membersError);
       }
 
-      async function loadMembersByOrganization(){
-        return await client
-          .from("memberships")
-          .select("id,is_active,expiration_date,site_id,organization_id")
-          .eq("organization_id", orgId)
-          .limit(5000);
-      }
+      const { data: activity, error: activityError } = await client
+        .from("membership_activity")
+        .select("id,organization_id,wash_time")
+        .eq("organization_id", orgId)
+        .gte("wash_time", getDashboardMonthStart())
+        .lte("wash_time", getDashboardMonthEnd())
+        .limit(5000);
 
-      async function loadActivityBySite(){
-        return await client
-          .from("membership_activity")
-          .select("id,site_id,organization_id,wash_time")
-          .eq("site_id", siteId)
-          .gte("wash_time", getDashboardMonthStart())
-          .lte("wash_time", getDashboardMonthEnd())
-          .limit(5000);
-      }
-
-      async function loadActivityByOrganization(){
-        return await client
-          .from("membership_activity")
-          .select("id,site_id,organization_id,wash_time")
-          .eq("organization_id", orgId)
-          .gte("wash_time", getDashboardMonthStart())
-          .lte("wash_time", getDashboardMonthEnd())
-          .limit(5000);
-      }
-
-      let members = [];
-      let activity = [];
-      let membersLoaded = false;
-      let activityLoaded = false;
-
-      if(siteId){
-        const siteMembersResult = await loadMembersBySite();
-
-        if(siteMembersResult.error){
-          console.log("Dashboard memberships site load error:", siteMembersResult.error);
-        }else{
-          members = siteMembersResult.data || [];
-          membersLoaded = true;
-        }
-
-        const siteActivityResult = await loadActivityBySite();
-
-        if(siteActivityResult.error){
-          console.log("Dashboard membership activity site load error:", siteActivityResult.error);
-        }else{
-          activity = siteActivityResult.data || [];
-          activityLoaded = true;
-        }
-      }
-
-      if(orgId && (!membersLoaded || !activityLoaded)){
-        if(!membersLoaded){
-          const orgMembersResult = await loadMembersByOrganization();
-
-          if(orgMembersResult.error){
-            console.log("Dashboard memberships organization load error:", orgMembersResult.error);
-          }else{
-            members = orgMembersResult.data || [];
-          }
-        }
-
-        if(!activityLoaded){
-          const orgActivityResult = await loadActivityByOrganization();
-
-          if(orgActivityResult.error){
-            console.log("Dashboard membership activity organization load error:", orgActivityResult.error);
-          }else{
-            activity = orgActivityResult.data || [];
-          }
-        }
+      if(activityError){
+        console.log("Dashboard membership activity organization load error:", activityError);
       }
 
       return {
