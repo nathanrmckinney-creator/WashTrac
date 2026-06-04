@@ -206,6 +206,29 @@
       margin-top:12px;
     }
 
+    .schedule-grid{
+      display:grid;
+      grid-template-columns:1.4fr .9fr .8fr .9fr;
+      gap:12px;
+      align-items:end;
+      margin-top:12px;
+    }
+
+    .schedule-summary{
+      margin-top:14px;
+      padding:12px 14px;
+      border-radius:10px;
+      background:#0b1220;
+      border:1px solid #1f2937;
+      color:#cbd5e1;
+      font-size:14px;
+      line-height:1.45;
+    }
+
+    .schedule-summary strong{
+      color:#fff;
+    }
+
     .modal{
       display:none;
       position:fixed;
@@ -258,7 +281,7 @@
       .page-header{padding-right:0;}
       .page-header h1{font-size:34px;}
       .summary{grid-template-columns:1fr;}
-      .form-grid,.form-grid.member-grid,.search-grid{grid-template-columns:1fr;}
+      .form-grid,.form-grid.member-grid,.search-grid,.schedule-grid{grid-template-columns:1fr;}
       .top-row{align-items:stretch;}
       .members-btn{width:100%;}
     }
@@ -394,6 +417,55 @@ document.addEventListener("DOMContentLoaded", function(){
       </div>
 
       <div class="status" id="membershipReportStatus"></div>
+    </div>
+
+    <div class="card">
+      <h3>Scheduled Membership Reports</h3>
+      <p class="report-card-note">
+        Schedule a recurring membership report email for the current account/site. This is separate from the normal wash report schedule.
+      </p>
+
+      <div class="schedule-grid">
+        <div class="field">
+          <label for="membershipScheduleEmail">Report Email</label>
+          <input id="membershipScheduleEmail" type="email" placeholder="name@email.com">
+        </div>
+
+        <div class="field">
+          <label for="membershipScheduleFrequency">Frequency</label>
+          <select id="membershipScheduleFrequency">
+            <option value="off">Off</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="membershipScheduleTime">Send Time</label>
+          <input id="membershipScheduleTime" type="time" value="08:00">
+        </div>
+
+        <div class="field">
+          <label for="membershipScheduleRange">Report Range</label>
+          <select id="membershipScheduleRange">
+            <option value="this_month">This Month</option>
+            <option value="last_month">Last Month</option>
+            <option value="all">All Membership Data</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="report-actions">
+        <button type="button" onclick="saveMembershipReportSchedule()">Save Membership Schedule</button>
+        <button class="secondary" type="button" onclick="disableMembershipReportSchedule()">Turn Off Schedule</button>
+      </div>
+
+      <div class="schedule-summary" id="membershipScheduleSummary">
+        <strong>Current Schedule:</strong> No membership report schedule saved.
+      </div>
+
+      <div class="status" id="membershipScheduleStatus"></div>
     </div>
 
     <div class="card">
@@ -953,6 +1025,7 @@ async function switchSite(siteId){
 
   clearStatus();
   await loadMembershipPage();
+  await loadMembershipReportSchedule();
 }
 
 async function fetchMembers(orgId){
@@ -1531,6 +1604,219 @@ function downloadMembershipReportCsv(){
   setMembershipReportStatus(`Downloaded membership report with ${rows.length} member${rows.length === 1 ? "" : "s"}.`, "success");
 }
 
+
+function setMembershipScheduleStatus(message, tone = ""){
+  const box = document.getElementById("membershipScheduleStatus");
+  if(!box) return;
+
+  box.innerText = message || "";
+  box.className = "status show";
+
+  if(tone === "success") box.classList.add("success");
+  if(tone === "warn") box.classList.add("warn");
+  if(tone === "error" || tone === true) box.classList.add("error");
+}
+
+function getMembershipScheduleStorageKey(){
+  const orgId = getActiveOrganizationId() || "no-org";
+  const siteId = getActiveSiteId() || "no-site";
+  return `washtracMembershipReportSchedule:${orgId}:${siteId}`;
+}
+
+function isValidMembershipEmail(email){
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim());
+}
+
+function formatScheduleFrequency(value){
+  if(value === "daily") return "Daily";
+  if(value === "weekly") return "Weekly";
+  if(value === "monthly") return "Monthly";
+  return "Off";
+}
+
+function formatScheduleRange(value){
+  if(value === "this_month") return "This Month";
+  if(value === "last_month") return "Last Month";
+  if(value === "all") return "All Membership Data";
+  return "This Month";
+}
+
+function renderMembershipScheduleSummary(schedule){
+  const box = document.getElementById("membershipScheduleSummary");
+  if(!box) return;
+
+  if(!schedule || schedule.is_active === false || schedule.frequency === "off"){
+    box.innerHTML = `<strong>Current Schedule:</strong> No membership report schedule saved.`;
+    return;
+  }
+
+  box.innerHTML = `
+    <strong>Current Schedule:</strong>
+    ${escapeText(formatScheduleFrequency(schedule.frequency))} at ${escapeText(schedule.send_time || "08:00")}
+    to ${escapeText(schedule.email || "")}
+    using ${escapeText(formatScheduleRange(schedule.report_range || "this_month"))}.
+  `;
+}
+
+async function loadMembershipReportSchedule(){
+  const orgId = getActiveOrganizationId();
+  const siteId = getActiveSiteId();
+
+  if(!orgId || !siteId){
+    renderMembershipScheduleSummary(null);
+    return;
+  }
+
+  let loadedSchedule = null;
+
+  try{
+    const { data, error } = await client
+      .from("membership_report_schedules")
+      .select("*")
+      .eq("organization_id", orgId)
+      .eq("site_id", siteId)
+      .maybeSingle();
+
+    if(!error && data){
+      loadedSchedule = data;
+    }else if(error){
+      console.log("Membership schedule load warning:", error);
+    }
+  }catch(err){
+    console.log("Membership schedule load fallback:", err);
+  }
+
+  if(!loadedSchedule){
+    try{
+      const local = localStorage.getItem(getMembershipScheduleStorageKey());
+      if(local) loadedSchedule = JSON.parse(local);
+    }catch(err){
+      console.log("Membership schedule local load error:", err);
+    }
+  }
+
+  if(loadedSchedule){
+    const emailInput = document.getElementById("membershipScheduleEmail");
+    const freqInput = document.getElementById("membershipScheduleFrequency");
+    const timeInput = document.getElementById("membershipScheduleTime");
+    const rangeInput = document.getElementById("membershipScheduleRange");
+
+    if(emailInput) emailInput.value = loadedSchedule.email || "";
+    if(freqInput) freqInput.value = loadedSchedule.frequency || "off";
+    if(timeInput) timeInput.value = loadedSchedule.send_time || "08:00";
+    if(rangeInput) rangeInput.value = loadedSchedule.report_range || "this_month";
+  }
+
+  renderMembershipScheduleSummary(loadedSchedule);
+}
+
+async function saveMembershipReportSchedule(){
+  const orgId = getActiveOrganizationId();
+  const siteId = getActiveSiteId();
+  const email = document.getElementById("membershipScheduleEmail").value.trim();
+  const frequency = document.getElementById("membershipScheduleFrequency").value;
+  const sendTime = document.getElementById("membershipScheduleTime").value || "08:00";
+  const reportRange = document.getElementById("membershipScheduleRange").value || "this_month";
+
+  if(!orgId){
+    setMembershipScheduleStatus("No organization selected.", "error");
+    return;
+  }
+
+  if(!siteId){
+    setMembershipScheduleStatus("No site selected.", "error");
+    return;
+  }
+
+  if(frequency === "off"){
+    await disableMembershipReportSchedule();
+    return;
+  }
+
+  if(!isValidMembershipEmail(email)){
+    setMembershipScheduleStatus("Enter a valid email address.", "warn");
+    return;
+  }
+
+  const schedule = {
+    organization_id: orgId,
+    site_id: siteId,
+    email,
+    frequency,
+    send_time: sendTime,
+    report_range: reportRange,
+    is_active: true,
+    report_type: "membership",
+    updated_at: new Date().toISOString()
+  };
+
+  let savedToSupabase = false;
+
+  try{
+    const { error } = await client
+      .from("membership_report_schedules")
+      .upsert([schedule], { onConflict:"organization_id,site_id" });
+
+    if(error){
+      console.log("Membership schedule save warning:", error);
+    }else{
+      savedToSupabase = true;
+    }
+  }catch(err){
+    console.log("Membership schedule save fallback:", err);
+  }
+
+  localStorage.setItem(getMembershipScheduleStorageKey(), JSON.stringify(schedule));
+  renderMembershipScheduleSummary(schedule);
+
+  setMembershipScheduleStatus(
+    savedToSupabase
+      ? "Membership report schedule saved."
+      : "Membership report schedule saved locally. Create/check the membership_report_schedules table before relying on automatic emails.",
+    savedToSupabase ? "success" : "warn"
+  );
+}
+
+async function disableMembershipReportSchedule(){
+  const orgId = getActiveOrganizationId();
+  const siteId = getActiveSiteId();
+
+  const disabledSchedule = {
+    organization_id: orgId,
+    site_id: siteId,
+    email: document.getElementById("membershipScheduleEmail")?.value.trim() || "",
+    frequency: "off",
+    send_time: document.getElementById("membershipScheduleTime")?.value || "08:00",
+    report_range: document.getElementById("membershipScheduleRange")?.value || "this_month",
+    is_active: false,
+    report_type: "membership",
+    updated_at: new Date().toISOString()
+  };
+
+  if(orgId && siteId){
+    try{
+      const { error } = await client
+        .from("membership_report_schedules")
+        .upsert([disabledSchedule], { onConflict:"organization_id,site_id" });
+
+      if(error){
+        console.log("Membership schedule disable warning:", error);
+      }
+    }catch(err){
+      console.log("Membership schedule disable fallback:", err);
+    }
+  }
+
+  localStorage.setItem(getMembershipScheduleStorageKey(), JSON.stringify(disabledSchedule));
+
+  const freqInput = document.getElementById("membershipScheduleFrequency");
+  if(freqInput) freqInput.value = "off";
+
+  renderMembershipScheduleSummary(null);
+  setMembershipScheduleStatus("Membership report schedule turned off.", "success");
+}
+
+
 function csvEscape(value){
   const text = String(value ?? "");
   if(/[",\n\r]/.test(text)){
@@ -1658,6 +1944,7 @@ window.onload = async function(){
   }
 
   await loadMembershipPage();
+  await loadMembershipReportSchedule();
 };
 </script>
 </body>
