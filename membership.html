@@ -1358,23 +1358,32 @@ function exportMembersCsv(){
   "Status",
   "Active"
 ];
-  const csvRows = rows.map(member => {
-    const status = getMembershipStatus(member);
+const csvRows = rows.map(member => {
+  const status = getMembershipStatus(member);
 
-    return [
-      member.code,
-      member.first_name,
-      member.last_name,
-      member.license_plate,
-      member.start_date,
-      member.expiration_date,
-      member.daily_wash_limit || 2,
-      formatMoney(getMemberMonthlyPrice(member)),
-      getMemberMonthlyCount(member.id),
-      status.label,
-      member.is_active === false ? "No" : "Yes"
-    ];
-  });
+  const lastWashRecord = allMembershipActivity.find(
+    row => String(row.membership_id) === String(member.id)
+  );
+
+  const lastWash = lastWashRecord
+    ? formatDateTime(lastWashRecord.wash_time || lastWashRecord.created_at)
+    : "";
+
+  return [
+    member.code,
+    member.first_name,
+    member.last_name,
+    member.license_plate,
+    member.start_date,
+    member.expiration_date,
+    member.daily_wash_limit || 2,
+    formatMoney(getMemberMonthlyPrice(member)),
+    getMemberMonthlyCount(member.id),
+    lastWash,
+    status.label,
+    member.is_active === false ? "No" : "Yes"
+  ];
+});
 
   const csv = [headers, ...csvRows]
     .map(line => line.map(csvEscape).join(","))
