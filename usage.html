@@ -324,12 +324,93 @@ button.secondary{background:#334155;}
   border:1px solid rgba(245,158,11,.35);
 }
 
+
+.membership-report-summary{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:16px;
+  margin:0 0 18px 0;
+}
+
+.membership-report-box{
+  background:#0b1220;
+  border:1px solid #1f2937;
+  border-radius:10px;
+  padding:16px;
+}
+
+.membership-report-box strong{
+  display:block;
+  font-size:26px;
+  margin-bottom:6px;
+}
+
+.membership-report-box span{
+  color:#94a3b8;
+  font-size:13px;
+}
+
+.membership-table-wrap{
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  margin-top:14px;
+}
+
+.membership-report-table{
+  width:100%;
+  min-width:980px;
+  border-collapse:collapse;
+}
+
+.membership-report-table th,
+.membership-report-table td{
+  padding:12px 10px;
+  border-bottom:1px solid #1f2937;
+  text-align:left;
+  vertical-align:middle;
+}
+
+.membership-report-table th{
+  color:#93c5fd;
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+}
+
+.member-status-pill{
+  display:inline-block;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  white-space:nowrap;
+}
+
+.member-status-current{
+  background:rgba(34,197,94,.16);
+  color:#86efac;
+  border:1px solid rgba(34,197,94,.28);
+}
+
+.member-status-expired{
+  background:rgba(100,116,139,.18);
+  color:#cbd5e1;
+  border:1px solid rgba(148,163,184,.25);
+}
+
+.member-status-inactive{
+  background:rgba(239,68,68,.16);
+  color:#fca5a5;
+  border:1px solid rgba(239,68,68,.28);
+}
+
 @media(max-width:900px){
   .sidebar{display:none;}
   .desktop-menu-wrap{display:none;}
   .mobile-topbar{display:flex;}
   .app{display:block;}
   .summary{grid-template-columns:1fr;}
+  .membership-report-summary{grid-template-columns:1fr;}
   .grid-2{grid-template-columns:1fr;}
  .main{
   padding:20px;
@@ -499,6 +580,46 @@ document.addEventListener("DOMContentLoaded", function(){
       </div>
     </div>
 
+    <div class="card">
+      <h3>Membership Report</h3>
+
+      <div class="note" style="margin-top:0;margin-bottom:14px;">
+        Monthly membership report using the same selected account/site scope. Memberships are counted by organization, matching the Membership page and Dashboard.
+      </div>
+
+      <div class="membership-report-summary">
+        <div class="membership-report-box"><strong id="membershipCurrentMembers">0</strong><span>Current Members</span></div>
+        <div class="membership-report-box"><strong id="membershipExpiredMembers">0</strong><span>Expired Members</span></div>
+        <div class="membership-report-box"><strong id="membershipWashesThisMonth">0</strong><span>Membership Washes This Month</span></div>
+        <div class="membership-report-box"><strong id="membershipAverageWashes">0</strong><span>Avg Washes Per Member</span></div>
+      </div>
+
+      <div class="actions">
+        <button type="button" onclick="exportMembershipCSV()">Export Membership CSV</button>
+        <button class="secondary" type="button" onclick="emailMembershipReport()">Email Membership Report</button>
+      </div>
+
+      <div class="membership-table-wrap">
+        <table class="membership-report-table">
+          <thead>
+            <tr>
+              <th>Member Name</th>
+              <th>License Plate</th>
+              <th>Code</th>
+              <th>Expiration Date</th>
+              <th>Daily Limit</th>
+              <th>Washes This Month</th>
+              <th>Last Wash</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="membershipReportBody">
+            <tr><td colspan="8" style="color:#94a3b8;">Loading membership report...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <div class="grid-2">
       <div class="card">
         <h3>Top Used Codes</h3>
@@ -510,7 +631,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
         <div class="form-row">
           <label for="reportSiteScope">Report Site Scope</label>
-          <select id="reportSiteScope" onchange="loadUsage(); loadHeartbeatStatus();">
+          <select id="reportSiteScope" onchange="loadUsage(); loadMembershipReport(); loadHeartbeatStatus();">
             <option value="current">Current Site</option>
             <option value="all">All My Sites</option>
           </select>
@@ -708,6 +829,9 @@ let lastHeartbeatDevices = [];
 let reportsLoadToken = 0;
 let reportsLoadInProgress = false;
 let reportsAssignedSites = [];
+let cachedMembershipRows = [];
+let cachedMembershipActivities = [];
+let cachedMembershipSummary = { current:0, expired:0, washes:0, average:0 };
 
 const columnLabels = {
   code: "Code",
@@ -976,6 +1100,7 @@ async function switchReportSite(siteId){
   }
 
   await loadUsage();
+  await loadMembershipReport();
   await loadHeartbeatStatus();
 }
 
@@ -2612,6 +2737,367 @@ function loadSavedSchedule(){
   renderScheduleSummary();
 }
 
+
+function escapeReportText(value){
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function formatReportDate(value){
+  if(!value) return "-";
+  const date = new Date(String(value).includes("T") ? value : value + "T00:00:00");
+  if(Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString();
+}
+
+function formatReportDateTime(value){
+  if(!value) return "-";
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleString();
+}
+
+function getMemberFullName(member){
+  return `${member.first_name || ""} ${member.last_name || ""}`.trim() || "-";
+}
+
+function getMemberStatus(member){
+  if(member.is_active === false){
+    return { key:"inactive", label:"Inactive", className:"member-status-inactive" };
+  }
+
+  if(!member.expiration_date){
+    return { key:"current", label:"Current", className:"member-status-current" };
+  }
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const expiration = new Date(member.expiration_date + "T23:59:59");
+
+  if(Number.isNaN(expiration.getTime()) || expiration < today){
+    return { key:"expired", label:"Expired", className:"member-status-expired" };
+  }
+
+  return { key:"current", label:"Current", className:"member-status-current" };
+}
+
+function getMonthStartIso(){
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+}
+
+function getMonthEndIso(){
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
+}
+
+function getMembershipOrganizationIds(){
+  const scope = getReportSiteScope();
+  const activeSiteId = getActiveSiteId();
+  const sites = reportsAssignedSites || [];
+
+  if(scope === "all"){
+    return [...new Set(sites.map(site => site.organization_id || site.org_id || site.company_id || "").filter(Boolean))];
+  }
+
+  const activeSite = sites.find(site => site.id === activeSiteId) || sites[0] || null;
+  const orgId = activeSite?.organization_id || activeSite?.org_id || activeSite?.company_id || localStorage.getItem("activeOrganizationId") || "";
+  return orgId ? [orgId] : [];
+}
+
+async function loadMembershipReport(){
+  const body = document.getElementById("membershipReportBody");
+  if(body){
+    body.innerHTML = `<tr><td colspan="8" style="color:#94a3b8;">Loading membership report...</td></tr>`;
+  }
+
+  const organizationIds = getMembershipOrganizationIds();
+
+  if(!organizationIds.length){
+    cachedMembershipRows = [];
+    cachedMembershipActivities = [];
+    renderMembershipReport();
+    return;
+  }
+
+  try{
+    let memberQuery = client
+      .from("memberships")
+      .select("*")
+      .order("created_at", { ascending:false });
+
+    memberQuery = organizationIds.length === 1
+      ? memberQuery.eq("organization_id", organizationIds[0])
+      : memberQuery.in("organization_id", organizationIds);
+
+    const { data: members, error: memberError } = await memberQuery;
+
+    if(memberError){
+      console.log("Membership report members load error:", memberError);
+      cachedMembershipRows = [];
+      cachedMembershipActivities = [];
+      renderMembershipReport("Could not load memberships.");
+      return;
+    }
+
+    let activityQuery = client
+      .from("membership_activity")
+      .select("*")
+      .gte("wash_time", getMonthStartIso())
+      .lte("wash_time", getMonthEndIso())
+      .order("wash_time", { ascending:false })
+      .limit(5000);
+
+    activityQuery = organizationIds.length === 1
+      ? activityQuery.eq("organization_id", organizationIds[0])
+      : activityQuery.in("organization_id", organizationIds);
+
+    const { data: activity, error: activityError } = await activityQuery;
+
+    if(activityError){
+      console.log("Membership report activity load error:", activityError);
+      cachedMembershipRows = members || [];
+      cachedMembershipActivities = [];
+      renderMembershipReport();
+      return;
+    }
+
+    cachedMembershipRows = members || [];
+    cachedMembershipActivities = activity || [];
+    renderMembershipReport();
+  }catch(err){
+    console.log("loadMembershipReport unexpected error:", err);
+    cachedMembershipRows = [];
+    cachedMembershipActivities = [];
+    renderMembershipReport("Unexpected membership report error.");
+  }
+}
+
+function getMembershipReportRows(){
+  const activityByMember = new Map();
+
+  (cachedMembershipActivities || []).forEach(row => {
+    const key = String(row.membership_id || "");
+    if(!key) return;
+    if(!activityByMember.has(key)) activityByMember.set(key, []);
+    activityByMember.get(key).push(row);
+  });
+
+  return (cachedMembershipRows || []).map(member => {
+    const activity = activityByMember.get(String(member.id || "")) || [];
+    const lastWash = activity
+      .map(row => row.wash_time || row.created_at || "")
+      .filter(Boolean)
+      .sort((a,b) => new Date(b) - new Date(a))[0] || "";
+    const status = getMemberStatus(member);
+
+    return {
+      member,
+      member_name: getMemberFullName(member),
+      license_plate: String(member.license_plate || "").toUpperCase(),
+      code: member.code || "",
+      expiration_date: member.expiration_date || "",
+      daily_wash_limit: member.daily_wash_limit || 2,
+      washes_this_month: activity.length,
+      last_wash: lastWash,
+      status_label: status.label,
+      status_key: status.key,
+      status_class: status.className
+    };
+  }).sort((a,b) => {
+    if(a.status_key === "current" && b.status_key !== "current") return -1;
+    if(a.status_key !== "current" && b.status_key === "current") return 1;
+    return String(a.member_name).localeCompare(String(b.member_name));
+  });
+}
+
+function renderMembershipReport(errorMessage = ""){
+  const rows = getMembershipReportRows();
+  const current = rows.filter(row => row.status_key === "current").length;
+  const expired = rows.filter(row => row.status_key === "expired" || row.status_key === "inactive").length;
+  const washes = (cachedMembershipActivities || []).length;
+  const average = current > 0 ? (washes / current).toFixed(1) : "0";
+
+  cachedMembershipSummary = { current, expired, washes, average };
+
+  const currentEl = document.getElementById("membershipCurrentMembers");
+  const expiredEl = document.getElementById("membershipExpiredMembers");
+  const washesEl = document.getElementById("membershipWashesThisMonth");
+  const averageEl = document.getElementById("membershipAverageWashes");
+
+  if(currentEl) currentEl.innerText = current;
+  if(expiredEl) expiredEl.innerText = expired;
+  if(washesEl) washesEl.innerText = washes;
+  if(averageEl) averageEl.innerText = average;
+
+  const body = document.getElementById("membershipReportBody");
+  if(!body) return;
+
+  if(errorMessage){
+    body.innerHTML = `<tr><td colspan="8" style="color:#fecaca;">${escapeReportText(errorMessage)}</td></tr>`;
+    return;
+  }
+
+  if(!rows.length){
+    body.innerHTML = `<tr><td colspan="8" style="color:#94a3b8;">No memberships found for this account.</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = rows.map(row => `
+    <tr>
+      <td>${escapeReportText(row.member_name)}</td>
+      <td>${escapeReportText(row.license_plate || "-")}</td>
+      <td><strong>${escapeReportText(row.code || "-")}</strong></td>
+      <td>${escapeReportText(formatReportDate(row.expiration_date))}</td>
+      <td>${escapeReportText(row.daily_wash_limit)}</td>
+      <td>${escapeReportText(row.washes_this_month)}</td>
+      <td>${escapeReportText(formatReportDateTime(row.last_wash))}</td>
+      <td><span class="member-status-pill ${row.status_class}">${escapeReportText(row.status_label)}</span></td>
+    </tr>
+  `).join("");
+}
+
+function buildMembershipCSV(){
+  const rows = getMembershipReportRows();
+  let csv = `WashTrac Membership Report,${csvSafe(cachedSiteScopeLabel || "Current Site")}\n`;
+  csv += `Generated,${csvSafe(new Date().toLocaleString())}\n`;
+  csv += `Current Members,${csvSafe(cachedMembershipSummary.current)}\n`;
+  csv += `Expired Members,${csvSafe(cachedMembershipSummary.expired)}\n`;
+  csv += `Membership Washes This Month,${csvSafe(cachedMembershipSummary.washes)}\n`;
+  csv += `Average Washes Per Current Member,${csvSafe(cachedMembershipSummary.average)}\n\n`;
+  csv += ["Member Name","License Plate","Code","Expiration Date","Daily Wash Limit","Washes This Month","Last Wash","Status"].map(csvSafe).join(",") + "\n";
+
+  rows.forEach(row => {
+    csv += [
+      row.member_name,
+      row.license_plate,
+      row.code,
+      row.expiration_date,
+      row.daily_wash_limit,
+      row.washes_this_month,
+      row.last_wash ? formatReportDateTime(row.last_wash) : "",
+      row.status_label
+    ].map(csvSafe).join(",") + "\n";
+  });
+
+  return csv;
+}
+
+function exportMembershipCSV(){
+  const rows = getMembershipReportRows();
+  if(!rows.length){
+    setManualEmailStatus("No membership data to export.", "warn");
+    return;
+  }
+
+  const stamp = new Date().toISOString().slice(0,10);
+  downloadCSV(buildMembershipCSV(), `washtrac-membership-report-${stamp}.csv`);
+  setManualEmailStatus(`Exported ${rows.length} membership row${rows.length === 1 ? "" : "s"}.`, "success");
+}
+
+function buildMembershipReportHtml(){
+  const esc = escapeReportText;
+  const rows = getMembershipReportRows();
+  const generatedAt = new Date().toLocaleString();
+  const scope = cachedSiteScopeLabel || "Current Site";
+
+  const rowHtml = rows.length ? rows.map((row, index) => {
+    const bg = index % 2 === 0 ? "#081a2d" : "#06111f";
+    return `
+      <tr style="background:${bg};">
+        <td style="padding:10px;border:1px solid #1d4ed8;color:#eaf4ff;">${esc(row.member_name)}</td>
+        <td style="padding:10px;border:1px solid #1d4ed8;color:#eaf4ff;">${esc(row.license_plate || "-")}</td>
+        <td style="padding:10px;border:1px solid #1d4ed8;color:#eaf4ff;font-weight:900;">${esc(row.code || "-")}</td>
+        <td style="padding:10px;border:1px solid #1d4ed8;color:#eaf4ff;">${esc(formatReportDate(row.expiration_date))}</td>
+        <td style="padding:10px;border:1px solid #1d4ed8;color:#eaf4ff;">${esc(row.daily_wash_limit)}</td>
+        <td style="padding:10px;border:1px solid #1d4ed8;color:#eaf4ff;">${esc(row.washes_this_month)}</td>
+        <td style="padding:10px;border:1px solid #1d4ed8;color:#eaf4ff;">${esc(formatReportDateTime(row.last_wash))}</td>
+        <td style="padding:10px;border:1px solid #1d4ed8;color:#eaf4ff;">${esc(row.status_label)}</td>
+      </tr>
+    `;
+  }).join("") : `
+      <tr><td colspan="8" style="padding:24px;border:1px solid #1d4ed8;color:#94a3b8;text-align:center;">No membership data found.</td></tr>
+  `;
+
+  function metric(label, value){
+    return `
+      <td width="25%" style="padding:7px;">
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#071727;border:1px solid #2563eb;">
+          <tr><td align="center" style="padding:16px 10px;">
+            <div style="font-size:12px;letter-spacing:.5px;color:#ffffff;text-transform:uppercase;font-weight:800;">${esc(label)}</div>
+            <div style="font-size:34px;line-height:40px;font-weight:900;color:#4ea1ff;padding-top:8px;">${esc(value)}</div>
+          </td></tr>
+        </table>
+      </td>
+    `;
+  }
+
+  return `
+<!doctype html>
+<html>
+  <body style="margin:0;padding:0;background:#000712;font-family:Arial,Helvetica,sans-serif;color:#ffffff;">
+    <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#000712;border-collapse:collapse;">
+      <tr><td align="center" style="padding:24px 10px;">
+        <table width="980" cellpadding="0" cellspacing="0" role="presentation" style="width:980px;max-width:980px;border-collapse:collapse;background:#050d19;border:1px solid #2563eb;">
+          <tr><td align="center" style="padding:26px 24px 18px;background:#071727;border-bottom:1px solid #2563eb;">
+            <img src="https://thewashtrac.com/washtrac-logo.png" alt="WashTrac" width="360" style="display:block;margin:0 auto 12px;height:auto;max-width:88%;border:0;">
+            <div style="font-size:26px;line-height:32px;font-weight:900;letter-spacing:1px;color:#ffffff;">Monthly Membership Report</div>
+            <div style="font-size:14px;line-height:22px;color:#94a3b8;padding-top:6px;">${esc(scope)} • Generated ${esc(generatedAt)}</div>
+          </td></tr>
+          <tr><td style="padding:18px 17px 8px;background:#050d19;">
+            <table width="100%" cellpadding="0" cellspacing="0" role="presentation"><tr>
+              ${metric("Current Members", cachedMembershipSummary.current)}
+              ${metric("Expired Members", cachedMembershipSummary.expired)}
+              ${metric("Washes This Month", cachedMembershipSummary.washes)}
+              ${metric("Avg / Current Member", cachedMembershipSummary.average)}
+            </tr></table>
+          </td></tr>
+          <tr><td style="padding:0 24px 24px;background:#050d19;">
+            <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#071727;border:1px solid #2563eb;">
+              <tr><td style="padding:18px;">
+                <div style="font-family:Arial Black,Arial,Helvetica,sans-serif;color:#4ea1ff;font-size:21px;line-height:25px;font-weight:900;letter-spacing:.8px;padding-bottom:12px;">MEMBERSHIP DETAIL</div>
+                <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;font-size:13px;">
+                  <thead><tr>
+                    ${["Member Name","License Plate","Code","Expiration","Daily Limit","Washes This Month","Last Wash","Status"].map(h => `<th align="left" style="padding:10px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-size:12px;text-transform:uppercase;">${esc(h)}</th>`).join("")}
+                  </tr></thead>
+                  <tbody>${rowHtml}</tbody>
+                </table>
+              </td></tr>
+            </table>
+          </td></tr>
+          <tr><td align="center" style="padding:0 24px 24px;background:#050d19;color:#c8ced8;font-size:13px;line-height:20px;">This is a WashTrac membership report.<br>© ${new Date().getFullYear()} WashTrac. All rights reserved.</td></tr>
+        </table>
+      </td></tr>
+    </table>
+  </body>
+</html>`;
+}
+
+async function emailMembershipReport(){
+  const rows = getMembershipReportRows();
+  if(!rows.length){
+    setManualEmailStatus("No membership data to email.", "warn");
+    return;
+  }
+
+  const email = getManualReportEmail();
+  if(!email){
+    setManualEmailStatus("Enter an email address first.", "warn");
+    return;
+  }
+
+  if(!isValidEmailAddress(email)){
+    setManualEmailStatus("Enter a valid email address.", "error");
+    return;
+  }
+
+  await sendReportToEmail(email, "WashTrac Membership Report", buildMembershipReportHtml());
+}
+
 async function initializeReportsPage(){
 
   populateMonthDays();
@@ -2621,6 +3107,7 @@ async function initializeReportsPage(){
   applyReportUrlParams();
   await loadReportSiteSwitcher();
   await loadUsage();
+  await loadMembershipReport();
   await loadHeartbeatStatus();
 
   // Realtime subscriptions removed for Reports stability.
