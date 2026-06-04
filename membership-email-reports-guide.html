@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WashTrac Membership Email Reports</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #020617;
+      color: #ffffff;
+      line-height: 1.6;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(2, 6, 23, 0.95);
+      border-bottom: 1px solid #1e293b;
+      padding: 14px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-logo {
+      width: 220px;
+      max-width: 100%;
+      height: auto;
+      display: block;
+      position: relative;
+      top: -10px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 18px;
+      border-radius: 10px;
+      background: #1b4fd6;
+      color: #ffffff;
+      font-weight: 700;
+      border: none;
+    }
+
+    .hero {
+      padding: 80px 20px 50px;
+      background:
+        radial-gradient(circle at top center, rgba(37,99,235,0.22), transparent 45%),
+        linear-gradient(180deg, #020617 0%, #07111f 55%, #020617 100%);
+      border-bottom: 1px solid #1e293b;
+      text-align: center;
+    }
+
+    .hero .eyebrow {
+      color: #60a5fa;
+      letter-spacing: 2px;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .hero h1 {
+      margin: 0 0 16px;
+      font-size: 54px;
+      line-height: 1.05;
+    }
+
+    .hero p {
+      max-width: 760px;
+      margin: 0 auto;
+      color: #94a3b8;
+      font-size: 19px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 70px 20px;
+    }
+
+    .section-card {
+      background: linear-gradient(180deg, #0f172a, #111827);
+      border: 1px solid #1e293b;
+      border-radius: 18px;
+      padding: 28px;
+      margin: 0 auto 80px;
+      max-width: 1100px;
+      width: 100%;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .section-card h2 {
+      margin: 0 0 12px;
+      font-size: 32px;
+    }
+
+    .section-card p {
+      margin: 0 0 14px;
+      color: #cbd5e1;
+      font-size: 17px;
+    }
+
+    .section-card ul {
+      margin: 0;
+      padding-left: 22px;
+      color: #cbd5e1;
+    }
+
+    .section-card li {
+      margin-bottom: 8px;
+    }
+
+    .tip {
+      margin-top: 16px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: rgba(37, 99, 235, 0.10);
+      border: 1px solid rgba(37, 99, 235, 0.28);
+      color: #dbeafe;
+      font-size: 15px;
+    }
+
+    .next-box {
+      margin-top: 50px;
+      background: linear-gradient(145deg, #0f172a, #111827);
+      border: 1px solid #1e293b;
+      border-radius: 18px;
+      padding: 36px;
+      text-align: center;
+    }
+
+    .next-box h2 {
+      margin-top: 0;
+      font-size: 36px;
+    }
+
+    .next-box p {
+      max-width: 700px;
+      margin: 0 auto 22px;
+      color: #94a3b8;
+      font-size: 18px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px;
+      color: #64748b;
+      border-top: 1px solid #1e293b;
+      margin-top: 40px;
+    }
+
+    @media (max-width: 900px) {
+      header { padding: 14px 20px; }
+      .header-logo { width: 180px; }
+      .hero { padding: 65px 20px 40px; }
+      .hero h1 { font-size: 40px; }
+      .hero p { font-size: 17px; }
+      .container { padding: 50px 20px; }
+      .section-card {
+        padding: 22px;
+        margin-bottom: 50px;
+      }
+      .section-card h2 { font-size: 26px; }
+      .next-box { padding: 28px 22px; }
+      .next-box h2 { font-size: 30px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <a href="index.html">
+      <img src="washtrac-logo.png" alt="WashTrac" class="header-logo">
+    </a>
+
+    <a href="faq.html" class="btn">Back to Guides</a>
+  </header>
+
+  <section class="hero">
+    <div class="eyebrow">Membership Reporting Guide</div>
+    <h1>Membership Email Reports</h1>
+    <p>
+      Use WashTrac membership email reports to send member totals, monthly washes,
+      revenue, expiration status, and detailed membership activity to managers automatically.
+    </p>
+  </section>
+
+  <div class="container">
+
+    <div class="section-card">
+      <h2>Membership Report Overview</h2>
+      <p>
+        Membership reports summarize the current membership program for the selected account or site.
+      </p>
+      <ul>
+        <li>Current members</li>
+        <li>Expired members</li>
+        <li>Members expiring this month</li>
+        <li>Membership washes this month</li>
+        <li>Monthly membership revenue</li>
+        <li>Average washes per member</li>
+      </ul>
+    </div>
+
+    <div class="section-card">
+      <h2>Email Membership Report</h2>
+      <p>
+        Send a membership report directly from the Membership page when a manager needs an immediate update.
+      </p>
+      <ul>
+        <li>Open the Membership page</li>
+        <li>Confirm the correct site or account is selected</li>
+        <li>Enter the recipient email address</li>
+        <li>Click <strong>Email Membership Report</strong></li>
+      </ul>
+
+      <div class="tip">
+        Manual membership email reports use the same membership data shown on the Membership page.
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h2>Scheduled Membership Reports</h2>
+      <p>
+        Scheduled membership reports can be sent automatically on a recurring basis.
+      </p>
+      <ul>
+        <li>Choose the report recipient</li>
+        <li>Select the frequency</li>
+        <li>Set the send time</li>
+        <li>Save the schedule</li>
+      </ul>
+
+      <div class="tip">
+        Scheduled membership reports are separate from normal wash activity reports and only include membership data.
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h2>Report Details Included</h2>
+      <p>
+        Each membership email report includes a member detail table for review and accountability.
+      </p>
+      <ul>
+        <li>Name</li>
+        <li>License plate</li>
+        <li>Membership code</li>
+        <li>Daily wash limit</li>
+        <li>Monthly price</li>
+        <li>Washes this month</li>
+        <li>Last wash</li>
+        <li>Expiration date</li>
+        <li>Status</li>
+      </ul>
+    </div>
+
+    <div class="section-card">
+      <h2>Membership Expiration Tracking</h2>
+      <p>
+        Membership reports help identify which members are current, expiring soon, or expired.
+      </p>
+      <ul>
+        <li>Current memberships remain active and usable</li>
+        <li>Expiring this month highlights memberships needing attention</li>
+        <li>Expired or inactive members are separated for review</li>
+      </ul>
+    </div>
+
+    <div class="section-card">
+      <h2>CSV Download vs Email Report</h2>
+      <p>
+        WashTrac supports both quick downloads and emailed reports depending on the workflow.
+      </p>
+      <ul>
+        <li>Use CSV download when exporting data for spreadsheets</li>
+        <li>Use manual email when sending a one-time report</li>
+        <li>Use scheduled email reports for recurring management updates</li>
+      </ul>
+    </div>
+
+    <div class="section-card">
+      <h2>Best Practices</h2>
+      <p>
+        Keep membership reporting accurate by keeping member records up to date.
+      </p>
+      <ul>
+        <li>Update expired memberships when they renew</li>
+        <li>Verify monthly prices are correct</li>
+        <li>Review members with unusually high wash counts</li>
+        <li>Use scheduled reports for monthly billing review</li>
+      </ul>
+    </div>
+
+    <div class="next-box">
+      <h2>Membership Reporting Made Simple</h2>
+      <p>
+        WashTrac membership reports keep membership revenue, usage, and expiration status organized
+        so managers can review performance without searching through individual records.
+      </p>
+
+      <a href="faq.html" class="btn">Return to FAQ & Guides</a>
+    </div>
+
+  </div>
+
+  <footer>
+    WASHTRAC © 2026<br>
+    Control. Track. Manage.
+  </footer>
+
+</body>
+</html>
