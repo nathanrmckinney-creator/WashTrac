@@ -1054,6 +1054,21 @@ function renderMembers(){
     const status = getMembershipStatus(member);
     const monthlyCount = getMemberMonthlyCount(member.id);
 
+const monthlyPrice = getMemberMonthlyPrice(member);
+
+const revenuePerWash =
+  monthlyCount > 0
+    ? monthlyPrice / monthlyCount
+    : monthlyPrice;
+
+const lastWashRecord = allMembershipActivity.find(
+  row => String(row.membership_id) === String(member.id)
+);
+
+const lastWash = lastWashRecord
+  ? formatDateTime(lastWashRecord.wash_time || lastWashRecord.created_at)
+  : "-";
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td><strong>${escapeText(getMemberCode(member))}</strong></td>
