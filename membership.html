@@ -1344,7 +1344,20 @@ function exportMembersCsv(){
     return;
   }
 
-  const headers = ["Code","First Name","Last Name","License Plate","Start Date","Expiration Date","Daily Wash Limit","Monthly Price","This Month","Status","Active"];
+  const headers = [
+  "Code",
+  "First Name",
+  "Last Name",
+  "License Plate",
+  "Start Date",
+  "Expiration Date",
+  "Daily Wash Limit",
+  "Monthly Price",
+  "This Month",
+  "Last Wash",
+  "Status",
+  "Active"
+];
   const csvRows = rows.map(member => {
     const status = getMembershipStatus(member);
 
