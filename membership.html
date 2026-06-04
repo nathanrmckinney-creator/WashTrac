@@ -1077,8 +1077,10 @@ const lastWash = lastWashRecord
       <td>${escapeText(formatDate(member.start_date))}</td>
       <td class="${status.dateClass}">${escapeText(formatDate(member.expiration_date))}</td>
       <td>${escapeText(member.daily_wash_limit || 2)}</td>
-      <td>${escapeText(formatMoney(getMemberMonthlyPrice(member)))}</td>
+      <td>${escapeText(formatMoney(monthlyPrice))}</td>
       <td>${monthlyCount}</td>
+      <td>${escapeText(formatMoney(revenuePerWash))}</td>
+      <td>${escapeText(lastWash)}</td>
       <td><span class="status-pill ${status.statusClass}">${escapeText(status.label)}</span></td>
       <td><button class="edit-btn" type="button">Edit</button></td>
     `;
