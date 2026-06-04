@@ -1,0 +1,2108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WashTrac Memberships</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:#fff;overflow-x:hidden;}
+    .app{display:flex;min-height:100vh;}
+
+    .sidebar{
+      width:220px;
+      background:
+        radial-gradient(
+          circle at 0% 0%,
+          rgba(37, 99, 235, 0.85) 0%,
+          rgba(37, 99, 235, 0.45) 6%,
+          rgba(37, 99, 235, 0.18) 10%,
+          rgba(37, 99, 235, 0.06) 14%,
+          transparent 16%
+        ),
+        linear-gradient(180deg, #0f172a 0%, #111827 100%);
+      padding:20px;
+      border-right:1px solid #1e293b;
+      flex-shrink:0;
+      position:fixed;
+      top:0;
+      left:0;
+      height:100vh;
+      overflow:hidden;
+    }
+
+    .logo,
+    .mobile-logo{margin-bottom:24px;}
+
+    .logo-image{
+      width:180px;
+      height:auto;
+      display:block;
+    }
+
+    .logo-image-mobile{
+      width:150px;
+      height:auto;
+      display:block;
+    }
+
+    .nav a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
+    .nav a:hover,
+    .nav a.active{color:#fff;}
+
+    .main{
+      flex:1;
+      padding:30px;
+      position:relative;
+      margin-left:220px;
+    }
+
+    .desktop-menu-wrap{position:absolute;top:24px;right:30px;z-index:1200;}
+    .menu-btn{background:#2563eb;border:none;color:#fff;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:bold;}
+    .hamburger-menu{display:none;position:absolute;top:46px;right:0;width:220px;background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:12px 16px;box-shadow:0 12px 30px rgba(0,0,0,.45);z-index:1500;}
+    .hamburger-menu a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
+    .hamburger-menu a:hover{color:#fff;}
+    .hamburger-menu a.logout-link{color:#f87171;}
+
+    .mobile-topbar{display:none;align-items:center;justify-content:space-between;padding:16px 20px;background:#0f172a;border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:1400;}
+    .mobile-logo{margin-bottom:0;}
+    .mobile-menu{display:none;position:fixed;top:64px;right:16px;width:240px;background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:12px 16px;box-shadow:0 12px 30px rgba(0,0,0,.45);z-index:1500;}
+    .mobile-menu a{display:block;color:#cbd5f5;text-decoration:none;padding:10px 0;}
+    .mobile-menu a:hover{color:#fff;}
+    .mobile-menu a.logout-link{color:#f87171;}
+    .backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1100;}
+
+    .page-header{margin-bottom:20px;padding-right:90px;}
+    .page-header h1{margin:0 0 10px 0;font-size:42px;}
+    .page-header p{margin:0;color:#94a3b8;line-height:1.5;}
+
+    .top-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+      margin-bottom:22px;
+    }
+
+    .site-row{
+      max-width:520px;
+      display:flex;
+      gap:10px;
+      flex:1;
+      min-width:280px;
+    }
+
+    #siteSwitcher{
+      flex:1;
+      padding:12px;
+      border-radius:10px;
+      background:#0b1220;
+      color:white;
+      border:1px solid #1ea7ff;
+      box-shadow:0 0 6px rgba(30,167,255,0.4);
+      font-size:15px;
+      font-weight:600;
+      outline:none;
+    }
+
+    .members-btn{
+      background:linear-gradient(135deg,#2563eb,#1ea7ff);
+      box-shadow:0 0 16px rgba(30,167,255,.25);
+      border-radius:12px;
+      padding:13px 18px;
+      white-space:nowrap;
+    }
+
+    .summary{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  margin-bottom:20px;
+}
+    .summary-box{background:#111827;padding:18px;border-radius:12px;}
+    .summary-box strong{display:block;font-size:30px;margin-bottom:6px;}
+    .summary-box span{color:#94a3b8;font-size:14px;}
+
+    .card{background:#111827;padding:20px;border-radius:12px;margin-bottom:20px;}
+    .card h3{margin:0 0 16px 0;}
+
+    .form-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;align-items:end;}
+    .form-grid.member-grid{grid-template-columns:1fr 1fr 1fr 1fr;}
+    .field{display:flex;flex-direction:column;gap:8px;}
+    .field label{font-size:13px;color:#94a3b8;}
+    input, select{width:100%;padding:12px;border-radius:8px;border:1px solid #334155;background:#0b1220;color:#fff;font-size:15px;}
+    input::placeholder{color:#6b7280;}
+
+    .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;}
+    button{padding:12px 16px;background:#2563eb;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold;}
+    button.secondary{background:#334155;}
+    button.remove-btn{background:#dc2626;padding:10px 14px;}
+    button.edit-btn{background:#334155;padding:10px 14px;}
+    button.view-btn{background:#334155;padding:10px 14px;}
+    button:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.35);}
+
+    .quick-code-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 18px 0;}
+    .random-code-btn{font-size:18px;padding:16px 22px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#1ea7ff);box-shadow:0 0 16px rgba(30,167,255,.28);}
+    .quick-code-note{color:#94a3b8;font-size:14px;}
+
+    .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    table{width:100%;border-collapse:collapse;min-width:1180px;}
+    th, td{padding:14px 10px;border-bottom:1px solid #1f2937;text-align:left;vertical-align:middle;}
+    th{color:#93c5fd;font-size:13px;text-transform:uppercase;letter-spacing:.5px;}
+    .muted{color:#94a3b8;}
+
+    .tag{display:inline-block;padding:6px 10px;border-radius:999px;background:#1e293b;color:#cbd5e1;font-size:12px;font-weight:bold;white-space:nowrap;}
+
+    .status-pill{
+      display:inline-block;
+      padding:7px 11px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
+      white-space:nowrap;
+    }
+
+    .status-current{background:rgba(34,197,94,.16);color:#86efac;border:1px solid rgba(34,197,94,.28);}
+    .status-warning{background:rgba(245,158,11,.16);color:#fde68a;border:1px solid rgba(245,158,11,.28);}
+    .status-expiring{background:rgba(239,68,68,.16);color:#fca5a5;border:1px solid rgba(239,68,68,.28);}
+    .status-expired{background:rgba(100,116,139,.18);color:#cbd5e1;border:1px solid rgba(148,163,184,.25);}
+
+    .expiration-current{color:#86efac;font-weight:900;}
+    .expiration-warning{color:#fde68a;font-weight:900;}
+    .expiration-expiring{color:#fca5a5;font-weight:900;}
+    .expiration-expired{color:#94a3b8;font-weight:900;}
+
+    .search-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;}
+
+    .status{margin-top:14px;padding:12px 14px;border-radius:8px;background:#0b1220;border:1px solid #1f2937;color:#cbd5e1;display:none;}
+    .status.show{display:block;}
+    .status.success{border-color:rgba(34,197,94,.35);color:#86efac;}
+    .status.warn{border-color:rgba(245,158,11,.35);color:#fde68a;}
+    .status.error{border-color:rgba(239,68,68,.35);color:#fecaca;}
+
+    .report-card-note{
+      color:#94a3b8;
+      font-size:14px;
+      line-height:1.5;
+      margin:0 0 14px 0;
+    }
+
+    .report-actions{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:12px;
+    }
+
+    .report-small{
+      color:#94a3b8;
+      font-size:13px;
+      line-height:1.45;
+      margin-top:12px;
+    }
+
+    .schedule-grid{
+      display:grid;
+      grid-template-columns:1.4fr .9fr .8fr .9fr;
+      gap:12px;
+      align-items:end;
+      margin-top:12px;
+    }
+
+    .schedule-summary{
+      margin-top:14px;
+      padding:12px 14px;
+      border-radius:10px;
+      background:#0b1220;
+      border:1px solid #1f2937;
+      color:#cbd5e1;
+      font-size:14px;
+      line-height:1.45;
+    }
+
+    .schedule-summary strong{
+      color:#fff;
+    }
+
+    .modal{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(2,6,23,.78);
+      z-index:3000;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+
+    .modal.show{display:flex;}
+
+    .modal-box{
+      width:100%;
+      max-width:860px;
+      max-height:88vh;
+      overflow:auto;
+      background:#111827;
+      border:1px solid #1e293b;
+      border-radius:16px;
+      padding:22px;
+      box-shadow:
+        0 0 0 1px rgba(30,167,255,.14),
+        0 22px 70px rgba(0,0,0,.6);
+    }
+
+    .modal-header{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:16px;
+    }
+
+    .modal-header h3{margin:0 0 6px 0;font-size:24px;}
+    .close-modal-btn{background:#334155;padding:10px 13px;border-radius:8px;line-height:1;}
+
+    @media (max-width:1100px){
+      .summary{grid-template-columns:1fr 1fr;}
+      .form-grid,.form-grid.member-grid,.search-grid{grid-template-columns:1fr 1fr;}
+    }
+
+    @media (max-width:900px){
+      .app{display:block;}
+      .sidebar{display:none;}
+      .desktop-menu-wrap{display:none;}
+      .mobile-topbar{display:flex;}
+      .main{padding:20px;margin-left:0;}
+      .page-header{padding-right:0;}
+      .page-header h1{font-size:34px;}
+      .summary{grid-template-columns:1fr;}
+      .form-grid,.form-grid.member-grid,.search-grid,.schedule-grid{grid-template-columns:1fr;}
+      .top-row{align-items:stretch;}
+      .members-btn{width:100%;}
+    }
+  </style>
+</head>
+
+<body>
+<script>
+function hasAdminAccess(){
+  return sessionStorage.getItem("washtracAdmin") === "yes" ||
+         localStorage.getItem("washtracAdmin") === "yes";
+}
+
+if(sessionStorage.getItem("washtracAdmin") === "yes"){
+  localStorage.setItem("washtracAdmin", "yes");
+}
+
+const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
+const isAdminLogin = hasAdminAccess();
+
+if(!isClientLogin && !isAdminLogin){
+  window.location.replace("login.html");
+}
+
+document.addEventListener("DOMContentLoaded", function(){
+  document.querySelectorAll(".admin-only-link").forEach(link => {
+    link.style.display = hasAdminAccess() ? "block" : "none";
+  });
+});
+</script>
+
+<div class="mobile-topbar">
+  <div class="mobile-logo">
+    <img src="washtrac-logo.png" alt="WashTrac" class="logo-image-mobile">
+  </div>
+  <button class="menu-btn" type="button" onclick="toggleMobileMenu()">☰</button>
+</div>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="dashboard.html">Dashboard</a>
+  <a href="codes.html">Codes</a>
+  <a href="activity.html">Activity</a>
+  <a href="usage.html">Reports</a>
+  <a href="monitor.html">Monitor</a>
+
+  <hr style="
+    border:none;
+    border-top:1px solid #1e293b;
+    margin:16px 0;
+  ">
+
+  <a class="active" href="membership.html">Membership</a>
+  <a href="maintenance.html" class="admin-only-link" style="display:none;">Maintenance</a>
+  <a href="#" onclick="goHome(event)">Back to Homepage</a>
+  <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
+</div>
+
+<div class="backdrop" id="backdrop" onclick="closeMenus()"></div>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="logo">
+      <img src="washtrac-logo.png" alt="WashTrac" class="logo-image">
+    </div>
+    <div class="nav">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="codes.html">Codes</a>
+      <a href="activity.html">Activity</a>
+      <a href="usage.html">Reports</a>
+      <a href="monitor.html">Monitor</a>
+
+      <hr style="
+        border:none;
+        border-top:1px solid #1e293b;
+        margin:16px 0;
+      ">
+
+      <a class="active" href="membership.html">Membership</a>
+      <a href="maintenance.html" class="admin-only-link" style="display:none;">Maintenance</a>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="desktop-menu-wrap">
+      <button class="menu-btn" type="button" onclick="toggleDesktopMenu()">☰</button>
+      <div class="hamburger-menu" id="desktopMenu">
+        <a href="#" onclick="goHome(event)">Back to Homepage</a>
+        <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
+      </div>
+    </div>
+
+    <div class="page-header">
+      <h1>Memberships</h1>
+      <p>Create membership codes, track member washes, and monitor expiration status across the dealership account.</p>
+    </div>
+
+    <div class="top-row">
+      <div class="site-row">
+        <select id="siteSwitcher" onchange="switchSite(this.value)">
+          <option>Loading sites...</option>
+        </select>
+      </div>
+
+      <button class="members-btn" type="button" onclick="openMembersPage()">Manage Members</button>
+    </div>
+
+    <div class="summary">
+      <div class="summary-box"><strong id="currentMembersCount">0</strong><span>Current Members</span></div>
+      <div class="summary-box"><strong id="membershipWashesMonth">0</strong><span>Membership Washes This Month</span></div>
+      <div class="summary-box"><strong id="monthlyMembershipRevenue">$0.00</strong><span>Monthly Membership Revenue</span></div>
+      <div class="summary-box">
+  <strong id="avgWashesPerMember">0.0</strong>
+  <span>Average Washes Per Member</span>
+</div>
+      <div class="summary-box"><strong id="expiringThisMonthCount">0</strong><span>Expiring This Month</span></div>
+      <div class="summary-box"><strong id="expiredMembersCount">0</strong><span>Expired Members</span></div>
+    </div>
+
+    <div class="card">
+      <h3>Membership Reports</h3>
+      <p class="report-card-note">
+        Download a complete membership report using the current account/site selection. This report uses the same membership data already shown below.
+      </p>
+
+      <div class="report-actions">
+        <button type="button" onclick="downloadMembershipStyledReport()">Download Membership Report</button>
+        <button class="secondary" type="button" onclick="downloadMembershipReportCsv()">Download Membership CSV</button>
+        <button class="secondary" type="button" onclick="exportMembersCsv()">Download Filtered Members CSV</button>
+        <button class="secondary" type="button" onclick="loadMembershipPage()">Refresh Membership Data</button>
+      </div>
+
+      <div class="report-small">
+Membership report downloads as a styled WashTrac HTML report matching the regular report layout. CSV downloads are still available for spreadsheets.
+      </div>
+
+      <div class="status" id="membershipReportStatus"></div>
+    </div>
+
+    <div class="card">
+      <h3>Scheduled Membership Reports <span style="color:#60a5fa;font-size:13px;font-weight:900;letter-spacing:.8px;">NEW</span></h3>
+      <p class="report-card-note">
+        Schedule a recurring membership report email for the current account/site. This is separate from the normal wash report schedule. This card should be visible directly under Membership Reports.
+      </p>
+
+      <div class="schedule-grid">
+        <div class="field">
+          <label for="membershipScheduleEmail">Report Email</label>
+          <input id="membershipScheduleEmail" type="email" placeholder="name@email.com">
+        </div>
+
+        <div class="field">
+          <label for="membershipScheduleFrequency">Frequency</label>
+          <select id="membershipScheduleFrequency">
+            <option value="off">Off</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="membershipScheduleTime">Send Time</label>
+          <input id="membershipScheduleTime" type="time" value="08:00">
+        </div>
+
+        <div class="field">
+          <label for="membershipScheduleRange">Report Range</label>
+          <select id="membershipScheduleRange">
+            <option value="this_month">This Month</option>
+            <option value="last_month">Last Month</option>
+            <option value="all">All Membership Data</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="report-actions">
+        <button type="button" onclick="saveMembershipReportSchedule()">Save Membership Schedule</button>
+        <button class="secondary" type="button" onclick="disableMembershipReportSchedule()">Turn Off Schedule</button>
+      </div>
+
+      <div class="schedule-summary" id="membershipScheduleSummary">
+        <strong>Current Schedule:</strong> No membership report schedule saved.
+      </div>
+
+      <div class="status" id="membershipScheduleStatus"></div>
+    </div>
+
+    <div class="card">
+      <h3>Add New Member</h3>
+
+      <div class="quick-code-row">
+        <button class="random-code-btn" type="button" onclick="generateRandomCode()">Generate Random 4-Digit Membership Code</button>
+        <span class="quick-code-note">Fills the code box below without duplicating an existing active membership code.</span>
+      </div>
+
+      <div class="form-grid member-grid">
+        <div class="field">
+          <label for="codeInput">Membership Code</label>
+          <input id="codeInput" placeholder="Code" maxlength="4" inputmode="numeric">
+        </div>
+
+        <div class="field">
+          <label for="firstNameInput">First Name</label>
+          <input id="firstNameInput" placeholder="First name">
+        </div>
+
+        <div class="field">
+          <label for="lastNameInput">Last Name</label>
+          <input id="lastNameInput" placeholder="Last name">
+        </div>
+
+        <div class="field">
+          <label for="plateInput">License Plate</label>
+          <input id="plateInput" placeholder="Plate number">
+        </div>
+      </div>
+
+      <div class="form-grid member-grid" style="margin-top:12px;">
+        <div class="field">
+          <label for="startDateInput">Start Date</label>
+          <input id="startDateInput" type="date">
+        </div>
+
+        <div class="field">
+          <label for="expirationDateInput">Expiration Date</label>
+          <input id="expirationDateInput" type="date">
+        </div>
+
+        <div class="field">
+          <label for="dailyLimitInput">Washes Allowed Per Day</label>
+          <input id="dailyLimitInput" type="number" min="1" value="2">
+        </div>
+
+        <div class="field">
+          <label for="monthlyPriceInput">Monthly Price</label>
+          <input id="monthlyPriceInput" type="number" min="0" step="0.01" value="0.00" inputmode="decimal">
+        </div>
+
+        <div class="field">
+          <button id="addMemberButton" type="button" onclick="addMember()">Add Member</button>
+        </div>
+      </div>
+
+      <div class="status" id="statusBox"></div>
+    </div>
+
+    <div class="card">
+      <h3>Search Members</h3>
+      <div class="search-grid">
+        <div class="field">
+          <label for="searchName">Search by name</label>
+          <input id="searchName" placeholder="Name" oninput="renderMembers()">
+        </div>
+
+        <div class="field">
+          <label for="searchPlate">Search by license plate</label>
+          <input id="searchPlate" placeholder="Plate" oninput="renderMembers()">
+        </div>
+
+        <div class="field">
+          <label for="searchCode">Search by code</label>
+          <input id="searchCode" placeholder="Code" oninput="renderMembers()">
+        </div>
+
+        <div class="field">
+          <label for="searchStatus">Status</label>
+          <select id="searchStatus" onchange="renderMembers()">
+            <option value="">All current/active</option>
+            <option value="current">Current</option>
+            <option value="warning">Month Before Expiration</option>
+            <option value="expiring">Expiring This Month</option>
+            <option value="expired">Expired</option>
+            <option value="all">All Members</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="secondary" type="button" onclick="clearSearch()">Clear Search</button>
+        <button class="secondary" type="button" onclick="exportMembersCsv()">Export CSV</button>
+        <button class="secondary" type="button" onclick="loadMembershipPage()">Refresh</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Members</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Name</th>
+              <th>License Plate</th>
+              <th>Start Date</th>
+              <th>Expiration</th>
+              <th>Washes/Day</th>
+              <th>Monthly Price</th>
+              <th>This Month</th>
+              <th>Last Wash</th>
+              <th>Status</th>
+              <th>Edit</th>
+            </tr>
+          </thead>
+          <tbody id="membersTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Membership Activity - Current Month</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date / Time</th>
+              <th>Name</th>
+              <th>License Plate</th>
+              <th>Code</th>
+              <th>Expiration</th>
+              <th>Wash Count This Month</th>
+              <th>Site</th>
+            </tr>
+          </thead>
+          <tbody id="membershipActivityBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="editMemberModal" class="modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <h3>Edit Member</h3>
+        <div id="editMemberSubtitle" class="muted">Update membership details.</div>
+      </div>
+      <button class="close-modal-btn" type="button" onclick="closeEditMember()">✕</button>
+    </div>
+
+    <input id="editMemberId" type="hidden">
+
+    <div class="form-grid">
+      <div class="field">
+        <label for="editFirstName">First Name</label>
+        <input id="editFirstName">
+      </div>
+
+      <div class="field">
+        <label for="editLastName">Last Name</label>
+        <input id="editLastName">
+      </div>
+
+      <div class="field">
+        <label for="editPlate">License Plate</label>
+        <input id="editPlate">
+      </div>
+
+      <div class="field">
+        <label for="editCode">Code</label>
+        <input id="editCode" maxlength="4" inputmode="numeric">
+      </div>
+    </div>
+
+    <div class="form-grid" style="margin-top:12px;">
+      <div class="field">
+        <label for="editStartDate">Start Date</label>
+        <input id="editStartDate" type="date">
+      </div>
+
+      <div class="field">
+        <label for="editExpirationDate">Expiration Date</label>
+        <input id="editExpirationDate" type="date">
+      </div>
+
+      <div class="field">
+        <label for="editDailyLimit">Washes Allowed Per Day</label>
+        <input id="editDailyLimit" type="number" min="1">
+      </div>
+
+      <div class="field">
+        <label for="editMonthlyPrice">Monthly Price</label>
+        <input id="editMonthlyPrice" type="number" min="0" step="0.01" value="0.00" inputmode="decimal">
+      </div>
+
+      <div class="field">
+        <label for="editActive">Active</label>
+        <select id="editActive">
+          <option value="true">Active</option>
+          <option value="false">Inactive</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="button" onclick="saveMemberEdits()">Save Changes</button>
+      <button class="secondary" type="button" onclick="closeEditMember()">Cancel</button>
+    </div>
+
+    <div class="status" id="editStatusBox"></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
+const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentSiteId = null;
+let currentOrganizationId = null;
+let allSites = [];
+let allMembers = [];
+let allMembershipActivity = [];
+let lastRenderedMembers = [];
+let loadInProgress = false;
+
+window.addEventListener("pageshow", function(){
+  const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
+  const isAdminLogin = hasAdminAccess();
+
+  if(!isClientLogin && !isAdminLogin){
+    window.location.replace("login.html");
+  }
+});
+
+function getActiveSiteId(){
+  return currentSiteId || localStorage.getItem("activeSiteId") || "";
+}
+
+function getActiveOrganizationId(){
+  return currentOrganizationId || localStorage.getItem("activeOrganizationId") || "";
+}
+
+function todayDateString(){
+  return new Date().toISOString().slice(0,10);
+}
+
+function firstDayOfCurrentMonth(){
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), 1);
+}
+
+function lastDayOfCurrentMonth(){
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+}
+
+function firstDayOfNextMonth(){
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth() + 1, 1);
+}
+
+function normalizePlate(value){
+  return String(value || "").trim().toUpperCase().replace(/\s+/g, "");
+}
+
+function displayPlate(value){
+  return String(value || "").trim().toUpperCase();
+}
+
+function escapeText(value){
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function formatDate(value){
+  if(!value) return "-";
+  const date = new Date(value + "T00:00:00");
+  if(Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString();
+}
+
+function formatDateTime(value){
+  if(!value) return "-";
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleString();
+}
+
+function parseMonthlyPrice(value){
+  const number = Number(String(value ?? "0").replace(/[^0-9.]/g, ""));
+  if(!Number.isFinite(number) || number < 0) return 0;
+  return Math.round(number * 100) / 100;
+}
+
+function formatMoney(value){
+  const number = Number(value || 0);
+  return number.toLocaleString(undefined, {
+    style:"currency",
+    currency:"USD",
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+  });
+}
+
+function getMemberMonthlyPrice(member){
+  return parseMonthlyPrice(member?.monthly_price || 0);
+}
+
+function getMemberName(member){
+  return `${member.first_name || ""} ${member.last_name || ""}`.trim();
+}
+
+function getMemberCode(member){
+  return String(member.code || "").trim();
+}
+
+function getMemberMonthlyCount(memberId){
+  return allMembershipActivity.filter(row => String(row.membership_id || "") === String(memberId || "")).length;
+}
+
+function getSiteName(siteId){
+  const found = allSites.find(site => site.id === siteId);
+  return found ? (found.name || found.site_name || "Unnamed Site") : "-";
+}
+
+function getMembershipStatus(member){
+  if(member.is_active === false){
+    return { key:"expired", label:"Inactive", statusClass:"status-expired", dateClass:"expiration-expired" };
+  }
+
+  if(!member.expiration_date){
+    return { key:"current", label:"Current", statusClass:"status-current", dateClass:"expiration-current" };
+  }
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const expiration = new Date(member.expiration_date + "T23:59:59");
+
+  if(Number.isNaN(expiration.getTime())){
+    return { key:"expired", label:"Invalid Date", statusClass:"status-expired", dateClass:"expiration-expired" };
+  }
+
+  if(expiration < today){
+    return { key:"expired", label:"Expired", statusClass:"status-expired", dateClass:"expiration-expired" };
+  }
+
+  const currentMonthStart = firstDayOfCurrentMonth();
+  const currentMonthEnd = lastDayOfCurrentMonth();
+  const nextMonthStart = firstDayOfNextMonth();
+  const nextMonthEnd = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59);
+
+  if(expiration >= currentMonthStart && expiration <= currentMonthEnd){
+    return { key:"expiring", label:"Expires This Month", statusClass:"status-expiring", dateClass:"expiration-expiring" };
+  }
+
+  if(expiration >= nextMonthStart && expiration <= nextMonthEnd){
+    return { key:"warning", label:"Month Before Expiration", statusClass:"status-warning", dateClass:"expiration-warning" };
+  }
+
+  return { key:"current", label:"Current", statusClass:"status-current", dateClass:"expiration-current" };
+}
+
+function setStatus(message, tone = ""){
+  const box = document.getElementById("statusBox");
+  box.innerText = message;
+  box.className = "status show";
+
+  if(tone === "success") box.classList.add("success");
+  if(tone === "warn") box.classList.add("warn");
+  if(tone === "error" || tone === true) box.classList.add("error");
+}
+
+function clearStatus(){
+  const box = document.getElementById("statusBox");
+  box.innerText = "";
+  box.className = "status";
+}
+
+function setEditStatus(message, tone = ""){
+  const box = document.getElementById("editStatusBox");
+  box.innerText = message;
+  box.className = "status show";
+
+  if(tone === "success") box.classList.add("success");
+  if(tone === "warn") box.classList.add("warn");
+  if(tone === "error" || tone === true) box.classList.add("error");
+}
+
+function clearEditStatus(){
+  const box = document.getElementById("editStatusBox");
+  box.innerText = "";
+  box.className = "status";
+}
+
+function toggleDesktopMenu(){
+  const desktopMenu = document.getElementById("desktopMenu");
+  const mobileMenu = document.getElementById("mobileMenu");
+  const backdrop = document.getElementById("backdrop");
+  const isOpen = desktopMenu.style.display === "block";
+
+  mobileMenu.style.display = "none";
+  desktopMenu.style.display = isOpen ? "none" : "block";
+  backdrop.style.display = isOpen ? "none" : "block";
+}
+
+function toggleMobileMenu(){
+  const desktopMenu = document.getElementById("desktopMenu");
+  const mobileMenu = document.getElementById("mobileMenu");
+  const backdrop = document.getElementById("backdrop");
+  const isOpen = mobileMenu.style.display === "block";
+
+  desktopMenu.style.display = "none";
+  mobileMenu.style.display = isOpen ? "none" : "block";
+  backdrop.style.display = isOpen ? "none" : "block";
+}
+
+function closeMenus(){
+  document.getElementById("mobileMenu").style.display = "none";
+  document.getElementById("desktopMenu").style.display = "none";
+  document.getElementById("backdrop").style.display = "none";
+}
+
+function goHome(event){
+  if(event) event.preventDefault();
+
+  closeMenus();
+
+  localStorage.removeItem("washtracLoggedIn");
+  sessionStorage.removeItem("washtracAdmin");
+  localStorage.removeItem("washtracAdmin");
+  sessionStorage.removeItem("washtracSessionActive");
+  window.location.replace("index.html");
+}
+
+async function logout(event){
+  if(event) event.preventDefault();
+
+  closeMenus();
+
+  try{
+    await client.auth.signOut();
+  }catch(err){
+    console.log("logout error:", err);
+  }
+
+  localStorage.removeItem("washtracLoggedIn");
+  localStorage.removeItem("activeSiteId");
+  localStorage.removeItem("washtracActiveSiteId");
+  localStorage.removeItem("activeOrganizationId");
+  sessionStorage.removeItem("washtracAdmin");
+  localStorage.removeItem("washtracAdmin");
+  sessionStorage.removeItem("washtracSessionActive");
+  window.location.replace("login.html");
+}
+
+function openMembersPage(){
+  window.location.href = "members.html";
+}
+
+async function loadSites(){
+  const select = document.getElementById("siteSwitcher");
+  if(!select) return "";
+
+  select.innerHTML = `<option>Loading sites...</option>`;
+
+  /*
+    IMPORTANT:
+    This project has been inconsistent about site_members/user_site_access.
+    Dashboard was fixed by loading directly from sites.
+    Membership should do the same so it does not get stuck with "No sites assigned"
+    or empty member data when the user access lookup table is missing/empty.
+  */
+
+  const { data, error } = await client
+    .from("sites")
+    .select("*")
+    .order("name", { ascending:true });
+
+  if(error){
+    console.log("Sites load error:", error);
+    select.innerHTML = `<option value="">Error loading sites</option>`;
+    localStorage.removeItem("activeSiteId");
+    localStorage.removeItem("activeOrganizationId");
+    currentSiteId = null;
+    currentOrganizationId = null;
+    return "";
+  }
+
+  allSites = data || [];
+
+  if(!allSites.length){
+    select.innerHTML = `<option value="">No sites found</option>`;
+    localStorage.removeItem("activeSiteId");
+    localStorage.removeItem("activeOrganizationId");
+    currentSiteId = null;
+    currentOrganizationId = null;
+    return "";
+  }
+
+  select.innerHTML = allSites.map(site => {
+    return `<option value="${escapeText(site.id)}">${escapeText(site.name || site.site_name || "Unnamed Site")}</option>`;
+  }).join("");
+
+  const saved = localStorage.getItem("activeSiteId") || localStorage.getItem("washtracActiveSiteId");
+  const exists = saved && allSites.some(site => site.id === saved);
+  const activeSite = exists ? allSites.find(site => site.id === saved) : allSites[0];
+
+  currentSiteId = activeSite.id;
+  currentOrganizationId = activeSite.organization_id || activeSite.org_id || activeSite.company_id || null;
+
+  localStorage.setItem("activeSiteId", currentSiteId);
+  localStorage.setItem("washtracActiveSiteId", currentSiteId);
+
+  if(currentOrganizationId){
+    localStorage.setItem("activeOrganizationId", currentOrganizationId);
+  }else{
+    localStorage.removeItem("activeOrganizationId");
+  }
+
+  select.value = currentSiteId;
+  return currentSiteId;
+}
+
+async function switchSite(siteId){
+  if(!siteId) return;
+
+  currentSiteId = siteId;
+  localStorage.setItem("activeSiteId", siteId);
+
+  const activeSite = allSites.find(site => site.id === siteId);
+
+  if(activeSite){
+    currentOrganizationId = activeSite.organization_id || activeSite.org_id || activeSite.company_id || null;
+    if(currentOrganizationId) localStorage.setItem("activeOrganizationId", currentOrganizationId);
+  }else{
+    const { data, error } = await client
+      .from("sites")
+      .select("*")
+      .eq("id", siteId)
+      .maybeSingle();
+
+    if(!error && data){
+      currentOrganizationId = data.organization_id || data.org_id || data.company_id || null;
+      if(currentOrganizationId) localStorage.setItem("activeOrganizationId", currentOrganizationId);
+    }
+  }
+
+  clearStatus();
+  await loadMembershipPage();
+  await loadMembershipReportSchedule();
+}
+
+async function fetchMembers(orgId){
+  if(!orgId) return [];
+
+  const { data, error } = await client
+    .from("memberships")
+    .select("*")
+    .eq("organization_id", orgId)
+    .order("created_at", { ascending:false });
+
+  if(error){
+    console.log("fetchMembers error:", error);
+    setStatus("Could not load memberships. Make sure the memberships table exists.", "error");
+    return [];
+  }
+
+  return data || [];
+}
+
+async function fetchMembershipActivity(orgId){
+  if(!orgId) return [];
+
+  const monthStart = firstDayOfCurrentMonth().toISOString();
+  const monthEnd = lastDayOfCurrentMonth().toISOString();
+
+  const { data, error } = await client
+    .from("membership_activity")
+    .select("*")
+    .eq("organization_id", orgId)
+    .gte("wash_time", monthStart)
+    .lte("wash_time", monthEnd)
+    .order("wash_time", { ascending:false })
+    .limit(1000);
+
+  if(error){
+    console.log("fetchMembershipActivity error:", error);
+    return [];
+  }
+
+  return data || [];
+}
+
+function resetEmpty(){
+  allMembers = [];
+  allMembershipActivity = [];
+  document.getElementById("currentMembersCount").innerText = "0";
+  document.getElementById("membershipWashesMonth").innerText = "0";
+  document.getElementById("monthlyMembershipRevenue").innerText = "$0.00";
+  document.getElementById("avgWashesPerMember").innerText = "0.0";
+  document.getElementById("expiringThisMonthCount").innerText = "0";
+  document.getElementById("expiredMembersCount").innerText = "0";
+  document.getElementById("membersTableBody").innerHTML = `<tr><td colspan="11" class="muted">No active account selected.</td></tr>`;
+  document.getElementById("membershipActivityBody").innerHTML = `<tr><td colspan="7" class="muted">No membership activity found.</td></tr>`;
+}
+
+async function loadMembershipPage(){
+  if(loadInProgress) return;
+
+  const orgId = getActiveOrganizationId();
+
+  if(!orgId){
+    resetEmpty();
+    return;
+  }
+
+  loadInProgress = true;
+
+  try{
+    const [members, activity] = await Promise.all([
+      fetchMembers(orgId),
+      fetchMembershipActivity(orgId)
+    ]);
+
+    allMembers = members;
+    allMembershipActivity = activity;
+
+    renderSummary();
+    renderMembers();
+    renderMembershipActivity();
+  }catch(err){
+    console.log("loadMembershipPage error:", err);
+    setStatus("Could not load membership page.", "error");
+  }finally{
+    loadInProgress = false;
+  }
+}
+
+function renderSummary(){
+  const currentMembers = allMembers.filter(member => {
+    const status = getMembershipStatus(member);
+    return member.is_active !== false && status.key !== "expired";
+  });
+
+  const expiringThisMonth = allMembers.filter(member => getMembershipStatus(member).key === "expiring");
+  const expiredMembers = allMembers.filter(member => getMembershipStatus(member).key === "expired");
+
+ const monthlyRevenue = currentMembers.reduce(
+  (sum, member) => sum + getMemberMonthlyPrice(member),
+  0
+);
+
+const avgWashesPerMember =
+  currentMembers.length > 0
+    ? allMembershipActivity.length / currentMembers.length
+    : 0;
+
+  document.getElementById("currentMembersCount").innerText = currentMembers.length;
+  document.getElementById("membershipWashesMonth").innerText = allMembershipActivity.length;
+  document.getElementById("monthlyMembershipRevenue").innerText = formatMoney(monthlyRevenue);
+  document.getElementById("avgWashesPerMember").innerText = avgWashesPerMember.toFixed(1);
+  document.getElementById("expiringThisMonthCount").innerText = expiringThisMonth.length;
+  document.getElementById("expiredMembersCount").innerText = expiredMembers.length;
+}
+
+function renderMembers(){
+  const nameSearch = document.getElementById("searchName").value.trim().toLowerCase();
+  const plateSearch = document.getElementById("searchPlate").value.trim().toLowerCase();
+  const codeSearch = document.getElementById("searchCode").value.trim().toLowerCase();
+  const statusSearch = document.getElementById("searchStatus").value;
+
+  let filtered = allMembers.filter(member => {
+    const name = getMemberName(member).toLowerCase();
+    const plate = String(member.license_plate || "").toLowerCase();
+    const normalizedPlate = normalizePlate(member.license_plate).toLowerCase();
+    const code = getMemberCode(member).toLowerCase();
+    const status = getMembershipStatus(member);
+
+    const matchesText =
+      name.includes(nameSearch) &&
+      (plate.includes(plateSearch) || normalizedPlate.includes(normalizePlate(plateSearch).toLowerCase())) &&
+      code.includes(codeSearch);
+
+    if(!matchesText) return false;
+
+    if(statusSearch === "all") return true;
+    if(statusSearch) return status.key === statusSearch;
+
+    return member.is_active !== false && status.key !== "expired";
+  });
+
+  const tbody = document.getElementById("membersTableBody");
+  tbody.innerHTML = "";
+
+  if(!filtered.length){
+    lastRenderedMembers = [];
+    tbody.innerHTML = `<tr><td colspan="11" class="muted">No matching members found.</td></tr>`;
+    return;
+  }
+
+  lastRenderedMembers = filtered;
+
+  filtered.forEach(member => {
+    const status = getMembershipStatus(member);
+    const monthlyCount = getMemberMonthlyCount(member.id);
+
+const monthlyPrice = getMemberMonthlyPrice(member);
+
+const lastWashRecord = allMembershipActivity.find(
+  row => String(row.membership_id) === String(member.id)
+);
+
+const lastWash = lastWashRecord
+  ? formatDateTime(lastWashRecord.wash_time || lastWashRecord.created_at)
+  : "-";
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><strong>${escapeText(getMemberCode(member))}</strong></td>
+      <td>${escapeText(getMemberName(member))}</td>
+      <td><span class="tag">${escapeText(displayPlate(member.license_plate))}</span></td>
+      <td>${escapeText(formatDate(member.start_date))}</td>
+      <td class="${status.dateClass}">${escapeText(formatDate(member.expiration_date))}</td>
+      <td>${escapeText(member.daily_wash_limit || 2)}</td>
+      <td>${escapeText(formatMoney(monthlyPrice))}</td>
+      <td>${monthlyCount}</td>
+      <td>${escapeText(lastWash)}</td>
+      <td><span class="status-pill ${status.statusClass}">${escapeText(status.label)}</span></td>
+      <td><button class="edit-btn" type="button">Edit</button></td>
+    `;
+
+    tr.querySelector(".edit-btn").addEventListener("click", () => openEditMember(member.id));
+    tbody.appendChild(tr);
+  });
+}
+
+function renderMembershipActivity(){
+  const tbody = document.getElementById("membershipActivityBody");
+  tbody.innerHTML = "";
+
+  if(!allMembershipActivity.length){
+    tbody.innerHTML = `<tr><td colspan="7" class="muted">No membership activity found for the current month.</td></tr>`;
+    return;
+  }
+
+  allMembershipActivity.forEach(row => {
+    const member = allMembers.find(item => String(item.id) === String(row.membership_id));
+    const status = member ? getMembershipStatus(member) : null;
+    const monthlyCount = getMemberMonthlyCount(row.membership_id);
+
+    tbody.innerHTML += `
+      <tr>
+        <td>${escapeText(formatDateTime(row.wash_time || row.created_at))}</td>
+        <td>${escapeText(member ? getMemberName(member) : (row.member_name || "-"))}</td>
+        <td><span class="tag">${escapeText(displayPlate(row.license_plate || member?.license_plate || ""))}</span></td>
+        <td><strong>${escapeText(row.code || member?.code || "")}</strong></td>
+        <td class="${status ? status.dateClass : ""}">${escapeText(formatDate(member?.expiration_date || row.expiration_date || ""))}</td>
+        <td>${monthlyCount}</td>
+        <td>${escapeText(getSiteName(row.site_id))}</td>
+      </tr>
+    `;
+  });
+}
+
+function clearSearch(){
+  document.getElementById("searchName").value = "";
+  document.getElementById("searchPlate").value = "";
+  document.getElementById("searchCode").value = "";
+  document.getElementById("searchStatus").value = "";
+  renderMembers();
+}
+
+function generateRandomCode(){
+  clearStatus();
+
+  const usedCodes = new Set(
+    allMembers
+      .filter(member => member.is_active !== false)
+      .map(member => getMemberCode(member))
+      .filter(Boolean)
+  );
+
+  for(let attempt = 0; attempt < 300; attempt++){
+    const code = String(Math.floor(Math.random() * 10000)).padStart(4, "0");
+
+    if(code === "0000") continue;
+
+    if(!usedCodes.has(code)){
+      document.getElementById("codeInput").value = code;
+      setStatus(`Random membership code ${code} generated. Fill in member details and click Add Member to save.`, "success");
+      return;
+    }
+  }
+
+  setStatus("Could not generate a unique code. Try again.", "warn");
+}
+
+async function addMember(){
+  clearStatus();
+
+  const orgId = getActiveOrganizationId();
+  const code = document.getElementById("codeInput").value.trim();
+  const firstName = document.getElementById("firstNameInput").value.trim();
+  const lastName = document.getElementById("lastNameInput").value.trim();
+  const plate = normalizePlate(document.getElementById("plateInput").value);
+  const startDate = document.getElementById("startDateInput").value;
+  const expirationDate = document.getElementById("expirationDateInput").value;
+  const dailyLimit = Number(document.getElementById("dailyLimitInput").value || 2);
+  const monthlyPrice = parseMonthlyPrice(document.getElementById("monthlyPriceInput").value);
+
+  if(!orgId){ setStatus("No organization selected.", "error"); return; }
+  if(!code){ setStatus("Generate or enter a membership code.", "warn"); return; }
+  if(!/^\d{4}$/.test(code)){ setStatus("Membership code must be 4 digits.", "warn"); return; }
+  if(code === "0000"){ setStatus("0000 is reserved for the programming master code.", "warn"); return; }
+  if(!firstName){ setStatus("Enter first name.", "warn"); return; }
+  if(!lastName){ setStatus("Enter last name.", "warn"); return; }
+  if(!plate){ setStatus("Enter license plate.", "warn"); return; }
+  if(!startDate){ setStatus("Enter start date.", "warn"); return; }
+  if(!expirationDate){ setStatus("Enter expiration date.", "warn"); return; }
+  if(!Number.isInteger(dailyLimit) || dailyLimit < 1){ setStatus("Washes allowed per day must be 1 or higher.", "warn"); return; }
+
+  const existingCode = allMembers.find(member => getMemberCode(member) === code && member.is_active !== false);
+  if(existingCode){
+    setStatus("That membership code already exists.", "warn");
+    return;
+  }
+
+  const existingPlate = allMembers.find(member => normalizePlate(member.license_plate) === plate);
+  if(existingPlate){
+    setStatus("That license plate already exists on this account.", "warn");
+    return;
+  }
+
+  const insertRow = {
+    organization_id: orgId,
+    code,
+    first_name: firstName,
+    last_name: lastName,
+    license_plate: plate,
+    start_date: startDate,
+    expiration_date: expirationDate,
+    daily_wash_limit: dailyLimit,
+    monthly_price: monthlyPrice,
+    is_active: true
+  };
+
+  const { error } = await client
+    .from("memberships")
+    .insert([insertRow]);
+
+  if(error){
+    console.log("addMember error:", error);
+    setStatus("Could not add member. Check the memberships table and RLS policy.", "error");
+    return;
+  }
+
+  document.getElementById("codeInput").value = "";
+  document.getElementById("firstNameInput").value = "";
+  document.getElementById("lastNameInput").value = "";
+  document.getElementById("plateInput").value = "";
+  document.getElementById("startDateInput").value = todayDateString();
+  document.getElementById("expirationDateInput").value = "";
+  document.getElementById("dailyLimitInput").value = "2";
+  document.getElementById("monthlyPriceInput").value = "0.00";
+
+  setStatus("Member added.", "success");
+  await loadMembershipPage();
+}
+
+function openEditMember(memberId){
+  const member = allMembers.find(item => String(item.id) === String(memberId));
+  if(!member) return;
+
+  clearEditStatus();
+
+  document.getElementById("editMemberId").value = member.id;
+  document.getElementById("editFirstName").value = member.first_name || "";
+  document.getElementById("editLastName").value = member.last_name || "";
+  document.getElementById("editPlate").value = member.license_plate || "";
+  document.getElementById("editCode").value = member.code || "";
+  document.getElementById("editStartDate").value = member.start_date || "";
+  document.getElementById("editExpirationDate").value = member.expiration_date || "";
+  document.getElementById("editDailyLimit").value = member.daily_wash_limit || 2;
+  document.getElementById("editMonthlyPrice").value = getMemberMonthlyPrice(member).toFixed(2);
+  document.getElementById("editActive").value = member.is_active === false ? "false" : "true";
+  document.getElementById("editMemberSubtitle").innerText = `${getMemberName(member)} • ${displayPlate(member.license_plate)}`;
+
+  document.getElementById("editMemberModal").classList.add("show");
+}
+
+function closeEditMember(){
+  document.getElementById("editMemberModal").classList.remove("show");
+}
+
+async function saveMemberEdits(){
+  clearEditStatus();
+
+  const orgId = getActiveOrganizationId();
+  const memberId = document.getElementById("editMemberId").value;
+  const code = document.getElementById("editCode").value.trim();
+  const firstName = document.getElementById("editFirstName").value.trim();
+  const lastName = document.getElementById("editLastName").value.trim();
+  const plate = normalizePlate(document.getElementById("editPlate").value);
+  const startDate = document.getElementById("editStartDate").value;
+  const expirationDate = document.getElementById("editExpirationDate").value;
+  const dailyLimit = Number(document.getElementById("editDailyLimit").value || 2);
+  const monthlyPrice = parseMonthlyPrice(document.getElementById("editMonthlyPrice").value);
+  const isActive = document.getElementById("editActive").value === "true";
+
+  if(!memberId || !orgId){ setEditStatus("Missing member/account information.", "error"); return; }
+  if(!code || !/^\d{4}$/.test(code)){ setEditStatus("Code must be 4 digits.", "warn"); return; }
+  if(code === "0000"){ setEditStatus("0000 is reserved for the programming master code.", "warn"); return; }
+  if(!firstName){ setEditStatus("Enter first name.", "warn"); return; }
+  if(!lastName){ setEditStatus("Enter last name.", "warn"); return; }
+  if(!plate){ setEditStatus("Enter license plate.", "warn"); return; }
+  if(!startDate){ setEditStatus("Enter start date.", "warn"); return; }
+  if(!expirationDate){ setEditStatus("Enter expiration date.", "warn"); return; }
+  if(!Number.isInteger(dailyLimit) || dailyLimit < 1){ setEditStatus("Daily limit must be 1 or higher.", "warn"); return; }
+
+  const duplicateCode = allMembers.find(member =>
+    String(member.id) !== String(memberId) &&
+    getMemberCode(member) === code &&
+    member.is_active !== false
+  );
+
+  if(duplicateCode){
+    setEditStatus("That membership code already exists.", "warn");
+    return;
+  }
+
+  const duplicatePlate = allMembers.find(member =>
+    String(member.id) !== String(memberId) &&
+    normalizePlate(member.license_plate) === plate
+  );
+
+  if(duplicatePlate){
+    setEditStatus("That license plate already exists on this account.", "warn");
+    return;
+  }
+
+  const { error } = await client
+    .from("memberships")
+    .update({
+      code,
+      first_name: firstName,
+      last_name: lastName,
+      license_plate: plate,
+      start_date: startDate,
+      expiration_date: expirationDate,
+      daily_wash_limit: dailyLimit,
+      monthly_price: monthlyPrice,
+      is_active: isActive,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", memberId)
+    .eq("organization_id", orgId);
+
+  if(error){
+    console.log("saveMemberEdits error:", error);
+    setEditStatus("Could not save changes.", "error");
+    return;
+  }
+
+  setEditStatus("Changes saved.", "success");
+  await loadMembershipPage();
+
+  setTimeout(() => {
+    closeEditMember();
+  }, 650);
+}
+
+
+function getCurrentMembershipSummary(){
+  const currentMembers = allMembers.filter(member => {
+    const status = getMembershipStatus(member);
+    return member.is_active !== false && status.key !== "expired";
+  });
+
+  const expiringThisMonth = allMembers.filter(member => getMembershipStatus(member).key === "expiring");
+  const expiredMembers = allMembers.filter(member => getMembershipStatus(member).key === "expired");
+
+  const monthlyRevenue = currentMembers.reduce(
+    (sum, member) => sum + getMemberMonthlyPrice(member),
+    0
+  );
+
+  const avgWashesPerMember =
+    currentMembers.length > 0
+      ? allMembershipActivity.length / currentMembers.length
+      : 0;
+
+  return {
+    currentMembers: currentMembers.length,
+    expiredMembers: expiredMembers.length,
+    expiringThisMonth: expiringThisMonth.length,
+    membershipWashesThisMonth: allMembershipActivity.length,
+    monthlyMembershipRevenue: monthlyRevenue,
+    averageWashesPerMember: avgWashesPerMember
+  };
+}
+
+function setMembershipReportStatus(message, tone = ""){
+  const box = document.getElementById("membershipReportStatus");
+  if(!box) return;
+
+  box.innerText = message || "";
+  box.className = "status show";
+
+  if(tone === "success") box.classList.add("success");
+  if(tone === "warn") box.classList.add("warn");
+  if(tone === "error" || tone === true) box.classList.add("error");
+}
+
+function getMembershipReportRows(){
+  return (allMembers || []).map(member => {
+    const status = getMembershipStatus(member);
+
+    const lastWashRecord = allMembershipActivity.find(
+      row => String(row.membership_id) === String(member.id)
+    );
+
+    const lastWash = lastWashRecord
+      ? formatDateTime(lastWashRecord.wash_time || lastWashRecord.created_at)
+      : "";
+
+    return {
+      name: getMemberName(member),
+      plate: displayPlate(member.license_plate),
+      code: getMemberCode(member),
+      dailyLimit: member.daily_wash_limit || 2,
+      monthlyPrice: getMemberMonthlyPrice(member),
+      washesThisMonth: getMemberMonthlyCount(member.id),
+      lastWash,
+      expiration: member.expiration_date || "",
+      status: status.label,
+      active: member.is_active === false ? "No" : "Yes"
+    };
+  }).sort((a,b) => {
+    const statusOrder = {
+      "Current": 1,
+      "Month Before Expiration": 2,
+      "Expires This Month": 3,
+      "Expired": 4,
+      "Inactive": 5,
+      "Invalid Date": 6
+    };
+
+    const aOrder = statusOrder[a.status] || 99;
+    const bOrder = statusOrder[b.status] || 99;
+
+    if(aOrder !== bOrder) return aOrder - bOrder;
+    return String(a.name || "").localeCompare(String(b.name || ""));
+  });
+}
+
+
+function buildMembershipStyledReportHtml(){
+  const esc = (value) => String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+  const summary = getCurrentMembershipSummary();
+  const rows = getMembershipReportRows();
+  const activeSite = allSites.find(site => site.id === getActiveSiteId());
+  const siteName = activeSite ? (activeSite.name || activeSite.site_name || "Unnamed Site") : "Current Site";
+  const generatedAt = new Date().toLocaleString();
+
+  function metricCell(label, value, sub, color){
+    return `
+      <td width="33.333%" valign="top" style="padding:7px;">
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#071727;border:1px solid #2563eb;border-radius:0;">
+          <tr>
+            <td align="center" style="padding:17px 10px 16px 10px;">
+              <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;color:#ffffff;text-transform:uppercase;font-weight:800;min-height:32px;">${esc(label)}</div>
+              <div style="font-family:Arial,Helvetica,sans-serif;font-size:34px;line-height:38px;font-weight:900;color:${color};padding-top:7px;">${esc(value)}</div>
+              <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;color:${color};font-weight:800;padding-top:8px;">${esc(sub)}</div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    `;
+  }
+
+  const detailRows = rows.length ? rows.map((row, index) => {
+    const bg = index % 2 === 0 ? "#081a2d" : "#06111f";
+    const statusColor = row.status === "Current" ? "#86efac" :
+      row.status === "Month Before Expiration" ? "#fde68a" :
+      row.status === "Expires This Month" ? "#fca5a5" : "#cbd5e1";
+
+    return `
+      <tr style="background:${bg};">
+        <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;font-weight:800;">${esc(row.name || "-")}</td>
+        <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">${esc(row.plate || "-")}</td>
+        <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;font-weight:800;">${esc(row.code || "-")}</td>
+        <td align="center" style="padding:11px 13px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">${esc(row.dailyLimit)}</td>
+        <td align="right" style="padding:11px 13px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">${esc(formatMoney(row.monthlyPrice))}</td>
+        <td align="center" style="padding:11px 13px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">${esc(row.washesThisMonth)}</td>
+        <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">${esc(row.lastWash || "-")}</td>
+        <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">${esc(row.expiration || "-")}</td>
+        <td style="padding:11px 13px;border:1px solid #1d4ed8;color:${statusColor};font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;font-weight:900;">${esc(row.status || "-")}</td>
+      </tr>
+    `;
+  }).join("") : `
+    <tr>
+      <td colspan="9" align="center" style="padding:28px;color:#94a3b8;background:#06111f;border:1px solid #1d4ed8;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">
+        No membership data found.
+      </td>
+    </tr>
+  `;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WashTrac Membership Report</title>
+</head>
+<body style="margin:0;padding:0;background:#020617;color:#ffffff;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#020617;">
+    <tr>
+      <td align="center" style="padding:26px 12px;">
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;max-width:980px;background:#020617;border:1px solid #1e293b;">
+          <tr>
+            <td align="center" style="padding:28px 24px 12px 24px;background:#020817;border-bottom:1px solid #1e293b;">
+              <img src="https://www.thewashtrac.com/washtrac-logo.png" alt="WashTrac" width="220" style="display:block;border:0;outline:none;text-decoration:none;margin:0 auto 12px auto;max-width:220px;height:auto;">
+              <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;letter-spacing:2px;color:#60a5fa;text-transform:uppercase;font-weight:900;">Membership Report</div>
+              <div style="font-family:Arial,Helvetica,sans-serif;font-size:34px;line-height:40px;color:#ffffff;font-weight:900;padding-top:8px;">WashTrac Membership Report</div>
+              <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:22px;color:#94a3b8;padding-top:10px;">${esc(siteName)} &bull; Generated ${esc(generatedAt)}</div>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:18px 17px 6px 17px;background:#020617;">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;">
+                <tr>
+                  ${metricCell("Current Members", summary.currentMembers, "Active / not expired", "#38bdf8")}
+                  ${metricCell("Expired Members", summary.expiredMembers, "Expired or inactive", "#fca5a5")}
+                  ${metricCell("Expiring This Month", summary.expiringThisMonth, "Needs attention", "#fcd34d")}
+                </tr>
+                <tr>
+                  ${metricCell("Membership Washes", summary.membershipWashesThisMonth, "This month", "#86efac")}
+                  ${metricCell("Monthly Revenue", formatMoney(summary.monthlyMembershipRevenue), "Current members", "#38bdf8")}
+                  ${metricCell("Average Washes", summary.averageWashesPerMember.toFixed(1), "Per current member", "#c4b5fd")}
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:18px 24px 10px 24px;background:#020617;">
+              <div style="font-family:Arial,Helvetica,sans-serif;font-size:22px;line-height:28px;color:#ffffff;font-weight:900;margin-bottom:10px;">Member Details</div>
+              <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:20px;color:#94a3b8;margin-bottom:14px;">Includes member name, plate, code, daily limit, monthly price, current month wash count, last wash, expiration, and status.</div>
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;">
+                <thead>
+                  <tr>
+                    <th align="left" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">Name</th>
+                    <th align="left" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">Plate</th>
+                    <th align="left" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">Code</th>
+                    <th align="center" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">Daily Limit</th>
+                    <th align="right" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">Monthly Price</th>
+                    <th align="center" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">This Month</th>
+                    <th align="left" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">Last Wash</th>
+                    <th align="left" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">Expiration</th>
+                    <th align="left" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">Status</th>
+                  </tr>
+                </thead>
+                <tbody>${detailRows}</tbody>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding:24px;background:#020817;border-top:1px solid #1e293b;color:#64748b;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:18px;letter-spacing:.8px;text-transform:uppercase;">
+              WASHTRAC &copy; 2026<br>Control. Track. Manage.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+function downloadMembershipStyledReport(){
+  const rows = getMembershipReportRows();
+
+  if(!rows.length){
+    setMembershipReportStatus("No membership data to download.", "warn");
+    return;
+  }
+
+  const html = buildMembershipStyledReportHtml();
+  const blob = new Blob([html], { type:"text/html;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const dateStamp = new Date().toISOString().slice(0,10);
+
+  link.href = url;
+  link.download = `washtrac-membership-report-${dateStamp}.html`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+  setMembershipReportStatus(`Downloaded styled membership report with ${rows.length} member${rows.length === 1 ? "" : "s"}.`, "success");
+}
+
+function buildMembershipReportCsv(){
+  const summary = getCurrentMembershipSummary();
+  const rows = getMembershipReportRows();
+
+  const activeSite = allSites.find(site => site.id === getActiveSiteId());
+  const siteName = activeSite ? (activeSite.name || activeSite.site_name || "Unnamed Site") : "Current Site";
+
+  const headers = [
+    "Name",
+    "Plate",
+    "Code",
+    "Daily Limit",
+    "Monthly Price",
+    "Washes This Month",
+    "Last Wash",
+    "Expiration",
+    "Status"
+  ];
+
+  const csvRows = rows.map(row => [
+    row.name,
+    row.plate,
+    row.code,
+    row.dailyLimit,
+    formatMoney(row.monthlyPrice),
+    row.washesThisMonth,
+    row.lastWash,
+    row.expiration,
+    row.status
+  ]);
+
+  const summaryRows = [
+    ["WashTrac Membership Report", siteName],
+    ["Generated", new Date().toLocaleString()],
+    ["Current Members", summary.currentMembers],
+    ["Expired Members", summary.expiredMembers],
+    ["Expiring This Month", summary.expiringThisMonth],
+    ["Membership Washes This Month", summary.membershipWashesThisMonth],
+    ["Monthly Membership Revenue", formatMoney(summary.monthlyMembershipRevenue)],
+    ["Average Washes Per Member", summary.averageWashesPerMember.toFixed(1)],
+    [],
+    headers,
+    ...csvRows
+  ];
+
+  return summaryRows
+    .map(line => line.map(csvEscape).join(","))
+    .join("\n");
+}
+
+function downloadMembershipReportCsv(){
+  const rows = getMembershipReportRows();
+
+  if(!rows.length){
+    setMembershipReportStatus("No membership data to download.", "warn");
+    return;
+  }
+
+  const blob = new Blob([buildMembershipReportCsv()], { type:"text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const dateStamp = new Date().toISOString().slice(0,10);
+
+  link.href = url;
+  link.download = `washtrac-membership-report-${dateStamp}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+  setMembershipReportStatus(`Downloaded membership report with ${rows.length} member${rows.length === 1 ? "" : "s"}.`, "success");
+}
+
+
+function setMembershipScheduleStatus(message, tone = ""){
+  const box = document.getElementById("membershipScheduleStatus");
+  if(!box) return;
+
+  box.innerText = message || "";
+  box.className = "status show";
+
+  if(tone === "success") box.classList.add("success");
+  if(tone === "warn") box.classList.add("warn");
+  if(tone === "error" || tone === true) box.classList.add("error");
+}
+
+function getMembershipScheduleStorageKey(){
+  const orgId = getActiveOrganizationId() || "no-org";
+  const siteId = getActiveSiteId() || "no-site";
+  return `washtracMembershipReportSchedule:${orgId}:${siteId}`;
+}
+
+function isValidMembershipEmail(email){
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim());
+}
+
+function formatScheduleFrequency(value){
+  if(value === "daily") return "Daily";
+  if(value === "weekly") return "Weekly";
+  if(value === "monthly") return "Monthly";
+  return "Off";
+}
+
+function formatScheduleRange(value){
+  if(value === "this_month") return "This Month";
+  if(value === "last_month") return "Last Month";
+  if(value === "all") return "All Membership Data";
+  return "This Month";
+}
+
+function renderMembershipScheduleSummary(schedule){
+  const box = document.getElementById("membershipScheduleSummary");
+  if(!box) return;
+
+  if(!schedule || schedule.is_active === false || schedule.frequency === "off"){
+    box.innerHTML = `<strong>Current Schedule:</strong> No membership report schedule saved.`;
+    return;
+  }
+
+  box.innerHTML = `
+    <strong>Current Schedule:</strong>
+    ${escapeText(formatScheduleFrequency(schedule.frequency))} at ${escapeText(schedule.send_time || "08:00")}
+    to ${escapeText(schedule.email || "")}
+    using ${escapeText(formatScheduleRange(schedule.report_range || "this_month"))}.
+  `;
+}
+
+async function loadMembershipReportSchedule(){
+  const orgId = getActiveOrganizationId();
+  const siteId = getActiveSiteId();
+
+  if(!orgId || !siteId){
+    renderMembershipScheduleSummary(null);
+    return;
+  }
+
+  let loadedSchedule = null;
+
+  try{
+    const { data, error } = await client
+      .from("membership_report_schedules")
+      .select("*")
+      .eq("organization_id", orgId)
+      .eq("site_id", siteId)
+      .maybeSingle();
+
+    if(!error && data){
+      loadedSchedule = data;
+    }else if(error){
+      console.log("Membership schedule load warning:", error);
+    }
+  }catch(err){
+    console.log("Membership schedule load fallback:", err);
+  }
+
+  if(!loadedSchedule){
+    try{
+      const local = localStorage.getItem(getMembershipScheduleStorageKey());
+      if(local) loadedSchedule = JSON.parse(local);
+    }catch(err){
+      console.log("Membership schedule local load error:", err);
+    }
+  }
+
+  if(loadedSchedule){
+    const emailInput = document.getElementById("membershipScheduleEmail");
+    const freqInput = document.getElementById("membershipScheduleFrequency");
+    const timeInput = document.getElementById("membershipScheduleTime");
+    const rangeInput = document.getElementById("membershipScheduleRange");
+
+    if(emailInput) emailInput.value = loadedSchedule.email || "";
+    if(freqInput) freqInput.value = loadedSchedule.frequency || "off";
+    if(timeInput) timeInput.value = loadedSchedule.send_time || "08:00";
+    if(rangeInput) rangeInput.value = loadedSchedule.report_range || "this_month";
+  }
+
+  renderMembershipScheduleSummary(loadedSchedule);
+}
+
+async function saveMembershipReportSchedule(){
+  const orgId = getActiveOrganizationId();
+  const siteId = getActiveSiteId();
+  const email = document.getElementById("membershipScheduleEmail").value.trim();
+  const frequency = document.getElementById("membershipScheduleFrequency").value;
+  const sendTime = document.getElementById("membershipScheduleTime").value || "08:00";
+  const reportRange = document.getElementById("membershipScheduleRange").value || "this_month";
+
+  if(!orgId){
+    setMembershipScheduleStatus("No organization selected.", "error");
+    return;
+  }
+
+  if(!siteId){
+    setMembershipScheduleStatus("No site selected.", "error");
+    return;
+  }
+
+  if(frequency === "off"){
+    await disableMembershipReportSchedule();
+    return;
+  }
+
+  if(!isValidMembershipEmail(email)){
+    setMembershipScheduleStatus("Enter a valid email address.", "warn");
+    return;
+  }
+
+  const schedule = {
+    organization_id: orgId,
+    site_id: siteId,
+    email,
+    frequency,
+    send_time: sendTime,
+    report_range: reportRange,
+    is_active: true,
+    report_type: "membership",
+    updated_at: new Date().toISOString()
+  };
+
+  let savedToSupabase = false;
+
+  try{
+    const { error } = await client
+      .from("membership_report_schedules")
+      .upsert([schedule], { onConflict:"organization_id,site_id" });
+
+    if(error){
+      console.log("Membership schedule save warning:", error);
+    }else{
+      savedToSupabase = true;
+    }
+  }catch(err){
+    console.log("Membership schedule save fallback:", err);
+  }
+
+  localStorage.setItem(getMembershipScheduleStorageKey(), JSON.stringify(schedule));
+  renderMembershipScheduleSummary(schedule);
+
+  setMembershipScheduleStatus(
+    savedToSupabase
+      ? "Membership report schedule saved."
+      : "Membership report schedule saved locally. Create/check the membership_report_schedules table before relying on automatic emails.",
+    savedToSupabase ? "success" : "warn"
+  );
+}
+
+async function disableMembershipReportSchedule(){
+  const orgId = getActiveOrganizationId();
+  const siteId = getActiveSiteId();
+
+  const disabledSchedule = {
+    organization_id: orgId,
+    site_id: siteId,
+    email: document.getElementById("membershipScheduleEmail")?.value.trim() || "",
+    frequency: "off",
+    send_time: document.getElementById("membershipScheduleTime")?.value || "08:00",
+    report_range: document.getElementById("membershipScheduleRange")?.value || "this_month",
+    is_active: false,
+    report_type: "membership",
+    updated_at: new Date().toISOString()
+  };
+
+  if(orgId && siteId){
+    try{
+      const { error } = await client
+        .from("membership_report_schedules")
+        .upsert([disabledSchedule], { onConflict:"organization_id,site_id" });
+
+      if(error){
+        console.log("Membership schedule disable warning:", error);
+      }
+    }catch(err){
+      console.log("Membership schedule disable fallback:", err);
+    }
+  }
+
+  localStorage.setItem(getMembershipScheduleStorageKey(), JSON.stringify(disabledSchedule));
+
+  const freqInput = document.getElementById("membershipScheduleFrequency");
+  if(freqInput) freqInput.value = "off";
+
+  renderMembershipScheduleSummary(null);
+  setMembershipScheduleStatus("Membership report schedule turned off.", "success");
+}
+
+
+function csvEscape(value){
+  const text = String(value ?? "");
+  if(/[",\n\r]/.test(text)){
+    return `"${text.replaceAll('"', '""')}"`;
+  }
+  return text;
+}
+
+function exportMembersCsv(){
+  const rows = lastRenderedMembers || [];
+
+  if(!rows.length){
+    setStatus("No members to export.", "warn");
+    return;
+  }
+
+  const headers = [
+  "Code",
+  "First Name",
+  "Last Name",
+  "License Plate",
+  "Start Date",
+  "Expiration Date",
+  "Daily Wash Limit",
+  "Monthly Price",
+  "This Month",
+  "Last Wash",
+  "Status",
+  "Active"
+];
+const csvRows = rows.map(member => {
+  const status = getMembershipStatus(member);
+
+  const lastWashRecord = allMembershipActivity.find(
+    row => String(row.membership_id) === String(member.id)
+  );
+
+  const lastWash = lastWashRecord
+    ? formatDateTime(lastWashRecord.wash_time || lastWashRecord.created_at)
+    : "";
+
+  return [
+    member.code,
+    member.first_name,
+    member.last_name,
+    member.license_plate,
+    member.start_date,
+    member.expiration_date,
+    member.daily_wash_limit || 2,
+    formatMoney(getMemberMonthlyPrice(member)),
+    getMemberMonthlyCount(member.id),
+    lastWash,
+    status.label,
+    member.is_active === false ? "No" : "Yes"
+  ];
+});
+
+  const csv = [headers, ...csvRows]
+    .map(line => line.map(csvEscape).join(","))
+    .join("\n");
+
+  const blob = new Blob([csv], { type:"text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const dateStamp = new Date().toISOString().slice(0,10);
+
+  link.href = url;
+  link.download = `washtrac-memberships-${dateStamp}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+  setStatus(`Exported ${rows.length} member${rows.length === 1 ? "" : "s"}.`, "success");
+}
+
+document.addEventListener("keydown", function(event){
+  if(event.key === "Escape"){
+    closeMenus();
+    closeEditMember();
+  }
+});
+
+document.getElementById("editMemberModal").addEventListener("click", function(event){
+  if(event.target.id === "editMemberModal"){
+    closeEditMember();
+  }
+});
+
+document.addEventListener("click", function(event){
+  const desktopWrap = document.querySelector(".desktop-menu-wrap");
+  const mobileMenu = document.getElementById("mobileMenu");
+  const mobileTopbar = document.querySelector(".mobile-topbar");
+
+  if(
+    desktopWrap &&
+    mobileMenu &&
+    mobileTopbar &&
+    !desktopWrap.contains(event.target) &&
+    !mobileMenu.contains(event.target) &&
+    !mobileTopbar.contains(event.target)
+  ){
+    closeMenus();
+  }
+});
+
+["codeInput","firstNameInput","lastNameInput","plateInput","startDateInput","expirationDateInput","dailyLimitInput","monthlyPriceInput"].forEach(id => {
+  document.addEventListener("keydown", function(event){
+    if(event.target && event.target.id === id && event.key === "Enter"){
+      addMember();
+    }
+  });
+});
+
+window.onload = async function(){
+  document.getElementById("startDateInput").value = todayDateString();
+  document.getElementById("dailyLimitInput").value = "2";
+  document.getElementById("monthlyPriceInput").value = "0.00";
+
+  const siteId = await loadSites();
+
+  if(!siteId){
+    resetEmpty();
+    return;
+  }
+
+  await loadMembershipPage();
+  await loadMembershipReportSchedule();
+};
+</script>
+</body>
+</html>
