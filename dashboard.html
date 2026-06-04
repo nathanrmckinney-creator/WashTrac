@@ -3288,12 +3288,13 @@
     function resetDashboardEmpty(){
       document.getElementById("activeCodes").innerText = "0";
       document.getElementById("todayWashes").innerText = "0";
-      document.getElementById("topDepartment").innerText = "-";
-      document.getElementById("topDepartment").innerText = "-";
+      document.getElementById("currentMembers").innerText = "0";
+      document.getElementById("memberWashesMonth").innerText = "0";
       document.getElementById("totalActivityRecords").innerText = "0";
       document.getElementById("totalDepartments").innerText = "0";
       document.getElementById("totalBays").innerText = "0";
       document.getElementById("lastUpdated").innerText = new Date().toLocaleTimeString();
+
       renderRecentActivity([]);
       renderTopCodes([]);
       renderDepartmentChart([]);
@@ -3304,6 +3305,71 @@
       renderPairedDevices([]);
       renderWifiSupport(null);
       renderCostAllocation([], []);
+    }
+
+    function getDashboardMonthStart(){
+      const now = new Date();
+      return new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    }
+
+    function getDashboardMonthEnd(){
+      const now = new Date();
+      return new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+    }
+
+    function isCurrentDashboardMember(member){
+      if(!member || member.is_active === false) return false;
+
+      if(!member.expiration_date){
+        return true;
+      }
+
+      const today = new Date();
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const expiration = new Date(member.expiration_date + "T23:59:59");
+
+      if(Number.isNaN(expiration.getTime())) return false;
+
+      return expiration >= todayStart;
+    }
+
+    async function fetchDashboardMembershipStats(){
+      const orgId = getActiveOrganizationId();
+
+      if(!orgId){
+        return {
+          currentMembers: 0,
+          memberWashesMonth: 0
+        };
+      }
+
+      const [{ data: members, error: membersError }, { data: activity, error: activityError }] = await Promise.all([
+        client
+          .from("memberships")
+          .select("id,is_active,expiration_date")
+          .eq("organization_id", orgId),
+
+        client
+          .from("membership_activity")
+          .select("id")
+          .eq("organization_id", orgId)
+          .gte("wash_time", getDashboardMonthStart())
+          .lte("wash_time", getDashboardMonthEnd())
+          .limit(5000)
+      ]);
+
+      if(membersError){
+        console.log("Dashboard memberships load error:", membersError);
+      }
+
+      if(activityError){
+        console.log("Dashboard membership activity load error:", activityError);
+      }
+
+      return {
+        currentMembers: (members || []).filter(isCurrentDashboardMember).length,
+        memberWashesMonth: (activity || []).length
+      };
     }
 
     async function loadDashboard(){
@@ -3327,7 +3393,8 @@
           control,
           bays,
           pairedDevices,
-          activeSiteSettings
+          activeSiteSettings,
+          membershipStats
         ] = await Promise.all([
           fetchCodes(activeSiteId),
           fetchRecentActivity(activeSiteId),
@@ -3335,7 +3402,8 @@
           fetchSystemControl(activeSiteId),
           fetchBayStatus(activeSiteId),
           fetchPairedDevices(activeSiteId),
-          fetchActiveSiteSettings(activeSiteId)
+          fetchActiveSiteSettings(activeSiteId),
+          fetchDashboardMembershipStats()
         ]);
 
         if(loadToken !== dashboardLoadToken) return;
@@ -3349,8 +3417,8 @@
 
         document.getElementById("activeCodes").innerText = activeCodes.length;
         document.getElementById("todayWashes").innerText = allActivity.length;
-        document.getElementById("topCode").innerText = codeUsage.length ? codeUsage[0].code : "-";
-        document.getElementById("topDepartment").innerText = departments.length ? departments[0].department : "-";
+        document.getElementById("currentMembers").innerText = membershipStats.currentMembers || 0;
+        document.getElementById("memberWashesMonth").innerText = membershipStats.memberWashesMonth || 0;
         document.getElementById("totalActivityRecords").innerText = allActivity.length;
         document.getElementById("totalDepartments").innerText = departments.length;
         document.getElementById("totalBays").innerText = usedBays.length || bays.length;
