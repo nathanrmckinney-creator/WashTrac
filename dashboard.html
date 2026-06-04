@@ -3318,15 +3318,28 @@
     }
 
     function isCurrentDashboardMember(member){
-      if(!member || member.is_active === false) return false;
+      if(!member) return false;
 
-      if(!member.expiration_date){
+      const activeValue = member.is_active;
+      if(activeValue === false || activeValue === "false" || activeValue === 0) return false;
+
+      const expiresValue =
+        member.expiration_date ||
+        member.expires_at ||
+        member.expiration ||
+        "";
+
+      if(!expiresValue){
         return true;
       }
 
       const today = new Date();
       const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      const expiration = new Date(member.expiration_date + "T23:59:59");
+
+      const expiresText = String(expiresValue);
+      const expiration = expiresText.includes("T")
+        ? new Date(expiresText)
+        : new Date(expiresText + "T23:59:59");
 
       if(Number.isNaN(expiration.getTime())) return false;
 
@@ -3334,36 +3347,97 @@
     }
 
     async function fetchDashboardMembershipStats(){
+      const siteId = getActiveSiteId();
       const orgId = getActiveOrganizationId();
 
-      if(!orgId){
+      if(!siteId && !orgId){
         return {
           currentMembers: 0,
           memberWashesMonth: 0
         };
       }
 
-      const [{ data: members, error: membersError }, { data: activity, error: activityError }] = await Promise.all([
-        client
+      async function loadMembersBySite(){
+        return await client
           .from("memberships")
-          .select("id,is_active,expiration_date")
-          .eq("organization_id", orgId),
+          .select("id,is_active,expiration_date,site_id,organization_id")
+          .eq("site_id", siteId)
+          .limit(5000);
+      }
 
-        client
+      async function loadMembersByOrganization(){
+        return await client
+          .from("memberships")
+          .select("id,is_active,expiration_date,site_id,organization_id")
+          .eq("organization_id", orgId)
+          .limit(5000);
+      }
+
+      async function loadActivityBySite(){
+        return await client
           .from("membership_activity")
-          .select("id")
+          .select("id,site_id,organization_id,wash_time")
+          .eq("site_id", siteId)
+          .gte("wash_time", getDashboardMonthStart())
+          .lte("wash_time", getDashboardMonthEnd())
+          .limit(5000);
+      }
+
+      async function loadActivityByOrganization(){
+        return await client
+          .from("membership_activity")
+          .select("id,site_id,organization_id,wash_time")
           .eq("organization_id", orgId)
           .gte("wash_time", getDashboardMonthStart())
           .lte("wash_time", getDashboardMonthEnd())
-          .limit(5000)
-      ]);
-
-      if(membersError){
-        console.log("Dashboard memberships load error:", membersError);
+          .limit(5000);
       }
 
-      if(activityError){
-        console.log("Dashboard membership activity load error:", activityError);
+      let members = [];
+      let activity = [];
+      let membersLoaded = false;
+      let activityLoaded = false;
+
+      if(siteId){
+        const siteMembersResult = await loadMembersBySite();
+
+        if(siteMembersResult.error){
+          console.log("Dashboard memberships site load error:", siteMembersResult.error);
+        }else{
+          members = siteMembersResult.data || [];
+          membersLoaded = true;
+        }
+
+        const siteActivityResult = await loadActivityBySite();
+
+        if(siteActivityResult.error){
+          console.log("Dashboard membership activity site load error:", siteActivityResult.error);
+        }else{
+          activity = siteActivityResult.data || [];
+          activityLoaded = true;
+        }
+      }
+
+      if(orgId && (!membersLoaded || !activityLoaded)){
+        if(!membersLoaded){
+          const orgMembersResult = await loadMembersByOrganization();
+
+          if(orgMembersResult.error){
+            console.log("Dashboard memberships organization load error:", orgMembersResult.error);
+          }else{
+            members = orgMembersResult.data || [];
+          }
+        }
+
+        if(!activityLoaded){
+          const orgActivityResult = await loadActivityByOrganization();
+
+          if(orgActivityResult.error){
+            console.log("Dashboard membership activity organization load error:", orgActivityResult.error);
+          }else{
+            activity = orgActivityResult.data || [];
+          }
+        }
       }
 
       return {
