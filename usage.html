@@ -327,7 +327,7 @@ button.secondary{background:#334155;}
 
 .membership-report-summary{
   display:grid;
-  grid-template-columns:repeat(4,1fr);
+  grid-template-columns:repeat(3,1fr);
   gap:16px;
   margin:0 0 18px 0;
 }
@@ -590,8 +590,10 @@ document.addEventListener("DOMContentLoaded", function(){
       <div class="membership-report-summary">
         <div class="membership-report-box"><strong id="membershipCurrentMembers">0</strong><span>Current Members</span></div>
         <div class="membership-report-box"><strong id="membershipExpiredMembers">0</strong><span>Expired Members</span></div>
+        <div class="membership-report-box"><strong id="membershipExpiringThisMonth">0</strong><span>Expiring This Month</span></div>
         <div class="membership-report-box"><strong id="membershipWashesThisMonth">0</strong><span>Membership Washes This Month</span></div>
-        <div class="membership-report-box"><strong id="membershipAverageWashes">0</strong><span>Avg Washes Per Member</span></div>
+        <div class="membership-report-box"><strong id="membershipMonthlyRevenue">$0.00</strong><span>Monthly Membership Revenue</span></div>
+        <div class="membership-report-box"><strong id="membershipAverageWashes">0</strong><span>Average Washes Per Member</span></div>
       </div>
 
       <div class="actions">
@@ -603,18 +605,19 @@ document.addEventListener("DOMContentLoaded", function(){
         <table class="membership-report-table">
           <thead>
             <tr>
-              <th>Member Name</th>
-              <th>License Plate</th>
+              <th>Name</th>
+              <th>Plate</th>
               <th>Code</th>
-              <th>Expiration Date</th>
               <th>Daily Limit</th>
+              <th>Monthly Price</th>
               <th>Washes This Month</th>
               <th>Last Wash</th>
+              <th>Expiration</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody id="membershipReportBody">
-            <tr><td colspan="8" style="color:#94a3b8;">Loading membership report...</td></tr>
+            <tr><td colspan="9" style="color:#94a3b8;">Loading membership report...</td></tr>
           </tbody>
         </table>
       </div>
@@ -831,7 +834,8 @@ let reportsLoadInProgress = false;
 let reportsAssignedSites = [];
 let cachedMembershipRows = [];
 let cachedMembershipActivities = [];
-let cachedMembershipSummary = { current:0, expired:0, washes:0, average:0 };
+let cachedMembershipAllActivities = [];
+let cachedMembershipSummary = { current:0, expired:0, expiring:0, washes:0, revenue:0, average:0 };
 
 const columnLabels = {
   code: "Code",
@@ -2776,6 +2780,7 @@ function getMemberStatus(member){
 
   const today = new Date();
   today.setHours(0,0,0,0);
+
   const expiration = new Date(member.expiration_date + "T23:59:59");
 
   if(Number.isNaN(expiration.getTime()) || expiration < today){
@@ -2783,6 +2788,39 @@ function getMemberStatus(member){
   }
 
   return { key:"current", label:"Current", className:"member-status-current" };
+}
+
+function isMemberExpiringThisMonth(member){
+  const status = getMemberStatus(member);
+  if(status.key !== "current") return false;
+  if(!member.expiration_date) return false;
+
+  const expiration = new Date(member.expiration_date + "T12:00:00");
+  if(Number.isNaN(expiration.getTime())) return false;
+
+  const now = new Date();
+  return expiration.getFullYear() === now.getFullYear() &&
+         expiration.getMonth() === now.getMonth();
+}
+
+function getMemberMonthlyPrice(member){
+  const candidates = [
+    member.monthly_price,
+    member.monthly_membership_price,
+    member.price,
+    member.membership_price,
+    member.monthly_rate,
+    member.rate
+  ];
+
+  for(const value of candidates){
+    const number = Number(String(value ?? "").replace(/[^0-9.]/g, ""));
+    if(Number.isFinite(number) && number > 0){
+      return Math.round(number * 100) / 100;
+    }
+  }
+
+  return 0;
 }
 
 function getMonthStartIso(){
@@ -2812,7 +2850,7 @@ function getMembershipOrganizationIds(){
 async function loadMembershipReport(){
   const body = document.getElementById("membershipReportBody");
   if(body){
-    body.innerHTML = `<tr><td colspan="8" style="color:#94a3b8;">Loading membership report...</td></tr>`;
+    body.innerHTML = `<tr><td colspan="9" style="color:#94a3b8;">Loading membership report...</td></tr>`;
   }
 
   const organizationIds = getMembershipOrganizationIds();
@@ -2820,6 +2858,7 @@ async function loadMembershipReport(){
   if(!organizationIds.length){
     cachedMembershipRows = [];
     cachedMembershipActivities = [];
+    cachedMembershipAllActivities = [];
     renderMembershipReport();
     return;
   }
@@ -2840,11 +2879,12 @@ async function loadMembershipReport(){
       console.log("Membership report members load error:", memberError);
       cachedMembershipRows = [];
       cachedMembershipActivities = [];
+      cachedMembershipAllActivities = [];
       renderMembershipReport("Could not load memberships.");
       return;
     }
 
-    let activityQuery = client
+    let monthActivityQuery = client
       .from("membership_activity")
       .select("*")
       .gte("wash_time", getMonthStartIso())
@@ -2852,61 +2892,90 @@ async function loadMembershipReport(){
       .order("wash_time", { ascending:false })
       .limit(5000);
 
-    activityQuery = organizationIds.length === 1
-      ? activityQuery.eq("organization_id", organizationIds[0])
-      : activityQuery.in("organization_id", organizationIds);
+    monthActivityQuery = organizationIds.length === 1
+      ? monthActivityQuery.eq("organization_id", organizationIds[0])
+      : monthActivityQuery.in("organization_id", organizationIds);
 
-    const { data: activity, error: activityError } = await activityQuery;
+    const { data: monthActivity, error: monthActivityError } = await monthActivityQuery;
 
-    if(activityError){
-      console.log("Membership report activity load error:", activityError);
-      cachedMembershipRows = members || [];
-      cachedMembershipActivities = [];
-      renderMembershipReport();
-      return;
+    if(monthActivityError){
+      console.log("Membership report monthly activity load error:", monthActivityError);
+    }
+
+    let allActivityQuery = client
+      .from("membership_activity")
+      .select("*")
+      .order("wash_time", { ascending:false })
+      .limit(5000);
+
+    allActivityQuery = organizationIds.length === 1
+      ? allActivityQuery.eq("organization_id", organizationIds[0])
+      : allActivityQuery.in("organization_id", organizationIds);
+
+    const { data: allActivity, error: allActivityError } = await allActivityQuery;
+
+    if(allActivityError){
+      console.log("Membership report last wash activity load error:", allActivityError);
     }
 
     cachedMembershipRows = members || [];
-    cachedMembershipActivities = activity || [];
+    cachedMembershipActivities = monthActivityError ? [] : (monthActivity || []);
+    cachedMembershipAllActivities = allActivityError ? cachedMembershipActivities : (allActivity || []);
     renderMembershipReport();
   }catch(err){
     console.log("loadMembershipReport unexpected error:", err);
     cachedMembershipRows = [];
     cachedMembershipActivities = [];
+    cachedMembershipAllActivities = [];
     renderMembershipReport("Unexpected membership report error.");
   }
 }
 
 function getMembershipReportRows(){
-  const activityByMember = new Map();
+  const monthActivityByMember = new Map();
+  const allActivityByMember = new Map();
 
   (cachedMembershipActivities || []).forEach(row => {
     const key = String(row.membership_id || "");
     if(!key) return;
-    if(!activityByMember.has(key)) activityByMember.set(key, []);
-    activityByMember.get(key).push(row);
+    if(!monthActivityByMember.has(key)) monthActivityByMember.set(key, []);
+    monthActivityByMember.get(key).push(row);
+  });
+
+  (cachedMembershipAllActivities || []).forEach(row => {
+    const key = String(row.membership_id || "");
+    if(!key) return;
+    if(!allActivityByMember.has(key)) allActivityByMember.set(key, []);
+    allActivityByMember.get(key).push(row);
   });
 
   return (cachedMembershipRows || []).map(member => {
-    const activity = activityByMember.get(String(member.id || "")) || [];
-    const lastWash = activity
+    const monthActivity = monthActivityByMember.get(String(member.id || "")) || [];
+    const allActivity = allActivityByMember.get(String(member.id || "")) || monthActivity;
+
+    const lastWash = allActivity
       .map(row => row.wash_time || row.created_at || "")
       .filter(Boolean)
       .sort((a,b) => new Date(b) - new Date(a))[0] || "";
+
     const status = getMemberStatus(member);
+    const monthlyPrice = getMemberMonthlyPrice(member);
 
     return {
       member,
       member_name: getMemberFullName(member),
-      license_plate: String(member.license_plate || "").toUpperCase(),
-      code: member.code || "",
-      expiration_date: member.expiration_date || "",
-      daily_wash_limit: member.daily_wash_limit || 2,
-      washes_this_month: activity.length,
+      license_plate: String(member.license_plate || member.plate || "").toUpperCase(),
+      code: member.code || member.access_code || "",
+      daily_wash_limit: member.daily_wash_limit || member.daily_limit || 2,
+      monthly_price_value: monthlyPrice,
+      monthly_price: formatMoney(monthlyPrice),
+      washes_this_month: monthActivity.length,
       last_wash: lastWash,
+      expiration_date: member.expiration_date || "",
       status_label: status.label,
       status_key: status.key,
-      status_class: status.className
+      status_class: status.className,
+      expiring_this_month: isMemberExpiringThisMonth(member)
     };
   }).sort((a,b) => {
     if(a.status_key === "current" && b.status_key !== "current") return -1;
@@ -2919,31 +2988,39 @@ function renderMembershipReport(errorMessage = ""){
   const rows = getMembershipReportRows();
   const current = rows.filter(row => row.status_key === "current").length;
   const expired = rows.filter(row => row.status_key === "expired" || row.status_key === "inactive").length;
+  const expiring = rows.filter(row => row.expiring_this_month).length;
   const washes = (cachedMembershipActivities || []).length;
+  const revenue = rows
+    .filter(row => row.status_key === "current")
+    .reduce((sum, row) => sum + Number(row.monthly_price_value || 0), 0);
   const average = current > 0 ? (washes / current).toFixed(1) : "0";
 
-  cachedMembershipSummary = { current, expired, washes, average };
+  cachedMembershipSummary = { current, expired, expiring, washes, revenue, average };
 
   const currentEl = document.getElementById("membershipCurrentMembers");
   const expiredEl = document.getElementById("membershipExpiredMembers");
+  const expiringEl = document.getElementById("membershipExpiringThisMonth");
   const washesEl = document.getElementById("membershipWashesThisMonth");
+  const revenueEl = document.getElementById("membershipMonthlyRevenue");
   const averageEl = document.getElementById("membershipAverageWashes");
 
   if(currentEl) currentEl.innerText = current;
   if(expiredEl) expiredEl.innerText = expired;
+  if(expiringEl) expiringEl.innerText = expiring;
   if(washesEl) washesEl.innerText = washes;
+  if(revenueEl) revenueEl.innerText = formatMoney(revenue);
   if(averageEl) averageEl.innerText = average;
 
   const body = document.getElementById("membershipReportBody");
   if(!body) return;
 
   if(errorMessage){
-    body.innerHTML = `<tr><td colspan="8" style="color:#fecaca;">${escapeReportText(errorMessage)}</td></tr>`;
+    body.innerHTML = `<tr><td colspan="9" style="color:#fecaca;">${escapeReportText(errorMessage)}</td></tr>`;
     return;
   }
 
   if(!rows.length){
-    body.innerHTML = `<tr><td colspan="8" style="color:#94a3b8;">No memberships found for this account.</td></tr>`;
+    body.innerHTML = `<tr><td colspan="9" style="color:#94a3b8;">No memberships found for this account.</td></tr>`;
     return;
   }
 
@@ -2952,10 +3029,11 @@ function renderMembershipReport(errorMessage = ""){
       <td>${escapeReportText(row.member_name)}</td>
       <td>${escapeReportText(row.license_plate || "-")}</td>
       <td><strong>${escapeReportText(row.code || "-")}</strong></td>
-      <td>${escapeReportText(formatReportDate(row.expiration_date))}</td>
       <td>${escapeReportText(row.daily_wash_limit)}</td>
+      <td>${escapeReportText(row.monthly_price)}</td>
       <td>${escapeReportText(row.washes_this_month)}</td>
       <td>${escapeReportText(formatReportDateTime(row.last_wash))}</td>
+      <td>${escapeReportText(formatReportDate(row.expiration_date))}</td>
       <td><span class="member-status-pill ${row.status_class}">${escapeReportText(row.status_label)}</span></td>
     </tr>
   `).join("");
@@ -2963,23 +3041,28 @@ function renderMembershipReport(errorMessage = ""){
 
 function buildMembershipCSV(){
   const rows = getMembershipReportRows();
+
   let csv = `WashTrac Membership Report,${csvSafe(cachedSiteScopeLabel || "Current Site")}\n`;
   csv += `Generated,${csvSafe(new Date().toLocaleString())}\n`;
   csv += `Current Members,${csvSafe(cachedMembershipSummary.current)}\n`;
   csv += `Expired Members,${csvSafe(cachedMembershipSummary.expired)}\n`;
+  csv += `Expiring This Month,${csvSafe(cachedMembershipSummary.expiring)}\n`;
   csv += `Membership Washes This Month,${csvSafe(cachedMembershipSummary.washes)}\n`;
-  csv += `Average Washes Per Current Member,${csvSafe(cachedMembershipSummary.average)}\n\n`;
-  csv += ["Member Name","License Plate","Code","Expiration Date","Daily Wash Limit","Washes This Month","Last Wash","Status"].map(csvSafe).join(",") + "\n";
+  csv += `Monthly Membership Revenue,${csvSafe(formatMoney(cachedMembershipSummary.revenue))}\n`;
+  csv += `Average Washes Per Member,${csvSafe(cachedMembershipSummary.average)}\n\n`;
+
+  csv += ["Name","Plate","Code","Daily Limit","Monthly Price","Washes This Month","Last Wash","Expiration","Status"].map(csvSafe).join(",") + "\n";
 
   rows.forEach(row => {
     csv += [
       row.member_name,
       row.license_plate,
       row.code,
-      row.expiration_date,
       row.daily_wash_limit,
+      row.monthly_price,
       row.washes_this_month,
       row.last_wash ? formatReportDateTime(row.last_wash) : "",
+      row.expiration_date,
       row.status_label
     ].map(csvSafe).join(",") + "\n";
   });
@@ -2989,6 +3072,7 @@ function buildMembershipCSV(){
 
 function exportMembershipCSV(){
   const rows = getMembershipReportRows();
+
   if(!rows.length){
     setManualEmailStatus("No membership data to export.", "warn");
     return;
@@ -3012,24 +3096,25 @@ function buildMembershipReportHtml(){
         <td style="padding:10px;border:1px solid #1d4ed8;color:#eaf4ff;">${esc(row.member_name)}</td>
         <td style="padding:10px;border:1px solid #1d4ed8;color:#eaf4ff;">${esc(row.license_plate || "-")}</td>
         <td style="padding:10px;border:1px solid #1d4ed8;color:#eaf4ff;font-weight:900;">${esc(row.code || "-")}</td>
-        <td style="padding:10px;border:1px solid #1d4ed8;color:#eaf4ff;">${esc(formatReportDate(row.expiration_date))}</td>
         <td style="padding:10px;border:1px solid #1d4ed8;color:#eaf4ff;">${esc(row.daily_wash_limit)}</td>
+        <td style="padding:10px;border:1px solid #1d4ed8;color:#eaf4ff;">${esc(row.monthly_price)}</td>
         <td style="padding:10px;border:1px solid #1d4ed8;color:#eaf4ff;">${esc(row.washes_this_month)}</td>
         <td style="padding:10px;border:1px solid #1d4ed8;color:#eaf4ff;">${esc(formatReportDateTime(row.last_wash))}</td>
+        <td style="padding:10px;border:1px solid #1d4ed8;color:#eaf4ff;">${esc(formatReportDate(row.expiration_date))}</td>
         <td style="padding:10px;border:1px solid #1d4ed8;color:#eaf4ff;">${esc(row.status_label)}</td>
       </tr>
     `;
   }).join("") : `
-      <tr><td colspan="8" style="padding:24px;border:1px solid #1d4ed8;color:#94a3b8;text-align:center;">No membership data found.</td></tr>
+      <tr><td colspan="9" style="padding:24px;border:1px solid #1d4ed8;color:#94a3b8;text-align:center;">No membership data found.</td></tr>
   `;
 
   function metric(label, value){
     return `
-      <td width="25%" style="padding:7px;">
+      <td width="33.33%" style="padding:7px;">
         <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#071727;border:1px solid #2563eb;">
           <tr><td align="center" style="padding:16px 10px;">
-            <div style="font-size:12px;letter-spacing:.5px;color:#ffffff;text-transform:uppercase;font-weight:800;">${esc(label)}</div>
-            <div style="font-size:34px;line-height:40px;font-weight:900;color:#4ea1ff;padding-top:8px;">${esc(value)}</div>
+            <div style="font-size:12px;letter-spacing:.5px;color:#ffffff;text-transform:uppercase;font-weight:800;min-height:28px;">${esc(label)}</div>
+            <div style="font-size:31px;line-height:38px;font-weight:900;color:#4ea1ff;padding-top:8px;">${esc(value)}</div>
           </td></tr>
         </table>
       </td>
@@ -3048,12 +3133,18 @@ function buildMembershipReportHtml(){
             <div style="font-size:26px;line-height:32px;font-weight:900;letter-spacing:1px;color:#ffffff;">Monthly Membership Report</div>
             <div style="font-size:14px;line-height:22px;color:#94a3b8;padding-top:6px;">${esc(scope)} • Generated ${esc(generatedAt)}</div>
           </td></tr>
-          <tr><td style="padding:18px 17px 8px;background:#050d19;">
+          <tr><td style="padding:18px 17px 0;background:#050d19;">
             <table width="100%" cellpadding="0" cellspacing="0" role="presentation"><tr>
               ${metric("Current Members", cachedMembershipSummary.current)}
               ${metric("Expired Members", cachedMembershipSummary.expired)}
-              ${metric("Washes This Month", cachedMembershipSummary.washes)}
-              ${metric("Avg / Current Member", cachedMembershipSummary.average)}
+              ${metric("Expiring This Month", cachedMembershipSummary.expiring)}
+            </tr></table>
+          </td></tr>
+          <tr><td style="padding:0 17px 8px;background:#050d19;">
+            <table width="100%" cellpadding="0" cellspacing="0" role="presentation"><tr>
+              ${metric("Membership Washes This Month", cachedMembershipSummary.washes)}
+              ${metric("Monthly Membership Revenue", formatMoney(cachedMembershipSummary.revenue))}
+              ${metric("Average Washes Per Member", cachedMembershipSummary.average)}
             </tr></table>
           </td></tr>
           <tr><td style="padding:0 24px 24px;background:#050d19;">
@@ -3062,7 +3153,7 @@ function buildMembershipReportHtml(){
                 <div style="font-family:Arial Black,Arial,Helvetica,sans-serif;color:#4ea1ff;font-size:21px;line-height:25px;font-weight:900;letter-spacing:.8px;padding-bottom:12px;">MEMBERSHIP DETAIL</div>
                 <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;font-size:13px;">
                   <thead><tr>
-                    ${["Member Name","License Plate","Code","Expiration","Daily Limit","Washes This Month","Last Wash","Status"].map(h => `<th align="left" style="padding:10px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-size:12px;text-transform:uppercase;">${esc(h)}</th>`).join("")}
+                    ${["Name","Plate","Code","Daily Limit","Monthly Price","Washes This Month","Last Wash","Expiration","Status"].map(h => `<th align="left" style="padding:10px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-size:12px;text-transform:uppercase;">${esc(h)}</th>`).join("")}
                   </tr></thead>
                   <tbody>${rowHtml}</tbody>
                 </table>
