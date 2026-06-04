@@ -1434,7 +1434,7 @@ document.addEventListener("click", function(event){
   }
 });
 
-["codeInput","firstNameInput","lastNameInput","plateInput","startDateInput","expirationDateInput","dailyLimitInput"].forEach(id => {
+["codeInput","firstNameInput","lastNameInput","plateInput","startDateInput","expirationDateInput","dailyLimitInput","monthlyPriceInput"].forEach(id => {
   document.addEventListener("keydown", function(event){
     if(event.target && event.target.id === id && event.key === "Enter"){
       addMember();
