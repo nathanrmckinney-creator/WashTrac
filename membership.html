@@ -957,7 +957,7 @@ function resetEmpty(){
   document.getElementById("revenuePerMembershipWash").innerText = "$0.00";
   document.getElementById("expiringThisMonthCount").innerText = "0";
   document.getElementById("expiredMembersCount").innerText = "0";
-  document.getElementById("membersTableBody").innerHTML = `<tr><td colspan="10" class="muted">No active account selected.</td></tr>`;
+  document.getElementById("membersTableBody").innerHTML = `<tr><td colspan="12" class="muted">No active account selected.</td></tr>`;
   document.getElementById("membershipActivityBody").innerHTML = `<tr><td colspan="7" class="muted">No membership activity found.</td></tr>`;
 }
 
@@ -1044,7 +1044,7 @@ function renderMembers(){
 
   if(!filtered.length){
     lastRenderedMembers = [];
-    tbody.innerHTML = `<tr><td colspan="10" class="muted">No matching members found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="12" class="muted">No matching members found.</td></tr>`;
     return;
   }
 
