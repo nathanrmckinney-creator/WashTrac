@@ -1005,8 +1005,15 @@ function renderSummary(){
   const expiringThisMonth = allMembers.filter(member => getMembershipStatus(member).key === "expiring");
   const expiredMembers = allMembers.filter(member => getMembershipStatus(member).key === "expired");
 
-  const monthlyRevenue = currentMembers.reduce((sum, member) => sum + getMemberMonthlyPrice(member), 0);
-  const revenuePerWash = allMembershipActivity.length ? monthlyRevenue / allMembershipActivity.length : 0;
+ const monthlyRevenue = currentMembers.reduce(
+  (sum, member) => sum + getMemberMonthlyPrice(member),
+  0
+);
+
+const avgWashesPerMember =
+  currentMembers.length > 0
+    ? allMembershipActivity.length / currentMembers.length
+    : 0;
 
   document.getElementById("currentMembersCount").innerText = currentMembers.length;
   document.getElementById("membershipWashesMonth").innerText = allMembershipActivity.length;
