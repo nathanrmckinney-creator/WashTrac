@@ -1599,8 +1599,6 @@ function buildMembershipStyledReportHtml(){
   const activeSite = allSites.find(site => site.id === getActiveSiteId());
   const siteName = activeSite ? (activeSite.name || activeSite.site_name || "Unnamed Site") : "Current Site";
   const generatedAt = new Date().toLocaleString();
-  const reportUrl = `https://www.thewashtrac.com/membership.html?siteId=${encodeURIComponent(getActiveSiteId() || "")}`;
-  const loginUrl = `https://www.thewashtrac.com/login.html?redirect=${encodeURIComponent(reportUrl)}`;
 
   const esc = (value) => String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -1609,265 +1607,404 @@ function buildMembershipStyledReportHtml(){
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 
-  function metricCell(label, value, sub, color){
-    return `
-      <td width="33.333%" valign="top" style="padding:7px;">
-        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#071727;border:1px solid #2563eb;">
-          <tr>
-            <td align="center" style="padding:17px 10px 16px 10px;">
-              <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;color:#ffffff;text-transform:uppercase;font-weight:800;min-height:32px;">${esc(label)}</div>
-              <div style="font-family:Arial,Helvetica,sans-serif;font-size:34px;line-height:38px;font-weight:900;color:${color};padding-top:7px;">${esc(value)}</div>
-              <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;color:${color};font-weight:800;padding-top:8px;">${esc(sub)}</div>
-            </td>
-          </tr>
-        </table>
-      </td>
-    `;
-  }
+  const statusClass = (status) => {
+    const key = String(status || "").toLowerCase();
+    if(key.includes("expired") || key.includes("inactive")) return "status-expired";
+    if(key.includes("this month")) return "status-expiring";
+    if(key.includes("month before")) return "status-warning";
+    return "status-current";
+  };
 
-  const currentRows = rows.filter(row => row.status === "Current").slice(0,5);
-  const attentionRows = rows.filter(row => row.status === "Expires This Month" || row.status === "Month Before Expiration" || row.status === "Expired" || row.status === "Inactive").slice(0,5);
+  const metricCard = (label, value, sub = "") => `
+    <div class="metric-card">
+      <strong>${esc(value)}</strong>
+      <span>${esc(label)}</span>
+      ${sub ? `<small>${esc(sub)}</small>` : ""}
+    </div>
+  `;
 
-  function miniRows(items, emptyText){
-    if(!items.length){
-      return `
-        <tr>
-          <td colspan="2" style="padding:10px 0;color:#94a3b8;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">${esc(emptyText)}</td>
-        </tr>
-      `;
-    }
-
-    return items.map((item, index) => `
-      <tr>
-        <td style="padding:7px 0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:18px;font-weight:700;">${index + 1}.&nbsp; ${esc(item.name || "-")}</td>
-        <td align="right" style="padding:7px 0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:18px;font-weight:900;">${esc(item.status || "-")}</td>
-      </tr>
-      <tr>
-        <td colspan="2" style="padding:0 0 5px 0;border-top:3px solid #1e3a5f;font-size:0;line-height:0;">&nbsp;</td>
-      </tr>
-    `).join("");
-  }
-
-  const memberRowsHtml = rows.length ? rows.map((row, index) => {
-    const bg = index % 2 === 0 ? "#081a2d" : "#06111f";
-    const statusColor = row.status === "Current" ? "#4ade80" :
-      row.status === "Expires This Month" ? "#fca5a5" :
-      row.status === "Month Before Expiration" ? "#facc15" :
-      row.status === "Expired" || row.status === "Inactive" ? "#cbd5e1" : "#eaf4ff";
-
-    return `
-      <tr style="background:${bg};">
-        <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">${esc(row.name || "-")}</td>
-        <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">${esc(row.plate || "-")}</td>
-        <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;font-weight:900;">${esc(row.code || "-")}</td>
-        <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">${esc(row.dailyLimit || "-")}</td>
-        <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#7ee787;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;font-weight:900;">${esc(formatMoney(row.monthlyPrice || 0))}</td>
-        <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">${esc(row.washesThisMonth || 0)}</td>
-        <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">${esc(row.lastWash || "-")}</td>
-        <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">${esc(formatDate(row.expiration) || row.expiration || "-")}</td>
-        <td style="padding:11px 13px;border:1px solid #1d4ed8;color:${statusColor};font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;font-weight:900;">${esc(row.status || "-")}</td>
-      </tr>
-    `;
-  }).join("") : `
+  const memberRowsHtml = rows.length ? rows.map(row => `
     <tr>
-      <td colspan="9" align="center" style="padding:28px;color:#94a3b8;background:#06111f;border:1px solid #1d4ed8;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">
-        No membership data found.
-      </td>
+      <td>${esc(row.name || "-")}</td>
+      <td><span class="plate-pill">${esc(row.plate || "-")}</span></td>
+      <td><strong>${esc(row.code || "-")}</strong></td>
+      <td>${esc(row.dailyLimit || "-")}</td>
+      <td>${esc(formatMoney(row.monthlyPrice || 0))}</td>
+      <td>${esc(row.washesThisMonth || 0)}</td>
+      <td>${esc(row.lastWash || "-")}</td>
+      <td>${esc(row.expiration || "-")}</td>
+      <td><span class="status-pill ${statusClass(row.status)}">${esc(row.status || "-")}</span></td>
+    </tr>
+  `).join("") : `
+    <tr>
+      <td colspan="9" class="empty-cell">No membership data found.</td>
     </tr>
   `;
 
-  return `
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="color-scheme" content="dark">
-    <meta name="supported-color-schemes" content="dark">
-    <title>WashTrac Membership Report</title>
-  </head>
-  <body style="margin:0;padding:0;background:#000712;font-family:Arial,Helvetica,sans-serif;color:#ffffff;">
-    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#000712;">
-      WashTrac membership report for ${esc(siteName)}.
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WashTrac Membership Report</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #020617;
+      color: #ffffff;
+      line-height: 1.6;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    header {
+      background: rgba(2, 6, 23, 0.95);
+      border-bottom: 1px solid #1e293b;
+      padding: 14px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-logo {
+      width: 220px;
+      max-width: 100%;
+      height: auto;
+      display: block;
+      position: relative;
+      top: -10px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 18px;
+      border-radius: 10px;
+      background: #1b4fd6;
+      color: #ffffff !important;
+      font-weight: 700;
+      border: none;
+    }
+
+    .hero {
+      padding: 80px 20px 50px;
+      background:
+        radial-gradient(circle at top center, rgba(37,99,235,0.22), transparent 45%),
+        linear-gradient(180deg, #020617 0%, #07111f 55%, #020617 100%);
+      border-bottom: 1px solid #1e293b;
+      text-align: center;
+    }
+
+    .hero .eyebrow {
+      color: #60a5fa;
+      letter-spacing: 2px;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .hero h1 {
+      margin: 0 0 16px;
+      font-size: 54px;
+      line-height: 1.05;
+    }
+
+    .hero p {
+      max-width: 760px;
+      margin: 0 auto;
+      color: #94a3b8;
+      font-size: 19px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 70px 20px;
+    }
+
+    .section-card {
+      background: linear-gradient(180deg, #0f172a, #111827);
+      border: 1px solid #1e293b;
+      border-radius: 18px;
+      padding: 28px;
+      margin: 0 auto 44px;
+      max-width: 1100px;
+      width: 100%;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .section-card h2 {
+      margin: 0 0 12px;
+      font-size: 32px;
+    }
+
+    .section-card p {
+      margin: 0 0 14px;
+      color: #cbd5e1;
+      font-size: 17px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .metric-card {
+      background: rgba(37, 99, 235, 0.10);
+      border: 1px solid rgba(37, 99, 235, 0.28);
+      border-radius: 14px;
+      padding: 20px;
+      min-height: 116px;
+    }
+
+    .metric-card strong {
+      display: block;
+      font-size: 34px;
+      line-height: 1.05;
+      margin-bottom: 8px;
+      color: #ffffff;
+    }
+
+    .metric-card span {
+      display: block;
+      color: #dbeafe;
+      font-size: 14px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .metric-card small {
+      display: block;
+      color: #94a3b8;
+      font-size: 13px;
+      margin-top: 7px;
+    }
+
+    .tip {
+      margin-top: 16px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: rgba(37, 99, 235, 0.10);
+      border: 1px solid rgba(37, 99, 235, 0.28);
+      color: #dbeafe;
+      font-size: 15px;
+    }
+
+    .report-table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-top: 18px;
+    }
+
+    table {
+      width: 100%;
+      min-width: 1040px;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 14px 12px;
+      border-bottom: 1px solid #1f2937;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      color: #93c5fd;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      background: rgba(2, 6, 23, 0.55);
+      border-top: 1px solid #1e293b;
+    }
+
+    td {
+      color: #e5e7eb;
+      font-size: 14px;
+    }
+
+    tr:nth-child(even) td {
+      background: rgba(2, 6, 23, 0.22);
+    }
+
+    .plate-pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #1e293b;
+      color: #cbd5e1;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .status-pill {
+      display: inline-block;
+      padding: 7px 11px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .status-current { background: rgba(34,197,94,.16); color:#86efac; border:1px solid rgba(34,197,94,.28); }
+    .status-warning { background: rgba(245,158,11,.16); color:#fde68a; border:1px solid rgba(245,158,11,.28); }
+    .status-expiring { background: rgba(239,68,68,.16); color:#fca5a5; border:1px solid rgba(239,68,68,.28); }
+    .status-expired { background: rgba(100,116,139,.18); color:#cbd5e1; border:1px solid rgba(148,163,184,.25); }
+
+    .empty-cell {
+      color: #94a3b8;
+      text-align: center;
+      padding: 28px;
+    }
+
+    .next-box {
+      margin-top: 50px;
+      background: linear-gradient(145deg, #0f172a, #111827);
+      border: 1px solid #1e293b;
+      border-radius: 18px;
+      padding: 36px;
+      text-align: center;
+    }
+
+    .next-box h2 {
+      margin-top: 0;
+      font-size: 36px;
+    }
+
+    .next-box p {
+      max-width: 700px;
+      margin: 0 auto 22px;
+      color: #94a3b8;
+      font-size: 18px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px;
+      color: #64748b;
+      border-top: 1px solid #1e293b;
+      margin-top: 40px;
+    }
+
+    @media (max-width: 900px) {
+      header { padding: 14px 20px; }
+      .header-logo { width: 180px; }
+      .hero { padding: 65px 20px 40px; }
+      .hero h1 { font-size: 40px; }
+      .hero p { font-size: 17px; }
+      .container { padding: 50px 20px; }
+      .section-card { padding: 22px; margin-bottom: 34px; }
+      .section-card h2 { font-size: 26px; }
+      .metric-grid { grid-template-columns: 1fr; }
+      .next-box { padding: 28px 22px; }
+      .next-box h2 { font-size: 30px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <a href="https://www.thewashtrac.com/index.html">
+      <img src="https://www.thewashtrac.com/washtrac-logo.png" alt="WashTrac" class="header-logo">
+    </a>
+
+    <a href="https://www.thewashtrac.com/membership.html" class="btn">Open Memberships</a>
+  </header>
+
+  <section class="hero">
+    <div class="eyebrow">Membership Report</div>
+    <h1>${esc(siteName)}</h1>
+    <p>
+      Membership performance, expiration status, monthly revenue,
+      wash activity, and member detail report.
+    </p>
+  </section>
+
+  <div class="container">
+
+    <div class="section-card">
+      <h2>Membership Summary</h2>
+      <p>Generated ${esc(generatedAt)} using the current WashTrac membership data.</p>
+
+      <div class="metric-grid">
+        ${metricCard("Current Members", summary.currentMembers, "Active and not expired")}
+        ${metricCard("Expired Members", summary.expiredMembers, "Expired or inactive")}
+        ${metricCard("Expiring This Month", summary.expiringThisMonth, "Needs renewal attention")}
+        ${metricCard("Membership Washes This Month", summary.membershipWashesThisMonth, "Current month activity")}
+        ${metricCard("Monthly Membership Revenue", formatMoney(summary.monthlyMembershipRevenue), "Based on monthly price")}
+        ${metricCard("Average Washes Per Member", summary.averageWashesPerMember.toFixed(1), "This month")}
+      </div>
     </div>
 
-    <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;margin:0;padding:0;background:#000712;">
-      <tr>
-        <td align="center" style="padding:24px 10px;background:#000712;">
-          <table width="980" cellpadding="0" cellspacing="0" role="presentation" style="width:980px;max-width:980px;border-collapse:collapse;background:#050d19;border:1px solid #2563eb;">
-            <tr>
-              <td align="center" style="padding:26px 24px 18px 24px;background:#071727;border-bottom:1px solid #2563eb;">
-                <img src="https://thewashtrac.com/washtrac-logo.png" alt="WashTrac" width="360" style="display:block;margin:0 auto 12px auto;height:auto;max-width:88%;border:0;outline:none;text-decoration:none;">
-                <table width="720" cellpadding="0" cellspacing="0" role="presentation" style="width:720px;max-width:720px;border-collapse:collapse;margin:0 auto 14px auto;">
-                  <tr><td style="border-top:2px solid #3b82f6;font-size:0;line-height:0;">&nbsp;</td></tr>
-                </table>
-                <div style="font-family:Arial Black,Arial,Helvetica,sans-serif;font-size:29px;line-height:34px;font-weight:900;color:#ffffff;letter-spacing:.3px;">${esc(siteName)}</div>
-                <div style="font-family:Arial,Helvetica,sans-serif;margin-top:7px;color:#4ea1ff;font-size:17px;line-height:22px;letter-spacing:4px;font-weight:900;">MEMBERSHIP REPORT</div>
-                <div style="font-family:Arial,Helvetica,sans-serif;margin-top:12px;color:#c5ccd6;font-size:15px;line-height:20px;">Generated: <strong style="color:#ffffff;">${esc(generatedAt)}</strong></div>
-                <table cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;margin-top:17px;">
-                  <tr>
-                    <td align="center" bgcolor="#2563eb" style="background:#2563eb;padding:12px 18px;">
-                      <a href="${loginUrl}" style="display:inline-block;color:#ffffff;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:18px;font-weight:900;">View Full Membership Page</a>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
+    <div class="section-card">
+      <h2>Report Details</h2>
+      <p>
+        This report includes member name, plate, code, daily wash limit, monthly price,
+        washes this month, last wash, expiration, and membership status.
+      </p>
+      <div class="tip">
+        Membership revenue is calculated from current active members and their saved monthly price.
+      </div>
+    </div>
 
-            <tr>
-              <td style="padding:18px 17px 8px 17px;background:#050d19;">
-                <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;">
-                  <tr>
-                    ${metricCell("Current Members", summary.currentMembers, "Active memberships", "#56a8ff")}
-                    ${metricCell("Expired Members", summary.expiredMembers, "Expired or inactive", "#fca5a5")}
-                    ${metricCell("Expiring This Month", summary.expiringThisMonth, "Renewal attention", "#facc15")}
-                  </tr>
-                  <tr>
-                    ${metricCell("Membership Washes", summary.membershipWashesThisMonth, "This month", "#7ee787")}
-                    ${metricCell("Monthly Revenue", formatMoney(summary.monthlyMembershipRevenue), "Membership pricing", "#7ee787")}
-                    ${metricCell("Avg Washes / Member", summary.averageWashesPerMember.toFixed(1), "This month", "#56a8ff")}
-                  </tr>
-                </table>
-              </td>
-            </tr>
+    <div class="section-card">
+      <h2>Member Detail Report</h2>
+      <p>Complete member list for ${esc(siteName)}.</p>
 
+      <div class="report-table-wrap">
+        <table>
+          <thead>
             <tr>
-              <td style="padding:0 17px 12px 17px;background:#050d19;">
-                <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;">
-                  <tr>
-                    <td width="60%" valign="top" style="padding:7px;">
-                      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#071727;border:1px solid #2563eb;min-height:216px;">
-                        <tr>
-                          <td style="padding:18px;">
-                            <div style="font-family:Arial Black,Arial,Helvetica,sans-serif;color:#4ea1ff;font-size:20px;line-height:24px;font-weight:900;letter-spacing:.8px;padding-bottom:14px;">REPORT SUMMARY</div>
-                            <div style="font-family:Arial,Helvetica,sans-serif;color:#cbd5e1;font-size:15px;line-height:28px;">
-                              <strong style="color:#ffffff;">Scope:</strong> ${esc(siteName)}<br>
-                              <strong style="color:#ffffff;">Report:</strong> Membership Report<br>
-                              <strong style="color:#ffffff;">Generated:</strong> ${esc(generatedAt)}<br>
-                              <strong style="color:#ffffff;">Columns:</strong> Name, Plate, Code, Daily Limit, Monthly Price, This Month, Last Wash, Expiration, Status
-                            </div>
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                    <td width="40%" valign="top" style="padding:7px;">
-                      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#071727;border:1px solid #2563eb;min-height:216px;">
-                        <tr>
-                          <td style="padding:18px;">
-                            <div style="font-family:Arial Black,Arial,Helvetica,sans-serif;color:#4ea1ff;font-size:20px;line-height:24px;font-weight:900;letter-spacing:.8px;padding-bottom:12px;">MEMBER STATUS</div>
-                            <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;">
-                              <tr>
-                                <td style="padding:7px 0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:18px;font-weight:700;">Current</td>
-                                <td align="right" style="padding:7px 0;color:#7ee787;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:18px;font-weight:900;">${esc(summary.currentMembers)}</td>
-                              </tr>
-                              <tr><td colspan="2" style="padding:0 0 5px 0;border-top:3px solid #1e3a5f;font-size:0;line-height:0;">&nbsp;</td></tr>
-                              <tr>
-                                <td style="padding:7px 0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:18px;font-weight:700;">Expiring This Month</td>
-                                <td align="right" style="padding:7px 0;color:#facc15;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:18px;font-weight:900;">${esc(summary.expiringThisMonth)}</td>
-                              </tr>
-                              <tr><td colspan="2" style="padding:0 0 5px 0;border-top:3px solid #1e3a5f;font-size:0;line-height:0;">&nbsp;</td></tr>
-                              <tr>
-                                <td style="padding:7px 0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:18px;font-weight:700;">Expired / Inactive</td>
-                                <td align="right" style="padding:7px 0;color:#fca5a5;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:18px;font-weight:900;">${esc(summary.expiredMembers)}</td>
-                              </tr>
-                            </table>
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-                </table>
-              </td>
+              <th>Name</th>
+              <th>Plate</th>
+              <th>Code</th>
+              <th>Daily Limit</th>
+              <th>Monthly Price</th>
+              <th>This Month</th>
+              <th>Last Wash</th>
+              <th>Expiration</th>
+              <th>Status</th>
             </tr>
+          </thead>
+          <tbody>${memberRowsHtml}</tbody>
+        </table>
+      </div>
+    </div>
 
-            <tr>
-              <td style="padding:0 24px 18px 24px;background:#050d19;">
-                <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#071727;border:1px solid #2563eb;">
-                  <tr>
-                    <td style="padding:18px;">
-                      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;margin-bottom:12px;">
-                        <tr>
-                          <td align="left" style="font-family:Arial Black,Arial,Helvetica,sans-serif;color:#4ea1ff;font-size:21px;line-height:25px;font-weight:900;letter-spacing:.8px;">MEMBERSHIP REVENUE SUMMARY</td>
-                          <td align="right" style="font-family:Arial,Helvetica,sans-serif;color:#ffffff;font-size:19px;line-height:24px;font-weight:900;">Monthly Revenue: <span style="color:#4ade80;">${formatMoney(summary.monthlyMembershipRevenue)}</span></td>
-                        </tr>
-                      </table>
-                      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;font-size:13px;">
-                        <thead>
-                          <tr>
-                            <th align="left" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">Metric</th>
-                            <th align="left" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">Value</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr style="background:#081a2d;">
-                            <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">Monthly Membership Revenue</td>
-                            <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#4ade80;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;font-weight:900;">${formatMoney(summary.monthlyMembershipRevenue)}</td>
-                          </tr>
-                          <tr style="background:#06111f;">
-                            <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">Membership Washes This Month</td>
-                            <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;font-weight:900;">${esc(summary.membershipWashesThisMonth)}</td>
-                          </tr>
-                          <tr style="background:#081a2d;">
-                            <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">Average Washes Per Member</td>
-                            <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;font-weight:900;">${esc(summary.averageWashesPerMember.toFixed(1))}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
+    <div class="next-box">
+      <h2>Membership Accountability</h2>
+      <p>
+        WashTrac membership reporting helps track active members, monitor expiration status,
+        review member washes, and verify monthly membership revenue.
+      </p>
 
-            <tr>
-              <td style="padding:0 24px 20px 24px;background:#050d19;">
-                <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#071727;border:1px solid #2563eb;">
-                  <tr>
-                    <td style="padding:18px;">
-                      <div style="font-family:Arial Black,Arial,Helvetica,sans-serif;color:#4ea1ff;font-size:21px;line-height:25px;font-weight:900;letter-spacing:.8px;padding-bottom:12px;">MEMBER DETAIL REPORT</div>
-                      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;font-size:13px;">
-                        <thead>
-                          <tr>
-                            <th align="left" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">Name</th>
-                            <th align="left" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">Plate</th>
-                            <th align="left" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">Code</th>
-                            <th align="left" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">Daily Limit</th>
-                            <th align="left" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">Monthly Price</th>
-                            <th align="left" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">This Month</th>
-                            <th align="left" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">Last Wash</th>
-                            <th align="left" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">Expiration</th>
-                            <th align="left" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>${memberRowsHtml}</tbody>
-                      </table>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
+      <a href="https://www.thewashtrac.com/membership.html" class="btn">Open Memberships</a>
+    </div>
 
-            <tr>
-              <td style="padding:0 24px 24px 24px;background:#050d19;">
-                <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;">
-                  <tr>
-                    <td style="border-top:1px solid #2563eb;font-size:0;line-height:0;">&nbsp;</td>
-                    <td width="430" align="center" style="color:#c8ced8;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:20px;padding:0 16px;">
-                      This is a WashTrac membership report.<br>
-                      © ${new Date().getFullYear()} WashTrac. All rights reserved.
-                    </td>
-                    <td style="border-top:1px solid #2563eb;font-size:0;line-height:0;">&nbsp;</td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>
-  `;
+  </div>
+
+  <footer>
+    WASHTRAC © ${new Date().getFullYear()}<br>
+    Control. Track. Manage.
+  </footer>
+
+</body>
+</html>`;
 }
+
 function downloadMembershipReportCsv(){
   const rows = getMembershipReportRows();
 
