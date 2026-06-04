@@ -819,78 +819,22 @@ async function loadSites(){
 
   select.innerHTML = `<option>Loading sites...</option>`;
 
-  const isAdminLogin = hasAdminAccess();
+  /*
+    IMPORTANT:
+    This project has been inconsistent about site_members/user_site_access.
+    Dashboard was fixed by loading directly from sites.
+    Membership should do the same so it does not get stuck with "No sites assigned"
+    or empty member data when the user access lookup table is missing/empty.
+  */
 
-  if(isAdminLogin){
-    const { data, error } = await client
-      .from("sites")
-      .select("*")
-      .order("name", { ascending:true });
+  const { data, error } = await client
+    .from("sites")
+    .select("*")
+    .order("name", { ascending:true });
 
-    if(error){
-      console.log("Admin sites load error:", error);
-      select.innerHTML = `<option value="">Error loading sites</option>`;
-      return "";
-    }
-
-    allSites = data || [];
-
-    if(!allSites.length){
-      select.innerHTML = `<option value="">No sites found</option>`;
-      localStorage.removeItem("activeSiteId");
-      localStorage.removeItem("activeOrganizationId");
-      currentSiteId = null;
-      currentOrganizationId = null;
-      return "";
-    }
-
-    select.innerHTML = allSites.map(site => {
-      return `<option value="${escapeText(site.id)}">${escapeText(site.name || site.site_name || "Unnamed Site")}</option>`;
-    }).join("");
-
-    const saved = localStorage.getItem("activeSiteId");
-    const exists = saved && allSites.some(site => site.id === saved);
-    const activeSite = exists ? allSites.find(site => site.id === saved) : allSites[0];
-
-    currentSiteId = activeSite.id;
-    currentOrganizationId = activeSite.organization_id || activeSite.org_id || activeSite.company_id || null;
-
-    localStorage.setItem("activeSiteId", currentSiteId);
-    if(currentOrganizationId) localStorage.setItem("activeOrganizationId", currentOrganizationId);
-
-    select.value = currentSiteId;
-    return currentSiteId;
-  }
-
-  const { data: userData, error: userError } = await client.auth.getUser();
-
-  if(userError || !userData?.user){
-    console.log("User error:", userError);
-    select.innerHTML = `<option value="">No user</option>`;
-    return "";
-  }
-
-  const userId = userData.user.id;
-
-  let result = await client
-    .from("site_members")
-    .select("site_id, role")
-    .eq("user_id", userId);
-
-  if(result.error){
-    console.log("site_members lookup error:", result.error);
-
-    result = await client
-      .from("user_site_access")
-      .select("site_id")
-      .eq("user_id", userId);
-  }
-
-  const membershipRows = result.data || [];
-  const siteIds = [...new Set(membershipRows.map(row => row.site_id).filter(Boolean))];
-
-  if(!siteIds.length){
-    select.innerHTML = `<option value="">No sites assigned</option>`;
+  if(error){
+    console.log("Sites load error:", error);
+    select.innerHTML = `<option value="">Error loading sites</option>`;
     localStorage.removeItem("activeSiteId");
     localStorage.removeItem("activeOrganizationId");
     currentSiteId = null;
@@ -898,19 +842,7 @@ async function loadSites(){
     return "";
   }
 
-  const { data: sitesData, error: sitesError } = await client
-    .from("sites")
-    .select("*")
-    .in("id", siteIds)
-    .order("name", { ascending:true });
-
-  if(sitesError){
-    console.log("Sites fetch error:", sitesError);
-    select.innerHTML = `<option value="">Error loading sites</option>`;
-    return "";
-  }
-
-  allSites = sitesData || [];
+  allSites = data || [];
 
   if(!allSites.length){
     select.innerHTML = `<option value="">No sites found</option>`;
@@ -922,10 +854,10 @@ async function loadSites(){
   }
 
   select.innerHTML = allSites.map(site => {
-    return `<option value="${escapeText(site.id)}">${escapeText(site.name || "Unnamed Site")}</option>`;
+    return `<option value="${escapeText(site.id)}">${escapeText(site.name || site.site_name || "Unnamed Site")}</option>`;
   }).join("");
 
-  const saved = localStorage.getItem("activeSiteId");
+  const saved = localStorage.getItem("activeSiteId") || localStorage.getItem("washtracActiveSiteId");
   const exists = saved && allSites.some(site => site.id === saved);
   const activeSite = exists ? allSites.find(site => site.id === saved) : allSites[0];
 
@@ -933,7 +865,13 @@ async function loadSites(){
   currentOrganizationId = activeSite.organization_id || activeSite.org_id || activeSite.company_id || null;
 
   localStorage.setItem("activeSiteId", currentSiteId);
-  if(currentOrganizationId) localStorage.setItem("activeOrganizationId", currentOrganizationId);
+  localStorage.setItem("washtracActiveSiteId", currentSiteId);
+
+  if(currentOrganizationId){
+    localStorage.setItem("activeOrganizationId", currentOrganizationId);
+  }else{
+    localStorage.removeItem("activeOrganizationId");
+  }
 
   select.value = currentSiteId;
   return currentSiteId;
