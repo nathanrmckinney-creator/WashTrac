@@ -145,7 +145,7 @@
     .quick-code-note{color:#94a3b8;font-size:14px;}
 
     .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-    table{width:100%;border-collapse:collapse;min-width:1050px;}
+    table{width:100%;border-collapse:collapse;min-width:1180px;}
     th, td{padding:14px 10px;border-bottom:1px solid #1f2937;text-align:left;vertical-align:middle;}
     th{color:#93c5fd;font-size:13px;text-transform:uppercase;letter-spacing:.5px;}
     .muted{color:#94a3b8;}
@@ -340,7 +340,9 @@ document.addEventListener("DOMContentLoaded", function(){
 
     <div class="summary">
       <div class="summary-box"><strong id="currentMembersCount">0</strong><span>Current Members</span></div>
+      <div class="summary-box"><strong id="membershipMonthlyRevenue">$0.00</strong><span>Monthly Membership Revenue</span></div>
       <div class="summary-box"><strong id="membershipWashesMonth">0</strong><span>Membership Washes This Month</span></div>
+      <div class="summary-box"><strong id="membershipRevenuePerWash">$0.00</strong><span>Revenue Per Membership Wash</span></div>
       <div class="summary-box"><strong id="expiringThisMonthCount">0</strong><span>Expiring This Month</span></div>
       <div class="summary-box"><strong id="expiredMembersCount">0</strong><span>Expired Members</span></div>
     </div>
@@ -387,13 +389,18 @@ document.addEventListener("DOMContentLoaded", function(){
         </div>
 
         <div class="field">
-          <label for="dailyLimitInput">Washes Allowed Per Day</label>
-          <input id="dailyLimitInput" type="number" min="1" value="2">
+          <label for="monthlyPriceInput">Monthly Price</label>
+          <input id="monthlyPriceInput" type="number" min="0" step="0.01" value="0.00" inputmode="decimal" placeholder="39.99">
         </div>
 
         <div class="field">
-          <button id="addMemberButton" type="button" onclick="addMember()">Add Member</button>
+          <label for="dailyLimitInput">Washes Allowed Per Day</label>
+          <input id="dailyLimitInput" type="number" min="1" value="2">
         </div>
+      </div>
+
+      <div class="actions">
+        <button id="addMemberButton" type="button" onclick="addMember()">Add Member</button>
       </div>
 
       <div class="status" id="statusBox"></div>
@@ -449,6 +456,7 @@ document.addEventListener("DOMContentLoaded", function(){
               <th>Start Date</th>
               <th>Expiration</th>
               <th>Washes/Day</th>
+              <th>Monthly Price</th>
               <th>This Month</th>
               <th>Status</th>
               <th>Edit</th>
@@ -527,10 +535,17 @@ document.addEventListener("DOMContentLoaded", function(){
       </div>
 
       <div class="field">
+        <label for="editMonthlyPrice">Monthly Price</label>
+        <input id="editMonthlyPrice" type="number" min="0" step="0.01" inputmode="decimal">
+      </div>
+
+      <div class="field">
         <label for="editDailyLimit">Washes Allowed Per Day</label>
         <input id="editDailyLimit" type="number" min="1">
       </div>
+    </div>
 
+    <div class="form-grid" style="margin-top:12px;">
       <div class="field">
         <label for="editActive">Active</label>
         <select id="editActive">
@@ -629,6 +644,22 @@ function formatDateTime(value){
   return date.toLocaleString();
 }
 
+function parseMoney(value){
+  const number = Number(String(value ?? "0").replace(/[^0-9.]/g, ""));
+  if(!Number.isFinite(number) || number < 0) return 0;
+  return Math.round(number * 100) / 100;
+}
+
+function formatMoney(value){
+  const number = Number(value || 0);
+  return number.toLocaleString(undefined, {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
 function getMemberName(member){
   return `${member.first_name || ""} ${member.last_name || ""}`.trim();
 }
@@ -639,6 +670,10 @@ function getMemberCode(member){
 
 function getMemberMonthlyCount(memberId){
   return allMembershipActivity.filter(row => String(row.membership_id || "") === String(memberId || "")).length;
+}
+
+function getMemberMonthlyPrice(member){
+  return parseMoney(member?.monthly_price ?? member?.monthlyPrice ?? member?.price ?? 0);
 }
 
 function getSiteName(siteId){
@@ -979,10 +1014,12 @@ function resetEmpty(){
   allMembers = [];
   allMembershipActivity = [];
   document.getElementById("currentMembersCount").innerText = "0";
+  document.getElementById("membershipMonthlyRevenue").innerText = "$0.00";
   document.getElementById("membershipWashesMonth").innerText = "0";
+  document.getElementById("membershipRevenuePerWash").innerText = "$0.00";
   document.getElementById("expiringThisMonthCount").innerText = "0";
   document.getElementById("expiredMembersCount").innerText = "0";
-  document.getElementById("membersTableBody").innerHTML = `<tr><td colspan="9" class="muted">No active account selected.</td></tr>`;
+  document.getElementById("membersTableBody").innerHTML = `<tr><td colspan="10" class="muted">No active account selected.</td></tr>`;
   document.getElementById("membershipActivityBody").innerHTML = `<tr><td colspan="7" class="muted">No membership activity found.</td></tr>`;
 }
 
@@ -1026,9 +1063,14 @@ function renderSummary(){
 
   const expiringThisMonth = allMembers.filter(member => getMembershipStatus(member).key === "expiring");
   const expiredMembers = allMembers.filter(member => getMembershipStatus(member).key === "expired");
+  const monthlyRevenue = currentMembers.reduce((sum, member) => sum + getMemberMonthlyPrice(member), 0);
+  const membershipWashes = allMembershipActivity.length;
+  const revenuePerWash = membershipWashes > 0 ? monthlyRevenue / membershipWashes : 0;
 
   document.getElementById("currentMembersCount").innerText = currentMembers.length;
-  document.getElementById("membershipWashesMonth").innerText = allMembershipActivity.length;
+  document.getElementById("membershipMonthlyRevenue").innerText = formatMoney(monthlyRevenue);
+  document.getElementById("membershipWashesMonth").innerText = membershipWashes;
+  document.getElementById("membershipRevenuePerWash").innerText = formatMoney(revenuePerWash);
   document.getElementById("expiringThisMonthCount").innerText = expiringThisMonth.length;
   document.getElementById("expiredMembersCount").innerText = expiredMembers.length;
 }
@@ -1064,7 +1106,7 @@ function renderMembers(){
 
   if(!filtered.length){
     lastRenderedMembers = [];
-    tbody.innerHTML = `<tr><td colspan="9" class="muted">No matching members found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" class="muted">No matching members found.</td></tr>`;
     return;
   }
 
@@ -1082,6 +1124,7 @@ function renderMembers(){
       <td>${escapeText(formatDate(member.start_date))}</td>
       <td class="${status.dateClass}">${escapeText(formatDate(member.expiration_date))}</td>
       <td>${escapeText(member.daily_wash_limit || 2)}</td>
+      <td>${escapeText(formatMoney(getMemberMonthlyPrice(member)))}</td>
       <td>${monthlyCount}</td>
       <td><span class="status-pill ${status.statusClass}">${escapeText(status.label)}</span></td>
       <td><button class="edit-btn" type="button">Edit</button></td>
@@ -1164,6 +1207,7 @@ async function addMember(){
   const startDate = document.getElementById("startDateInput").value;
   const expirationDate = document.getElementById("expirationDateInput").value;
   const dailyLimit = Number(document.getElementById("dailyLimitInput").value || 2);
+  const monthlyPrice = parseMoney(document.getElementById("monthlyPriceInput").value || 0);
 
   if(!orgId){ setStatus("No organization selected.", "error"); return; }
   if(!code){ setStatus("Generate or enter a membership code.", "warn"); return; }
@@ -1175,6 +1219,7 @@ async function addMember(){
   if(!startDate){ setStatus("Enter start date.", "warn"); return; }
   if(!expirationDate){ setStatus("Enter expiration date.", "warn"); return; }
   if(!Number.isInteger(dailyLimit) || dailyLimit < 1){ setStatus("Washes allowed per day must be 1 or higher.", "warn"); return; }
+  if(monthlyPrice < 0){ setStatus("Monthly price cannot be negative.", "warn"); return; }
 
   const existingCode = allMembers.find(member => getMemberCode(member) === code && member.is_active !== false);
   if(existingCode){
@@ -1197,6 +1242,7 @@ async function addMember(){
     start_date: startDate,
     expiration_date: expirationDate,
     daily_wash_limit: dailyLimit,
+    monthly_price: monthlyPrice,
     is_active: true
   };
 
@@ -1216,6 +1262,7 @@ async function addMember(){
   document.getElementById("plateInput").value = "";
   document.getElementById("startDateInput").value = todayDateString();
   document.getElementById("expirationDateInput").value = "";
+  document.getElementById("monthlyPriceInput").value = "0.00";
   document.getElementById("dailyLimitInput").value = "2";
 
   setStatus("Member added.", "success");
@@ -1235,6 +1282,7 @@ function openEditMember(memberId){
   document.getElementById("editCode").value = member.code || "";
   document.getElementById("editStartDate").value = member.start_date || "";
   document.getElementById("editExpirationDate").value = member.expiration_date || "";
+  document.getElementById("editMonthlyPrice").value = getMemberMonthlyPrice(member).toFixed(2);
   document.getElementById("editDailyLimit").value = member.daily_wash_limit || 2;
   document.getElementById("editActive").value = member.is_active === false ? "false" : "true";
   document.getElementById("editMemberSubtitle").innerText = `${getMemberName(member)} • ${displayPlate(member.license_plate)}`;
@@ -1258,6 +1306,7 @@ async function saveMemberEdits(){
   const startDate = document.getElementById("editStartDate").value;
   const expirationDate = document.getElementById("editExpirationDate").value;
   const dailyLimit = Number(document.getElementById("editDailyLimit").value || 2);
+  const monthlyPrice = parseMoney(document.getElementById("editMonthlyPrice").value || 0);
   const isActive = document.getElementById("editActive").value === "true";
 
   if(!memberId || !orgId){ setEditStatus("Missing member/account information.", "error"); return; }
@@ -1269,6 +1318,7 @@ async function saveMemberEdits(){
   if(!startDate){ setEditStatus("Enter start date.", "warn"); return; }
   if(!expirationDate){ setEditStatus("Enter expiration date.", "warn"); return; }
   if(!Number.isInteger(dailyLimit) || dailyLimit < 1){ setEditStatus("Daily limit must be 1 or higher.", "warn"); return; }
+  if(monthlyPrice < 0){ setEditStatus("Monthly price cannot be negative.", "warn"); return; }
 
   const duplicateCode = allMembers.find(member =>
     String(member.id) !== String(memberId) &&
@@ -1301,6 +1351,7 @@ async function saveMemberEdits(){
       start_date: startDate,
       expiration_date: expirationDate,
       daily_wash_limit: dailyLimit,
+      monthly_price: monthlyPrice,
       is_active: isActive,
       updated_at: new Date().toISOString()
     })
@@ -1337,7 +1388,7 @@ function exportMembersCsv(){
     return;
   }
 
-  const headers = ["Code","First Name","Last Name","License Plate","Start Date","Expiration Date","Daily Wash Limit","This Month","Status","Active"];
+  const headers = ["Code","First Name","Last Name","License Plate","Start Date","Expiration Date","Daily Wash Limit","Monthly Price","This Month","Status","Active"];
   const csvRows = rows.map(member => {
     const status = getMembershipStatus(member);
 
@@ -1349,6 +1400,7 @@ function exportMembersCsv(){
       member.start_date,
       member.expiration_date,
       member.daily_wash_limit || 2,
+      getMemberMonthlyPrice(member).toFixed(2),
       getMemberMonthlyCount(member.id),
       status.label,
       member.is_active === false ? "No" : "Yes"
@@ -1414,6 +1466,7 @@ document.addEventListener("click", function(event){
 
 window.onload = async function(){
   document.getElementById("startDateInput").value = todayDateString();
+  document.getElementById("monthlyPriceInput").value = "0.00";
   document.getElementById("dailyLimitInput").value = "2";
 
   const siteId = await loadSites();
