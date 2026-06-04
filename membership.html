@@ -1066,11 +1066,6 @@ function renderMembers(){
 
 const monthlyPrice = getMemberMonthlyPrice(member);
 
-const revenuePerWash =
-  monthlyCount > 0
-    ? monthlyPrice / monthlyCount
-    : monthlyPrice;
-
 const lastWashRecord = allMembershipActivity.find(
   row => String(row.membership_id) === String(member.id)
 );
