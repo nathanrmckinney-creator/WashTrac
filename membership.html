@@ -184,6 +184,28 @@
     .status.warn{border-color:rgba(245,158,11,.35);color:#fde68a;}
     .status.error{border-color:rgba(239,68,68,.35);color:#fecaca;}
 
+    .report-card-note{
+      color:#94a3b8;
+      font-size:14px;
+      line-height:1.5;
+      margin:0 0 14px 0;
+    }
+
+    .report-actions{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:12px;
+    }
+
+    .report-small{
+      color:#94a3b8;
+      font-size:13px;
+      line-height:1.45;
+      margin-top:12px;
+    }
+
     .modal{
       display:none;
       position:fixed;
@@ -353,6 +375,25 @@ document.addEventListener("DOMContentLoaded", function(){
 </div>
       <div class="summary-box"><strong id="expiringThisMonthCount">0</strong><span>Expiring This Month</span></div>
       <div class="summary-box"><strong id="expiredMembersCount">0</strong><span>Expired Members</span></div>
+    </div>
+
+    <div class="card">
+      <h3>Membership Reports</h3>
+      <p class="report-card-note">
+        Download a complete membership report using the current account/site selection. This report uses the same membership data already shown below.
+      </p>
+
+      <div class="report-actions">
+        <button type="button" onclick="downloadMembershipReportCsv()">Download Membership Report CSV</button>
+        <button class="secondary" type="button" onclick="exportMembersCsv()">Download Filtered Members CSV</button>
+        <button class="secondary" type="button" onclick="loadMembershipPage()">Refresh Membership Data</button>
+      </div>
+
+      <div class="report-small">
+        Membership report includes Name, Plate, Code, Daily Limit, Monthly Price, Washes This Month, Last Wash, Expiration, and Status.
+      </div>
+
+      <div class="status" id="membershipReportStatus"></div>
     </div>
 
     <div class="card">
@@ -1331,6 +1372,163 @@ async function saveMemberEdits(){
   setTimeout(() => {
     closeEditMember();
   }, 650);
+}
+
+
+function getCurrentMembershipSummary(){
+  const currentMembers = allMembers.filter(member => {
+    const status = getMembershipStatus(member);
+    return member.is_active !== false && status.key !== "expired";
+  });
+
+  const expiringThisMonth = allMembers.filter(member => getMembershipStatus(member).key === "expiring");
+  const expiredMembers = allMembers.filter(member => getMembershipStatus(member).key === "expired");
+
+  const monthlyRevenue = currentMembers.reduce(
+    (sum, member) => sum + getMemberMonthlyPrice(member),
+    0
+  );
+
+  const avgWashesPerMember =
+    currentMembers.length > 0
+      ? allMembershipActivity.length / currentMembers.length
+      : 0;
+
+  return {
+    currentMembers: currentMembers.length,
+    expiredMembers: expiredMembers.length,
+    expiringThisMonth: expiringThisMonth.length,
+    membershipWashesThisMonth: allMembershipActivity.length,
+    monthlyMembershipRevenue: monthlyRevenue,
+    averageWashesPerMember: avgWashesPerMember
+  };
+}
+
+function setMembershipReportStatus(message, tone = ""){
+  const box = document.getElementById("membershipReportStatus");
+  if(!box) return;
+
+  box.innerText = message || "";
+  box.className = "status show";
+
+  if(tone === "success") box.classList.add("success");
+  if(tone === "warn") box.classList.add("warn");
+  if(tone === "error" || tone === true) box.classList.add("error");
+}
+
+function getMembershipReportRows(){
+  return (allMembers || []).map(member => {
+    const status = getMembershipStatus(member);
+
+    const lastWashRecord = allMembershipActivity.find(
+      row => String(row.membership_id) === String(member.id)
+    );
+
+    const lastWash = lastWashRecord
+      ? formatDateTime(lastWashRecord.wash_time || lastWashRecord.created_at)
+      : "";
+
+    return {
+      name: getMemberName(member),
+      plate: displayPlate(member.license_plate),
+      code: getMemberCode(member),
+      dailyLimit: member.daily_wash_limit || 2,
+      monthlyPrice: getMemberMonthlyPrice(member),
+      washesThisMonth: getMemberMonthlyCount(member.id),
+      lastWash,
+      expiration: member.expiration_date || "",
+      status: status.label,
+      active: member.is_active === false ? "No" : "Yes"
+    };
+  }).sort((a,b) => {
+    const statusOrder = {
+      "Current": 1,
+      "Month Before Expiration": 2,
+      "Expires This Month": 3,
+      "Expired": 4,
+      "Inactive": 5,
+      "Invalid Date": 6
+    };
+
+    const aOrder = statusOrder[a.status] || 99;
+    const bOrder = statusOrder[b.status] || 99;
+
+    if(aOrder !== bOrder) return aOrder - bOrder;
+    return String(a.name || "").localeCompare(String(b.name || ""));
+  });
+}
+
+function buildMembershipReportCsv(){
+  const summary = getCurrentMembershipSummary();
+  const rows = getMembershipReportRows();
+
+  const activeSite = allSites.find(site => site.id === getActiveSiteId());
+  const siteName = activeSite ? (activeSite.name || activeSite.site_name || "Unnamed Site") : "Current Site";
+
+  const headers = [
+    "Name",
+    "Plate",
+    "Code",
+    "Daily Limit",
+    "Monthly Price",
+    "Washes This Month",
+    "Last Wash",
+    "Expiration",
+    "Status"
+  ];
+
+  const csvRows = rows.map(row => [
+    row.name,
+    row.plate,
+    row.code,
+    row.dailyLimit,
+    formatMoney(row.monthlyPrice),
+    row.washesThisMonth,
+    row.lastWash,
+    row.expiration,
+    row.status
+  ]);
+
+  const summaryRows = [
+    ["WashTrac Membership Report", siteName],
+    ["Generated", new Date().toLocaleString()],
+    ["Current Members", summary.currentMembers],
+    ["Expired Members", summary.expiredMembers],
+    ["Expiring This Month", summary.expiringThisMonth],
+    ["Membership Washes This Month", summary.membershipWashesThisMonth],
+    ["Monthly Membership Revenue", formatMoney(summary.monthlyMembershipRevenue)],
+    ["Average Washes Per Member", summary.averageWashesPerMember.toFixed(1)],
+    [],
+    headers,
+    ...csvRows
+  ];
+
+  return summaryRows
+    .map(line => line.map(csvEscape).join(","))
+    .join("\n");
+}
+
+function downloadMembershipReportCsv(){
+  const rows = getMembershipReportRows();
+
+  if(!rows.length){
+    setMembershipReportStatus("No membership data to download.", "warn");
+    return;
+  }
+
+  const blob = new Blob([buildMembershipReportCsv()], { type:"text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const dateStamp = new Date().toISOString().slice(0,10);
+
+  link.href = url;
+  link.download = `washtrac-membership-report-${dateStamp}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+  setMembershipReportStatus(`Downloaded membership report with ${rows.length} member${rows.length === 1 ? "" : "s"}.`, "success");
 }
 
 function csvEscape(value){
