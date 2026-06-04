@@ -1196,7 +1196,7 @@ function generateRandomCode(){
   setStatus("Could not generate a unique code. Try again.", "warn");
 }
 
-async function addMember(){
+async async function addMember(){
   clearStatus();
 
   const orgId = getActiveOrganizationId();
@@ -1294,7 +1294,7 @@ function closeEditMember(){
   document.getElementById("editMemberModal").classList.remove("show");
 }
 
-async function saveMemberEdits(){
+async async function saveMemberEdits(){
   clearEditStatus();
 
   const orgId = getActiveOrganizationId();
