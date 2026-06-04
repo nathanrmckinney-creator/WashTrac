@@ -2379,120 +2379,28 @@
 
   select.innerHTML = `<option>Loading sites...</option>`;
 
-  const isAdminLogin = hasAdminAccess();
+  /*
+    IMPORTANT:
+    Do not query site_members here. This project does not have a public.site_members table.
+    The old code caused this console error:
+    "Could not find the table 'public.site_members'"
 
-  // ADMIN MODE: load every site in the system
-  if(isAdminLogin){
-    const { data, error } = await client
-      .from("sites")
-      .select("*")
-      .order("name", { ascending:true });
+    We load directly from public.sites instead.
+    Admins see all sites. Normal users see whatever RLS allows.
+  */
 
-    if(error){
-      console.log("Admin sites load error:", error);
-      select.innerHTML = `<option value="">Error loading sites</option>`;
-      return "";
-    }
-
-    const sites = data || [];
-
-    if(!sites.length){
-      select.innerHTML = `<option value="">No sites found</option>`;
-      localStorage.removeItem("activeSiteId");
-      localStorage.removeItem("washtracActiveSiteId");
-      localStorage.removeItem("activeOrganizationId");
-      currentSiteId = null;
-      currentOrganizationId = null;
-      return "";
-    }
-
-    select.innerHTML = sites.map(site => {
-      const siteId = escapeHtml(site.id);
-      const orgId = escapeHtml(site.organization_id || site.org_id || site.company_id || "");
-      const name = escapeHtml(site.name || site.site_name || "Unnamed Site");
-      return `<option value="${siteId}" data-org="${orgId}">${name}</option>`;
-    }).join("");
-
-    const saved = localStorage.getItem("activeSiteId") || localStorage.getItem("washtracActiveSiteId");
-    const exists = saved && sites.some(s => s.id === saved);
-
-    currentSiteId = exists ? saved : sites[0].id;
-    const selectedSite = sites.find(s => s.id === currentSiteId) || sites[0];
-    currentOrganizationId = selectedSite.organization_id || selectedSite.org_id || selectedSite.company_id || "";
-
-    localStorage.setItem("activeSiteId", currentSiteId);
-    localStorage.setItem("washtracActiveSiteId", currentSiteId);
-
-    if(currentOrganizationId){
-      localStorage.setItem("activeOrganizationId", currentOrganizationId);
-    }else{
-      localStorage.removeItem("activeOrganizationId");
-    }
-
-    select.value = currentSiteId;
-    return currentSiteId;
-  }
-
-  // NORMAL USER MODE
-  const { data: userData, error: userError } = await client.auth.getUser();
-
-  if(userError || !userData?.user){
-    console.log("User error:", userError);
-    select.innerHTML = `<option value="">No user</option>`;
-    localStorage.removeItem("washtracLoggedIn");
-    window.location.replace("login.html");
-    return "";
-  }
-
-  const user = userData.user;
-  let membershipRows = [];
-
-  let result = await client
-    .from("site_members")
-    .select("site_id, role")
-    .eq("user_id", user.id);
-
-  if(result.error){
-    console.log("site_members lookup error:", result.error);
-
-    result = await client
-      .from("user_site_access")
-      .select("site_id")
-      .eq("user_id", user.id);
-  }
-
-  if(result.error){
-    console.log("Site access error:", result.error);
-    select.innerHTML = `<option value="">Error loading sites</option>`;
-    return "";
-  }
-
-  membershipRows = result.data || [];
-  const siteIds = [...new Set(membershipRows.map(row => row.site_id).filter(Boolean))];
-
-  if(!siteIds.length){
-    select.innerHTML = `<option value="">No sites assigned</option>`;
-    localStorage.removeItem("activeSiteId");
-    localStorage.removeItem("washtracActiveSiteId");
-    localStorage.removeItem("activeOrganizationId");
-    currentSiteId = null;
-    currentOrganizationId = null;
-    return "";
-  }
-
-  const { data: sitesData, error: sitesError } = await client
+  const { data, error } = await client
     .from("sites")
     .select("*")
-    .in("id", siteIds)
     .order("name", { ascending:true });
 
-  if(sitesError){
-    console.log("Sites fetch error:", sitesError);
+  if(error){
+    console.log("Sites load error:", error);
     select.innerHTML = `<option value="">Error loading sites</option>`;
     return "";
   }
 
-  const sites = sitesData || [];
+  const sites = data || [];
 
   if(!sites.length){
     select.innerHTML = `<option value="">No sites found</option>`;
@@ -2507,16 +2415,16 @@
   select.innerHTML = sites.map(site => {
     const siteId = escapeHtml(site.id);
     const orgId = escapeHtml(site.organization_id || site.org_id || site.company_id || "");
-    const name = escapeHtml(site.name || "Unnamed Site");
+    const name = escapeHtml(site.name || site.site_name || "Unnamed Site");
     return `<option value="${siteId}" data-org="${orgId}">${name}</option>`;
   }).join("");
 
   const saved = localStorage.getItem("activeSiteId") || localStorage.getItem("washtracActiveSiteId");
-  const exists = saved && sites.some(s => s.id === saved);
+  const exists = saved && sites.some(site => site.id === saved);
+  const activeSite = exists ? sites.find(site => site.id === saved) : sites[0];
 
-  currentSiteId = exists ? saved : sites[0].id;
-  const selectedSite = sites.find(s => s.id === currentSiteId) || sites[0];
-  currentOrganizationId = selectedSite.organization_id || selectedSite.org_id || selectedSite.company_id || "";
+  currentSiteId = activeSite.id;
+  currentOrganizationId = activeSite.organization_id || activeSite.org_id || activeSite.company_id || "";
 
   localStorage.setItem("activeSiteId", currentSiteId);
   localStorage.setItem("washtracActiveSiteId", currentSiteId);
@@ -2528,7 +2436,6 @@
   }
 
   select.value = currentSiteId;
-
   return currentSiteId;
 }
 
