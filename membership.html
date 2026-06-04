@@ -1018,7 +1018,7 @@ const avgWashesPerMember =
   document.getElementById("currentMembersCount").innerText = currentMembers.length;
   document.getElementById("membershipWashesMonth").innerText = allMembershipActivity.length;
   document.getElementById("monthlyMembershipRevenue").innerText = formatMoney(monthlyRevenue);
-  document.getElementById("revenuePerMembershipWash").innerText = formatMoney(revenuePerWash);
+  document.getElementById("avgWashesPerMember").innerText = avgWashesPerMember.toFixed(1);
   document.getElementById("expiringThisMonthCount").innerText = expiringThisMonth.length;
   document.getElementById("expiredMembersCount").innerText = expiredMembers.length;
 }
