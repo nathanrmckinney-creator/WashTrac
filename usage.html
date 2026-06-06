@@ -508,7 +508,7 @@ document.addEventListener("DOMContentLoaded", function(){
       </div>
 
       <div class="card">
-        <h3>Report Actions</h3>
+        <h3>Quick Email Report</h3>
 
         <div class="form-row">
           <label for="reportSiteScope">Report Site Scope</label>
@@ -520,27 +520,11 @@ document.addEventListener("DOMContentLoaded", function(){
 
         <div class="note" id="siteScopeSummary">Reports are using the current selected site.</div>
 
-        <div class="actions">
-          <button onclick="exportCustomCSV()">Export Selected Columns</button>
-          <button class="secondary" onclick="emailReport()">Email Report</button>
-        </div>
-
-        <div class="form-row" style="margin-top:14px;">
-          <label for="manualReportEmail">Send Report To</label>
-          <input id="manualReportEmail" type="email" placeholder="name@email.com">
-        </div>
-
-        <div class="status" id="manualEmailStatus"></div>
-
-        <div class="note">
-          Choose a date range, select columns, download a CSV, email a report, or save an automatic reporting schedule.
-        </div>
-
         <div class="builder-section">
           <div class="builder-title">Report Date Range</div>
 
           <div class="form-row">
-            <label for="reportRange">Download / Email Range</label>
+            <label for="reportRange">Email Report Range</label>
             <select id="reportRange" onchange="updateReportRangeFields()">
               <option value="all">All Available Data</option>
               <option value="today">Today</option>
@@ -566,117 +550,115 @@ document.addEventListener("DOMContentLoaded", function(){
             </div>
           </div>
 
-          <div class="note" id="rangeSummary">Current export range: All Available Data.</div>
+          <div class="note" id="rangeSummary">Current email range: All Available Data.</div>
         </div>
 
         <div class="builder-section">
-          <div class="builder-title">Report Columns</div>
-
-          <div class="column-grid">
-            <label><input type="checkbox" class="report-column" value="code" checked> Code</label>
-            <label><input type="checkbox" class="report-column" value="department" checked> Department</label>
-            <label><input type="checkbox" class="report-column" value="name" checked> Name</label>
-            <label><input type="checkbox" class="report-column" value="uses" checked> Uses</label>
-            <label><input type="checkbox" class="report-column" value="last_used" checked> Last Used</label>
-          </div>
-
-
-        </div>
-
-        <div class="builder-section">
-          <div class="builder-title">Automated Report Schedule</div>
-
           <div class="form-row">
-            <label for="scheduleEmail">Report Email</label>
-            <input id="scheduleEmail" type="email" placeholder="name@email.com">
-          </div>
-
-          <div class="form-row">
-            <label for="scheduleFrequency">Frequency</label>
-            <select id="scheduleFrequency" onchange="updateScheduleFields()">
-              <option value="off">Off</option>
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="biweekly">Bi-weekly</option>
-              <option value="monthly">Monthly</option>
-              <option value="custom_days">Certain days of the week</option>
-              <option value="custom_month">Certain day of the month</option>
-            </select>
-          </div>
-
-          <div class="form-row">
-            <label for="scheduleRange">Automated Report Range</label>
-            <select id="scheduleRange" onchange="updateScheduleRangeFields()">
-              <option value="today">Today</option>
-              <option value="yesterday">Yesterday</option>
-              <option value="this_week">This Week</option>
-              <option value="last_week">Last Week</option>
-              <option value="last_14">Last 14 Days</option>
-              <option value="this_month">This Month</option>
-              <option value="last_month">Last Month</option>
-              <option value="custom">Custom Start / End Date</option>
-              <option value="all">All Available Data</option>
-            </select>
-          </div>
-
-          <div class="date-grid hidden" id="scheduleCustomRangeFields">
-            <div class="form-row">
-              <label for="scheduleStartDate">Schedule Start Date</label>
-              <input id="scheduleStartDate" type="date">
-            </div>
-
-            <div class="form-row">
-              <label for="scheduleEndDate">Schedule End Date</label>
-              <input id="scheduleEndDate" type="date">
-            </div>
-          </div>
-
-          <div class="form-row hidden" id="weeklyDayRow">
-            <label for="weeklyDay">Send On</label>
-            <select id="weeklyDay">
-              <option value="monday">Monday</option>
-              <option value="tuesday">Tuesday</option>
-              <option value="wednesday">Wednesday</option>
-              <option value="thursday">Thursday</option>
-              <option value="friday">Friday</option>
-              <option value="saturday">Saturday</option>
-              <option value="sunday">Sunday</option>
-            </select>
-          </div>
-
-          <div class="form-row hidden" id="customDaysRow">
-            <label>Send On These Days</label>
-            <div class="day-grid">
-              <label><input type="checkbox" class="schedule-day" value="monday"> Mon</label>
-              <label><input type="checkbox" class="schedule-day" value="tuesday"> Tue</label>
-              <label><input type="checkbox" class="schedule-day" value="wednesday"> Wed</label>
-              <label><input type="checkbox" class="schedule-day" value="thursday"> Thu</label>
-              <label><input type="checkbox" class="schedule-day" value="friday"> Fri</label>
-              <label><input type="checkbox" class="schedule-day" value="saturday"> Sat</label>
-              <label><input type="checkbox" class="schedule-day" value="sunday"> Sun</label>
-            </div>
-          </div>
-
-          <div class="form-row hidden" id="monthDayRow">
-            <label for="monthDay">Day Of Month</label>
-            <select id="monthDay"></select>
-          </div>
-
-          <div class="form-row">
-            <label for="scheduleTime">Send Time</label>
-            <input id="scheduleTime" type="time" value="08:00">
+            <label for="manualReportEmail">Send Report To Email</label>
+            <input id="manualReportEmail" type="email" placeholder="name@email.com">
           </div>
 
           <div class="actions">
-            <button onclick="saveReportSchedule()">Save Schedule</button>
-            <button class="secondary" onclick="clearReportSchedule()">Turn Off Schedule</button>
+            <button onclick="emailReport()">Email Report</button>
           </div>
 
-          <div class="note" id="scheduleSummary">No automatic report schedule saved.</div>
+          <div class="status" id="manualEmailStatus"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Automated Email Schedule</h3>
+
+      <div class="form-row">
+        <label for="scheduleEmail">Report Email</label>
+        <input id="scheduleEmail" type="email" placeholder="name@email.com">
+      </div>
+
+      <div class="form-row">
+        <label for="scheduleFrequency">Frequency</label>
+        <select id="scheduleFrequency" onchange="updateScheduleFields()">
+          <option value="off">Off</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="biweekly">Bi-weekly</option>
+          <option value="monthly">Monthly</option>
+          <option value="custom_days">Certain days of the week</option>
+          <option value="custom_month">Certain day of the month</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label for="scheduleRange">Automated Report Range</label>
+        <select id="scheduleRange" onchange="updateScheduleRangeFields()">
+          <option value="today">Today</option>
+          <option value="yesterday">Yesterday</option>
+          <option value="this_week">This Week</option>
+          <option value="last_week">Last Week</option>
+          <option value="last_14">Last 14 Days</option>
+          <option value="this_month">This Month</option>
+          <option value="last_month">Last Month</option>
+          <option value="custom">Custom Start / End Date</option>
+          <option value="all">All Available Data</option>
+        </select>
+      </div>
+
+      <div class="date-grid hidden" id="scheduleCustomRangeFields">
+        <div class="form-row">
+          <label for="scheduleStartDate">Schedule Start Date</label>
+          <input id="scheduleStartDate" type="date">
         </div>
 
-        <div class="status" id="emailStatus"></div>
+        <div class="form-row">
+          <label for="scheduleEndDate">Schedule End Date</label>
+          <input id="scheduleEndDate" type="date">
+        </div>
       </div>
+
+      <div class="form-row hidden" id="weeklyDayRow">
+        <label for="weeklyDay">Send On</label>
+        <select id="weeklyDay">
+          <option value="monday">Monday</option>
+          <option value="tuesday">Tuesday</option>
+          <option value="wednesday">Wednesday</option>
+          <option value="thursday">Thursday</option>
+          <option value="friday">Friday</option>
+          <option value="saturday">Saturday</option>
+          <option value="sunday">Sunday</option>
+        </select>
+      </div>
+
+      <div class="form-row hidden" id="customDaysRow">
+        <label>Send On These Days</label>
+        <div class="day-grid">
+          <label><input type="checkbox" class="schedule-day" value="monday"> Mon</label>
+          <label><input type="checkbox" class="schedule-day" value="tuesday"> Tue</label>
+          <label><input type="checkbox" class="schedule-day" value="wednesday"> Wed</label>
+          <label><input type="checkbox" class="schedule-day" value="thursday"> Thu</label>
+          <label><input type="checkbox" class="schedule-day" value="friday"> Fri</label>
+          <label><input type="checkbox" class="schedule-day" value="saturday"> Sat</label>
+          <label><input type="checkbox" class="schedule-day" value="sunday"> Sun</label>
+        </div>
+      </div>
+
+      <div class="form-row hidden" id="monthDayRow">
+        <label for="monthDay">Day Of Month</label>
+        <select id="monthDay"></select>
+      </div>
+
+      <div class="form-row">
+        <label for="scheduleTime">Send Time</label>
+        <input id="scheduleTime" type="time" value="08:00">
+      </div>
+
+      <div class="actions">
+        <button onclick="saveReportSchedule()">Save Schedule</button>
+        <button class="secondary" onclick="clearReportSchedule()">Turn Off Schedule</button>
+      </div>
+
+      <div class="note" id="scheduleSummary">No automatic report schedule saved.</div>
+      <div class="status" id="emailStatus"></div>
     </div>
   </div>
 </div>
@@ -1380,13 +1362,13 @@ function updateReportRangeFields(){
 
   const summary = document.getElementById("rangeSummary");
   if(range === "custom"){
-    summary.innerText = "Current export range: Custom Start / End Date.";
+    summary.innerText = "Current email range: Custom Start / End Date.";
     return;
   }
 
   const info = getRangeDates(range, "customStartDate", "customEndDate");
   if(info){
-    summary.innerText = `Current export range: ${info.label}.`;
+    summary.innerText = `Current email range: ${info.label}.`;
   }
 
   if(cachedRawUses.length){
@@ -1975,9 +1957,6 @@ function exportCustomCSV(){
     return;
   }
 
-  const columns = getSelectedColumns();
-  if(!columns.length) return;
-
   const csv = buildCSV(columns, report.codes, report.label, report.scopeLabel, report.billing || []);
   const stamp = new Date().toISOString().slice(0,10);
   downloadCSV(csv, `washtrac-custom-report-${stamp}.csv`);
@@ -2272,8 +2251,7 @@ async function emailReport(){
     return;
   }
 
-  const columns = ["code", "department", "name", "uses", "last_used"];
-  const html = buildReportHtml(columns, report.codes, report.departments, report.billing || [], report.label, report.scopeLabel);
+  const html = buildReportHtml([], report.codes, report.departments, report.billing || [], report.label, report.scopeLabel);
 
   await sendReportToEmail(email, "WashTrac Report", html);
 }
@@ -2320,10 +2298,6 @@ async function saveReportSchedule(){
   const weeklyDay = document.getElementById("weeklyDay").value;
   const monthDay = document.getElementById("monthDay").value;
   const time = document.getElementById("scheduleTime").value;
-  const columns = getSelectedColumns();
-
-  if(!columns.length) return;
-
   if(frequency !== "off" && !email){
     alert("Please enter an email address for automated reports.");
     return;
@@ -2395,7 +2369,7 @@ async function saveReportSchedule(){
       monthDay,
       time,
       customDays,
-      columns,
+      columns: [],
       includeBillingSummary: true,
       savedAt: new Date().toISOString()
     };
@@ -2416,7 +2390,7 @@ async function saveReportSchedule(){
       month_day: Number(schedule.monthDay || 1),
       send_time: schedule.time,
       custom_days: schedule.customDays || [],
-      columns: schedule.columns || [],
+      columns: [],
       include_billing_summary: true,
       enabled: schedule.frequency !== "off",
       last_sent_at: null,
@@ -2495,9 +2469,7 @@ function clearReportSchedule(){
   document.getElementById("scheduleTime").value = "08:00";
 
   document.querySelectorAll(".schedule-day").forEach(day => day.checked = false);
-  document.querySelectorAll(".report-column").forEach(col => col.checked = true);
-
-  updateScheduleFields();
+updateScheduleFields();
   updateScheduleRangeFields();
   renderScheduleSummary();
   setStatus("Automatic reporting turned off.", "warn");
@@ -2534,10 +2506,7 @@ function renderScheduleSummary(){
     box.innerText = "Automatic reporting is turned off.";
     return;
   }
-
-  const selectedCols = (schedule.columns || []).map(col => columnLabels[col] || col).join(", ");
-
-  let details = "";
+let details = "";
 
   if(schedule.frequency === "daily"){
     details = "Daily";
@@ -2571,7 +2540,7 @@ function renderScheduleSummary(){
 
   const scopeText = schedule.reportSiteScope === "all" ? "All My Sites" : "Current Site";
 
-  box.innerText = `${details} at ${schedule.time} to ${schedule.email}. Scope: ${scopeText}. Range: ${rangeText}. Columns: ${selectedCols}. Billing summary included.`;
+  box.innerText = `${details} at ${schedule.time} to ${schedule.email}. Scope: ${scopeText}. Range: ${rangeText}. Billing summary included.`;
 }
 
 function loadSavedSchedule(){
@@ -2592,12 +2561,7 @@ function loadSavedSchedule(){
   document.getElementById("weeklyDay").value = schedule.weeklyDay || "monday";
   document.getElementById("monthDay").value = schedule.monthDay || "1";
   document.getElementById("scheduleTime").value = schedule.time || "08:00";
-
-  document.querySelectorAll(".report-column").forEach(col => {
-    col.checked = (schedule.columns || []).includes(col.value);
-  });
-
-  document.querySelectorAll(".schedule-day").forEach(day => {
+document.querySelectorAll(".schedule-day").forEach(day => {
     day.checked = (schedule.customDays || []).includes(day.value);
   });
 
