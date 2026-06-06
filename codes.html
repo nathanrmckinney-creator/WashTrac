@@ -262,6 +262,201 @@
       font-weight:bold;
       white-space:nowrap;
     }
+
+
+    /* PREMIUM WASH​TRAC POLISH - matches dashboard/reports styling */
+    .sidebar > *,
+    .nav{
+      position:relative;
+      z-index:1;
+    }
+
+    .main::before{
+      content:"";
+      position:absolute;
+      top:0;
+      right:0;
+      width:420px;
+      height:260px;
+      background:radial-gradient(circle at 100% 0%, rgba(37,99,235,.20), transparent 62%);
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .main > *{
+      position:relative;
+      z-index:1;
+    }
+
+    .page-header{
+      margin-bottom:18px;
+    }
+
+    .page-header h1{
+      font-size:42px;
+      letter-spacing:-.6px;
+      text-shadow:0 0 26px rgba(37,99,235,.16);
+    }
+
+    .page-header p{
+      max-width:820px;
+    }
+
+    .summary-box{
+      background:
+        radial-gradient(circle at 14% 0%, rgba(37,99,235,.24), transparent 35%),
+        linear-gradient(145deg,#111827 0%,#07111f 100%);
+      padding:18px;
+      border-radius:14px;
+      border:1px solid rgba(37,99,235,.32);
+      box-shadow:0 14px 28px rgba(0,0,0,.22), inset 0 0 18px rgba(37,99,235,.06);
+    }
+
+    .summary-box strong{
+      color:#ffffff;
+      font-weight:900;
+    }
+
+    .card,
+    .activity-box{
+      background:
+        radial-gradient(circle at 12% 0%, rgba(37,99,235,.20), transparent 34%),
+        linear-gradient(145deg,#111827 0%,#07111f 100%);
+      padding:20px;
+      border-radius:14px;
+      border:1px solid rgba(37,99,235,.28);
+      box-shadow:0 16px 34px rgba(0,0,0,.28), inset 0 0 22px rgba(37,99,235,.045);
+    }
+
+    .card h3,
+    .activity-modal-header h3{
+      margin:0 0 16px 0;
+      font-family:Arial Black,Arial,Helvetica,sans-serif;
+      letter-spacing:.35px;
+      text-transform:uppercase;
+      color:#eaf4ff;
+    }
+
+    .form-grid,
+    .search-grid,
+    .activity-filter-grid{
+      gap:14px;
+    }
+
+    .field label{
+      color:#9fb0c8;
+      font-weight:800;
+      letter-spacing:.25px;
+    }
+
+    input,
+    select{
+      background:linear-gradient(180deg,#0b1220,#07101d);
+      border:1px solid rgba(51,65,85,.95);
+      box-shadow:inset 0 0 14px rgba(2,6,23,.34);
+      outline:none;
+    }
+
+    input:focus,
+    select:focus{
+      border-color:#1ea7ff;
+      box-shadow:0 0 0 1px rgba(30,167,255,.18), 0 0 14px rgba(30,167,255,.16), inset 0 0 14px rgba(2,6,23,.34);
+    }
+
+    button,
+    .menu-btn{
+      border:1px solid rgba(96,165,250,.22);
+      box-shadow:0 10px 20px rgba(2,6,23,.18), inset 0 1px 0 rgba(255,255,255,.10);
+    }
+
+    button:hover{
+      filter:brightness(1.08);
+    }
+
+    button.secondary,
+    .view-btn,
+    .close-modal-btn{
+      background:linear-gradient(180deg,#475569,#334155);
+    }
+
+    button.remove-btn{
+      background:linear-gradient(180deg,#ef4444,#dc2626);
+      border-color:rgba(248,113,113,.32);
+    }
+
+    .random-code-btn{
+      background:linear-gradient(180deg,#38bdf8 0%, #2563eb 48%, #1d4ed8 100%);
+      border:1px solid rgba(125,211,252,.44);
+      box-shadow:0 0 18px rgba(30,167,255,.28), inset 0 1px 0 rgba(255,255,255,.16);
+      font-weight:900;
+    }
+
+    .quick-code-row{
+      padding:14px;
+      border-radius:14px;
+      background:
+        linear-gradient(180deg,rgba(2,6,23,.48),rgba(2,6,23,.20)),
+        radial-gradient(circle at 50% 0%,rgba(56,189,248,.10),transparent 40%);
+      border:1px solid rgba(148,163,184,.14);
+    }
+
+    .table-wrap{
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.14);
+      background:rgba(2,6,23,.35);
+    }
+
+    table{
+      border-collapse:separate;
+      border-spacing:0;
+    }
+
+    th{
+      color:#93c5fd;
+      background:rgba(2,6,23,.46);
+      font-weight:900;
+    }
+
+    td{
+      color:#dbe5fb;
+    }
+
+    tbody tr:hover{
+      background:rgba(37,99,235,.08);
+    }
+
+    .tag,
+    .pill-neutral{
+      background:rgba(37,99,235,.16);
+      color:#bfdbfe;
+      border:1px solid rgba(96,165,250,.18);
+    }
+
+    .status,
+    .system-banner,
+    .activity-summary-box{
+      background:linear-gradient(145deg,#0b1220,#06101d);
+      border:1px solid rgba(37,99,235,.22);
+      box-shadow:inset 0 0 16px rgba(37,99,235,.045);
+    }
+
+    .activity-summary-box strong{
+      color:white;
+      font-weight:900;
+    }
+
+    .muted,
+    .quick-code-note,
+    .temp-help{
+      color:#94a3b8;
+    }
+
+    #siteSwitcher{
+      background:linear-gradient(180deg,#0b1220,#07101d) !important;
+      border:1px solid #1ea7ff !important;
+      box-shadow:0 0 6px rgba(30,167,255,.4), inset 0 0 14px rgba(2,6,23,.34) !important;
+    }
+
     @media (max-width:1100px){
       .summary{grid-template-columns:1fr 1fr;}
       .form-grid,.search-grid{grid-template-columns:1fr 1fr;}
@@ -639,7 +834,7 @@ let codesLoadToken = 0;
 let refreshTimer = null;
 let selectedActivityCode = "";
 let systemOnline = false;
-let systemOnlineReason = "No recent CodeBox heartbeat detected.";
+let systemOnlineReason = "No recent Keypad heartbeat detected.";
 const HEARTBEAT_ONLINE_MINUTES = 5;
 
 function getActiveSiteId(){
@@ -681,10 +876,10 @@ function renderSystemHeartbeat(devices){
 
   systemOnline = onlineDevices.length > 0;
   systemOnlineReason = systemOnline
-    ? `${onlineDevices.length} CodeBox heartbeat${onlineDevices.length === 1 ? "" : "s"} active.`
+    ? `${onlineDevices.length} Keypad heartbeat${onlineDevices.length === 1 ? "" : "s"} active.`
     : pairedDevices.length
-      ? "CodeBox heartbeat not currently online. Cloud code management is still available."
-      : "No CodeBox paired to this site yet. Cloud code management is still available.";
+      ? "Keypad heartbeat not currently online. Cloud code management is still available."
+      : "No Keypad paired to this site yet. Cloud code management is still available.";
 
   const addBtn = document.getElementById("addCodeButton");
   if(addBtn){
@@ -705,7 +900,7 @@ async function fetchPairedDevices(siteId){
   if(error){
     console.log("fetchPairedDevices error:", error);
     systemOnline = false;
-    systemOnlineReason = "Could not load CodeBox heartbeat status.";
+    systemOnlineReason = "Could not load Keypad heartbeat status.";
     return [];
   }
 
@@ -714,7 +909,7 @@ async function fetchPairedDevices(siteId){
 
 function ensureSystemOnlineForCodeChanges(){
   /*
-    Codes are cloud-managed, so they should stay editable even when the Pi/CodeBox is offline.
+    Codes are cloud-managed, so they should stay editable even when the Pi/Keypad is offline.
     The kiosk sync/enforcement catches up when the hardware returns online.
   */
   return true;
