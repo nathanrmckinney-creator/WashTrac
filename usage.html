@@ -481,10 +481,10 @@ document.addEventListener("DOMContentLoaded", function(){
     </div>
 
     <div class="card">
-      <h3>Department Billing Summary</h3>
+      <h3>Department Usage Summary</h3>
 
       <div class="note" style="margin-top:0;margin-bottom:14px;">
-        Billing uses the selected report range, the same Current Site / All My Sites scope, and the department Cost Per Car values saved on the Dashboard.
+        Department usage uses the selected report range, the same Current Site / All My Sites scope, and the department Cost Per Car values saved on the Dashboard.
       </div>
 
       <div class="billing-head">
@@ -495,7 +495,7 @@ document.addEventListener("DOMContentLoaded", function(){
       </div>
       <div id="departmentBillingSummary"></div>
       <div class="billing-total">
-        <span>Monthly Total</span>
+        <span>Usage Total</span>
         <span id="billingMonthlyTotal">$0.00</span>
       </div>
     </div>
@@ -1109,7 +1109,7 @@ async function applySiteScopeToQuery(query){
   if(scope === "all"){
     cachedSiteIds = siteInfo.siteIds;
     cachedSiteScopeLabel = "All My Sites";
-    setSiteScopeSummary(`Reports are using all assigned sites (${siteInfo.siteIds.length}). Billing rates use the Dashboard department Cost Per Car values from the current site.`);
+    setSiteScopeSummary(`Reports are using all assigned sites (${siteInfo.siteIds.length}). Department usage rates use the Dashboard department Cost Per Car values from the current site.`);
     return { query:query.in("site_id", siteInfo.siteIds), noSites:false };
   }
 
@@ -1539,7 +1539,7 @@ function renderDepartmentBillingSummary(){
   cachedBillingSummary = billing.summary;
 
   if(!billing.summary.length){
-    list.innerHTML = `<div class="billing-row"><div>No billing data yet.</div><div>0</div><div>$0.00 / car</div><div>$0.00</div></div>`;
+    list.innerHTML = `<div class="billing-row"><div>No department usage data yet.</div><div>0</div><div>$0.00 / car</div><div>$0.00</div></div>`;
     total.innerText = "$0.00";
     return;
   }
@@ -1648,7 +1648,11 @@ async function loadUsage(){
   const token = ++reportsLoadToken;
   reportsLoadInProgress = true;
 
-  setStatus("Loading reports...");
+  const emailStatusBox = document.getElementById("emailStatus");
+  if(emailStatusBox){
+    emailStatusBox.className = "status";
+    emailStatusBox.innerText = "";
+  }
 
   try{
     let query = client
@@ -1794,9 +1798,6 @@ const uses = rows
     renderTopCodesChart(codeArray.slice(0,10));
     renderTopCodesList(codeArray);
     renderDepartmentBillingSummary();
-
-    const nowText = new Date().toLocaleTimeString();
-
   }catch(err){
     console.log("loadUsage unexpected error:", err);
     setStatus("Unexpected reports error.", "error");
@@ -1904,7 +1905,7 @@ function buildCSV(columns, codes, rangeLabel, scopeLabel, billingSummary = []){
     csv += columns.map(col => csvSafe(item[col] || "")).join(",") + "\n";
   });
 
-  csv += "\nDepartment Billing Summary\n";
+  csv += "\nDepartment Usage Summary\n";
   csv += ["Department", "Cars", "Rate", "Total Cost"].map(csvSafe).join(",") + "\n";
 
   billingSummary.forEach(item => {
@@ -1917,7 +1918,7 @@ function buildCSV(columns, codes, rangeLabel, scopeLabel, billingSummary = []){
   });
 
   const monthlyTotal = billingSummary.reduce((sum, item) => sum + Number(item.total_cost_value || 0), 0);
-  csv += ["Monthly Total", "", "", formatMoney(monthlyTotal)].map(csvSafe).join(",") + "\n";
+  csv += ["Usage Total", "", "", formatMoney(monthlyTotal)].map(csvSafe).join(",") + "\n";
 
   return csv;
 }
@@ -1956,9 +1957,10 @@ function exportCustomCSV(){
     return;
   }
 
+  const columns = ["code", "department", "name", "uses", "last_used"];
   const csv = buildCSV(columns, report.codes, report.label, report.scopeLabel, report.billing || []);
   const stamp = new Date().toISOString().slice(0,10);
-  downloadCSV(csv, `washtrac-custom-report-${stamp}.csv`);
+  downloadCSV(csv, `washtrac-report-${stamp}.csv`);
 }
 
 function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel, scopeLabel){
@@ -2054,7 +2056,7 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
   }).join("") : `
     <tr>
       <td colspan="4" align="center" style="padding:28px;color:#94a3b8;background:#06111f;border:1px solid #1d4ed8;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">
-        No billing data found for this range.
+        No department usage data found for this range.
       </td>
     </tr>
   `;
@@ -2103,7 +2105,7 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
                     ${metricCell("Total Uses", totalUses, "Current range", "#56a8ff")}
                     ${metricCell("Total Codes", totalCodes, "Active in report", "#7ee787")}
                     ${metricCell("Top Department", topDept, "Highest usage", "#facc15")}
-                    ${metricCell("Monthly Total", formatMoney(monthlyTotal), "Billing total", "#7ee787")}
+                    ${metricCell("Usage Total", formatMoney(monthlyTotal), "Billing total", "#7ee787")}
                   </tr>
                 </table>
               </td>
@@ -2152,8 +2154,8 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
                     <td style="padding:18px;">
                       <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;margin-bottom:12px;">
                         <tr>
-                          <td align="left" style="font-family:Arial Black,Arial,Helvetica,sans-serif;color:#4ea1ff;font-size:21px;line-height:25px;font-weight:900;letter-spacing:.8px;">DEPARTMENT BILLING SUMMARY</td>
-                          <td align="right" style="font-family:Arial,Helvetica,sans-serif;color:#ffffff;font-size:19px;line-height:24px;font-weight:900;">Monthly Total: <span style="color:#4ade80;">${formatMoney(monthlyTotal)}</span></td>
+                          <td align="left" style="font-family:Arial Black,Arial,Helvetica,sans-serif;color:#4ea1ff;font-size:21px;line-height:25px;font-weight:900;letter-spacing:.8px;">DEPARTMENT USAGE SUMMARY</td>
+                          <td align="right" style="font-family:Arial,Helvetica,sans-serif;color:#ffffff;font-size:19px;line-height:24px;font-weight:900;">Usage Total: <span style="color:#4ade80;">${formatMoney(monthlyTotal)}</span></td>
                         </tr>
                       </table>
                       <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;font-size:13px;">
@@ -2526,7 +2528,7 @@ let details = "";
 
   const scopeText = schedule.reportSiteScope === "all" ? "All My Sites" : "Current Site";
 
-  box.innerText = `${details} at ${schedule.time} to ${schedule.email}. Scope: ${scopeText}. Range: ${rangeText}. Billing summary included.`;
+  box.innerText = `${details} at ${schedule.time} to ${schedule.email}. Scope: ${scopeText}. Range: ${rangeText}. Department usage summary included.`;
 }
 
 function loadSavedSchedule(){
