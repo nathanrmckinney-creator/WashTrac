@@ -227,8 +227,9 @@
 
 .main > *{position:relative;z-index:1;}
 
+/* Keep desktop menu attached to the page content so it scrolls away naturally. */
 .desktop-menu-wrap{
-  position:fixed !important;
+  position:absolute !important;
   top:24px !important;
   right:30px !important;
   z-index:2500 !important;
@@ -1013,7 +1014,7 @@ async function loadRecentCommands(){
     .select("*")
     .in("device_id",deviceIds)
     .order("created_at",{ascending:false})
-    .limit(50);
+    .limit(20);
 
   if(error){
     console.log("Commands load error:",error);
@@ -2175,7 +2176,9 @@ function renderCommands(){
     return;
   }
 
-  recentCommands.forEach(cmd=>{
+  const commandsToShow = recentCommands.slice(0, 20);
+
+  commandsToShow.forEach(cmd=>{
     const status=String(cmd.status||"pending").toLowerCase();
     const statusClass=status==="complete"||status==="completed"||status==="done"?"done":status==="failed"||status==="error"?"failed":"pending";
     const device=allDevices.find(item=>item.id===cmd.device_id);
