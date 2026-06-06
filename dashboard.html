@@ -3066,9 +3066,9 @@
         banner.className = "banner red show";
 
         if(deviceHealth.hasDevices){
-          banner.innerText = `SYSTEM OFFLINE — NO CODEBOX HEARTBEAT. LAST SEEN: ${formatLastSeen(deviceHealth.newestLastSeen)}`;
+          banner.innerText = `SYSTEM OFFLINE — NO KEYPAD HEARTBEAT. LAST SEEN: ${formatLastSeen(deviceHealth.newestLastSeen)}`;
         }else{
-          banner.innerText = "SYSTEM OFFLINE — NO CODEBOX PAIRED";
+          banner.innerText = "SYSTEM OFFLINE — NO KEYPAD PAIRED";
         }
 
         return;
@@ -3090,12 +3090,13 @@
         banner.innerText = "AFTER-HOURS LOCKOUT ACTIVE";
       } else {
         banner.className = "banner green show";
-        banner.innerText = `SYSTEM READY — ${deviceHealth.onlineCount}/${deviceHealth.totalCount} CODEBOX ONLINE`;
+        banner.innerText = `SYSTEM READY — ${deviceHealth.onlineCount}/${deviceHealth.totalCount} KEYPAD ONLINE`;
       }
     }
 
     function renderBayEditor(bays){
       const wrap = document.getElementById("bayEditorGrid");
+      if(!wrap) return;
       wrap.innerHTML = "";
 
       if(!bays.length){
@@ -3210,14 +3211,20 @@
       scheduleDashboardRefresh();
     }
 
+
+    function setTextIfExists(id, value){
+      const el = document.getElementById(id);
+      if(el) el.innerText = value;
+    }
+
     function resetDashboardEmpty(){
-      document.getElementById("activeCodes").innerText = "0";
-      document.getElementById("todayWashes").innerText = "0";
-      document.getElementById("currentMembers").innerText = "0";
-      document.getElementById("memberWashesMonth").innerText = "0";
-      document.getElementById("totalActivityRecords").innerText = "0";
-      document.getElementById("totalDepartments").innerText = "0";
-      document.getElementById("totalBays").innerText = "0";
+      setTextIfExists("activeCodes", "0");
+      setTextIfExists("todayWashes", "0");
+      setTextIfExists("currentMembers", "0");
+      setTextIfExists("memberWashesMonth", "0");
+      setTextIfExists("totalActivityRecords", "0");
+      setTextIfExists("totalDepartments", "0");
+      setTextIfExists("totalBays", "0");
       const lastUpdatedEl = document.getElementById("lastUpdated"); if(lastUpdatedEl) lastUpdatedEl.innerText = new Date().toLocaleTimeString();
 
       renderRecentActivity([]);
@@ -3371,13 +3378,13 @@
         const daily = buildDailyData(allActivity);
         const usedBays = [...new Set(allActivity.map(row => row.bay).filter(Boolean))];
 
-        document.getElementById("activeCodes").innerText = activeCodes.length;
-        document.getElementById("todayWashes").innerText = allActivity.length;
-        document.getElementById("currentMembers").innerText = membershipStats.currentMembers || 0;
-        document.getElementById("memberWashesMonth").innerText = membershipStats.memberWashesMonth || 0;
-        document.getElementById("totalActivityRecords").innerText = allActivity.length;
-        document.getElementById("totalDepartments").innerText = departments.length;
-        document.getElementById("totalBays").innerText = usedBays.length || bays.length;
+        setTextIfExists("activeCodes", activeCodes.length);
+        setTextIfExists("todayWashes", allActivity.length);
+        setTextIfExists("currentMembers", membershipStats.currentMembers || 0);
+        setTextIfExists("memberWashesMonth", membershipStats.memberWashesMonth || 0);
+        setTextIfExists("totalActivityRecords", allActivity.length);
+        setTextIfExists("totalDepartments", departments.length);
+        setTextIfExists("totalBays", usedBays.length || bays.length);
         const lastUpdatedEl = document.getElementById("lastUpdated"); if(lastUpdatedEl) lastUpdatedEl.innerText = new Date().toLocaleTimeString();
 
         currentCostPerCar = parseCostPerCar(activeSiteSettings?.cost_per_car ?? 0);
@@ -3395,6 +3402,7 @@
         renderBayEditor(bays);
       }catch(err){
         console.log("Dashboard load error:", err);
+        setBayStatusMessage("Dashboard data could not load. Check the browser console for the exact Supabase error.");
       }finally{
         dashboardRefreshInProgress = false;
       }
