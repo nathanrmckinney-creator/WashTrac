@@ -274,19 +274,19 @@ tbody tr:hover{
 }
 
 
-/* HARD FIX: lock desktop menu to viewport, not inside page/card flow */
+/* Keep desktop menu attached to the Activity page content so it scrolls away naturally. */
 .desktop-menu-wrap{
-  position:fixed !important;
+  position:absolute !important;
   top:24px !important;
   right:30px !important;
-  z-index:5000 !important;
+  z-index:2500 !important;
 }
 
 .desktop-menu-wrap .hamburger-menu{
   position:absolute !important;
   top:46px !important;
   right:0 !important;
-  z-index:5100 !important;
+  z-index:2600 !important;
 }
 
 @media (max-width:900px){
