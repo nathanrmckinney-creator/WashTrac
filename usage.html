@@ -2153,13 +2153,13 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
 
   function metricCell(label, value, sub, color){
     return `
-      <td width="25%" valign="top" style="padding:7px;">
+      <td width="25%" valign="top" style="padding:4px;">
         <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#071727;border:1px solid #2563eb;">
           <tr>
-            <td align="center" style="padding:17px 10px 16px 10px;">
-              <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;color:#ffffff;text-transform:uppercase;font-weight:800;min-height:32px;">${esc(label)}</div>
-              <div style="font-family:Arial,Helvetica,sans-serif;font-size:34px;line-height:38px;font-weight:900;color:${color};padding-top:7px;">${esc(value)}</div>
-              <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;color:${color};font-weight:800;padding-top:8px;">${esc(sub)}</div>
+            <td align="center" style="padding:9px 7px 8px 7px;">
+              <div style="font-family:Arial,Helvetica,sans-serif;font-size:10px;line-height:12px;letter-spacing:.35px;color:#ffffff;text-transform:uppercase;font-weight:800;min-height:18px;">${esc(label)}</div>
+              <div style="font-family:Arial,Helvetica,sans-serif;font-size:22px;line-height:25px;font-weight:900;color:${color};padding-top:4px;">${esc(value)}</div>
+              <div style="font-family:Arial,Helvetica,sans-serif;font-size:10px;line-height:12px;color:${color};font-weight:800;padding-top:4px;">${esc(sub)}</div>
             </td>
           </tr>
         </table>
@@ -2168,7 +2168,7 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
   }
 
   const tableHeaders = columns.map(col => `
-    <th align="left" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">
+    <th align="left" style="padding:6px 8px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:10px;line-height:12px;letter-spacing:.5px;text-transform:uppercase;">
       ${esc(columnLabels[col] || col)}
     </th>
   `).join("");
@@ -2178,7 +2178,7 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
     return `
       <tr style="background:${bg};">
         ${columns.map(col => `
-          <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">
+          <td style="padding:6px 8px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:10.5px;line-height:13px;">
             ${esc(item[col] || "")}
           </td>
         `).join("")}
@@ -2186,23 +2186,23 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
     `;
   }).join("") : `
     <tr>
-      <td colspan="${columns.length}" align="center" style="padding:28px;color:#94a3b8;background:#06111f;border:1px solid #1d4ed8;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">
+      <td colspan="${columns.length}" align="center" style="padding:14px;color:#94a3b8;background:#06111f;border:1px solid #1d4ed8;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:14px;">
         No report data found for this range.
       </td>
     </tr>
   `;
 
-  const topDepartmentRows = departments.length ? departments.slice(0,5).map((item, index) => `
+  const topDepartmentRows = departments.length ? departments.slice(0,3).map((item, index) => `
     <tr>
-      <td style="padding:7px 0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:18px;font-weight:700;">${index + 1}.&nbsp; ${esc(item[0])}</td>
-      <td align="right" style="padding:7px 0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:18px;font-weight:900;">${esc(item[1])}</td>
+      <td style="padding:4px 0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:14px;font-weight:700;">${index + 1}.&nbsp; ${esc(item[0])}</td>
+      <td align="right" style="padding:4px 0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:14px;font-weight:900;">${esc(item[1])}</td>
     </tr>
     <tr>
-      <td colspan="2" style="padding:0 0 5px 0;border-top:3px solid #1e3a5f;font-size:0;line-height:0;">&nbsp;</td>
+      <td colspan="2" style="padding:0 0 3px 0;border-top:2px solid #1e3a5f;font-size:0;line-height:0;">&nbsp;</td>
     </tr>
   `).join("") : `
     <tr>
-      <td colspan="2" style="padding:10px 0;color:#94a3b8;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">No department data found.</td>
+      <td colspan="2" style="padding:6px 0;color:#94a3b8;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:14px;">No department data found.</td>
     </tr>
   `;
 
@@ -2210,15 +2210,15 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
     const bg = index % 2 === 0 ? "#081a2d" : "#06111f";
     return `
       <tr style="background:${bg};">
-        <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">${esc(item.department)}</td>
-        <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">${esc(item.cars)}</td>
-        <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">${esc(item.rate)}</td>
+        <td style="padding:6px 8px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:10.5px;line-height:13px;">${esc(item.department)}</td>
+        <td style="padding:6px 8px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:10.5px;line-height:13px;">${esc(item.cars)}</td>
+        <td style="padding:6px 8px;border:1px solid #1d4ed8;color:#eaf4ff;font-family:Arial,Helvetica,sans-serif;font-size:10.5px;line-height:13px;">${esc(item.rate)}</td>
         <td style="padding:11px 13px;border:1px solid #1d4ed8;color:#4ade80;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;font-weight:900;">${esc(item.total_cost)}</td>
       </tr>
     `;
   }).join("") : `
     <tr>
-      <td colspan="4" align="center" style="padding:28px;color:#94a3b8;background:#06111f;border:1px solid #1d4ed8;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:18px;">
+      <td colspan="4" align="center" style="padding:14px;color:#94a3b8;background:#06111f;border:1px solid #1d4ed8;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:14px;">
         No department usage data found for this range.
       </td>
     </tr>
@@ -2232,6 +2232,10 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
     <meta name="color-scheme" content="dark">
     <meta name="supported-color-schemes" content="dark">
     <title>WashTrac Report</title>
+    <style>
+      @page{size:letter;margin:0.25in;}
+      @media print{body{zoom:.78;} .no-print{display:none !important;}}
+    </style>
   </head>
   <body style="margin:0;padding:0;background:#000712;font-family:Arial,Helvetica,sans-serif;color:#ffffff;">
     <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#000712;">
@@ -2240,21 +2244,21 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
 
     <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;margin:0;padding:0;background:#000712;">
       <tr>
-        <td align="center" style="padding:24px 10px;background:#000712;">
-          <table width="980" cellpadding="0" cellspacing="0" role="presentation" style="width:980px;max-width:980px;border-collapse:collapse;background:#050d19;border:1px solid #2563eb;">
+        <td align="center" style="padding:8px 6px;background:#000712;">
+          <table width="900" cellpadding="0" cellspacing="0" role="presentation" style="width:900px;max-width:900px;border-collapse:collapse;background:#050d19;border:1px solid #2563eb;">
             <tr>
-              <td align="center" style="padding:26px 24px 18px 24px;background:#071727;border-bottom:1px solid #2563eb;">
-                <img src="https://thewashtrac.com/washtrac-logo.png" alt="WashTrac" width="360" style="display:block;margin:0 auto 12px auto;height:auto;max-width:88%;border:0;outline:none;text-decoration:none;">
-                <table width="720" cellpadding="0" cellspacing="0" role="presentation" style="width:720px;max-width:720px;border-collapse:collapse;margin:0 auto 14px auto;">
+              <td align="center" style="padding:12px 18px 9px 18px;background:#071727;border-bottom:1px solid #2563eb;">
+                <img src="https://thewashtrac.com/washtrac-logo.png" alt="WashTrac" width="150" style="display:block;margin:0 auto 6px auto;height:auto;max-width:70%;border:0;outline:none;text-decoration:none;">
+                <table width="520" cellpadding="0" cellspacing="0" role="presentation" style="width:520px;max-width:520px;border-collapse:collapse;margin:0 auto 7px auto;">
                   <tr><td style="border-top:2px solid #3b82f6;font-size:0;line-height:0;">&nbsp;</td></tr>
                 </table>
-                <div style="font-family:Arial Black,Arial,Helvetica,sans-serif;font-size:29px;line-height:34px;font-weight:900;color:#ffffff;letter-spacing:.3px;">${esc(cleanScope)}</div>
-                <div style="font-family:Arial,Helvetica,sans-serif;margin-top:7px;color:#4ea1ff;font-size:17px;line-height:22px;letter-spacing:4px;font-weight:900;">USAGE REPORT</div>
-                <div style="font-family:Arial,Helvetica,sans-serif;margin-top:12px;color:#c5ccd6;font-size:15px;line-height:20px;">Range: <strong style="color:#ffffff;">${esc(rangeLabel)}</strong></div>
-                <table cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;margin-top:17px;">
+                <div style="font-family:Arial Black,Arial,Helvetica,sans-serif;font-size:20px;line-height:23px;font-weight:900;color:#ffffff;letter-spacing:.3px;">${esc(cleanScope)}</div>
+                <div style="font-family:Arial,Helvetica,sans-serif;margin-top:3px;color:#4ea1ff;font-size:12px;line-height:15px;letter-spacing:3px;font-weight:900;">USAGE REPORT</div>
+                <div style="font-family:Arial,Helvetica,sans-serif;margin-top:5px;color:#c5ccd6;font-size:11px;line-height:14px;">Range: <strong style="color:#ffffff;">${esc(rangeLabel)}</strong></div>
+                <table cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;margin-top:8px;">
                   <tr>
-                    <td align="center" bgcolor="#2563eb" style="background:#2563eb;padding:12px 18px;">
-                      <a href="${loginUrl}" style="display:inline-block;color:#ffffff;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:18px;font-weight:900;">View Full Interactive Report</a>
+                    <td align="center" bgcolor="#2563eb" style="background:#2563eb;padding:7px 12px;">
+                      <a href="${loginUrl}" style="display:inline-block;color:#ffffff;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:14px;font-weight:900;">View Full Interactive Report</a>
                     </td>
                   </tr>
                 </table>
@@ -2262,7 +2266,7 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
             </tr>
 
             <tr>
-              <td style="padding:18px 17px 8px 17px;background:#050d19;">
+              <td style="padding:8px 12px 4px 12px;background:#050d19;">
                 <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;">
                   <tr>
                     ${metricCell("Total Uses", totalUses, "Current range", "#56a8ff")}
@@ -2275,15 +2279,15 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
             </tr>
 
             <tr>
-              <td style="padding:0 17px 12px 17px;background:#050d19;">
+              <td style="padding:0 12px 6px 12px;background:#050d19;">
                 <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;">
                   <tr>
                     <td width="60%" valign="top" style="padding:7px;">
-                      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#071727;border:1px solid #2563eb;min-height:216px;">
+                      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#071727;border:1px solid #2563eb;min-height:132px;">
                         <tr>
-                          <td style="padding:18px;">
-                            <div style="font-family:Arial Black,Arial,Helvetica,sans-serif;color:#4ea1ff;font-size:20px;line-height:24px;font-weight:900;letter-spacing:.8px;padding-bottom:14px;">REPORT SUMMARY</div>
-                            <div style="font-family:Arial,Helvetica,sans-serif;color:#cbd5e1;font-size:15px;line-height:28px;">
+                          <td style="padding:10px;">
+                            <div style="font-family:Arial Black,Arial,Helvetica,sans-serif;color:#4ea1ff;font-size:14px;line-height:17px;font-weight:900;letter-spacing:.55px;padding-bottom:7px;">REPORT SUMMARY</div>
+                            <div style="font-family:Arial,Helvetica,sans-serif;color:#cbd5e1;font-size:11px;line-height:17px;">
                               <strong style="color:#ffffff;">Scope:</strong> ${esc(cleanScope)}<br>
                               <strong style="color:#ffffff;">Range:</strong> ${esc(rangeLabel)}<br>
                               <strong style="color:#ffffff;">Generated:</strong> ${esc(generatedAt)}<br>
@@ -2294,10 +2298,10 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
                       </table>
                     </td>
                     <td width="40%" valign="top" style="padding:7px;">
-                      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#071727;border:1px solid #2563eb;min-height:216px;">
+                      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#071727;border:1px solid #2563eb;min-height:132px;">
                         <tr>
-                          <td style="padding:18px;">
-                            <div style="font-family:Arial Black,Arial,Helvetica,sans-serif;color:#4ea1ff;font-size:20px;line-height:24px;font-weight:900;letter-spacing:.8px;padding-bottom:12px;">TOP DEPARTMENTS</div>
+                          <td style="padding:10px;">
+                            <div style="font-family:Arial Black,Arial,Helvetica,sans-serif;color:#4ea1ff;font-size:14px;line-height:17px;font-weight:900;letter-spacing:.55px;padding-bottom:6px;">TOP DEPARTMENTS</div>
                             <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;">
                               ${topDepartmentRows}
                             </table>
@@ -2311,23 +2315,23 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
             </tr>
 
             <tr>
-              <td style="padding:0 24px 18px 24px;background:#050d19;">
+              <td style="padding:0 14px 8px 14px;background:#050d19;">
                 <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#071727;border:1px solid #2563eb;">
                   <tr>
-                    <td style="padding:18px;">
-                      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;margin-bottom:12px;">
+                    <td style="padding:10px;">
+                      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;margin-bottom:6px;">
                         <tr>
-                          <td align="left" style="font-family:Arial Black,Arial,Helvetica,sans-serif;color:#4ea1ff;font-size:21px;line-height:25px;font-weight:900;letter-spacing:.8px;">DEPARTMENT USAGE SUMMARY</td>
-                          <td align="right" style="font-family:Arial,Helvetica,sans-serif;color:#ffffff;font-size:19px;line-height:24px;font-weight:900;">Usage Total: <span style="color:#4ade80;">${formatMoney(monthlyTotal)}</span></td>
+                          <td align="left" style="font-family:Arial Black,Arial,Helvetica,sans-serif;color:#4ea1ff;font-size:14px;line-height:17px;font-weight:900;letter-spacing:.55px;">DEPARTMENT USAGE SUMMARY</td>
+                          <td align="right" style="font-family:Arial,Helvetica,sans-serif;color:#ffffff;font-size:13px;line-height:16px;font-weight:900;">Usage Total: <span style="color:#4ade80;">${formatMoney(monthlyTotal)}</span></td>
                         </tr>
                       </table>
                       <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;font-size:13px;">
                         <thead>
                           <tr>
-                            <th align="left" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">Department</th>
-                            <th align="left" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">Cars</th>
-                            <th align="left" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">Rate</th>
-                            <th align="left" style="padding:12px 13px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;letter-spacing:.5px;text-transform:uppercase;">Total Cost</th>
+                            <th align="left" style="padding:6px 8px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:10px;line-height:12px;letter-spacing:.5px;text-transform:uppercase;">Department</th>
+                            <th align="left" style="padding:6px 8px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:10px;line-height:12px;letter-spacing:.5px;text-transform:uppercase;">Cars</th>
+                            <th align="left" style="padding:6px 8px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:10px;line-height:12px;letter-spacing:.5px;text-transform:uppercase;">Rate</th>
+                            <th align="left" style="padding:6px 8px;border:1px solid #2563eb;color:#ffffff;background:#020817;font-family:Arial,Helvetica,sans-serif;font-size:10px;line-height:12px;letter-spacing:.5px;text-transform:uppercase;">Total Cost</th>
                           </tr>
                         </thead>
                         <tbody>${billingRowsHtml}</tbody>
@@ -2342,11 +2346,11 @@ function buildReportHtml(columns, codes, departments, billingSummary, rangeLabel
             </tr>
 
             <tr>
-              <td style="padding:0 24px 24px 24px;background:#050d19;">
+              <td style="padding:0 14px 10px 14px;background:#050d19;">
                 <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;">
                   <tr>
                     <td style="border-top:1px solid #2563eb;font-size:0;line-height:0;">&nbsp;</td>
-                    <td width="430" align="center" style="color:#c8ced8;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:20px;padding:0 16px;">
+                    <td width="360" align="center" style="color:#c8ced8;font-family:Arial,Helvetica,sans-serif;font-size:10px;line-height:13px;padding:0 10px;">
                       This is a WashTrac report.<br>
                       © ${new Date().getFullYear()} WashTrac. All rights reserved.
                     </td>
