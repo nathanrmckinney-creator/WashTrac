@@ -615,7 +615,7 @@ body{
 .activity-header,
 .activity-row{
   display:grid;
-  grid-template-columns:.8fr .55fr .9fr .9fr .85fr;
+  grid-template-columns:.85fr 1fr 1fr .85fr;
   gap:10px;
   align-items:center;
 }
@@ -634,7 +634,7 @@ body{
   font-size:15px;
 }
 .activity-row:last-child{border-bottom:none;}
-.activity-time,.activity-code,.activity-department,.activity-name,.activity-event{
+.activity-time,.activity-department,.activity-name,.activity-event{
   min-width:0;
   overflow:hidden;
   text-overflow:ellipsis;
@@ -699,6 +699,33 @@ body{
 .billing-live-total span:last-child{color:#86efac;}
 .billing-live-note{display:none;}
 #liveDepartmentBilling{max-height:calc(100% - 44px);overflow:hidden;}
+
+.top-department-box{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid rgba(148,163,184,.25);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  text-transform:uppercase;
+  font-weight:950;
+}
+.top-department-label{
+  color:#38bdf8;
+  font-size:13px;
+  letter-spacing:.55px;
+}
+.top-department-value{
+  color:#ffffff;
+  font-size:16px;
+  text-align:right;
+}
+.top-department-value span{
+  color:#86efac;
+  margin-left:8px;
+}
+
 
 /* Premium footer */
 .monitor-footer-fill{
@@ -873,12 +900,21 @@ body{
   #activity,#liveDepartmentBilling,.device-monitor-list{max-height:none;overflow:visible;}
   .activity-header{display:none;}
   .activity-row{grid-template-columns:1fr;gap:6px;white-space:normal;padding:12px 0;font-size:14px;}
-  .activity-time,.activity-code,.activity-department,.activity-name,.activity-event{white-space:normal;text-align:left;}
+  .activity-time,.activity-department,.activity-name,.activity-event{white-space:normal;text-align:left;}
   .billing-compact-head{display:none;}
   .billing-compact-row{grid-template-columns:1fr;gap:5px;font-size:14px;padding:12px 0;}
   .billing-compact-cars,.billing-compact-rate,.billing-compact-total{text-align:left;}
   .billing-live-total{font-size:15px;}
   .billing-live-note{display:block;}
+
+  .top-department-box{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  .top-department-value{
+    text-align:left;
+  }
+
   .monitor-footer-fill{display:none;}
 }
 </style>
@@ -1453,7 +1489,6 @@ function renderActivity(activity){
   wrap.innerHTML = `
     <div class="activity-header">
       <div>Time</div>
-      <div>Code</div>
       <div>Department</div>
       <div>Name</div>
       <div style="text-align:right;">Event</div>
@@ -1467,7 +1502,6 @@ function renderActivity(activity){
     wrap.innerHTML += `
       <div class="activity-row">
         <div class="activity-time">${escapeText(timeText)}</div>
-        <div class="activity-code">${escapeText(getActivityCode(row))}</div>
         <div class="activity-department">${escapeText(getActivityDepartment(row))}</div>
         <div class="activity-name">${escapeText(getActivityName(row))}</div>
         <div class="activity-event">${escapeText(getActivityEvent(row))}</div>
@@ -1960,6 +1994,10 @@ function renderLiveDepartmentBilling(rows, codes = []){
   const items = sortBillingDepartments(Object.values(map));
   const dailyWashCount = items.reduce((sum, item) => sum + Number(item.carsToday || 0), 0);
   const monthlyWashCount = items.reduce((sum, item) => sum + Number(item.carsMonth || 0), 0);
+  const topDepartment = items
+    .filter(item => Number(item.carsMonth || 0) > 0)
+    .sort((a,b) => Number(b.carsMonth || 0) - Number(a.carsMonth || 0))[0] || null;
+
   const dailyCountEl = document.getElementById("dailyWashCount");
   const monthlyCountEl = document.getElementById("monthlyWashCount");
 
@@ -1984,6 +2022,12 @@ function renderLiveDepartmentBilling(rows, codes = []){
         <div class="billing-compact-cars">${item.carsMonth}</div>
       </div>
     `).join("")}
+    <div class="top-department-box">
+      <div class="top-department-label">Top Department</div>
+      <div class="top-department-value">
+        ${topDepartment ? `${escapeText(topDepartment.department)} <span>${topDepartment.carsMonth}</span>` : `-- <span>0</span>`}
+      </div>
+    </div>
   `;
 }
 
