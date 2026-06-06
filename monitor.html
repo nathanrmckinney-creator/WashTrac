@@ -434,7 +434,7 @@ body{
   position:relative;
 }
 .billing-card h3::before{
-  content:"▦";
+  content:"$";
   position:absolute;
   left:0;
   top:-4px;
@@ -646,7 +646,7 @@ body{
 .billing-compact-head,
 .billing-compact-row{
   display:grid;
-  grid-template-columns:1.4fr .8fr .8fr;
+  grid-template-columns:1.25fr .55fr .75fr .55fr .65fr .85fr;
   gap:7px;
   align-items:center;
 }
@@ -698,7 +698,7 @@ body{
 }
 .billing-live-total span:last-child{color:#86efac;}
 .billing-live-note{display:none;}
-#liveDepartmentBilling{max-height:calc(100% - 44px);overflow:hidden;}
+#liveDepartmentBilling{max-height:calc(100% - 94px);overflow:hidden;}
 
 /* Premium footer */
 .monitor-footer-fill{
@@ -1014,8 +1014,19 @@ document.addEventListener("DOMContentLoaded", function(){
 
       <div class="monitor-grid">
         <div class="card billing-card">
-          <h3>Department Usage</h3>
+          <h3>Live Department Billing</h3>
           <div id="liveDepartmentBilling"></div>
+          <div class="billing-live-total">
+            <span>Today's Total</span>
+            <span id="liveBillingTotal">$0.00</span>
+          </div>
+          <div class="billing-live-total" style="margin-top:8px;padding-top:8px;">
+            <span>Monthly Total</span>
+            <span id="liveMonthlyBillingTotal">$0.00</span>
+          </div>
+          <div class="billing-live-note">
+            Shows all Dashboard billing departments, including zero-count departments and real custom departments, using the Cost Per Car saved on the Dashboard.
+          </div>
         </div>
 
         <div class="card daily-count-card">
@@ -1037,8 +1048,8 @@ document.addEventListener("DOMContentLoaded", function(){
 
       <div class="monitor-footer-fill">
         <span class="monitor-footer-heartbeat" id="lastHeartbeatFooter">↻ LAST HEARTBEAT: --</span>
-        <span class="monitor-footer-wash" id="lastWashFooter">⌁ LAST WASH: --</span>
-        <span class="monitor-footer-updated" id="lastUpdatedFooter">↻ LAST UPDATED: --</span>
+        <span class="monitor-footer-wash" id="currentWashNameFooter">CURRENT WASH: --</span>
+        <span class="monitor-footer-updated" id="lastWashFooter">⌁ LAST WASH: --</span>
       </div>
     </div>
   </div>
@@ -1524,10 +1535,6 @@ function setFooterValue(id, label, value){
   el.innerText = `${label}: ${value || "--"}`;
 }
 
-function updateFooterLastUpdated(){
-  setFooterValue("lastUpdatedFooter", "↻ LAST UPDATED", formatFooterDateTime(new Date()));
-}
-
 function updateFooterHeartbeat(devices = []){
   let newestLastSeen = null;
 
@@ -1545,14 +1552,34 @@ function updateFooterHeartbeat(devices = []){
   setFooterValue("lastHeartbeatFooter", "↻ LAST HEARTBEAT", newestLastSeen ? formatFooterDateTime(newestLastSeen) : "--");
 }
 
+function updateCurrentWashName(name){
+  const el = document.getElementById("currentWashNameFooter");
+  if(!el) return;
+  el.innerText = `CURRENT WASH: ${name || "--"}`;
+}
+
 function updateFooterLastWash(row){
   if(!row){
     setFooterValue("lastWashFooter", "⌁ LAST WASH", "--");
+    updateCurrentWashName("--");
     return;
   }
 
   const washTime = getActivityTime(row);
-  setFooterValue("lastWashFooter", "⌁ LAST WASH", formatFooterDateTime(washTime));
+
+  const washName =
+    row.metadata?.assigned_to ||
+    row.metadata?.name ||
+    row.assigned_to ||
+    "--";
+
+  updateCurrentWashName(washName);
+
+  setFooterValue(
+    "lastWashFooter",
+    "⌁ LAST WASH",
+    formatFooterDateTime(washTime)
+  );
 }
 
 function renderDevices(devices){
@@ -1697,7 +1724,7 @@ function renderNoSite(){
   if(monthlyCountEl) monthlyCountEl.innerText = "0";
   updateFooterHeartbeat([]);
   updateFooterLastWash(null);
-  updateFooterLastUpdated();
+  
 
   const banner = document.getElementById("systemBanner");
   banner.className = "banner yellow";
@@ -1901,7 +1928,10 @@ async function fetchBillingActivity(){
 
 function renderLiveDepartmentBilling(rows, codes = []){
   const wrap = document.getElementById("liveDepartmentBilling");
-  if(!wrap) return;
+  const todayTotalEl = document.getElementById("liveBillingTotal");
+  const monthTotalEl = document.getElementById("liveMonthlyBillingTotal");
+
+  if(!wrap || !todayTotalEl) return;
 
   const today = new Date();
   currentBillingDepartments = getBillingDepartmentList(rows, codes);
@@ -1913,7 +1943,10 @@ function renderLiveDepartmentBilling(rows, codes = []){
     map[department] = {
       department,
       carsToday: 0,
-      carsMonth: 0
+      todayTotal: 0,
+      carsMonth: 0,
+      monthTotal: 0,
+      rate: getDepartmentCost(department)
     };
   });
 
@@ -1926,32 +1959,45 @@ function renderLiveDepartmentBilling(rows, codes = []){
     const department = normalizeBillingDepartment(row.department || row.metadata?.department);
     if(!department) return;
 
+    const storedCost = parseCostPerCar(row.cost_per_car || row.metadata?.cost_per_car);
+    const rate = storedCost > 0 ? storedCost : getDepartmentCost(department);
+
     if(!map[department]){
       map[department] = {
         department,
         carsToday: 0,
-        carsMonth: 0
+        todayTotal: 0,
+        carsMonth: 0,
+        monthTotal: 0,
+        rate
       };
     }
 
+    map[department].rate = rate;
     map[department].carsMonth += 1;
+    map[department].monthTotal += rate;
 
     if(sameLocalDay(eventDate, today)){
       map[department].carsToday += 1;
+      map[department].todayTotal += rate;
     }
   });
 
   const items = sortBillingDepartments(Object.values(map));
+  const dayTotal = items.reduce((sum, item) => sum + Number(item.todayTotal || 0), 0);
+  const monthTotal = items.reduce((sum, item) => sum + Number(item.monthTotal || 0), 0);
   const dailyWashCount = items.reduce((sum, item) => sum + Number(item.carsToday || 0), 0);
   const monthlyWashCount = items.reduce((sum, item) => sum + Number(item.carsMonth || 0), 0);
   const dailyCountEl = document.getElementById("dailyWashCount");
   const monthlyCountEl = document.getElementById("monthlyWashCount");
 
+  todayTotalEl.innerText = money(dayTotal);
+  if(monthTotalEl) monthTotalEl.innerText = money(monthTotal);
   if(dailyCountEl) dailyCountEl.innerText = String(dailyWashCount);
   if(monthlyCountEl) monthlyCountEl.innerText = String(monthlyWashCount);
 
   if(!items.length){
-    wrap.innerHTML = `<div class="empty-state">No departments found.</div>`;
+    wrap.innerHTML = `<div class="empty-state">No billing departments found.</div>`;
     return;
   }
 
@@ -1959,17 +2005,24 @@ function renderLiveDepartmentBilling(rows, codes = []){
     <div class="billing-compact-head">
       <div>Department</div>
       <div style="text-align:right;">Cars Today</div>
+      <div style="text-align:right;">Today Total</div>
       <div style="text-align:right;">Cars Month</div>
+      <div style="text-align:right;">Rate</div>
+      <div style="text-align:right;">Monthly Total</div>
     </div>
     ${items.map(item => `
       <div class="billing-compact-row">
         <div class="billing-compact-dept">${escapeText(item.department)}</div>
         <div class="billing-compact-cars">${item.carsToday}</div>
+        <div class="billing-compact-total">${money(item.todayTotal)}</div>
         <div class="billing-compact-cars">${item.carsMonth}</div>
+        <div class="billing-compact-rate">${money(item.rate)}</div>
+        <div class="billing-compact-total">${money(item.monthTotal)}</div>
       </div>
     `).join("")}
   `;
 }
+
 async function loadDepartmentBilling(){
   await fetchActiveSiteSettings();
   const [rows, codes] = await Promise.all([
@@ -2146,7 +2199,7 @@ async function loadMonitor(){
     renderDevices(devices || []);
     renderControl(control, hasOnlineDevice, hasPairedDevice);
     updateFooterHeartbeat(devices || []);
-    updateFooterLastUpdated();
+    
   }catch(err){
     console.log("monitor load error:", err);
   }finally{
@@ -2208,7 +2261,7 @@ function setupRealtime(){
         loadActivity();
         loadDepartmentBilling();
         loadLastBillableWash();
-        updateFooterLastUpdated();
+        
       }
     })
 
