@@ -1796,7 +1796,7 @@ const uses = rows
     renderDepartmentBillingSummary();
 
     const nowText = new Date().toLocaleTimeString();
-    setStatus(`Loaded ${uses.length} usage events at ${nowText}.`, "success");
+    setStatus("Could not load reports.", "error");
 
   }catch(err){
     console.log("loadUsage unexpected error:", err);
