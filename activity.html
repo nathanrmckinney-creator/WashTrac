@@ -273,6 +273,28 @@ tbody tr:hover{
   box-shadow:0 0 6px rgba(30,167,255,.4), inset 0 0 14px rgba(2,6,23,.34) !important;
 }
 
+
+/* HARD FIX: lock desktop menu to viewport, not inside page/card flow */
+.desktop-menu-wrap{
+  position:fixed !important;
+  top:24px !important;
+  right:30px !important;
+  z-index:5000 !important;
+}
+
+.desktop-menu-wrap .hamburger-menu{
+  position:absolute !important;
+  top:46px !important;
+  right:0 !important;
+  z-index:5100 !important;
+}
+
+@media (max-width:900px){
+  .desktop-menu-wrap{
+    display:none !important;
+  }
+}
+
 @media (max-width:1100px){
   .summary{grid-template-columns:1fr 1fr;}
   .filters{grid-template-columns:1fr 1fr;}
