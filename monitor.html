@@ -853,6 +853,8 @@ body{
     margin-top:-6px;
   }
     
+}
+
 @media (max-width:1200px){
   body{overflow-y:auto;}
   .monitor-shell{height:auto;overflow:visible;grid-template-rows:auto;gap:14px;}
@@ -869,55 +871,323 @@ body{
 }
 
 @media (max-width:900px){
-  body{overflow-x:hidden;overflow-y:auto;}
-  .app{display:block;min-height:auto;}
-  .sidebar{display:none;}
-  .desktop-menu-wrap{display:none;}
-  .mobile-topbar{display:flex;}
-  .main{padding:20px;margin-left:0;min-height:auto;}
-  .monitor-shell{height:auto;display:block;overflow:visible;}
-  .monitor-top{display:block;padding-right:0;}
-  .monitor-brand-logo{position:static;width:210px;margin:0 auto 10px;transform:none;}
-  .page-header{padding:0;margin-bottom:10px;text-align:center;transform:none;border-left:none;}
-  .page-header h1{font-size:34px;margin:0;}
-  .page-header p{display:none;}
-  .banner{font-size:16px;line-height:1.2;min-height:auto;padding:8px 12px;margin-bottom:16px;}
-  .banner::before,.banner::after{display:none;}
-  .status-row{display:grid;grid-template-columns:1fr;gap:16px;grid-column:1 / -1;margin-bottom:16px;}
-  .status-card{
+  body{
+    overflow-x:hidden;
+    overflow-y:auto;
+    background:#020617;
+  }
+
+  .app{
+    display:block;
     min-height:auto;
-    padding:18px 18px 18px 80px;
   }
+
+  .sidebar,
+  .desktop-menu-wrap{
+    display:none;
+  }
+
+  .mobile-topbar{
+    display:flex;
+    padding:12px 14px;
+  }
+
+  .logo-image-mobile{
+    width:132px;
+  }
+
+  .mobile-menu{
+    top:58px;
+    right:12px;
+    width:230px;
+  }
+
+  .main{
+    padding:12px;
+    margin-left:0;
+    min-height:auto;
+  }
+
+  .monitor-shell{
+    height:auto;
+    min-height:auto;
+    display:block;
+    overflow:visible;
+  }
+
+  .monitor-top{
+    display:block;
+    min-height:auto;
+    padding:0;
+    margin-bottom:10px;
+  }
+
+  .monitor-brand-logo{
+    display:none;
+  }
+
+  .page-header{
+    padding:0;
+    margin:0;
+    text-align:left;
+    transform:none;
+    border-left:3px solid #38bdf8;
+  }
+
+  .page-header h1{
+    font-size:24px;
+    margin:0 0 0 10px;
+    letter-spacing:.35px;
+  }
+
+  .page-header p{
+    display:none;
+  }
+
+  .banner{
+    font-size:13px;
+    line-height:1.2;
+    min-height:auto;
+    padding:8px 10px;
+    margin:10px 0;
+    border-radius:9px;
+    letter-spacing:.35px;
+  }
+
+  .banner::before,
+  .banner::after{
+    display:none;
+  }
+
+  .status-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    min-height:auto;
+    margin-bottom:10px;
+  }
+
+  .status-card{
+    min-height:92px;
+    padding:12px 10px 12px 58px;
+    align-items:flex-start;
+    text-align:left;
+  }
+
+  .status-card::before{
+    width:100%;
+    height:140%;
+  }
+
   .status-card::after{
-    width:46px;
-    height:46px;
-    left:18px;
+    width:38px;
+    height:38px;
+    left:12px;
+    border-radius:12px;
+    font-size:26px !important;
   }
-  .monitor-grid{display:grid;grid-template-columns:1fr;grid-template-rows:auto;gap:16px;min-height:auto;}
-  .billing-card,.daily-count-card,.activity-card{grid-column:1 / -1;}
-  .card{padding:18px;margin-bottom:0;overflow:visible;}
-  .daily-count-main{width:190px;height:190px;font-size:82px;}
-  .monthly-count-main{width:170px;height:135px;font-size:58px;}
-  .daily-count-label{font-size:14px;}
-  #activity,#liveDepartmentBilling,.device-monitor-list{max-height:none;overflow:visible;}
-  .activity-header{display:none;}
-  .activity-row{grid-template-columns:1fr;gap:6px;white-space:normal;padding:12px 0;font-size:14px;}
-  .activity-time,.activity-department,.activity-name,.activity-event{white-space:normal;text-align:left;}
-  .billing-compact-head{display:none;}
-  .billing-compact-row{grid-template-columns:1fr;gap:5px;font-size:14px;padding:12px 0;}
-  .billing-compact-cars,.billing-compact-rate,.billing-compact-total{text-align:left;}
-  .billing-live-total{font-size:15px;}
-  .billing-live-note{display:block;}
+
+  #washStatusCard::after{
+    font-size:30px !important;
+  }
+
+  .status-row .status-card:nth-child(2)::after{
+    font-size:26px !important;
+  }
+
+  .status-row .status-card:nth-child(3)::after{
+    font-size:24px !important;
+  }
+
+  .status-row .status-card:nth-child(4)::after{
+    font-size:28px !important;
+  }
+
+  .status-card h3{
+    font-size:11px;
+    line-height:1.1;
+    margin:0 0 6px 0;
+    text-align:left;
+    letter-spacing:.45px;
+  }
+
+  .status-card > div:not(.device-monitor-list){
+    font-size:18px;
+    text-align:left;
+    line-height:1.1;
+  }
+
+  .status-pill{
+    min-width:auto;
+    padding:6px 10px;
+    font-size:16px;
+  }
+
+  #washStatusCard .status-pill{
+    font-size:16px !important;
+    line-height:1.05 !important;
+    padding:6px 9px;
+  }
+
+  #washStatusCard.wash-status-full h3,
+  #washStatusCard.wash-status-waiting h3,
+  #washStatusCard.wash-status-active h3{
+    transform:none;
+  }
+
+  #lockoutWindow{
+    top:0 !important;
+    font-size:16px !important;
+    line-height:1.15;
+  }
+
+  #lockoutWindowCard h3{
+    top:0 !important;
+  }
+
+  .monitor-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    grid-template-rows:auto;
+    gap:10px;
+    min-height:auto;
+  }
+
+  .billing-card,
+  .daily-count-card,
+  .activity-card{
+    grid-column:1 / -1;
+  }
+
+  .card{
+    padding:14px;
+    margin-bottom:0;
+    overflow:visible;
+    border-radius:11px;
+  }
+
+  .billing-card h3,
+  .activity-card h3{
+    font-size:18px;
+    padding-left:36px;
+    margin-bottom:10px;
+  }
+
+  .billing-card h3::before,
+  .activity-card h3::before{
+    width:26px;
+    height:26px;
+    font-size:14px;
+  }
+
+  .daily-count-card{
+    padding:16px 12px;
+  }
+
+  .daily-count-card h3{
+    font-size:21px;
+    margin-bottom:10px;
+  }
+
+  .daily-count-label{
+    font-size:13px;
+    gap:9px;
+    margin-top:8px;
+  }
+
+  .daily-count-label::before,
+  .daily-count-label::after{
+    width:34px;
+  }
+
+  .daily-count-main{
+    width:132px;
+    height:132px;
+    font-size:58px;
+  }
+
+  .monthly-count-wrap{
+    margin-top:14px;
+    padding-top:14px;
+  }
+
+  .monthly-count-main{
+    width:132px;
+    height:104px;
+    font-size:46px;
+  }
+
+  #activity,
+  #liveDepartmentBilling,
+  .device-monitor-list{
+    max-height:none;
+    overflow:visible;
+  }
+
+  .activity-header{
+    display:none;
+  }
+
+  .activity-row{
+    grid-template-columns:1fr;
+    gap:5px;
+    white-space:normal;
+    padding:10px 0;
+    font-size:14px;
+  }
+
+  .activity-time,
+  .activity-department,
+  .activity-name,
+  .activity-event{
+    white-space:normal;
+    text-align:left;
+  }
+
+  .activity-time::before{content:"Time: "; color:#38bdf8; font-weight:900;}
+  .activity-department::before{content:"Department: "; color:#38bdf8; font-weight:900;}
+  .activity-name::before{content:"Name: "; color:#38bdf8; font-weight:900;}
+  .activity-event::before{content:"Event: "; color:#38bdf8; font-weight:900;}
+
+  .billing-compact-head{
+    display:none;
+  }
+
+  .billing-compact-row{
+    grid-template-columns:1.1fr .6fr .6fr;
+    gap:8px;
+    font-size:13px;
+    padding:9px 0;
+  }
+
+  .billing-compact-cars,
+  .billing-compact-rate,
+  .billing-compact-total{
+    text-align:right;
+  }
 
   .top-department-box{
     align-items:flex-start;
     flex-direction:column;
-  }
-  .top-department-value{
-    text-align:left;
+    gap:5px;
   }
 
-  .monitor-footer-fill{display:none;}
+  .top-department-value{
+    text-align:left;
+    font-size:15px;
+  }
+
+  .billing-live-total{
+    font-size:15px;
+  }
+
+  .billing-live-note{
+    display:block;
+  }
+
+  .monitor-footer-fill{
+    display:none;
+  }
 }
 </style>
 </head>
@@ -1692,7 +1962,7 @@ function renderControl(control, hasOnlineDevice = false, hasPairedDevice = false
     document.getElementById("lockoutWindow").innerText = "--:-- to --:--";
 
     banner.className = "banner yellow";
-    banner.innerText = "SYSTEM STATUS UNKNOWN";
+    banner.innerText = window.innerWidth <= 900 ? "LOADING SYSTEM STATUS" : "SYSTEM STATUS UNKNOWN";
     return;
   }
 
