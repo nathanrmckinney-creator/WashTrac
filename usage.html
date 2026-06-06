@@ -125,15 +125,45 @@ body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#020617;color:
 
 
 .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:20px 0;}
-.summary-box{background:#111827;padding:18px;border-radius:10px;}
-.summary-box strong{font-size:28px;display:block;margin-bottom:6px;}
+.summary-box{
+  background:linear-gradient(145deg,#111827 0%,#07111f 100%);
+  padding:18px;
+  border-radius:14px;
+  border:1px solid rgba(37,99,235,.32);
+  box-shadow:0 14px 28px rgba(0,0,0,.22), inset 0 0 18px rgba(37,99,235,.06);
+}
+.summary-box strong{font-size:28px;display:block;margin-bottom:6px;color:#ffffff;}
 .summary-box span{color:#94a3b8;font-size:14px;}
 
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
-.card{background:#111827;padding:20px;border-radius:10px;margin-bottom:20px;}
-.card h3{margin-top:0;margin-bottom:16px;}
-
-.chart-wrap{position:relative;height:320px;}
+.card{
+  background:
+    radial-gradient(circle at 12% 0%, rgba(37,99,235,.20), transparent 34%),
+    linear-gradient(145deg,#111827 0%,#07111f 100%);
+  padding:20px;
+  border-radius:14px;
+  margin-bottom:20px;
+  border:1px solid rgba(37,99,235,.28);
+  box-shadow:0 16px 34px rgba(0,0,0,.28), inset 0 0 22px rgba(37,99,235,.045);
+}
+.card h3{
+  margin-top:0;
+  margin-bottom:16px;
+  font-family:Arial Black,Arial,Helvetica,sans-serif;
+  letter-spacing:.35px;
+  text-transform:uppercase;
+  color:#eaf4ff;
+}
+.chart-wrap{
+  position:relative;
+  height:360px;
+  padding:14px 12px 8px;
+  border-radius:14px;
+  background:
+    linear-gradient(180deg,rgba(2,6,23,.48),rgba(2,6,23,.20)),
+    radial-gradient(circle at 50% 0%,rgba(56,189,248,.11),transparent 38%);
+  border:1px solid rgba(148,163,184,.14);
+}
 .list-row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #1f2937;}
 .list-row:last-child{border-bottom:none;}
 
@@ -566,9 +596,8 @@ document.addEventListener("DOMContentLoaded", function(){
           <div class="status" id="manualEmailStatus"></div>
         </div>
       </div>
-    </div>
 
-    <div class="card">
+<div class="card">
       <h3>Automated Email Schedule</h3>
 
       <div class="form-row">
@@ -1810,6 +1839,7 @@ const uses = rows
 
 function renderTopCodesList(codes){
   const list = document.getElementById("topCodes");
+  if(!list) return;
   list.innerHTML = "";
 
   if(!codes.length){
@@ -1829,24 +1859,75 @@ function renderTopCodesList(codes){
 
 function renderDepartmentChart(sorted){
   const ctx = document.getElementById("departmentUsageChart");
+  if(!ctx) return;
   if(departmentUsageChartInstance) departmentUsageChartInstance.destroy();
+
+  const chartCtx = ctx.getContext("2d");
+  const gradient = chartCtx.createLinearGradient(0, 0, ctx.width || 700, 0);
+  gradient.addColorStop(0, "rgba(37,99,235,.95)");
+  gradient.addColorStop(.55, "rgba(56,189,248,.95)");
+  gradient.addColorStop(1, "rgba(134,239,172,.95)");
+
+  const labels = sorted.map(d => d[0]);
+  const values = sorted.map(d => Number(d[1] || 0));
 
   departmentUsageChartInstance = new Chart(ctx,{
     type:"bar",
     data:{
-      labels: sorted.map(d => d[0]),
+      labels,
       datasets:[{
-        label:"Uses",
-        data: sorted.map(d => d[1])
+        label:"Washes",
+        data: values,
+        backgroundColor: gradient,
+        borderColor:"rgba(147,197,253,.95)",
+        borderWidth:1,
+        borderRadius:10,
+        borderSkipped:false,
+        barThickness:22,
+        maxBarThickness:28
       }]
     },
     options:{
+      indexAxis:"y",
       responsive:true,
       maintainAspectRatio:false,
-      plugins:{ legend:{ labels:{ color:"#e5e7eb" } } },
+      animation:{duration:850,easing:"easeOutQuart"},
+      layout:{padding:{top:6,right:18,bottom:2,left:2}},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:"rgba(2,6,23,.94)",
+          titleColor:"#ffffff",
+          bodyColor:"#dbeafe",
+          borderColor:"rgba(56,189,248,.55)",
+          borderWidth:1,
+          padding:12,
+          displayColors:false,
+          callbacks:{
+            label:(context) => `${context.parsed.x} washes`
+          }
+        }
+      },
       scales:{
-        x:{ ticks:{ color:"#cbd5e1" }, grid:{ color:"#1f2937" } },
-        y:{ ticks:{ color:"#cbd5e1" }, grid:{ color:"#1f2937" }, beginAtZero:true }
+        x:{
+          beginAtZero:true,
+          ticks:{
+            color:"#cbd5e1",
+            precision:0,
+            font:{weight:"800"}
+          },
+          grid:{
+            color:"rgba(148,163,184,.14)",
+            drawBorder:false
+          }
+        },
+        y:{
+          ticks:{
+            color:"#eaf4ff",
+            font:{weight:"900"}
+          },
+          grid:{display:false}
+        }
       }
     }
   });
@@ -1854,26 +1935,84 @@ function renderDepartmentChart(sorted){
 
 function renderTopCodesChart(codes){
   const ctx = document.getElementById("topCodesChart");
+  if(!ctx) return;
   if(topCodesChartInstance) topCodesChartInstance.destroy();
+
+  const chartCtx = ctx.getContext("2d");
+  const fillGradient = chartCtx.createLinearGradient(0, 0, 0, ctx.height || 360);
+  fillGradient.addColorStop(0, "rgba(56,189,248,.34)");
+  fillGradient.addColorStop(.65, "rgba(37,99,235,.13)");
+  fillGradient.addColorStop(1, "rgba(37,99,235,0)");
+
+  const lineGradient = chartCtx.createLinearGradient(0, 0, ctx.width || 700, 0);
+  lineGradient.addColorStop(0, "#60a5fa");
+  lineGradient.addColorStop(.55, "#38bdf8");
+  lineGradient.addColorStop(1, "#86efac");
 
   topCodesChartInstance = new Chart(ctx,{
     type:"line",
     data:{
       labels: codes.map(c => c.code),
       datasets:[{
-        label:"Uses",
+        label:"Washes",
         data: codes.map(c => Number(c.uses || 0)),
-        fill:false,
-        tension:0.3
+        fill:true,
+        backgroundColor:fillGradient,
+        borderColor:lineGradient,
+        borderWidth:3,
+        pointRadius:5,
+        pointHoverRadius:7,
+        pointBackgroundColor:"#020617",
+        pointBorderColor:"#38bdf8",
+        pointBorderWidth:3,
+        tension:0.42
       }]
     },
     options:{
       responsive:true,
       maintainAspectRatio:false,
-      plugins:{ legend:{ labels:{ color:"#e5e7eb" } } },
+      animation:{duration:850,easing:"easeOutQuart"},
+      layout:{padding:{top:12,right:18,bottom:2,left:4}},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:"rgba(2,6,23,.94)",
+          titleColor:"#ffffff",
+          bodyColor:"#dbeafe",
+          borderColor:"rgba(56,189,248,.55)",
+          borderWidth:1,
+          padding:12,
+          displayColors:false,
+          callbacks:{
+            label:(context) => `${context.parsed.y} washes`
+          }
+        }
+      },
       scales:{
-        x:{ ticks:{ color:"#cbd5e1" }, grid:{ color:"#1f2937" } },
-        y:{ ticks:{ color:"#cbd5e1" }, grid:{ color:"#1f2937" }, beginAtZero:true }
+        x:{
+          ticks:{
+            color:"#cbd5e1",
+            font:{weight:"800"},
+            maxRotation:0,
+            autoSkip:false
+          },
+          grid:{
+            color:"rgba(148,163,184,.08)",
+            drawBorder:false
+          }
+        },
+        y:{
+          beginAtZero:true,
+          ticks:{
+            color:"#cbd5e1",
+            precision:0,
+            font:{weight:"800"}
+          },
+          grid:{
+            color:"rgba(148,163,184,.14)",
+            drawBorder:false
+          }
+        }
       }
     }
   });
