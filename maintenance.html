@@ -207,6 +207,134 @@
     min-width:840px;
   }
 }
+
+
+/* PREMIUM WASHTRAC POLISH - maintenance page */
+.sidebar > *,
+.nav{position:relative;z-index:1;}
+
+.main::before{
+  content:"";
+  position:absolute;
+  top:0;
+  right:0;
+  width:420px;
+  height:260px;
+  background:radial-gradient(circle at 100% 0%, rgba(37,99,235,.20), transparent 62%);
+  pointer-events:none;
+  z-index:0;
+}
+
+.main > *{position:relative;z-index:1;}
+
+.desktop-menu-wrap{
+  position:fixed !important;
+  top:24px !important;
+  right:30px !important;
+  z-index:2500 !important;
+}
+
+.hamburger-menu{
+  position:absolute !important;
+  top:46px !important;
+  right:0 !important;
+}
+
+.page-header h1{
+  letter-spacing:-.6px;
+  text-shadow:0 0 26px rgba(37,99,235,.16);
+}
+
+.summary-box{
+  background:
+    radial-gradient(circle at 14% 0%, rgba(37,99,235,.24), transparent 35%),
+    linear-gradient(145deg,#111827 0%,#07111f 100%);
+  padding:18px;
+  border-radius:14px;
+  border:1px solid rgba(37,99,235,.32);
+  box-shadow:0 14px 28px rgba(0,0,0,.22), inset 0 0 18px rgba(37,99,235,.06);
+}
+
+.summary-box strong{color:#fff;font-weight:900;}
+
+.card,
+.network-card,
+.mini-list,
+.relay-output-row{
+  background:
+    radial-gradient(circle at 12% 0%, rgba(37,99,235,.20), transparent 34%),
+    linear-gradient(145deg,#111827 0%,#07111f 100%);
+  border-radius:14px;
+  border:1px solid rgba(37,99,235,.28);
+  box-shadow:0 16px 34px rgba(0,0,0,.28), inset 0 0 22px rgba(37,99,235,.045);
+}
+
+.card h3,
+.card h4,
+.network-card h4{
+  margin:0 0 16px 0;
+  font-family:Arial Black,Arial,Helvetica,sans-serif;
+  letter-spacing:.35px;
+  text-transform:uppercase;
+  color:#eaf4ff;
+}
+
+.field label{color:#9fb0c8;font-weight:800;letter-spacing:.25px;}
+
+input,select,textarea{
+  background:linear-gradient(180deg,#0b1220,#07101d);
+  border:1px solid rgba(51,65,85,.95);
+  box-shadow:inset 0 0 14px rgba(2,6,23,.34);
+}
+
+input:focus,select:focus,textarea:focus{
+  border-color:#1ea7ff;
+  box-shadow:0 0 0 1px rgba(30,167,255,.18), 0 0 14px rgba(30,167,255,.16), inset 0 0 14px rgba(2,6,23,.34);
+}
+
+button,.menu-btn{
+  border:1px solid rgba(96,165,250,.22);
+  box-shadow:0 10px 20px rgba(2,6,23,.18), inset 0 1px 0 rgba(255,255,255,.10);
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+
+button:hover{filter:brightness(1.08);}
+button.secondary{background:linear-gradient(180deg,#475569,#334155);}
+button.success{background:linear-gradient(180deg,#22c55e,#16a34a);border-color:rgba(134,239,172,.35);}
+button.warn{background:linear-gradient(180deg,#f59e0b,#d97706);border-color:rgba(251,191,36,.35);}
+button.danger{background:linear-gradient(180deg,#ef4444,#dc2626);border-color:rgba(248,113,113,.35);}
+button.test{background:linear-gradient(180deg,#8b5cf6,#7c3aed);border-color:rgba(196,181,253,.35);}
+
+.table-wrap{
+  border-radius:14px;
+  border:1px solid rgba(148,163,184,.14);
+  background:rgba(2,6,23,.35);
+}
+
+table{border-collapse:separate;border-spacing:0;}
+th{color:#93c5fd;background:rgba(2,6,23,.46);font-weight:900;}
+td{color:#dbe5fb;}
+tbody tr:hover{background:rgba(37,99,235,.08);}
+
+.tag{border:1px solid rgba(96,165,250,.18);}
+.tag.online,.tag.green,.tag.done{border-color:rgba(34,197,94,.24);}
+.tag.offline,.tag.red,.tag.failed{border-color:rgba(239,68,68,.24);}
+.tag.pending,.tag.yellow{border-color:rgba(245,158,11,.24);}
+
+.status,.wifi-scan-status{
+  background:linear-gradient(145deg,#0b1220,#06101d);
+  border:1px solid rgba(37,99,235,.22);
+  box-shadow:inset 0 0 16px rgba(37,99,235,.045);
+}
+
+@media (max-width:900px){
+  .desktop-menu-wrap{display:none !important;}
+  .actions button,
+  .support-toolbar button,
+  .relay-output-actions button{width:100%;justify-content:center;}
+}
+
 </style>
 </head>
 
@@ -280,7 +408,7 @@ if(!hasAdminSession){
     <div class="page-header">
       <h1>Maintenance <span class="admin-pill">SUPPORT</span></h1>
       <p>
-        Customer support control center for devices, pairing codes, customer access, site codes, and remote CodeBox commands.
+        Customer support control center for devices, pairing codes, customer access, site codes, and remote Keypad commands.
         Maintenance is admin-only and should be used as the field support lifeline.
       </p>
     </div>
@@ -389,7 +517,7 @@ if(!hasAdminSession){
         </div>
 
         <div class="note">
-          Re-sync creates a fresh pending code for the selected site, then queues <span class="inline-code">sync_pairing_code</span> for visible CodeBox units.
+          Re-sync creates a fresh pending code for the selected site, then queues <span class="inline-code">sync_pairing_code</span> for visible Keypad units.
         </div>
       </div>
     </div>
@@ -519,7 +647,7 @@ if(!hasAdminSession){
       </div>
 
       <div class="note">
-        The CodeBox should report Wi‑Fi/LTE status into the <span class="inline-code">devices</span> row or a future <span class="inline-code">device_network_status</span> table. These controls queue safe commands; the device agent performs the actual network changes.
+        The Keypad should report Wi‑Fi/LTE status into the <span class="inline-code">devices</span> row or a future <span class="inline-code">device_network_status</span> table. These controls queue safe commands; the device agent performs the actual network changes.
       </div>
     </div>
 
@@ -604,7 +732,7 @@ if(!hasAdminSession){
         </div>
 
         <div class="note">
-          Needed backend/agent support on CodeBox: the Pi/CodeBox must poll <span class="inline-code">device_commands</span>, execute allowed commands, then update command status.
+          Needed backend/agent support on Keypad: the Pi/Keypad must poll <span class="inline-code">device_commands</span>, execute allowed commands, then update command status.
         </div>
       </div>
     </div>
@@ -642,7 +770,7 @@ if(!hasAdminSession){
         </table>
       </div>
       <div class="note">
-        Logs appear here after a CodeBox completes <span class="inline-code">pull_logs</span> and writes to <span class="inline-code">device_logs</span>.
+        Logs appear here after a Keypad completes <span class="inline-code">pull_logs</span> and writes to <span class="inline-code">device_logs</span>.
       </div>
     </div>
   </div>
@@ -707,7 +835,7 @@ function selectedSite(){
   return document.getElementById("siteFilter").value || "";
 }
 
-function getDeviceName(device){return device.device_name||device.name||device.nickname||"Unnamed CodeBox";}
+function getDeviceName(device){return device.device_name||device.name||device.nickname||"Unnamed Keypad";}
 function getDeviceSerial(device){return device.device_serial||device.serial||device.serial_number||device.id||"-";}
 function getDeviceVersion(device){return device.app_version||device.software_version||device.version||"-";}
 function getDeviceLastSeen(device){return device.last_seen||device.last_heartbeat||device.heartbeat_at||device.updated_at||"";}
@@ -747,9 +875,12 @@ function toggleMobileMenu(){
 }
 
 function closeMenus(){
-  document.getElementById("mobileMenu").style.display="none";
-  document.getElementById("desktopMenu").style.display="none";
-  document.getElementById("backdrop").style.display="none";
+  const mobileMenu=document.getElementById("mobileMenu");
+  const desktopMenu=document.getElementById("desktopMenu");
+  const backdrop=document.getElementById("backdrop");
+  if(mobileMenu) mobileMenu.style.display="none";
+  if(desktopMenu) desktopMenu.style.display="none";
+  if(backdrop) backdrop.style.display="none";
 }
 
 function goHome(event){
@@ -1032,7 +1163,7 @@ async function addSupportCode(){
   document.getElementById("supportDepartment").value = "";
   document.getElementById("supportName").value = "";
 
-  setStatus("Code saved. Queueing sync to visible CodeBox units.", "success");
+  setStatus("Code saved. Queueing sync to visible Keypad units.", "success");
   await loadSiteCodes();
   await queueCommandForVisible("sync_codes", false);
 }
@@ -1056,7 +1187,7 @@ async function removeSupportCode(id, code){
     return;
   }
 
-  setStatus("Code removed. Queueing sync to visible CodeBox units.", "success");
+  setStatus("Code removed. Queueing sync to visible Keypad units.", "success");
   await loadSiteCodes();
   await queueCommandForVisible("sync_codes", false);
 }
@@ -1077,7 +1208,7 @@ async function reactivateSupportCode(id){
     return;
   }
 
-  setStatus("Code reactivated. Queueing sync to visible CodeBox units.", "success");
+  setStatus("Code reactivated. Queueing sync to visible Keypad units.", "success");
   await loadSiteCodes();
   await queueCommandForVisible("sync_codes", false);
 }
@@ -1371,7 +1502,7 @@ async function savePairingCode(){
     return;
   }
 
-  setStatus(`Pairing code ${code} saved. Queueing sync to visible CodeBox units.`, "success");
+  setStatus(`Pairing code ${code} saved. Queueing sync to visible Keypad units.`, "success");
   await loadPairingCodes();
   await queueCommandForVisible("sync_pairing_code", false, { pairing_code: code, expires_at: expiresAt });
 }
@@ -1422,7 +1553,7 @@ function renderWirelessNetworks(networks){
       <div class="wifi-network-row">
         <div>
           <div class="wifi-network-name">No networks loaded yet</div>
-          <div class="wifi-network-meta">Click Search Wireless Networks to request a scan from the selected CodeBox.</div>
+          <div class="wifi-network-meta">Click Search Wireless Networks to request a scan from the selected Keypad.</div>
         </div>
       </div>
     `;
@@ -1477,7 +1608,7 @@ async function searchWirelessNetworks(){
     return;
   }
 
-  setWifiScanStatus("Wireless scan requested. Refresh network status after the CodeBox reports results.");
+  setWifiScanStatus("Wireless scan requested. Refresh network status after the Keypad reports results.");
 
   await queueCommandForVisible("scan_wifi_networks", false);
 
@@ -1841,7 +1972,7 @@ async function testRelayOutput(outputKey){
   }
 
   if(!visibleDevices.length){
-    setRelayOutputStatus("No visible CodeBox found for this site.", "warn");
+    setRelayOutputStatus("No visible Keypad found for this site.", "warn");
     return;
   }
 
@@ -2131,6 +2262,7 @@ async function queueCommandForDevices(command,devices,extraPayload={}){
 
 async function queueCommand(){
   clearStatus();
+  closeMenus();
 
   const command=document.getElementById("commandSelect").value;
   const targetDeviceId=document.getElementById("targetDevice").value;
@@ -2146,7 +2278,7 @@ async function queueCommand(){
     const device=allDevices.find(item=>item.id===targetDeviceId);
     if(device) targets=[device];
   }else{
-    targets=[...visibleDevices];
+    targets=getCommandTargetDevices();
   }
 
   if(!targets.length){
@@ -2163,23 +2295,51 @@ async function queueCommand(){
   await queueCommandForDevices(command,targets);
 }
 
+function getCommandTargetDevices(){
+  let targets = [...(visibleDevices || [])];
+
+  if(targets.length) return targets;
+
+  const siteId = selectedSite();
+  if(siteId){
+    targets = (allDevices || []).filter(device => device.site_id === siteId);
+  }else{
+    targets = [...(allDevices || [])];
+  }
+
+  return targets;
+}
+
 async function queueCommandForVisible(command, askConfirm=true, extraPayload={}){
   clearStatus();
+  closeMenus();
 
-  if(!visibleDevices.length){
-    setStatus("No visible devices to target.", "warn");
+  let targets = getCommandTargetDevices();
+
+  if(!targets.length){
+    await loadDevices();
+    renderDevices();
+    targets = getCommandTargetDevices();
+  }
+
+  if(!targets.length){
+    setStatus("No devices found for the selected site. Refresh the page or select a site first.", "warn");
     return;
   }
 
   if(askConfirm){
-    const confirmed=confirm(`Queue ${command} for all ${visibleDevices.length} visible device${visibleDevices.length===1?"":"s"}?`);
+    const confirmed=confirm(`Queue ${command} for ${targets.length} device${targets.length===1?"":"s"}?`);
     if(!confirmed) return;
   }
 
-  document.getElementById("commandSelect").value=command;
-  handleCommandChange();
+  const commandSelect = document.getElementById("commandSelect");
+  if(commandSelect){
+    commandSelect.value=command;
+    handleCommandChange();
+  }
 
-  await queueCommandForDevices(command,visibleDevices,extraPayload);
+  setStatus(`Queueing ${command} for ${targets.length} device${targets.length===1?"":"s"}...`, "warn");
+  await queueCommandForDevices(command,targets,extraPayload);
 }
 
 function openCustomerView(page){
