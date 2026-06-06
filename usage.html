@@ -614,6 +614,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
           <div class="actions">
             <button onclick="emailReport()">Email Report</button>
+            <button class="secondary" onclick="downloadPdfReport()">Download PDF</button>
           </div>
 
           <div class="status" id="manualEmailStatus"></div>
@@ -2379,6 +2380,46 @@ async function sendReportToEmail(email, subject, html){
   console.log(data);
   setManualEmailStatus(`Report sent to ${email}.`, "success");
   return true;
+}
+
+
+function downloadPdfReport(){
+  const report = getReportCodesForSelectedRange();
+  if(!report) return;
+
+  if(!report.codes.length){
+    setManualEmailStatus("No data to download for this date range.", "warn");
+    return;
+  }
+
+  const html = buildReportHtml([], report.codes, report.departments, report.billing || [], report.label, report.scopeLabel);
+  const pdfWindow = window.open("", "_blank");
+
+  if(!pdfWindow){
+    setManualEmailStatus("Popup blocked. Allow popups for this site, then try Download PDF again.", "warn");
+    return;
+  }
+
+  pdfWindow.document.open();
+  pdfWindow.document.write(html);
+  pdfWindow.document.close();
+
+  const runPrint = () => {
+    try{
+      pdfWindow.focus();
+      pdfWindow.print();
+      setManualEmailStatus("PDF report opened. Choose Save as PDF in the print window.", "success");
+    }catch(err){
+      console.log("PDF print error:", err);
+      setManualEmailStatus("PDF report opened, but the print dialog could not start automatically.", "warn");
+    }
+  };
+
+  if(pdfWindow.document.readyState === "complete"){
+    setTimeout(runPrint, 350);
+  }else{
+    pdfWindow.onload = () => setTimeout(runPrint, 350);
+  }
 }
 
 async function emailReport(){
