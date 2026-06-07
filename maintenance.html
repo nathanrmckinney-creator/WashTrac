@@ -1852,7 +1852,7 @@ function renderRelayOutputAssignments(){
         <div class="field">
           <label>Contact Type</label>
           <div class="relay-contact-fixed" id="relay-${key}-contact-display">
-            ${contact === "nc" ? "Normally Closed" : "Normally Open"}
+            ${contact === "nc" ? "N/C" : "N/O"}
           </div>
         </div>
 
@@ -2015,7 +2015,7 @@ async function testRelayOutput(outputKey){
 
   const confirmed = confirm(
     `Test ${payload.output_label} (${payload.output_name}) now?\n\n` +
-    `${payload.contact_type === "nc" ? "Normally Closed" : "Normally Open"} • ` +
+    `${payload.contact_type === "nc" ? "N/C" : "N/O"} • ` +
     `${payload.timer_type === "off_delay" ? "Off Delay" : "On Delay"} • ` +
     `${payload.duration_value} ${payload.duration_unit}`
   );
