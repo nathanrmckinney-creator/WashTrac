@@ -904,6 +904,59 @@ if(!isClientLogin && !isAdminLogin){
       return org.name || org.organization_name || org.company_name || "Unnamed Organization";
     }
 
+    function uniqueOrganizationsFromRows(rows){
+      const map = new Map();
+
+      (rows || []).forEach(row => {
+        const source = row?.organizations || row?.organization || row?.sites || row || {};
+        const id =
+          row?.organization_id ||
+          source?.organization_id ||
+          source?.id ||
+          "";
+
+        if(!id || map.has(id)) return;
+
+        map.set(id, {
+          id,
+          name:
+            source?.organization_name ||
+            source?.company_name ||
+            source?.organization?.name ||
+            source?.name ||
+            `Organization ${String(id).slice(0, 8)}`
+        });
+      });
+
+      return Array.from(map.values());
+    }
+
+    function renderOrganizationOptions(orgs){
+      const select = document.getElementById("organizationSelect");
+      organizations = orgs || [];
+
+      if(!organizations.length){
+        select.innerHTML = `<option value="">No organizations found</option>`;
+        return [];
+      }
+
+      select.innerHTML = organizations.map(org => {
+        return `<option value="${escapeText(org.id)}">${escapeText(organizationLabel(org))}</option>`;
+      }).join("");
+
+      const savedOrgId = localStorage.getItem("activeOrganizationId") || "";
+      const savedAllowed = savedOrgId && organizations.some(org => org.id === savedOrgId);
+
+      if(savedAllowed){
+        select.value = savedOrgId;
+      }else if(organizations[0]?.id){
+        select.value = organizations[0].id;
+        localStorage.setItem("activeOrganizationId", organizations[0].id);
+      }
+
+      return organizations;
+    }
+
     function escapeText(value){
       return String(value ?? "")
         .replaceAll("&", "&amp;")
@@ -1119,30 +1172,60 @@ if(!isClientLogin && !isAdminLogin){
       const select = document.getElementById("organizationSelect");
       select.innerHTML = `<option value="">Loading organizations...</option>`;
 
+      // First try the organizations table. If RLS blocks it, fall back to organization_id
+      // values from sites the current login can already see.
       const { data, error } = await client
         .from("organizations")
         .select("*")
         .order("name", { ascending:true });
 
+      if(!error && data && data.length){
+        return renderOrganizationOptions(data);
+      }
+
       if(error){
-        console.log("Organizations error:", error);
-        select.innerHTML = `<option value="">No organizations found</option>`;
-        organizations = [];
-        return [];
+        console.log("Organizations direct load error, using site fallback:", error);
       }
 
-      organizations = data || [];
+      let fallbackRows = [];
 
-      if(!organizations.length){
-        select.innerHTML = `<option value="">No organizations found</option>`;
-        return [];
+      if(hasAdminAccess()){
+        const siteResult = await client
+          .from("sites")
+          .select("organization_id,name")
+          .not("organization_id", "is", null);
+
+        if(siteResult.error){
+          console.log("Organization fallback from sites error:", siteResult.error);
+        }else{
+          fallbackRows = siteResult.data || [];
+        }
+      }else if(currentUser?.id){
+        const accessResult = await client
+          .from("user_site_access")
+          .select("sites(id,name,organization_id)")
+          .eq("user_id", currentUser.id);
+
+        if(accessResult.error){
+          console.log("Organization fallback from user site access error:", accessResult.error);
+        }else{
+          fallbackRows = (accessResult.data || [])
+            .map(row => row.sites)
+            .filter(Boolean);
+        }
       }
 
-      select.innerHTML = organizations.map(org => {
-        return `<option value="${escapeText(org.id)}">${escapeText(organizationLabel(org))}</option>`;
-      }).join("");
+      let fallbackOrgs = uniqueOrganizationsFromRows(fallbackRows);
 
-      return organizations;
+      const savedOrgId = localStorage.getItem("activeOrganizationId") || "";
+      if(savedOrgId && !fallbackOrgs.some(org => org.id === savedOrgId)){
+        fallbackOrgs.push({
+          id: savedOrgId,
+          name: `Organization ${String(savedOrgId).slice(0, 8)}`
+        });
+      }
+
+      return renderOrganizationOptions(fallbackOrgs);
     }
 
     async function acceptPendingInvitesForCurrentUser(){
@@ -1496,6 +1579,7 @@ if(!isClientLogin && !isAdminLogin){
       }
 
       localStorage.setItem("activeSiteId", siteData.id);
+      localStorage.setItem("activeOrganizationId", organization_id);
 
       clearForm();
       setStatus(`Site added with ${bayCount} bay${bayCount === 1 ? "" : "s"}, selected, and linked to your account.`, "good");
