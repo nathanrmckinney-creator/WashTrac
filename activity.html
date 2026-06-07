@@ -273,6 +273,24 @@ tbody tr:hover{
   box-shadow:0 0 6px rgba(30,167,255,.4), inset 0 0 14px rgba(2,6,23,.34) !important;
 }
 
+ /* Fix invisible Activity date range dropdown options */
+#datePreset,
+#rowLimit{
+  color:#ffffff !important;
+  background:linear-gradient(180deg,#0b1220,#07101d) !important;
+}
+
+#datePreset option,
+#rowLimit option{
+  background:#0b1220 !important;
+  color:#ffffff !important;
+}
+
+/* Windows Chrome/Edge dropdown rendering */
+select option:checked{
+  background:#2563eb !important;
+  color:#ffffff !important;
+}
 
 /* Keep desktop menu attached to the Activity page content so it scrolls away naturally. */
 .desktop-menu-wrap{
