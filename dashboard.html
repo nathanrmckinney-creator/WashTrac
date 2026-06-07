@@ -543,20 +543,27 @@
       font-size:14px;
       color:#94a3b8;
     }
-    .dashboard-top-trigger{
-      position:absolute;
-      top:135px;
-      right:30px;
-      z-index:1050;
-    }
 
-    .dashboard-top-trigger .control-status{
-      margin-top:10px;
-      min-width:250px;
-      max-width:330px;
-      font-size:13px;
-    }
-    .trigger-wash-button{
+.dashboard-top-trigger{
+  position:absolute;
+  top:135px;
+  right:30px;
+  z-index:1050;
+  width:190px;
+}
+
+.dashboard-top-trigger .control-status{
+  display:none !important;
+}
+
+.trigger-wash-button{
+  width:190px;
+  min-width:190px;
+  max-width:190px;
+  height:48px;
+  overflow:hidden;
+  white-space:nowrap;
+  position:relative;
   background:linear-gradient(180deg,#4ade80 0%, #22c55e 45%, #16a34a 100%) !important;
   color:#ffffff !important;
   border:1px solid rgba(134,239,172,.55) !important;
@@ -582,7 +589,7 @@
 }
 
 .trigger-wash-button:disabled{
-  opacity:.45;
+  opacity:.72;
   cursor:not-allowed;
   filter:none;
 }
@@ -597,11 +604,41 @@
   justify-content:center;
   font-size:10px;
   line-height:1;
+  flex:0 0 auto;
 }
 
+.trigger-wash-label{
+  display:inline-block;
+  min-width:0;
+}
 
+.trigger-wash-button.feedback-active{
+  justify-content:flex-start;
+  gap:8px;
+  padding-left:14px;
+  padding-right:14px;
+}
 
-    .cost-allocation-grid{
+.trigger-wash-button.feedback-active .trigger-wash-label{
+  position:absolute;
+  left:42px;
+  right:12px;
+  overflow:hidden;
+  white-space:nowrap;
+}
+
+.trigger-wash-button.feedback-active .trigger-wash-label span{
+  display:inline-block;
+  padding-left:100%;
+  animation:triggerWashScroll 3.2s linear infinite;
+}
+
+@keyframes triggerWashScroll{
+  0%{transform:translateX(0);}
+  100%{transform:translateX(-100%);}
+}
+
+.cost-allocation-grid{
       display:grid;
       grid-template-columns:1fr 1fr;
       gap:16px;
@@ -1007,15 +1044,17 @@
   .dashboard-top-trigger{
     position:static;
     margin:0 0 16px 0;
+    width:100%;
   }
 
   .dashboard-top-trigger .trigger-wash-button{
     width:100%;
+    min-width:0;
+    max-width:none;
   }
 
   .dashboard-top-trigger .control-status{
-    max-width:none;
-    min-width:0;
+    display:none !important;
   }
 }
   </style>
@@ -1122,9 +1161,9 @@
       <div class="dashboard-top-trigger">
         <button id="dashboardTriggerWashBtn" class="trigger-wash-button" type="button" onclick="triggerWashFromDashboard()">
           <span class="trigger-wash-icon">▶</span>
-          Trigger Wash
+          <span class="trigger-wash-label">Trigger Wash</span>
         </button>
-        <div id="bayStatusMessage" class="control-status"></div>
+        <div id="bayStatusMessage" class="control-status" aria-live="polite"></div>
       </div>
 
       <div class="page-header">
@@ -1763,11 +1802,44 @@
       box.classList.add("show");
     }
 
-    function setBayStatusMessage(message){
+    function setBayStatusMessage(message, tone = "success"){
       const box = document.getElementById("bayStatusMessage");
-      if(!box) return;
-      box.innerText = message;
-      box.classList.add("show");
+      if(box){
+        box.innerText = message || "";
+        box.classList.remove("show");
+      }
+
+      showTriggerWashButtonFeedback(message, tone);
+    }
+
+    function resetTriggerWashButton(){
+      const btn = document.getElementById("dashboardTriggerWashBtn");
+      if(!btn) return;
+
+      btn.classList.remove("feedback-active");
+      btn.disabled = false;
+      btn.innerHTML = `
+        <span class="trigger-wash-icon">▶</span>
+        <span class="trigger-wash-label">Trigger Wash</span>
+      `;
+    }
+
+    function showTriggerWashButtonFeedback(message, tone = "success"){
+      const btn = document.getElementById("dashboardTriggerWashBtn");
+      if(!btn) return;
+
+      const safeMessage = escapeHtml(message || "Trigger wash queued.");
+      const icon = tone === "error" ? "!" : "✓";
+
+      btn.disabled = true;
+      btn.classList.add("feedback-active");
+      btn.innerHTML = `
+        <span class="trigger-wash-icon">${icon}</span>
+        <span class="trigger-wash-label"><span>${safeMessage}</span></span>
+      `;
+
+      clearTimeout(window.dashboardTriggerWashFeedbackTimer);
+      window.dashboardTriggerWashFeedbackTimer = setTimeout(resetTriggerWashButton, 4200);
     }
 
     async function triggerWashFromDashboard(){
@@ -1775,12 +1847,12 @@
       const device = getPrimaryDevice();
 
       if(!activeSiteId){
-        setBayStatusMessage("No active site selected.");
+        setBayStatusMessage("No active site selected.", "error");
         return;
       }
 
       if(!device || !device.id){
-        setBayStatusMessage("No paired Keypad found for this site.");
+        setBayStatusMessage("No paired Keypad found for this site.", "error");
         return;
       }
 
@@ -1807,7 +1879,7 @@
 
       if(error){
         console.log("Trigger wash error:", error);
-        setBayStatusMessage("Could not queue trigger wash command.");
+        setBayStatusMessage("Could not queue trigger wash command.", "error");
         return;
       }
 
@@ -3188,7 +3260,7 @@
       const activeSiteId = getActiveSiteId();
 
       if(!activeSiteId){
-        setBayStatusMessage("No active site selected.");
+        setBayStatusMessage("No active site selected.", "error");
         return;
       }
 
