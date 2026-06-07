@@ -118,11 +118,12 @@
     }
 
     .summary{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:16px;
-  margin-bottom:20px;
-}
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:16px;
+      margin-bottom:20px;
+    }
+
     .summary-box{background:#111827;padding:18px;border-radius:12px;}
     .summary-box strong{display:block;font-size:30px;margin-bottom:6px;}
     .summary-box span{color:#94a3b8;font-size:14px;}
@@ -267,8 +268,6 @@
     .modal-header h3{margin:0 0 6px 0;font-size:24px;}
     .close-modal-btn{background:#334155;padding:10px 13px;border-radius:8px;line-height:1;}
 
-
-
     /* PREMIUM WASHTRAC POLISH - membership page */
     .sidebar::before{
       display:none;
@@ -297,7 +296,6 @@
       z-index:1;
     }
 
-    /* Desktop menu scrolls with the page, matching dashboard behavior */
     .desktop-menu-wrap{
       position:absolute !important;
       top:24px !important;
@@ -465,8 +463,26 @@
       box-shadow:inset 0 0 16px rgba(37,99,235,.045);
     }
 
+    /* FIX WHITE DROPDOWNS */
+    select,
+    select option,
+    #siteSwitcher,
+    #siteSwitcher option,
+    #editActive,
+    #editActive option{
+      background:#0b1220 !important;
+      color:#ffffff !important;
+    }
+
+    select,
+    #siteSwitcher,
+    #editActive{
+      color-scheme:dark;
+    }
+
     #siteSwitcher{
       background:linear-gradient(180deg,#0b1220,#07101d) !important;
+      color:#ffffff !important;
       border:1px solid #1ea7ff !important;
       box-shadow:0 0 6px rgba(30,167,255,.4), inset 0 0 14px rgba(2,6,23,.34) !important;
     }
@@ -479,7 +495,6 @@
         justify-content:center;
       }
     }
-
 
     @media (max-width:1100px){
       .summary{grid-template-columns:1fr 1fr;}
@@ -606,10 +621,7 @@ document.addEventListener("DOMContentLoaded", function(){
       <div class="summary-box"><strong id="currentMembersCount">0</strong><span>Current Members</span></div>
       <div class="summary-box"><strong id="membershipWashesMonth">0</strong><span>Membership Washes This Month</span></div>
       <div class="summary-box"><strong id="monthlyMembershipRevenue">$0.00</strong><span>Monthly Membership Revenue</span></div>
-      <div class="summary-box">
-  <strong id="avgWashesPerMember">0.0</strong>
-  <span>Average Washes Per Member</span>
-</div>
+      <div class="summary-box"><strong id="avgWashesPerMember">0.0</strong><span>Average Washes Per Member</span></div>
       <div class="summary-box"><strong id="expiringThisMonthCount">0</strong><span>Expiring This Month</span></div>
       <div class="summary-box"><strong id="expiredMembersCount">0</strong><span>Expired Members</span></div>
     </div>
@@ -617,20 +629,19 @@ document.addEventListener("DOMContentLoaded", function(){
     <div class="card">
       <h3>Download Membership Report</h3>
 
-     <div class="field">
-  <label>Report Site Scope</label>
-
-  <div style="
-    padding:12px;
-    border-radius:8px;
-    background:#0b1220;
-    border:1px solid #334155;
-    color:#fff;
-    font-weight:600;
-  ">
-    Current Site
-  </div>
-</div>
+      <div class="field">
+        <label>Report Site Scope</label>
+        <div style="
+          padding:12px;
+          border-radius:8px;
+          background:#0b1220;
+          border:1px solid #334155;
+          color:#fff;
+          font-weight:600;
+        ">
+          Current Site
+        </div>
+      </div>
 
       <div class="report-small">
         Membership reports use the current selected site/account and include only: all members, current members, expires this month, and expired.
@@ -1062,14 +1073,6 @@ async function loadSites(){
 
   select.innerHTML = `<option>Loading sites...</option>`;
 
-  /*
-    IMPORTANT:
-    This project has been inconsistent about site_members/user_site_access.
-    Dashboard was fixed by loading directly from sites.
-    Membership should do the same so it does not get stuck with "No sites assigned"
-    or empty member data when the user access lookup table is missing/empty.
-  */
-
   const { data, error } = await client
     .from("sites")
     .select("*")
@@ -1199,10 +1202,12 @@ function resetEmpty(){
   document.getElementById("avgWashesPerMember").innerText = "0.0";
   document.getElementById("expiringThisMonthCount").innerText = "0";
   document.getElementById("expiredMembersCount").innerText = "0";
+
   const membersTableBody = document.getElementById("membersTableBody");
   if(membersTableBody){
     membersTableBody.innerHTML = `<tr><td colspan="11" class="muted">No active account selected.</td></tr>`;
   }
+
   document.getElementById("membershipActivityBody").innerHTML = `<tr><td colspan="7" class="muted">No membership activity found.</td></tr>`;
 }
 
@@ -1247,15 +1252,15 @@ function renderSummary(){
   const expiringThisMonth = allMembers.filter(member => getMembershipStatus(member).key === "expiring");
   const expiredMembers = allMembers.filter(member => getMembershipStatus(member).key === "expired");
 
- const monthlyRevenue = currentMembers.reduce(
-  (sum, member) => sum + getMemberMonthlyPrice(member),
-  0
-);
+  const monthlyRevenue = currentMembers.reduce(
+    (sum, member) => sum + getMemberMonthlyPrice(member),
+    0
+  );
 
-const avgWashesPerMember =
-  currentMembers.length > 0
-    ? allMembershipActivity.length / currentMembers.length
-    : 0;
+  const avgWashesPerMember =
+    currentMembers.length > 0
+      ? allMembershipActivity.length / currentMembers.length
+      : 0;
 
   document.getElementById("currentMembersCount").innerText = currentMembers.length;
   document.getElementById("membershipWashesMonth").innerText = allMembershipActivity.length;
@@ -1307,16 +1312,15 @@ function renderMembers(){
   filtered.forEach(member => {
     const status = getMembershipStatus(member);
     const monthlyCount = getMemberMonthlyCount(member.id);
+    const monthlyPrice = getMemberMonthlyPrice(member);
 
-const monthlyPrice = getMemberMonthlyPrice(member);
+    const lastWashRecord = allMembershipActivity.find(
+      row => String(row.membership_id) === String(member.id)
+    );
 
-const lastWashRecord = allMembershipActivity.find(
-  row => String(row.membership_id) === String(member.id)
-);
-
-const lastWash = lastWashRecord
-  ? formatDateTime(lastWashRecord.wash_time || lastWashRecord.created_at)
-  : "-";
+    const lastWash = lastWashRecord
+      ? formatDateTime(lastWashRecord.wash_time || lastWashRecord.created_at)
+      : "-";
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -1573,7 +1577,6 @@ async function saveMemberEdits(){
   }, 650);
 }
 
-
 function getCurrentMembershipSummary(){
   const currentMembers = allMembers.filter(member => {
     const status = getMembershipStatus(member);
@@ -1790,7 +1793,7 @@ function buildMembershipStyledReportHtml(){
               </table>
             </td>
           </tr>
-<tr>
+          <tr>
             <td align="center" style="padding:14px 22px 18px 22px;border-top:1px solid #1d4ed8;color:#64748b;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:17px;">
               WASHTRAC © 2026<br>
               Control. Track. Manage.
@@ -1850,10 +1853,7 @@ async function sendMembershipReportToEmail(email, subject, html){
   return true;
 }
 
-
 function downloadMembershipPdfReport(){
-  const summary = getCurrentMembershipSummary();
-
   if(!allMembers.length){
     setMembershipReportStatus("No membership data to download.", "warn");
     return;
@@ -2112,7 +2112,6 @@ async function disableMembershipReportSchedule(){
   setMembershipScheduleStatus("Membership report schedule turned off.", "success");
 }
 
-
 function csvEscape(value){
   const text = String(value ?? "");
   if(/[",\n\r]/.test(text)){
@@ -2130,45 +2129,46 @@ function exportMembersCsv(){
   }
 
   const headers = [
-  "Code",
-  "First Name",
-  "Last Name",
-  "License Plate",
-  "Start Date",
-  "Expiration Date",
-  "Daily Wash Limit",
-  "Monthly Price",
-  "This Month",
-  "Last Wash",
-  "Status",
-  "Active"
-];
-const csvRows = rows.map(member => {
-  const status = getMembershipStatus(member);
-
-  const lastWashRecord = allMembershipActivity.find(
-    row => String(row.membership_id) === String(member.id)
-  );
-
-  const lastWash = lastWashRecord
-    ? formatDateTime(lastWashRecord.wash_time || lastWashRecord.created_at)
-    : "";
-
-  return [
-    member.code,
-    member.first_name,
-    member.last_name,
-    member.license_plate,
-    member.start_date,
-    member.expiration_date,
-    member.daily_wash_limit || 2,
-    formatMoney(getMemberMonthlyPrice(member)),
-    getMemberMonthlyCount(member.id),
-    lastWash,
-    status.label,
-    member.is_active === false ? "No" : "Yes"
+    "Code",
+    "First Name",
+    "Last Name",
+    "License Plate",
+    "Start Date",
+    "Expiration Date",
+    "Daily Wash Limit",
+    "Monthly Price",
+    "This Month",
+    "Last Wash",
+    "Status",
+    "Active"
   ];
-});
+
+  const csvRows = rows.map(member => {
+    const status = getMembershipStatus(member);
+
+    const lastWashRecord = allMembershipActivity.find(
+      row => String(row.membership_id) === String(member.id)
+    );
+
+    const lastWash = lastWashRecord
+      ? formatDateTime(lastWashRecord.wash_time || lastWashRecord.created_at)
+      : "";
+
+    return [
+      member.code,
+      member.first_name,
+      member.last_name,
+      member.license_plate,
+      member.start_date,
+      member.expiration_date,
+      member.daily_wash_limit || 2,
+      formatMoney(getMemberMonthlyPrice(member)),
+      getMemberMonthlyCount(member.id),
+      lastWash,
+      status.label,
+      member.is_active === false ? "No" : "Yes"
+    ];
+  });
 
   const csv = [headers, ...csvRows]
     .map(line => line.map(csvEscape).join(","))
