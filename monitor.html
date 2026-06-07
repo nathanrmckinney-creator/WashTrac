@@ -1374,12 +1374,13 @@ let assignedSiteIds = [];
 let refreshTimer = null;
 let heartbeatTimer = null;
 let monitorLoadInProgress = false;
+let monitorReloadQueued = false;
 let currentCostPerCar = 0;
 let currentDepartmentCosts = {};
 let currentBillingDepartments = [];
 
-const MONITOR_REFRESH_DELAY_MS = 350;
-const MONITOR_HEARTBEAT_REFRESH_MS = 30000;
+const MONITOR_REFRESH_DELAY_MS = 100;
+const MONITOR_HEARTBEAT_REFRESH_MS = 5000;
 
 function getActiveSiteId(){
   return currentSiteId || localStorage.getItem("activeSiteId") || localStorage.getItem("washtracActiveSiteId") || "";
@@ -2454,8 +2455,13 @@ async function loadActivity(){
 }
 
 async function loadMonitor(){
-  if(monitorLoadInProgress) return;
+  if(monitorLoadInProgress){
+    monitorReloadQueued = true;
+    return;
+  }
+
   monitorLoadInProgress = true;
+  monitorReloadQueued = false;
 
   const activeSiteId = getActiveSiteId();
 
@@ -2487,6 +2493,11 @@ async function loadMonitor(){
     console.log("monitor load error:", err);
   }finally{
     monitorLoadInProgress = false;
+
+    if(monitorReloadQueued && !document.hidden){
+      monitorReloadQueued = false;
+      scheduleMonitorRefresh(75);
+    }
   }
 }
 
@@ -2510,7 +2521,7 @@ function startHeartbeatRefresh(){
 
 document.addEventListener("visibilitychange", function(){
   if(!document.hidden){
-    scheduleMonitorRefresh(250);
+    scheduleMonitorRefresh(50);
   }
 });
 
@@ -2540,12 +2551,8 @@ function setupRealtime(){
       table:"wash_activity",
       filter:`site_id=eq.${activeSiteId}`
     }, () => {
-      if(!document.hidden){
-        loadActivity();
-        loadDepartmentBilling();
-        loadLastBillableWash();
-        
-      }
+      // Any keypad event writes to wash_activity, so force the full monitor to refresh now.
+      scheduleMonitorRefresh(50);
     })
 
     .on("postgres_changes", {
@@ -2553,23 +2560,21 @@ function setupRealtime(){
       schema:"public",
       table:"site_system_control",
       filter:`site_id=eq.${activeSiteId}`
-    }, () => scheduleMonitorRefresh(150))
+    }, () => scheduleMonitorRefresh(50))
 
     .on("postgres_changes", {
       event:"*",
       schema:"public",
       table:"site_bay_status",
       filter:`site_id=eq.${activeSiteId}`
-    }, () => {
-      if(!document.hidden) loadBays();
-    })
+    }, () => scheduleMonitorRefresh(50))
 
     .on("postgres_changes", {
       event:"*",
       schema:"public",
       table:"devices",
       filter:`site_id=eq.${activeSiteId}`
-    }, () => scheduleMonitorRefresh(150))
+    }, () => scheduleMonitorRefresh(50))
 
     .subscribe((status) => {
       if(status === "CHANNEL_ERROR" || status === "TIMED_OUT"){
