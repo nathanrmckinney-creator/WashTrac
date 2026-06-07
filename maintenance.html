@@ -836,7 +836,15 @@ function selectedSite(){
   return document.getElementById("siteFilter").value || "";
 }
 
-function getDeviceName(device){return device.device_name||device.name||device.nickname||"Unnamed Keypad";}
+function cleanDeviceDisplayName(value){
+  const raw = String(value || "").trim();
+  if(!raw) return "Unnamed Keypad";
+  return raw.replace(/CodeBox/gi, "Keypad");
+}
+
+function getDeviceName(device){
+  return cleanDeviceDisplayName(device?.device_name || device?.name || device?.nickname || "Unnamed Keypad");
+}
 function getDeviceSerial(device){return device.device_serial||device.serial||device.serial_number||device.id||"-";}
 function getDeviceVersion(device){return device.app_version||device.software_version||device.version||"-";}
 function getDeviceLastSeen(device){return device.last_seen||device.last_heartbeat||device.heartbeat_at||device.updated_at||"";}
