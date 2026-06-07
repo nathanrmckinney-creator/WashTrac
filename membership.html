@@ -615,7 +615,7 @@ document.addEventListener("DOMContentLoaded", function(){
     </div>
 
     <div class="card">
-      <h3>Quick Membership Report</h3>
+      <h3>Download Membership Report</h3>
 
       <div class="field">
         <label>Report Site Scope</label>
@@ -700,68 +700,6 @@ document.addEventListener("DOMContentLoaded", function(){
       </div>
 
       <div class="status" id="statusBox"></div>
-    </div>
-
-    <div class="card">
-      <h3>Search Members</h3>
-      <div class="search-grid">
-        <div class="field">
-          <label for="searchName">Search by name</label>
-          <input id="searchName" placeholder="Name" oninput="renderMembers()">
-        </div>
-
-        <div class="field">
-          <label for="searchPlate">Search by license plate</label>
-          <input id="searchPlate" placeholder="Plate" oninput="renderMembers()">
-        </div>
-
-        <div class="field">
-          <label for="searchCode">Search by code</label>
-          <input id="searchCode" placeholder="Code" oninput="renderMembers()">
-        </div>
-
-        <div class="field">
-          <label for="searchStatus">Status</label>
-          <select id="searchStatus" onchange="renderMembers()">
-            <option value="">All current/active</option>
-            <option value="current">Current</option>
-            <option value="warning">Month Before Expiration</option>
-            <option value="expiring">Expiring This Month</option>
-            <option value="expired">Expired</option>
-            <option value="all">All Members</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="actions">
-        <button class="secondary" type="button" onclick="clearSearch()">Clear Search</button>
-        <button class="secondary" type="button" onclick="exportMembersCsv()">Export CSV</button>
-        <button class="secondary" type="button" onclick="loadMembershipPage()">Refresh</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>Members</h3>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Code</th>
-              <th>Name</th>
-              <th>License Plate</th>
-              <th>Start Date</th>
-              <th>Expiration</th>
-              <th>Washes/Day</th>
-              <th>Monthly Price</th>
-              <th>This Month</th>
-              <th>Last Wash</th>
-              <th>Status</th>
-              <th>Edit</th>
-            </tr>
-          </thead>
-          <tbody id="membersTableBody"></tbody>
-        </table>
-      </div>
     </div>
 
     <div class="card">
@@ -1253,7 +1191,10 @@ function resetEmpty(){
   document.getElementById("avgWashesPerMember").innerText = "0.0";
   document.getElementById("expiringThisMonthCount").innerText = "0";
   document.getElementById("expiredMembersCount").innerText = "0";
-  document.getElementById("membersTableBody").innerHTML = `<tr><td colspan="11" class="muted">No active account selected.</td></tr>`;
+  const membersTableBody = document.getElementById("membersTableBody");
+  if(membersTableBody){
+    membersTableBody.innerHTML = `<tr><td colspan="11" class="muted">No active account selected.</td></tr>`;
+  }
   document.getElementById("membershipActivityBody").innerHTML = `<tr><td colspan="7" class="muted">No membership activity found.</td></tr>`;
 }
 
@@ -1317,10 +1258,13 @@ const avgWashesPerMember =
 }
 
 function renderMembers(){
-  const nameSearch = document.getElementById("searchName").value.trim().toLowerCase();
-  const plateSearch = document.getElementById("searchPlate").value.trim().toLowerCase();
-  const codeSearch = document.getElementById("searchCode").value.trim().toLowerCase();
-  const statusSearch = document.getElementById("searchStatus").value;
+  const tbody = document.getElementById("membersTableBody");
+  if(!tbody) return;
+
+  const nameSearch = document.getElementById("searchName")?.value.trim().toLowerCase() || "";
+  const plateSearch = document.getElementById("searchPlate")?.value.trim().toLowerCase() || "";
+  const codeSearch = document.getElementById("searchCode")?.value.trim().toLowerCase() || "";
+  const statusSearch = document.getElementById("searchStatus")?.value || "";
 
   let filtered = allMembers.filter(member => {
     const name = getMemberName(member).toLowerCase();
@@ -1342,7 +1286,6 @@ function renderMembers(){
     return member.is_active !== false && status.key !== "expired";
   });
 
-  const tbody = document.getElementById("membersTableBody");
   tbody.innerHTML = "";
 
   if(!filtered.length){
@@ -1396,7 +1339,7 @@ function renderMembershipActivity(){
     return;
   }
 
-  allMembershipActivity.forEach(row => {
+  allMembershipActivity.slice(0, 20).forEach(row => {
     const member = allMembers.find(item => String(item.id) === String(row.membership_id));
     const status = member ? getMembershipStatus(member) : null;
     const monthlyCount = getMemberMonthlyCount(row.membership_id);
@@ -1416,10 +1359,10 @@ function renderMembershipActivity(){
 }
 
 function clearSearch(){
-  document.getElementById("searchName").value = "";
-  document.getElementById("searchPlate").value = "";
-  document.getElementById("searchCode").value = "";
-  document.getElementById("searchStatus").value = "";
+  if(document.getElementById("searchName")) document.getElementById("searchName").value = "";
+  if(document.getElementById("searchPlate")) document.getElementById("searchPlate").value = "";
+  if(document.getElementById("searchCode")) document.getElementById("searchCode").value = "";
+  if(document.getElementById("searchStatus")) document.getElementById("searchStatus").value = "";
   renderMembers();
 }
 
