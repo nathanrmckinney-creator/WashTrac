@@ -336,6 +336,47 @@ select option:checked{
   .status-line{margin-left:0;width:100%;}
   table{min-width:680px;}
 }
+
+
+/* WASHTRAC DARK SELECT FIX - keep all dropdowns dark */
+select,
+select:focus,
+select:hover,
+.site-switcher-row select,
+#siteSwitcher,
+#datePreset,
+#rowLimit{
+  background:#0b1220 !important;
+  background-color:#0b1220 !important;
+  color:#ffffff !important;
+  border:1px solid #1ea7ff !important;
+  box-shadow:0 0 6px rgba(30,167,255,.4), inset 0 0 14px rgba(2,6,23,.34) !important;
+  outline:none !important;
+  color-scheme:dark !important;
+}
+
+select option,
+#siteSwitcher option,
+#datePreset option,
+#rowLimit option{
+  background:#0b1220 !important;
+  background-color:#0b1220 !important;
+  color:#ffffff !important;
+}
+
+select option:checked,
+#siteSwitcher option:checked,
+#datePreset option:checked,
+#rowLimit option:checked{
+  background:#2563eb !important;
+  background-color:#2563eb !important;
+  color:#ffffff !important;
+}
+
+input{
+  color-scheme:dark !important;
+}
+
 </style>
 </head>
 
