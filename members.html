@@ -416,6 +416,50 @@
     }
 
 
+    /* FIX WHITE DROPDOWNS - force dark native dropdowns on members page */
+    select,
+    select option,
+    select optgroup,
+    #siteSwitcher,
+    #siteSwitcher option,
+    #searchStatus,
+    #searchStatus option,
+    #sortMode,
+    #sortMode option,
+    #editActive,
+    #editActive option{
+      background:#0b1220 !important;
+      background-color:#0b1220 !important;
+      color:#ffffff !important;
+      border-color:#334155 !important;
+      color-scheme:dark !important;
+    }
+
+    select{
+      appearance:auto;
+      -webkit-appearance:auto;
+    }
+
+    select:focus,
+    #siteSwitcher:focus,
+    #searchStatus:focus,
+    #sortMode:focus,
+    #editActive:focus{
+      background:#0b1220 !important;
+      background-color:#0b1220 !important;
+      color:#ffffff !important;
+    }
+
+    option:checked,
+    option:hover,
+    option:focus{
+      background:#1d4ed8 !important;
+      background-color:#1d4ed8 !important;
+      color:#ffffff !important;
+    }
+
+
+
     @media (max-width:1200px){
       .summary{grid-template-columns:1fr 1fr;}
       .search-grid{grid-template-columns:1fr 1fr;}
