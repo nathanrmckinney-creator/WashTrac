@@ -290,11 +290,14 @@
     input,select{
       width:100%;
       padding:12px;
-      border-radius:8px;
-      border:1px solid #334155;
+      border-radius:10px;
+      border:1px solid rgba(51,65,85,.95);
       background:#0b1220;
-      color:white;
+      color:#ffffff;
       font-size:15px;
+      box-shadow:inset 0 0 14px rgba(2,6,23,.34);
+      outline:none;
+      color-scheme:dark;
     }
 
     input::placeholder{color:#64748b}
@@ -500,17 +503,46 @@
 
 input,
 select{
-  background:linear-gradient(180deg,#0b1220,#07101d);
+  width:100%;
+  padding:12px;
+  background:#0b1220 !important;
+  color:#ffffff !important;
   border:1px solid rgba(51,65,85,.95);
   box-shadow:inset 0 0 14px rgba(2,6,23,.34);
   outline:none;
   border-radius:10px;
+  color-scheme:dark;
 }
 
 input:focus,
 select:focus{
   border-color:#1ea7ff;
   box-shadow:0 0 0 1px rgba(30,167,255,.18), 0 0 14px rgba(30,167,255,.16), inset 0 0 14px rgba(2,6,23,.34);
+}
+
+/* force dark native dropdowns */
+select,
+select option,
+select optgroup,
+#organizationSelect,
+#siteBayCount,
+[id^="bayCount-"],
+[id^="inviteRole-"]{
+  background-color:#0b1220 !important;
+  color:#ffffff !important;
+  color-scheme:dark;
+}
+
+select option:checked,
+select option:hover{
+  background-color:#1e3a8a !important;
+  color:#ffffff !important;
+}
+
+select:disabled,
+input:disabled{
+  opacity:.72;
+  cursor:not-allowed;
 }
 
 button,
