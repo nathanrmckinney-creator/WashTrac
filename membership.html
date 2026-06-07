@@ -1751,18 +1751,14 @@ function buildMembershipStyledReportHtml(){
       <td align="center" style="padding:18px 14px 20px 14px;">
         <table width="760" cellpadding="0" cellspacing="0" role="presentation" style="width:760px;max-width:100%;border-collapse:collapse;background:#07111f;border:1px solid #1d4ed8;">
           <tr>
-            <td style="padding:16px 22px;border-bottom:1px solid #1d4ed8;">
-              <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;">
-                <tr>
-                  <td align="left" valign="middle">
-                    <img src="washtrac-logo.png" alt="WashTrac" width="140" style="display:block;width:140px;height:auto;">
-                  </td>
-                  <td align="right" valign="middle" style="font-family:Arial,Helvetica,sans-serif;color:#94a3b8;font-size:12px;line-height:17px;">
-                    <strong style="color:#ffffff;font-size:14px;">${esc(siteName)}</strong><br>
-                    Generated ${esc(generatedAt)}
-                  </td>
-                </tr>
-              </table>
+            <td align="center" style="padding:18px 22px 16px 22px;border-bottom:1px solid #1d4ed8;">
+              <img src="https://feqrsypiugwwdweiwvua.supabase.co/storage/v1/object/public/logos/washtrac-logo.png" alt="WashTrac" width="180" style="display:block;width:180px;height:auto;margin:0 auto;">
+              <div style="font-family:Arial,Helvetica,sans-serif;color:#ffffff;font-size:16px;line-height:20px;font-weight:900;margin-top:10px;">
+                ${esc(siteName)}
+              </div>
+              <div style="font-family:Arial,Helvetica,sans-serif;color:#94a3b8;font-size:12px;line-height:17px;margin-top:4px;">
+                Generated ${esc(generatedAt)}
+              </div>
             </td>
           </tr>
 
@@ -1775,7 +1771,7 @@ function buildMembershipStyledReportHtml(){
           </tr>
 
           <tr>
-            <td style="padding:16px 15px 18px 15px;">
+            <td style="padding:16px 15px 20px 15px;">
               <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;">
                 <tr>
                   ${metricCell("All Members", summary.allMembers ?? allMembers.length, "Total records", "#60a5fa")}
@@ -1786,20 +1782,7 @@ function buildMembershipStyledReportHtml(){
               </table>
             </td>
           </tr>
-
-          <tr>
-            <td style="padding:0 22px 22px 22px;">
-              <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#020817;border:1px solid #1d4ed8;">
-                <tr>
-                  <td style="padding:14px 16px;font-family:Arial,Helvetica,sans-serif;color:#dbeafe;font-size:13px;line-height:19px;">
-                    This membership report intentionally shows only the high-level membership counts requested for the selected account/site.
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <tr>
+<tr>
             <td align="center" style="padding:14px 22px 18px 22px;border-top:1px solid #1d4ed8;color:#64748b;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:16px;">
               WASHTRAC © 2026<br>
               Control. Track. Manage.
