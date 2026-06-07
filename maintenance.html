@@ -293,6 +293,33 @@ input:focus,select:focus,textarea:focus{
   box-shadow:0 0 0 1px rgba(30,167,255,.18), 0 0 14px rgba(30,167,255,.16), inset 0 0 14px rgba(2,6,23,.34);
 }
 
+
+/* Fix white dropdown menus in Chrome/Edge/Windows */
+select option,
+select optgroup{
+  background:#0b1220 !important;
+  color:#ffffff !important;
+}
+
+select option:checked,
+select option:hover{
+  background:#2563eb !important;
+  color:#ffffff !important;
+}
+
+.relay-contact-fixed{
+  min-height:40px;
+  display:flex;
+  align-items:center;
+  padding:10px 12px;
+  border-radius:8px;
+  border:1px solid rgba(51,65,85,.95);
+  background:linear-gradient(180deg,#0b1220,#07101d);
+  color:#ffffff;
+  font-weight:900;
+  box-shadow:inset 0 0 14px rgba(2,6,23,.34);
+}
+
 button,.menu-btn{
   border:1px solid rgba(96,165,250,.22);
   box-shadow:0 10px 20px rgba(2,6,23,.18), inset 0 1px 0 rgba(255,255,255,.10);
@@ -656,8 +683,8 @@ if(!hasAdminSession){
       <h3>Relay Output Assignments</h3>
 
       <div class="note">
-        Configure the dedicated SS Relay wash-start output and Relays 1–5. These settings are saved now for future ESP32 relay control.
-        Default SS Relay is <span class="inline-code">Wash Trigger</span>, normally open, off delay, 1 second.
+        Configure Relay 1 as the wash-start output and Relays 2–6 as dry contact outputs. Relay 1–4 are hard-wired normally open; Relay 5–6 are hard-wired normally closed.
+        Default Relay 1 assignment is <span class="inline-code">Wash Trigger</span>, off delay, 1 second.
       </div>
 
       <div id="relayOutputWrap" class="relay-output-wrap"></div>
@@ -1761,12 +1788,12 @@ async function saveLteConfig(){
 }
 
 const RELAY_OUTPUT_DEFAULTS = [
-  { output_key:"ss", output_label:"SS Relay", default_name:"Wash Trigger", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:true },
-  { output_key:"relay1", output_label:"Relay 1", default_name:"Spare", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false },
-  { output_key:"relay2", output_label:"Relay 2", default_name:"Spare", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false },
-  { output_key:"relay3", output_label:"Relay 3", default_name:"Spare", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false },
-  { output_key:"relay4", output_label:"Relay 4", default_name:"Spare", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false },
-  { output_key:"relay5", output_label:"Relay 5", default_name:"Spare", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false }
+  { output_key:"ss", output_label:"Relay 1", default_name:"Wash Trigger", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:true },
+  { output_key:"relay1", output_label:"Relay 2", default_name:"Spare", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false },
+  { output_key:"relay2", output_label:"Relay 3", default_name:"Spare", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false },
+  { output_key:"relay3", output_label:"Relay 4", default_name:"Spare", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false },
+  { output_key:"relay4", output_label:"Relay 5", default_name:"Spare", contact_type:"nc", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false },
+  { output_key:"relay5", output_label:"Relay 6", default_name:"Spare", contact_type:"nc", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false }
 ];
   
 function setRelayOutputStatus(message, tone=""){
@@ -1803,7 +1830,7 @@ function renderRelayOutputAssignments(){
   wrap.innerHTML = RELAY_OUTPUT_DEFAULTS.map(output => {
     const key = output.output_key;
     const name = getRelayValue(key, "output_name");
-    const contact = getRelayValue(key, "contact_type");
+    const contact = output.contact_type;
     const timer = getRelayValue(key, "timer_type");
     const duration = getRelayValue(key, "duration_value");
     const unit = getRelayValue(key, "duration_unit");
@@ -1823,11 +1850,10 @@ function renderRelayOutputAssignments(){
         </div>
 
         <div class="field">
-          <label for="relay-${key}-contact">Contact Type</label>
-          <select id="relay-${key}-contact">
-            <option value="no" ${contact === "no" ? "selected" : ""}>Normally Open</option>
-            <option value="nc" ${contact === "nc" ? "selected" : ""}>Normally Closed</option>
-          </select>
+          <label>Contact Type</label>
+          <div class="relay-contact-fixed" id="relay-${key}-contact-display">
+            ${contact === "nc" ? "Normally Closed" : "Normally Open"}
+          </div>
         </div>
 
         <div class="field">
@@ -1912,7 +1938,7 @@ function buildRelayOutputPayload(outputKey){
     output_key: outputKey,
     output_label: defaults.output_label,
     output_name: (document.getElementById(`relay-${outputKey}-name`)?.value || defaults.default_name).trim() || defaults.default_name,
-    contact_type: document.getElementById(`relay-${outputKey}-contact`)?.value || defaults.contact_type,
+    contact_type: defaults.contact_type,
     timer_type: document.getElementById(`relay-${outputKey}-timer`)?.value || defaults.timer_type,
     duration_value: durationValue,
     duration_unit: document.getElementById(`relay-${outputKey}-unit`)?.value || defaults.duration_unit,
