@@ -615,83 +615,32 @@ document.addEventListener("DOMContentLoaded", function(){
     </div>
 
     <div class="card">
-      <h3>Membership Reports</h3>
-      <p class="report-card-note">
-        Download a spreadsheet-friendly membership report or email the polished WashTrac membership report using the current account/site selection.
-      </p>
+      <h3>Quick Membership Report</h3>
 
-      <div class="report-actions">
-        <button type="button" onclick="downloadMembershipReportCsv()">Download Membership Report CSV</button>
-        <button class="secondary" type="button" onclick="exportMembersCsv()">Download Filtered Members CSV</button>
-        <button class="secondary" type="button" onclick="loadMembershipPage()">Refresh Membership Data</button>
-      </div>
-
-      <div class="form-grid" style="margin-top:16px;">
-        <div class="field">
-          <label for="membershipManualEmail">Email Membership Report To</label>
-          <input id="membershipManualEmail" type="email" placeholder="name@email.com">
-        </div>
-
-        <div class="field">
-          <label>&nbsp;</label>
-          <button type="button" onclick="emailMembershipReport()">Email Membership Report</button>
-        </div>
+      <div class="field">
+        <label>Report Site Scope</label>
+        <select disabled>
+          <option>Current Site</option>
+        </select>
       </div>
 
       <div class="report-small">
-        CSV downloads open in Excel. The emailed membership report uses the polished WashTrac HTML report style with logo, summary cards, member details, and footer.
+        Membership reports use the current selected site/account and include only: all members, current members, expires this month, and expired.
       </div>
 
-      <div class="status" id="membershipReportStatus"></div>
-    </div>
-
-    <div class="card">
-      <h3>Scheduled Membership Reports <span style="color:#60a5fa;font-size:13px;font-weight:900;letter-spacing:.8px;">NEW</span></h3>
-      <p class="report-card-note">
-        Schedule a recurring membership report email for the current account/site. This is separate from the normal wash report schedule. This card should be visible directly under Membership Reports.
-      </p>
-
-      <div class="schedule-grid">
+      <div class="builder-section">
         <div class="field">
-          <label for="membershipScheduleEmail">Report Email</label>
-          <input id="membershipScheduleEmail" type="email" placeholder="name@email.com">
+          <label for="membershipManualEmail">Send Report To Email</label>
+          <input id="membershipManualEmail" type="email" placeholder="name@email.com">
         </div>
 
-        <div class="field">
-          <label for="membershipScheduleFrequency">Frequency</label>
-          <select id="membershipScheduleFrequency">
-            <option value="off">Off</option>
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-          </select>
+        <div class="report-actions">
+          <button type="button" onclick="emailMembershipReport()">Email Report</button>
+          <button class="secondary" type="button" onclick="downloadMembershipPdfReport()">Download PDF</button>
         </div>
 
-        <div class="field">
-          <label for="membershipScheduleTime">Send Time</label>
-          <input id="membershipScheduleTime" type="time" value="08:00">
-        </div>
-
-        <div class="field">
-          <label for="membershipScheduleRange">Report Range</label>
-          <select id="membershipScheduleRange">
-            <option value="this_month">This Month</option>
-            <option value="last_month">Last Month</option>
-            <option value="all">All Membership Data</option>
-          </select>
-        </div>
+        <div class="status" id="membershipReportStatus"></div>
       </div>
-
-      <div class="report-actions">
-        <button type="button" onclick="saveMembershipReportSchedule()">Save Membership Schedule</button>
-        <button class="secondary" type="button" onclick="disableMembershipReportSchedule()">Turn Off Schedule</button>
-      </div>
-
-      <div class="schedule-summary" id="membershipScheduleSummary">
-        <strong>Current Schedule:</strong> No membership report schedule saved.
-      </div>
-
-      <div class="status" id="membershipScheduleStatus"></div>
     </div>
 
     <div class="card">
@@ -1694,6 +1643,7 @@ function getCurrentMembershipSummary(){
       : 0;
 
   return {
+    allMembers: allMembers.length,
     currentMembers: currentMembers.length,
     expiredMembers: expiredMembers.length,
     expiringThisMonth: expiringThisMonth.length,
@@ -1809,7 +1759,6 @@ function buildMembershipReportCsv(){
 
 function buildMembershipStyledReportHtml(){
   const summary = getCurrentMembershipSummary();
-  const rows = getMembershipReportRows();
   const activeSite = allSites.find(site => site.id === getActiveSiteId());
   const siteName = activeSite ? (activeSite.name || activeSite.site_name || "Unnamed Site") : "Current Site";
   const generatedAt = new Date().toLocaleString();
@@ -1821,38 +1770,21 @@ function buildMembershipStyledReportHtml(){
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 
-  const metricCards = [
-    ["Current Members", summary.currentMembers, "Active memberships"],
-    ["Expired Members", summary.expiredMembers, "Expired or inactive"],
-    ["Expiring This Month", summary.expiringThisMonth, "Renewal attention"],
-    ["Membership Washes", summary.membershipWashesThisMonth, "This month"],
-    ["Monthly Revenue", formatMoney(summary.monthlyMembershipRevenue), "Membership pricing"],
-    ["Avg Washes / Member", summary.averageWashesPerMember.toFixed(1), "This month"]
-  ].map(item => `
-    <div class="metric-card">
-      <div class="metric-label">${esc(item[0])}</div>
-      <div class="metric-value">${esc(item[1])}</div>
-      <div class="metric-sub">${esc(item[2])}</div>
-    </div>
-  `).join("");
-
-  const tableRows = rows.length ? rows.map(row => `
-    <tr>
-      <td>${esc(row.name || "-")}</td>
-      <td>${esc(row.plate || "-")}</td>
-      <td><strong>${esc(row.code || "-")}</strong></td>
-      <td>${esc(row.dailyLimit || "-")}</td>
-      <td>${esc(formatMoney(row.monthlyPrice || 0))}</td>
-      <td>${esc(row.washesThisMonth || 0)}</td>
-      <td>${esc(row.lastWash || "-")}</td>
-      <td>${esc(row.expiration || "-")}</td>
-      <td><span class="status-pill">${esc(row.status || "-")}</span></td>
-    </tr>
-  `).join("") : `
-    <tr>
-      <td colspan="9" class="empty-cell">No membership data found.</td>
-    </tr>
-  `;
+  function metricCell(label, value, sub, color){
+    return `
+      <td width="25%" valign="top" style="padding:7px;">
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#071727;border:1px solid #2563eb;border-radius:0;">
+          <tr>
+            <td align="center" style="padding:14px 8px 13px 8px;">
+              <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:15px;letter-spacing:.5px;color:#ffffff;text-transform:uppercase;font-weight:800;min-height:30px;">${esc(label)}</div>
+              <div style="font-family:Arial,Helvetica,sans-serif;font-size:30px;line-height:34px;font-weight:900;color:${color};padding-top:6px;">${esc(value)}</div>
+              <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:15px;color:${color};font-weight:800;padding-top:7px;">${esc(sub)}</div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    `;
+  }
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -1861,286 +1793,79 @@ function buildMembershipStyledReportHtml(){
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WashTrac Membership Report</title>
   <style>
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #020617;
-      color: #ffffff;
-      line-height: 1.6;
-    }
-
-    header {
-      background: rgba(2, 6, 23, 0.95);
-      border-bottom: 1px solid #1e293b;
-      padding: 14px 30px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .header-logo {
-      width: 220px;
-      max-width: 100%;
-      height: auto;
-      display: block;
-      position: relative;
-      top: -10px;
-    }
-
-    .header-meta {
-      color: #94a3b8;
-      font-size: 14px;
-      text-align: right;
-      line-height: 1.45;
-    }
-
-    .hero {
-      padding: 80px 20px 50px;
-      background:
-        radial-gradient(circle at top center, rgba(37,99,235,0.22), transparent 45%),
-        linear-gradient(180deg, #020617 0%, #07111f 55%, #020617 100%);
-      border-bottom: 1px solid #1e293b;
-      text-align: center;
-    }
-
-    .hero .eyebrow {
-      color: #60a5fa;
-      letter-spacing: 2px;
-      font-size: 14px;
-      font-weight: 700;
-      text-transform: uppercase;
-      margin-bottom: 14px;
-    }
-
-    .hero h1 {
-      margin: 0 0 16px;
-      font-size: 54px;
-      line-height: 1.05;
-    }
-
-    .hero p {
-      max-width: 760px;
-      margin: 0 auto;
-      color: #94a3b8;
-      font-size: 19px;
-    }
-
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 70px 20px;
-    }
-
-    .metric-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-bottom: 30px;
-    }
-
-    .metric-card,
-    .section-card {
-      background: linear-gradient(180deg, #0f172a, #111827);
-      border: 1px solid #1e293b;
-      border-radius: 18px;
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
-    }
-
-    .metric-card {
-      padding: 22px;
-      text-align: center;
-    }
-
-    .metric-label {
-      color: #cbd5e1;
-      font-size: 13px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: .7px;
-      min-height: 34px;
-    }
-
-    .metric-value {
-      color: #60a5fa;
-      font-size: 34px;
-      line-height: 1.1;
-      font-weight: 900;
-      margin-top: 8px;
-    }
-
-    .metric-sub {
-      color: #94a3b8;
-      font-size: 13px;
-      margin-top: 8px;
-    }
-
-    .section-card {
-      padding: 28px;
-      margin: 0 auto 30px;
-      width: 100%;
-      overflow: hidden;
-    }
-
-    .section-card h2 {
-      margin: 0 0 12px;
-      font-size: 32px;
-    }
-
-    .section-card p {
-      margin: 0 0 18px;
-      color: #cbd5e1;
-      font-size: 17px;
-    }
-
-    .table-wrap {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 980px;
-    }
-
-    th,
-    td {
-      padding: 13px 12px;
-      border-bottom: 1px solid #1f2937;
-      text-align: left;
-      vertical-align: middle;
-      font-size: 14px;
-    }
-
-    th {
-      color: #93c5fd;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .5px;
-      background: #0b1220;
-    }
-
-    tr:nth-child(even) td {
-      background: rgba(15, 23, 42, .42);
-    }
-
-    .status-pill {
-      display: inline-block;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(37, 99, 235, .15);
-      color: #dbeafe;
-      border: 1px solid rgba(37, 99, 235, .30);
-      font-size: 12px;
-      font-weight: 900;
-      white-space: nowrap;
-    }
-
-    .tip {
-      margin-top: 16px;
-      padding: 14px 18px;
-      border-radius: 12px;
-      background: rgba(37, 99, 235, 0.10);
-      border: 1px solid rgba(37, 99, 235, 0.28);
-      color: #dbeafe;
-      font-size: 15px;
-    }
-
-    .empty-cell {
-      color: #94a3b8;
-      text-align: center;
-      padding: 28px;
-    }
-
-    footer {
-      text-align: center;
-      padding: 30px;
-      color: #64748b;
-      border-top: 1px solid #1e293b;
-      margin-top: 40px;
-    }
-
-    @media print {
-      body { background: #020617; }
-      header { position: static; }
-      .container { padding: 35px 20px; }
-    }
-
-    @media (max-width: 900px) {
-      header { padding: 14px 20px; align-items: flex-start; gap: 12px; flex-direction: column; }
-      .header-logo { width: 180px; }
-      .header-meta { text-align: left; }
-      .hero { padding: 65px 20px 40px; }
-      .hero h1 { font-size: 40px; }
-      .hero p { font-size: 17px; }
-      .container { padding: 50px 20px; }
-      .metric-grid { grid-template-columns: 1fr; }
-      .section-card { padding: 22px; }
-      .section-card h2 { font-size: 26px; }
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;background:#020617;color:#ffffff;font-family:Arial,Helvetica,sans-serif;}
+    body{padding:0;}
+    @page{size:letter;margin:.35in;}
+    @media print{
+      body{-webkit-print-color-adjust:exact;print-color-adjust:exact;zoom:.90;}
     }
   </style>
 </head>
 <body>
-  <header>
-    <img src="washtrac-logo.png" alt="WashTrac" class="header-logo">
-    <div class="header-meta">
-      <strong>${esc(siteName)}</strong><br>
-      Generated ${esc(generatedAt)}
-    </div>
-  </header>
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#020617;color:#ffffff;">
+    <tr>
+      <td align="center" style="padding:18px 14px 20px 14px;">
+        <table width="760" cellpadding="0" cellspacing="0" role="presentation" style="width:760px;max-width:100%;border-collapse:collapse;background:#07111f;border:1px solid #1d4ed8;">
+          <tr>
+            <td style="padding:16px 22px;border-bottom:1px solid #1d4ed8;">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;">
+                <tr>
+                  <td align="left" valign="middle">
+                    <img src="washtrac-logo.png" alt="WashTrac" width="140" style="display:block;width:140px;height:auto;">
+                  </td>
+                  <td align="right" valign="middle" style="font-family:Arial,Helvetica,sans-serif;color:#94a3b8;font-size:12px;line-height:17px;">
+                    <strong style="color:#ffffff;font-size:14px;">${esc(siteName)}</strong><br>
+                    Generated ${esc(generatedAt)}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-  <section class="hero">
-    <div class="eyebrow">Membership Report</div>
-    <h1>Membership Summary</h1>
-    <p>
-      Current membership status, monthly wash activity, revenue totals, expiration status, and member detail for ${esc(siteName)}.
-    </p>
-  </section>
+          <tr>
+            <td align="center" style="padding:22px 22px 16px 22px;background:linear-gradient(180deg,#020617 0%,#071727 100%);border-bottom:1px solid #1d4ed8;">
+              <div style="font-family:Arial,Helvetica,sans-serif;color:#60a5fa;font-size:12px;line-height:16px;letter-spacing:2px;font-weight:900;text-transform:uppercase;">Membership Report</div>
+              <div style="font-family:Arial Black,Arial,Helvetica,sans-serif;color:#ffffff;font-size:32px;line-height:38px;font-weight:900;margin-top:6px;">Membership Summary</div>
+              <div style="font-family:Arial,Helvetica,sans-serif;color:#cbd5e1;font-size:13px;line-height:19px;margin-top:8px;max-width:620px;">Summary of all members, current members, members expiring this month, and expired memberships.</div>
+            </td>
+          </tr>
 
-  <div class="container">
-    <div class="metric-grid">
-      ${metricCards}
-    </div>
+          <tr>
+            <td style="padding:16px 15px 18px 15px;">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;">
+                <tr>
+                  ${metricCell("All Members", summary.allMembers ?? allMembers.length, "Total records", "#60a5fa")}
+                  ${metricCell("Current Members", summary.currentMembers, "Active now", "#86efac")}
+                  ${metricCell("Expires This Month", summary.expiringThisMonth, "Renewal attention", "#fbbf24")}
+                  ${metricCell("Expired", summary.expiredMembers, "Expired/inactive", "#f87171")}
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-    <div class="section-card">
-      <h2>Member Details</h2>
-      <p>
-        Membership report includes name, plate, code, daily limit, monthly price, monthly washes, last wash, expiration, and status.
-      </p>
+          <tr>
+            <td style="padding:0 22px 22px 22px;">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;background:#020817;border:1px solid #1d4ed8;">
+                <tr>
+                  <td style="padding:14px 16px;font-family:Arial,Helvetica,sans-serif;color:#dbeafe;font-size:13px;line-height:19px;">
+                    This membership report intentionally shows only the high-level membership counts requested for the selected account/site.
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Plate</th>
-              <th>Code</th>
-              <th>Daily Limit</th>
-              <th>Monthly Price</th>
-              <th>This Month</th>
-              <th>Last Wash</th>
-              <th>Expiration</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${tableRows}
-          </tbody>
+          <tr>
+            <td align="center" style="padding:14px 22px 18px 22px;border-top:1px solid #1d4ed8;color:#64748b;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:16px;">
+              WASHTRAC © 2026<br>
+              Control. Track. Manage.
+            </td>
+          </tr>
         </table>
-      </div>
-
-      <div class="tip">
-        This report is generated from the same membership data shown inside the WashTrac Membership page.
-      </div>
-    </div>
-  </div>
-
-  <footer>
-    WASHTRAC © 2026<br>
-    Control. Track. Manage.
-  </footer>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`;
 }
@@ -2191,10 +1916,37 @@ async function sendMembershipReportToEmail(email, subject, html){
   return true;
 }
 
-async function emailMembershipReport(){
-  const rows = getMembershipReportRows();
 
-  if(!rows.length){
+function downloadMembershipPdfReport(){
+  const summary = getCurrentMembershipSummary();
+
+  if(!allMembers.length){
+    setMembershipReportStatus("No membership data to download.", "warn");
+    return;
+  }
+
+  const html = buildMembershipStyledReportHtml();
+  const pdfWindow = window.open("", "_blank");
+
+  if(!pdfWindow){
+    setMembershipReportStatus("Popup blocked. Allow popups to download the PDF report.", "warn");
+    return;
+  }
+
+  pdfWindow.document.open();
+  pdfWindow.document.write(html);
+  pdfWindow.document.close();
+
+  pdfWindow.onload = function(){
+    pdfWindow.focus();
+    pdfWindow.print();
+  };
+
+  setMembershipReportStatus("PDF report opened. Choose Save as PDF from the print window.", "success");
+}
+
+async function emailMembershipReport(){
+  if(!allMembers.length){
     setMembershipReportStatus("No membership data to email.", "warn");
     return;
   }
