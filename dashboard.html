@@ -546,12 +546,20 @@
 
 .dashboard-top-trigger{
   position:absolute;
-  top:145px;
+  top:135px;
   right:30px;
   z-index:1050;
   width:190px;
 }
 
+@media (min-width:901px) and (max-width:1400px) and (orientation:landscape){
+
+  .dashboard-top-trigger{
+    top:145px;
+  }
+
+}    
+    
 .dashboard-top-trigger .control-status{
   display:none !important;
 }
