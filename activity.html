@@ -136,15 +136,7 @@ td{color:#e5e7eb;}
 
 /* PREMIUM WASHTRAC POLISH - matches dashboard/codes/reports styling */
 .main::before{
-  content:"";
-  position:absolute;
-  top:0;
-  right:0;
-  width:420px;
-  height:260px;
-  background:radial-gradient(circle at 100% 0%, rgba(37,99,235,.20), transparent 62%);
-  pointer-events:none;
-  z-index:0;
+  display:none;
 }
 
 .main > *{
@@ -375,6 +367,165 @@ select option:checked,
 
 input{
   color-scheme:dark !important;
+}
+
+
+/* WASHTRAC TABLET LANDSCAPE ACTIVITY FIX
+   Matches Dashboard/Codes footprint on Fold/tablet landscape only.
+   Desktop and phone remain unchanged. */
+@media (min-width:768px) and (max-width:1400px) and (orientation:landscape){
+
+  body{
+    overflow-x:hidden !important;
+  }
+
+  .app{
+    display:flex !important;
+    min-height:100vh !important;
+  }
+
+  .sidebar{
+    display:block !important;
+    width:220px !important;
+  }
+
+  .mobile-topbar{
+    display:none !important;
+  }
+
+  .desktop-menu-wrap{
+    display:block !important;
+    top:24px !important;
+    right:30px !important;
+  }
+
+  .main{
+    margin-left:220px !important;
+    padding:22px 24px 28px 24px !important;
+    max-width:calc(100vw - 220px) !important;
+    overflow-x:hidden !important;
+  }
+
+  .page-header{
+    margin-bottom:14px !important;
+    padding-right:220px !important;
+  }
+
+  .page-header h1{
+    font-size:34px !important;
+    margin-bottom:6px !important;
+    line-height:1.05 !important;
+  }
+
+  .page-header p{
+    font-size:13px !important;
+    line-height:1.35 !important;
+    max-width:760px !important;
+  }
+
+  .site-switcher-row{
+    margin-top:12px !important;
+    margin-bottom:14px !important;
+    max-width:520px !important;
+    gap:8px !important;
+  }
+
+  .site-switcher-row select,
+  #siteSwitcher{
+    padding:9px 11px !important;
+    font-size:13px !important;
+  }
+
+  .summary{
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    gap:12px !important;
+    margin-bottom:14px !important;
+  }
+
+  .summary-box{
+    padding:13px !important;
+    border-radius:12px !important;
+  }
+
+  .summary-box strong{
+    font-size:23px !important;
+    margin-bottom:4px !important;
+  }
+
+  .summary-box span{
+    font-size:12px !important;
+  }
+
+  .card{
+    padding:15px !important;
+    margin-bottom:14px !important;
+    border-radius:12px !important;
+  }
+
+  .card h3{
+    font-size:15px !important;
+    margin-bottom:11px !important;
+    line-height:1.1 !important;
+  }
+
+  .date-filters{
+    grid-template-columns:1.1fr 1fr 1fr .8fr !important;
+    gap:10px !important;
+    margin-bottom:10px !important;
+  }
+
+  .filters{
+    grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+    gap:10px !important;
+    margin-bottom:10px !important;
+  }
+
+  input,
+  select,
+  #datePreset,
+  #rowLimit{
+    padding:9px 10px !important;
+    font-size:13px !important;
+    border-radius:8px !important;
+  }
+
+  button,
+  .menu-btn{
+    padding:9px 11px !important;
+    font-size:12px !important;
+    border-radius:8px !important;
+  }
+
+  .actions{
+    gap:9px !important;
+    margin-top:12px !important;
+  }
+
+  .status-line{
+    font-size:12px !important;
+  }
+
+  .table-wrap{
+    max-width:100% !important;
+    overflow-x:auto !important;
+  }
+
+  table{
+    width:100% !important;
+    min-width:760px !important;
+    margin-top:8px !important;
+  }
+
+  th,
+  td{
+    padding:8px 7px !important;
+    font-size:11.5px !important;
+  }
+
+  .notice{
+    font-size:12px !important;
+    margin-top:10px !important;
+  }
 }
 
 </style>
