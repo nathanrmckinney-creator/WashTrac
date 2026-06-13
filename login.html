@@ -216,7 +216,14 @@
 const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
 const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 
-const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storage: window.localStorage
+  }
+});
 
 function setStatus(message, type = "") {
   const box = document.getElementById("statusBox");
@@ -246,6 +253,43 @@ async function loadSitesForUser(userId) {
     `)
     .eq("user_id", userId);
 }
+
+async function restoreLoggedInUser(userId) {
+  const { data: siteLinks, error } = await loadSitesForUser(userId);
+
+  if (error || !siteLinks || siteLinks.length === 0) {
+    return false;
+  }
+
+  const firstSite = siteLinks[0];
+
+  localStorage.setItem("washtracLoggedIn", "yes");
+  localStorage.setItem("selectedSiteId", firstSite.site_id);
+  localStorage.setItem("selectedOrgId", firstSite.organization_id);
+  localStorage.setItem("canViewAllSites", firstSite.can_view_all_sites ? "true" : "false");
+  localStorage.setItem("availableSites", JSON.stringify(siteLinks));
+
+  return true;
+}
+
+async function checkExistingSession() {
+  try {
+    const { data } = await client.auth.getSession();
+    const session = data && data.session;
+
+    if (session && session.user) {
+      const restored = await restoreLoggedInUser(session.user.id);
+
+      if (restored) {
+        window.location.replace("dashboard.html");
+      }
+    }
+  } catch (err) {
+    console.log("Session restore error:", err);
+  }
+}
+
+checkExistingSession();
 
 async function createFirstSiteForUser() {
   const pendingOrgName = localStorage.getItem("pendingOrgName");
@@ -289,10 +333,7 @@ async function forgotPassword() {
     return;
   }
 
-  setStatus(
-    "Password reset email sent. Check your inbox.",
-    "success"
-  );
+  setStatus("Password reset email sent. Check your inbox.", "success");
 }
   
 async function login(event) {
@@ -365,7 +406,7 @@ async function login(event) {
     localStorage.setItem("availableSites", JSON.stringify(siteLinks));
 
     setStatus("Login successful.", "success");
-    window.location.href = "dashboard.html";
+    window.location.replace("dashboard.html");
 
   } finally {
     btn.disabled = false;
