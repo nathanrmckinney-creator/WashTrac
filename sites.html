@@ -419,15 +419,7 @@
 }
 
 .main::before{
-  content:"";
-  position:absolute;
-  top:0;
-  right:0;
-  width:420px;
-  height:260px;
-  background:radial-gradient(circle at 100% 0%, rgba(37,99,235,.20), transparent 62%);
-  pointer-events:none;
-  z-index:0;
+  display:none;
 }
 
 .main > *{
@@ -545,8 +537,7 @@ input:disabled{
   cursor:not-allowed;
 }
 
-button,
-.menu-btn{
+button:not(.menu-btn){
   border:1px solid rgba(96,165,250,.22);
   box-shadow:0 10px 20px rgba(2,6,23,.18), inset 0 1px 0 rgba(255,255,255,.10);
   transition:filter .18s ease, transform .18s ease, box-shadow .18s ease;
@@ -629,7 +620,202 @@ button.danger{
       .site-card-top{grid-template-columns:1fr}
       .invite-grid{grid-template-columns:1fr}
     }
-  </style>
+  
+/* WASHTRAC TABLET LANDSCAPE SITES FIX
+   Matches Dashboard/Codes/Activity/Membership footprint on Fold/tablet landscape only.
+   Desktop and phone remain unchanged. */
+@media (min-width:768px) and (max-width:1400px) and (orientation:landscape){
+
+  body{
+    overflow-x:hidden !important;
+  }
+
+  .app{
+    display:flex !important;
+    min-height:100vh !important;
+  }
+
+  .sidebar{
+    display:block !important;
+    width:220px !important;
+  }
+
+  .mobile-topbar{
+    display:none !important;
+  }
+
+  .dashboard-menu-wrap{
+    display:block !important;
+    top:24px !important;
+    right:30px !important;
+  }
+
+  .dashboard-menu-wrap .menu-btn{
+    width:40px !important;
+    height:39px !important;
+    padding:0 !important;
+    font-size:13.5px !important;
+    line-height:1 !important;
+    border:none !important;
+    box-shadow:none !important;
+    border-radius:8px !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+  }
+
+  .main{
+    margin-left:220px !important;
+    padding:22px 24px 28px 24px !important;
+    max-width:calc(100vw - 220px) !important;
+    overflow-x:hidden !important;
+  }
+
+  .page-header{
+    margin-bottom:14px !important;
+    padding-right:220px !important;
+  }
+
+  .page-header h1{
+    font-size:34px !important;
+    margin-bottom:6px !important;
+    line-height:1.05 !important;
+  }
+
+  .page-header p{
+    font-size:13px !important;
+    line-height:1.35 !important;
+    max-width:760px !important;
+  }
+
+  .live-pill{
+    padding:4px 8px !important;
+    font-size:10.5px !important;
+  }
+
+  .grid-2{
+    grid-template-columns:1fr 1fr !important;
+    gap:14px !important;
+    margin-bottom:14px !important;
+  }
+
+  .card{
+    padding:15px !important;
+    margin-bottom:14px !important;
+    border-radius:12px !important;
+  }
+
+  .site-card{
+    padding:15px !important;
+    margin-bottom:14px !important;
+    border-radius:12px !important;
+  }
+
+  .card h3,
+  .card h4,
+  .site-card h4{
+    font-size:15px !important;
+    margin-bottom:11px !important;
+    line-height:1.1 !important;
+  }
+
+  .field-grid{
+    grid-template-columns:1fr 1fr !important;
+    gap:10px !important;
+    margin-top:10px !important;
+  }
+
+  .field.full{
+    grid-column:1 / -1 !important;
+  }
+
+  .field{
+    gap:6px !important;
+  }
+
+  .field label{
+    font-size:12px !important;
+  }
+
+  input,
+  select,
+  #organizationSelect,
+  #siteBayCount,
+  [id^="bayCount-"],
+  [id^="inviteRole-"]{
+    padding:9px 10px !important;
+    font-size:13px !important;
+    border-radius:8px !important;
+  }
+
+  button:not(.menu-btn){
+    padding:9px 11px !important;
+    font-size:12px !important;
+    border-radius:8px !important;
+  }
+
+  .controls{
+    gap:9px !important;
+    margin-top:12px !important;
+  }
+
+  .site-row{
+    grid-template-columns:1fr auto !important;
+    gap:10px !important;
+    padding:10px 0 !important;
+  }
+
+  .site-name{
+    font-size:14px !important;
+    margin-bottom:3px !important;
+  }
+
+  .site-meta,
+  .note,
+  .mini-muted{
+    font-size:12px !important;
+    line-height:1.35 !important;
+  }
+
+  .pill{
+    padding:4px 7px !important;
+    font-size:10.5px !important;
+  }
+
+  .site-card-top{
+    grid-template-columns:1fr auto !important;
+    gap:10px !important;
+    padding-bottom:10px !important;
+    margin-bottom:10px !important;
+  }
+
+  .invite-box{
+    margin-top:10px !important;
+    padding-top:10px !important;
+  }
+
+  .invite-grid{
+    grid-template-columns:1fr 120px 92px !important;
+    gap:8px !important;
+    align-items:end !important;
+  }
+
+  .invite-grid .field.full-mobile{
+    grid-column:auto !important;
+  }
+
+  .mini-list{
+    border-radius:12px !important;
+  }
+
+  .mini-row{
+    grid-template-columns:1fr auto !important;
+    gap:8px !important;
+    padding:8px 10px !important;
+  }
+}
+
+</style>
 </head>
 
 <body>
