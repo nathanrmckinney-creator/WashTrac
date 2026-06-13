@@ -90,7 +90,7 @@
     button:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.35);}
     .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
     .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-    table{width:100%;border-collapse:collapse;min-width:760px;}}
+    table{width:100%;border-collapse:collapse;min-width:760px;}
     th,td{padding:14px 10px;border-bottom:1px solid #1f2937;text-align:left;vertical-align:middle;}
     th{color:#93c5fd;font-size:13px;text-transform:uppercase;letter-spacing:.5px;}
     .muted{color:#94a3b8;}
@@ -251,15 +251,7 @@
 .nav{position:relative;z-index:1;}
 
 .main::before{
-  content:"";
-  position:absolute;
-  top:0;
-  right:0;
-  width:420px;
-  height:260px;
-  background:radial-gradient(circle at 100% 0%, rgba(37,99,235,.20), transparent 62%);
-  pointer-events:none;
-  z-index:0;
+  display:none;
 }
 
 .main > *{position:relative;z-index:1;}
@@ -358,7 +350,7 @@ select option:hover{
   box-shadow:inset 0 0 14px rgba(2,6,23,.34);
 }
 
-button,.menu-btn{
+button:not(.menu-btn){
   border:1px solid rgba(96,165,250,.22);
   box-shadow:0 10px 20px rgba(2,6,23,.18), inset 0 1px 0 rgba(255,255,255,.10);
   touch-action:manipulation;
@@ -399,6 +391,231 @@ tbody tr:hover{background:rgba(37,99,235,.08);}
   .actions button,
   .support-toolbar button,
   .relay-output-actions button{width:100%;justify-content:center;}
+}
+
+
+/* WASHTRAC TABLET LANDSCAPE MAINTENANCE FIX
+   Matches Dashboard/Codes/Activity/Membership footprint on Fold/tablet landscape only.
+   Desktop and phone remain unchanged. */
+@media (min-width:768px) and (max-width:1400px) and (orientation:landscape){
+
+  body{
+    overflow-x:hidden !important;
+  }
+
+  .app{
+    display:flex !important;
+    min-height:100vh !important;
+  }
+
+  .sidebar{
+    display:block !important;
+    width:220px !important;
+  }
+
+  .mobile-topbar{
+    display:none !important;
+  }
+
+  .desktop-menu-wrap{
+    display:block !important;
+    top:24px !important;
+    right:30px !important;
+  }
+
+  .desktop-menu-wrap .menu-btn{
+    padding:10px 14px !important;
+    font-size:16px !important;
+    border:none !important;
+    box-shadow:none !important;
+    border-radius:8px !important;
+  }
+
+  .main{
+    margin-left:220px !important;
+    padding:22px 24px 28px 24px !important;
+    max-width:calc(100vw - 220px) !important;
+    overflow-x:hidden !important;
+  }
+
+  .page-header{
+    margin-bottom:14px !important;
+    padding-right:220px !important;
+  }
+
+  .page-header h1{
+    font-size:34px !important;
+    margin-bottom:6px !important;
+    line-height:1.05 !important;
+  }
+
+  .page-header p{
+    font-size:13px !important;
+    line-height:1.35 !important;
+    max-width:760px !important;
+  }
+
+  .admin-pill{
+    padding:4px 8px !important;
+    font-size:10.5px !important;
+  }
+
+  .summary{
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    gap:12px !important;
+    margin-bottom:14px !important;
+  }
+
+  .summary-box{
+    padding:13px !important;
+    border-radius:12px !important;
+  }
+
+  .summary-box strong{
+    font-size:23px !important;
+    margin-bottom:4px !important;
+  }
+
+  .summary-box span{
+    font-size:12px !important;
+  }
+
+  .card,
+  .network-card{
+    padding:15px !important;
+    margin-bottom:14px !important;
+    border-radius:12px !important;
+  }
+
+  .card h3,
+  .card h4,
+  .network-card h4{
+    font-size:15px !important;
+    margin-bottom:11px !important;
+    line-height:1.1 !important;
+  }
+
+  .grid-2{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:14px !important;
+    margin-bottom:14px !important;
+  }
+
+  .grid-3{
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    gap:14px !important;
+    margin-bottom:14px !important;
+  }
+
+  .field-grid{
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    gap:10px !important;
+    margin-bottom:12px !important;
+  }
+
+  .field{
+    gap:6px !important;
+  }
+
+  .field label{
+    font-size:12px !important;
+  }
+
+  input,
+  select,
+  textarea,
+  .mini-select{
+    padding:9px 10px !important;
+    font-size:13px !important;
+    border-radius:8px !important;
+  }
+
+  textarea{
+    min-height:72px !important;
+  }
+
+  button:not(.menu-btn),
+  .small-btn,
+  button.secondary,
+  button.danger,
+  button.success,
+  button.warn,
+  button.test{
+    padding:9px 11px !important;
+    font-size:12px !important;
+    border-radius:8px !important;
+  }
+
+  .actions,
+  .support-toolbar,
+  .relay-output-actions{
+    gap:9px !important;
+    margin-top:12px !important;
+  }
+
+  .note,
+  .mini-muted,
+  .network-meta{
+    font-size:12px !important;
+    line-height:1.35 !important;
+  }
+
+  .mini-row{
+    padding:9px 10px !important;
+  }
+
+  .tag,
+  .inline-code{
+    padding:4px 7px !important;
+    font-size:10.5px !important;
+  }
+
+  .table-wrap{
+    max-width:100% !important;
+    overflow-x:auto !important;
+  }
+
+  table{
+    width:100% !important;
+    min-width:760px !important;
+  }
+
+  th,
+  td{
+    padding:8px 7px !important;
+    font-size:11.5px !important;
+  }
+
+  .relay-output-row{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:10px !important;
+    padding:12px !important;
+    border-radius:12px !important;
+  }
+
+  .relay-output-label{
+    font-size:13px !important;
+  }
+
+  .relay-output-label span{
+    font-size:11px !important;
+  }
+
+  .relay-output-row .field label{
+    white-space:normal !important;
+    font-size:11px !important;
+  }
+
+  .relay-output-row input,
+  .relay-output-row select,
+  .relay-output-row button{
+    padding:8px 9px !important;
+    font-size:12px !important;
+  }
+
+  .wifi-network-row{
+    padding:10px !important;
+  }
 }
 
 </style>
