@@ -700,8 +700,27 @@ document.addEventListener("DOMContentLoaded", function(){
       </div>
 
       <div class="form-row">
-        <label for="scheduleTime">Send Time</label>
-        <input id="scheduleTime" type="time" value="08:00">
+        <label>Send Hour</label>
+        <div style="display:flex;gap:10px;">
+          <select id="scheduleHour" style="flex:1;background:#020617;color:white;border:1px solid #334155;">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+          </select>
+          <select id="schedulePeriod" style="width:110px;background:#020617;color:white;border:1px solid #334155;">
+            <option value="AM">AM</option>
+            <option value="PM">PM</option>
+          </select>
+        </div>
       </div>
 
       <div class="actions">
@@ -1431,6 +1450,58 @@ function updateReportRangeFields(){
 function updateScheduleRangeFields(){
   const range = document.getElementById("scheduleRange").value;
   document.getElementById("scheduleCustomRangeFields").classList.toggle("hidden", range !== "custom");
+}
+
+function getScheduleTimeValue(){
+  let hour = parseInt(document.getElementById("scheduleHour").value, 10);
+  const period = document.getElementById("schedulePeriod").value;
+
+  if(period === "AM"){
+    if(hour === 12) hour = 0;
+  }else{
+    if(hour !== 12) hour += 12;
+  }
+
+  return `${String(hour).padStart(2, "0")}:00:00`;
+}
+
+function setScheduleTimeControls(timeValue){
+  let hour = parseInt(String(timeValue || "08:00").split(":")[0], 10);
+
+  if(!Number.isFinite(hour) || hour < 0 || hour > 23){
+    hour = 8;
+  }
+
+  let period = "AM";
+
+  if(hour >= 12){
+    period = "PM";
+    if(hour > 12) hour -= 12;
+  }
+
+  if(hour === 0){
+    hour = 12;
+  }
+
+  document.getElementById("scheduleHour").value = String(hour);
+  document.getElementById("schedulePeriod").value = period;
+}
+
+function formatScheduleTimeLabel(timeValue){
+  let hour = parseInt(String(timeValue || "08:00").split(":")[0], 10);
+
+  if(!Number.isFinite(hour) || hour < 0 || hour > 23){
+    hour = 8;
+  }
+
+  const period = hour >= 12 ? "PM" : "AM";
+  let displayHour = hour % 12;
+
+  if(displayHour === 0){
+    displayHour = 12;
+  }
+
+  return `${displayHour}:00 ${period}`;
 }
 
 function filterUsesByRange(uses, rangeValue, startId, endId){
@@ -2491,7 +2562,7 @@ async function saveReportSchedule(){
   const scheduleRange = document.getElementById("scheduleRange").value;
   const weeklyDay = document.getElementById("weeklyDay").value;
   const monthDay = document.getElementById("monthDay").value;
-  const time = document.getElementById("scheduleTime").value;
+  const time = getScheduleTimeValue();
   if(frequency !== "off" && !email){
     alert("Please enter an email address for automated reports.");
     return;
@@ -2660,7 +2731,7 @@ function clearReportSchedule(){
   document.getElementById("scheduleEmail").value = "";
   document.getElementById("scheduleStartDate").value = "";
   document.getElementById("scheduleEndDate").value = "";
-  document.getElementById("scheduleTime").value = "08:00";
+  setScheduleTimeControls("08:00");
 
   document.querySelectorAll(".schedule-day").forEach(day => day.checked = false);
 updateScheduleFields();
@@ -2734,7 +2805,7 @@ let details = "";
 
   const scopeText = schedule.reportSiteScope === "all" ? "All My Sites" : "Current Site";
 
-  box.innerText = `${details} at ${schedule.time} to ${schedule.email}. Scope: ${scopeText}. Range: ${rangeText}. Department usage summary included.`;
+  box.innerText = `${details} at ${formatScheduleTimeLabel(schedule.time)} to ${schedule.email}. Scope: ${scopeText}. Range: ${rangeText}. Department usage summary included.`;
 }
 
 function loadSavedSchedule(){
@@ -2754,7 +2825,7 @@ function loadSavedSchedule(){
   document.getElementById("scheduleEndDate").value = schedule.scheduleEndDate || "";
   document.getElementById("weeklyDay").value = schedule.weeklyDay || "monday";
   document.getElementById("monthDay").value = schedule.monthDay || "1";
-  document.getElementById("scheduleTime").value = schedule.time || "08:00";
+  setScheduleTimeControls(schedule.time || "08:00");
 document.querySelectorAll(".schedule-day").forEach(day => {
     day.checked = (schedule.customDays || []).includes(day.value);
   });
