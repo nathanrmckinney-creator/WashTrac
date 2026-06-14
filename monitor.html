@@ -2571,6 +2571,17 @@ async function loadActivity(){
   renderActivity(result.data || []);
 }
 
+async function loadMonitorSecondary(){
+  if(document.hidden) return;
+
+  await Promise.allSettled([
+    loadBays(),
+    loadActivity(),
+    loadDepartmentBilling(),
+    loadLastBillableWash()
+  ]);
+}
+
 async function loadMonitor(){
   if(monitorLoadInProgress){
     monitorReloadQueued = true;
@@ -2589,13 +2600,10 @@ async function loadMonitor(){
   }
 
   try{
+    // Critical top-strip refresh first. This is what needs to move immediately.
     const [control, devices] = await Promise.all([
       fetchControl(),
-      fetchDevices(),
-      loadBays(),
-      loadActivity(),
-      loadDepartmentBilling(),
-      loadLastBillableWash()
+      fetchDevices()
     ]);
 
     const hasPairedDevice = Array.isArray(devices) && devices.length > 0;
@@ -2605,15 +2613,20 @@ async function loadMonitor(){
     renderDevices(devices || []);
     renderControl(control, hasOnlineDevice, hasPairedDevice);
     updateFooterHeartbeat(devices || []);
-    
+
+    // Slower cards refresh after the top status has already updated.
+    loadMonitorSecondary().catch(err => {
+      console.log("monitor secondary load error:", err);
+    });
+
   }catch(err){
-    console.log("monitor load error:", err);
+    console.log("monitor critical load error:", err);
   }finally{
     monitorLoadInProgress = false;
 
     if(monitorReloadQueued && !document.hidden){
       monitorReloadQueued = false;
-      scheduleMonitorRefresh(75);
+      scheduleMonitorRefresh(50);
     }
   }
 }
