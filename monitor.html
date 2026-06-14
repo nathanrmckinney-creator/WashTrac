@@ -2664,53 +2664,90 @@ window.addEventListener("beforeunload", function(){
   }
 });
 
-function setupRealtime(){
+async function setupRealtime(){
   const activeSiteId = getActiveSiteId();
 
   if(monitorChannel){
-    client.removeChannel(monitorChannel);
+    try{
+      await client.removeChannel(monitorChannel);
+    }catch(err){
+      console.log("Monitor realtime remove error:", err);
+    }
     monitorChannel = null;
   }
 
-  if(!activeSiteId || !hasAccessToActiveSite()) return;
-
-  monitorChannel = client.channel("monitor-live-" + activeSiteId)
-   .on("postgres_changes", {
-  event:"*",
-  schema:"public",
-  table:"wash_activity"
-}, (payload) => {
-  const eventSiteId = payload?.new?.site_id || payload?.old?.site_id || "";
-
-  if(eventSiteId === getActiveSiteId()){
-    console.log("MONITOR WASH EVENT:", payload);
-    scheduleMonitorRefresh(50);
+  if(!activeSiteId || !hasAccessToActiveSite()){
+    console.log("MONITOR REALTIME NOT STARTED:", {
+      activeSiteId,
+      assignedSiteIds
+    });
+    return;
   }
-})
+
+  const channelName = "monitor-live-" + activeSiteId + "-" + Date.now();
+  console.log("MONITOR REALTIME STARTING:", channelName);
+
+  function realtimeRefresh(payload, sourceTable){
+    const eventSiteId =
+      payload?.new?.site_id ||
+      payload?.old?.site_id ||
+      "";
+
+    console.log("MONITOR REALTIME EVENT:", {
+      table: sourceTable,
+      eventSiteId,
+      activeSiteId: getActiveSiteId(),
+      payload
+    });
+
+    if(eventSiteId !== getActiveSiteId()) return;
+
+    clearTimeout(refreshTimer);
+
+    // Refresh immediately. The top strip renders first inside loadMonitor().
+    loadMonitor();
+  }
+
+  monitorChannel = client.channel(channelName)
     .on("postgres_changes", {
-      event:"*",
+      event:"INSERT",
       schema:"public",
-      table:"site_system_control",
-      filter:`site_id=eq.${activeSiteId}`
-    }, () => scheduleMonitorRefresh(50))
+      table:"wash_activity"
+    }, (payload) => realtimeRefresh(payload, "wash_activity"))
+
+    .on("postgres_changes", {
+      event:"UPDATE",
+      schema:"public",
+      table:"wash_activity"
+    }, (payload) => realtimeRefresh(payload, "wash_activity"))
 
     .on("postgres_changes", {
       event:"*",
       schema:"public",
-      table:"site_bay_status",
-      filter:`site_id=eq.${activeSiteId}`
-    }, () => scheduleMonitorRefresh(50))
+      table:"devices"
+    }, (payload) => realtimeRefresh(payload, "devices"))
 
     .on("postgres_changes", {
       event:"*",
       schema:"public",
-      table:"devices",
-      filter:`site_id=eq.${activeSiteId}`
-    }, () => scheduleMonitorRefresh(50))
+      table:"site_system_control"
+    }, (payload) => realtimeRefresh(payload, "site_system_control"))
+
+    .on("postgres_changes", {
+      event:"*",
+      schema:"public",
+      table:"site_bay_status"
+    }, (payload) => realtimeRefresh(payload, "site_bay_status"))
 
     .subscribe((status) => {
-      if(status === "CHANNEL_ERROR" || status === "TIMED_OUT"){
-        console.log("Monitor realtime:", status);
+      console.log("MONITOR REALTIME STATUS:", status);
+
+      if(status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED"){
+        setTimeout(() => {
+          if(!document.hidden){
+            setupRealtime();
+          }
+        }, 2000);
       }
     });
 }
@@ -2719,7 +2756,7 @@ async function initMonitor(){
   try{
     await loadAssignedSites();
     await loadMonitor();
-    setupRealtime();
+    await setupRealtime();
     startHeartbeatRefresh();
   }catch(err){
     console.log("initMonitor error:", err);
