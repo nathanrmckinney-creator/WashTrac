@@ -1497,7 +1497,7 @@ let currentDepartmentCosts = {};
 let currentBillingDepartments = [];
 
 const MONITOR_REFRESH_DELAY_MS = 100;
-const MONITOR_HEARTBEAT_REFRESH_MS = 5000;
+const MONITOR_HEARTBEAT_REFRESH_MS = 30000;
 
 function getActiveSiteId(){
   return currentSiteId || localStorage.getItem("activeSiteId") || localStorage.getItem("washtracActiveSiteId") || "";
