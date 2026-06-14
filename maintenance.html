@@ -1614,6 +1614,7 @@ async function loadSiteAccessUsers(){
   const inviteRows = invites || [];
 
   rememberUserEmail(currentUser?.id, currentUser?.email);
+  await loadUserEmailDirectory();
 
   inviteRows.forEach(invite => {
     if(invite.accepted_by && invite.email){
@@ -1731,10 +1732,31 @@ function rememberUserEmail(userId, email){
 
 function getUserDisplay(userId){
   if(currentUser?.id && userId === currentUser.id){
-    return currentUser.email || "You";
+    return currentUser.email || userEmailById[userId] || "You";
   }
 
   return userEmailById[userId] || shortUserId(userId) || "User";
+}
+
+async function loadUserEmailDirectory(){
+  // Browser-safe user email lookup. This requires the public.washtrac_user_emails view
+  // created in Supabase. If it is missing, the page falls back to invite emails / user IDs.
+  try{
+    const { data, error } = await client
+      .from("washtrac_user_emails")
+      .select("id,email");
+
+    if(error){
+      console.log("User email directory lookup skipped:", error);
+      return;
+    }
+
+    (data || []).forEach(row => {
+      rememberUserEmail(row.id, row.email);
+    });
+  }catch(err){
+    console.log("User email directory lookup skipped:", err);
+  }
 }
 
 function getSelectedOrganizationContext(){
@@ -1795,6 +1817,7 @@ async function loadOrganizationOwnerTool(){
   newOwnerSelect.innerHTML = `<option value="">Loading users...</option>`;
 
   rememberUserEmail(currentUser?.id, currentUser?.email);
+  await loadUserEmailDirectory();
 
   const { data: inviteRows, error: inviteError } = await client
     .from("site_invites")
@@ -3018,6 +3041,8 @@ document.addEventListener("click",function(event){
     closeMenus();
   }
 });
+
+window.loadOwnerTransferData = loadOrganizationOwnerTool;
 
 window.onload=async function(){
   await loadCurrentUser();
