@@ -1777,6 +1777,94 @@ if(!isClientLogin && !isAdminLogin){
       });
     }
 
+    async function linkOrganizationAdminsToNewSite(siteData, organizationId){
+      if(!siteData?.id){
+        throw new Error("No site id returned after creating site.");
+      }
+
+      const accessByUser = new Map();
+
+      if(currentUser?.id && !currentUser.is_admin_session){
+        accessByUser.set(currentUser.id, {
+          user_id: currentUser.id,
+          site_id: siteData.id,
+          role: "owner"
+        });
+      }
+
+      try{
+        const { data: orgSites, error: orgSitesError } = await client
+          .from("sites")
+          .select("id")
+          .eq("organization_id", organizationId);
+
+        if(orgSitesError){
+          console.log("Organization sites lookup error:", orgSitesError);
+        }else{
+          const orgSiteIds = (orgSites || [])
+            .map(site => site.id)
+            .filter(Boolean);
+
+          if(orgSiteIds.length){
+            const { data: adminRows, error: adminRowsError } = await client
+              .from("user_site_access")
+              .select("user_id, role")
+              .in("site_id", orgSiteIds)
+              .in("role", ["owner", "admin"]);
+
+            if(adminRowsError){
+              console.log("Organization admin lookup error:", adminRowsError);
+            }else{
+              (adminRows || []).forEach(row => {
+                if(!row?.user_id) return;
+
+                if(!accessByUser.has(row.user_id)){
+                  accessByUser.set(row.user_id, {
+                    user_id: row.user_id,
+                    site_id: siteData.id,
+                    role: "admin"
+                  });
+                }
+              });
+            }
+          }
+        }
+      }catch(err){
+        console.log("Organization admin link lookup error:", err);
+      }
+
+      const rowsToInsert = Array.from(accessByUser.values());
+
+      if(!rowsToInsert.length){
+        return;
+      }
+
+      const { data: existingRows, error: existingError } = await client
+        .from("user_site_access")
+        .select("user_id")
+        .eq("site_id", siteData.id);
+
+      if(existingError){
+        console.log("Existing site access lookup error:", existingError);
+      }
+
+      const existingUserIds = new Set((existingRows || []).map(row => row.user_id).filter(Boolean));
+      const newRows = rowsToInsert.filter(row => !existingUserIds.has(row.user_id));
+
+      if(!newRows.length){
+        return;
+      }
+
+      const { error: accessError } = await client
+        .from("user_site_access")
+        .insert(newRows);
+
+      if(accessError){
+        console.log("New site access insert error:", accessError);
+        throw accessError;
+      }
+    }
+
     async function addSite(){
       clearStatus();
 
@@ -1823,23 +1911,13 @@ if(!isClientLogin && !isAdminLogin){
         return;
       }
 
-      if(currentUser && siteData?.id && !hasAdminAccess()){
-        const { error: memberError } = await client
-          .from("user_site_access")
-          .insert([
-            {
-              user_id: currentUser.id,
-              site_id: siteData.id,
-              role: "owner"
-            }
-          ]);
-
-        if(memberError){
-          console.log("Site member insert error:", memberError);
-          setStatus("Site created, but user was not linked in user_site_access. Check policies/table columns.", "bad");
-          await loadSites();
-          return;
-        }
+      try{
+        await linkOrganizationAdminsToNewSite(siteData, organization_id);
+      }catch(err){
+        console.log("Site access link error:", err);
+        setStatus("Site created, but user access was not linked. Check user_site_access policies/table columns.", "bad");
+        await loadSites();
+        return;
       }
 
       try{
