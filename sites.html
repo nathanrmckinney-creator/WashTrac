@@ -1028,6 +1028,7 @@ if(!isClientLogin && !isAdminLogin){
     let currentSites = [];
     let pendingInvites = [];
     let acceptedMembers = [];
+    let userEmailLookup = {};
     let siteBayCounts = {};
 
     function toggleMobileMenu(){
@@ -1576,6 +1577,11 @@ if(!isClientLogin && !isAdminLogin){
 
       pendingInvites = [];
       acceptedMembers = [];
+      userEmailLookup = {};
+
+      if(currentUser?.id && currentUser?.email){
+        userEmailLookup[currentUser.id] = normalizeEmail(currentUser.email);
+      }
 
       if(!siteIds.length) return;
 
@@ -1602,6 +1608,22 @@ if(!isClientLogin && !isAdminLogin){
         console.log("Site members load error:", memberError);
       }else{
         acceptedMembers = dedupeMembersBySiteAndUser(members || []);
+      }
+
+      const { data: acceptedInviteRows, error: acceptedInviteError } = await client
+        .from("site_invites")
+        .select("email, accepted_by, site_id")
+        .in("site_id", siteIds)
+        .not("accepted_by", "is", null);
+
+      if(acceptedInviteError){
+        console.log("Accepted invite email lookup error:", acceptedInviteError);
+      }else{
+        (acceptedInviteRows || []).forEach(invite => {
+          if(invite?.accepted_by && invite?.email){
+            userEmailLookup[invite.accepted_by] = normalizeEmail(invite.email);
+          }
+        });
       }
     }
 
@@ -1649,6 +1671,36 @@ if(!isClientLogin && !isAdminLogin){
       return Array.from(map.values());
     }
 
+    function shortUserId(userId){
+      const id = String(userId || "");
+      return id ? `${id.slice(0, 8)}...` : "Unknown";
+    }
+
+    function getMemberDisplay(member){
+      const userId = String(member?.user_id || "");
+      const email = userEmailLookup[userId] || "";
+      const isCurrentUser = currentUser?.id && userId === currentUser.id;
+
+      if(isCurrentUser && currentUser?.email){
+        return {
+          label: normalizeEmail(currentUser.email),
+          meta: `User ID: ${shortUserId(userId)}`
+        };
+      }
+
+      if(email){
+        return {
+          label: email,
+          meta: `User ID: ${shortUserId(userId)}`
+        };
+      }
+
+      return {
+        label: `User ${shortUserId(userId)}`,
+        meta: `User ID: ${shortUserId(userId)}`
+      };
+    }
+
     function renderSites(){
       const wrap = document.getElementById("sitesList");
       wrap.innerHTML = "";
@@ -1681,6 +1733,7 @@ if(!isClientLogin && !isAdminLogin){
 
         const membersHtml = siteMembers.length
           ? siteMembers.map(member => {
+              const display = getMemberDisplay(member);
               const canRemoveMember =
                 manager &&
                 member?.id &&
@@ -1690,8 +1743,8 @@ if(!isClientLogin && !isAdminLogin){
               return `
                 <div class="mini-row">
                   <div class="mini-main">
-                    <strong>${member.user_id === currentUser.id ? "You" : "User"}</strong>
-                    <div class="mini-muted">${escapeText(member.user_id)}</div>
+                    <strong>${escapeText(display.label)}</strong>
+                    <div class="mini-muted">${escapeText(display.meta)}</div>
                   </div>
                   <div style="display:flex; align-items:center; gap:8px; justify-content:flex-end;">
                     <div class="pill green">${escapeText(member.role || "viewer")}</div>
