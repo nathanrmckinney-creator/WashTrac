@@ -1780,14 +1780,13 @@ function getSelectedOrganizationContext(){
     ? allSites.filter(item => (item.organization_id || item.org_id || item.company_id || "") === organizationId)
     : [site];
 
- return {
-  siteId,
-  organizationId,
-  organizationLabel: organizationId
-    ? `${siteName(siteId)} organization`
-    : `${siteName(siteId)} site`,
-  organizationSiteIds: organizationSites.map(item => item.id).filter(Boolean)
-};
+  return {
+    siteId: siteId,
+    organizationId: organizationId,
+    organizationLabel: siteName(siteId),
+    organizationSiteIds: organizationSites.map(item => item.id).filter(Boolean)
+  };
+}
 
 function setOwnershipStatus(message, tone = ""){
   const box = document.getElementById("ownershipStatusBox");
