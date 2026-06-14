@@ -2662,16 +2662,18 @@ function setupRealtime(){
   if(!activeSiteId || !hasAccessToActiveSite()) return;
 
   monitorChannel = client.channel("monitor-live-" + activeSiteId)
-    .on("postgres_changes", {
-      event:"*",
-      schema:"public",
-      table:"wash_activity",
-      filter:`site_id=eq.${activeSiteId}`
-    }, () => {
-      // Any keypad event writes to wash_activity, so force the full monitor to refresh now.
-      scheduleMonitorRefresh(50);
-    })
+   .on("postgres_changes", {
+  event:"*",
+  schema:"public",
+  table:"wash_activity"
+}, (payload) => {
+  const eventSiteId = payload?.new?.site_id || payload?.old?.site_id || "";
 
+  if(eventSiteId === getActiveSiteId()){
+    console.log("MONITOR WASH EVENT:", payload);
+    scheduleMonitorRefresh(50);
+  }
+})
     .on("postgres_changes", {
       event:"*",
       schema:"public",
