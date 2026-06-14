@@ -739,6 +739,45 @@ if(!hasAdminSession){
       </div>
     </div>
 
+    <div class="card">
+      <h3>Organization Ownership Transfer</h3>
+
+      <div class="field-grid">
+        <div class="field">
+          <label>Selected Organization</label>
+          <input id="ownerOrgLabel" value="Select a site first" disabled>
+        </div>
+
+        <div class="field">
+          <label>Current Owner/Admin Users</label>
+          <input id="currentOwnerLabel" value="Load ownership data" disabled>
+        </div>
+
+        <div class="field">
+          <label for="newOwnerUserId">New Owner User</label>
+          <select id="newOwnerUserId">
+            <option value="">Select a site first</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>&nbsp;</label>
+          <button class="warn" type="button" onclick="transferOrganizationOwnerAccess()">Transfer Owner Access</button>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="secondary" type="button" onclick="loadOrganizationOwnerTool()">Reload Owner Candidates</button>
+      </div>
+
+      <div id="ownershipStatusBox" class="status"></div>
+
+      <div class="note">
+        Launch-safe ownership transfer: gives the selected user <span class="inline-code">owner</span> access to every site in the selected organization.
+        It does not delete the old owner. Remove old site access afterward only after verifying the new owner can log in.
+      </div>
+    </div>
+
     <div class="grid-2">
       <div class="card">
         <h3>Customer Account Support</h3>
@@ -1075,6 +1114,8 @@ let selectedSiteId = "";
 let relayOutputRows = [];
 let quietRefreshTimer = null;
 let quietRefreshInProgress = false;
+let ownershipCandidateUsers = [];
+let userEmailById = {};
 
 function escapeText(value){
   return String(value ?? "")
@@ -1572,18 +1613,27 @@ async function loadSiteAccessUsers(){
   const accessRows = accessResult.data || [];
   const inviteRows = invites || [];
 
+  rememberUserEmail(currentUser?.id, currentUser?.email);
+
+  inviteRows.forEach(invite => {
+    if(invite.accepted_by && invite.email){
+      rememberUserEmail(invite.accepted_by, invite.email);
+    }
+  });
+
   let html = "";
 
   accessRows.forEach(row => {
     const role = row.role || "viewer";
     const accessId = row.id || "";
     const userId = row.user_id || "Linked user";
+    const userLabel = getUserDisplay(userId);
 
     html += `
       <div class="mini-row">
         <div class="mini-main">
-          <strong>${escapeText(userId)}</strong>
-          <div class="mini-muted">Role: ${escapeText(role)} • Access record</div>
+          <strong>${escapeText(userLabel)}</strong>
+          <div class="mini-muted">Role: ${escapeText(role)} • User ID: ${escapeText(shortUserId(userId) || userId)}</div>
         </div>
         <div class="mini-actions">
           <select class="mini-select" id="role-${escapeText(accessId)}">
@@ -1592,7 +1642,7 @@ async function loadSiteAccessUsers(){
             <option value="owner" ${role === "owner" ? "selected" : ""}>Owner</option>
           </select>
           <button class="small-btn secondary" type="button" onclick="changeUserRole('${escapeText(accessId)}')">Save Role</button>
-          <button class="small-btn danger" type="button" onclick="removeUserAccess('${escapeText(accessId)}','${escapeText(userId)}')">Remove</button>
+          <button class="small-btn danger" type="button" onclick="removeUserAccess('${escapeText(accessId)}','${escapeText(userLabel)}')">Remove</button>
         </div>
       </div>
     `;
@@ -1667,6 +1717,270 @@ async function removeUserAccess(accessId, userLabel){
 
   setStatus("User access removed.", "success");
   await loadSiteAccessUsers();
+}
+
+function shortUserId(value){
+  const text = String(value || "");
+  return text ? text.slice(0, 8) + "..." : "";
+}
+
+function rememberUserEmail(userId, email){
+  if(!userId || !email) return;
+  userEmailById[userId] = normalizeEmail(email);
+}
+
+function getUserDisplay(userId){
+  if(currentUser?.id && userId === currentUser.id){
+    return currentUser.email || "You";
+  }
+
+  return userEmailById[userId] || shortUserId(userId) || "User";
+}
+
+function getSelectedOrganizationContext(){
+  const siteId = selectedSite();
+  const site = allSites.find(item => item.id === siteId);
+
+  if(!site){
+    return {
+      siteId:"",
+      organizationId:"",
+      organizationLabel:"",
+      organizationSiteIds:[]
+    };
+  }
+
+  const organizationId = site.organization_id || site.org_id || site.company_id || "";
+  const organizationSites = organizationId
+    ? allSites.filter(item => (item.organization_id || item.org_id || item.company_id || "") === organizationId)
+    : [site];
+
+  return {
+    siteId,
+    organizationId,
+    organizationLabel: organizationId ? `${siteName(siteId)} organization` : `${siteName(siteId)} site`,
+    organizationSiteIds: organizationSites.map(item => item.id).filter(Boolean)
+  };
+}
+
+function setOwnershipStatus(message, tone = ""){
+  const box = document.getElementById("ownershipStatusBox");
+  if(!box) return;
+
+  box.innerText = message || "";
+  box.className = "status show";
+  if(tone) box.classList.add(tone);
+}
+
+async function loadOrganizationOwnerTool(){
+  const orgLabelInput = document.getElementById("ownerOrgLabel");
+  const currentOwnerInput = document.getElementById("currentOwnerLabel");
+  const newOwnerSelect = document.getElementById("newOwnerUserId");
+
+  if(!orgLabelInput || !currentOwnerInput || !newOwnerSelect) return;
+
+  ownershipCandidateUsers = [];
+
+  const context = getSelectedOrganizationContext();
+
+  if(!context.siteId || !context.organizationSiteIds.length){
+    orgLabelInput.value = "Select a site first";
+    currentOwnerInput.value = "No site selected";
+    newOwnerSelect.innerHTML = `<option value="">Select a site first</option>`;
+    return;
+  }
+
+  orgLabelInput.value = context.organizationLabel;
+  currentOwnerInput.value = "Loading...";
+  newOwnerSelect.innerHTML = `<option value="">Loading users...</option>`;
+
+  rememberUserEmail(currentUser?.id, currentUser?.email);
+
+  const { data: inviteRows, error: inviteError } = await client
+    .from("site_invites")
+    .select("email, accepted_by, site_id, role")
+    .in("site_id", context.organizationSiteIds);
+
+  if(inviteError){
+    console.log("Ownership invite lookup error:", inviteError);
+  }else{
+    (inviteRows || []).forEach(invite => {
+      if(invite.accepted_by && invite.email){
+        rememberUserEmail(invite.accepted_by, invite.email);
+      }
+    });
+  }
+
+  const { data: accessRows, error: accessError } = await client
+    .from("user_site_access")
+    .select("id, user_id, site_id, role, created_at")
+    .in("site_id", context.organizationSiteIds)
+    .order("created_at", { ascending:false });
+
+  if(accessError){
+    console.log("Ownership access lookup error:", accessError);
+    currentOwnerInput.value = "Could not load users";
+    newOwnerSelect.innerHTML = `<option value="">Could not load users</option>`;
+    setOwnershipStatus("Could not load organization users: " + accessError.message, "error");
+    return;
+  }
+
+  const candidateMap = new Map();
+
+  (accessRows || []).forEach(row => {
+    if(!row?.user_id) return;
+
+    const existing = candidateMap.get(row.user_id) || {
+      user_id: row.user_id,
+      email: getUserDisplay(row.user_id),
+      roles:new Set(),
+      siteIds:new Set()
+    };
+
+    existing.roles.add(String(row.role || "viewer"));
+    if(row.site_id) existing.siteIds.add(row.site_id);
+
+    candidateMap.set(row.user_id, existing);
+  });
+
+  ownershipCandidateUsers = Array.from(candidateMap.values())
+    .map(user => ({
+      ...user,
+      roles:Array.from(user.roles),
+      site_count:user.siteIds.size
+    }))
+    .sort((a,b) => String(getUserDisplay(a.user_id)).localeCompare(String(getUserDisplay(b.user_id))));
+
+  const ownerUsers = ownershipCandidateUsers.filter(user =>
+    user.roles.some(role => ["owner", "admin"].includes(String(role).toLowerCase()))
+  );
+
+  currentOwnerInput.value = ownerUsers.length
+    ? ownerUsers.map(user => getUserDisplay(user.user_id)).join(", ")
+    : "No owner/admin found";
+
+  if(!ownershipCandidateUsers.length){
+    newOwnerSelect.innerHTML = `<option value="">No linked users found</option>`;
+    return;
+  }
+
+  newOwnerSelect.innerHTML =
+    `<option value="">Choose new owner</option>` +
+    ownershipCandidateUsers.map(user => {
+      const label = `${getUserDisplay(user.user_id)} • ${user.roles.join("/")} • ${user.site_count} site${user.site_count === 1 ? "" : "s"}`;
+      return `<option value="${escapeText(user.user_id)}">${escapeText(label)}</option>`;
+    }).join("");
+}
+
+async function transferOrganizationOwnerAccess(){
+  clearStatus();
+
+  const context = getSelectedOrganizationContext();
+  const select = document.getElementById("newOwnerUserId");
+  const newOwnerUserId = select ? select.value : "";
+
+  if(!context.siteId || !context.organizationSiteIds.length){
+    setOwnershipStatus("Select a site first.", "warn");
+    return;
+  }
+
+  if(!newOwnerUserId){
+    setOwnershipStatus("Choose the new owner user.", "warn");
+    return;
+  }
+
+  const userLabel = getUserDisplay(newOwnerUserId);
+
+  const confirmed = confirm(
+    `Give organization owner access to ${userLabel}?\n\n` +
+    `This grants owner access to ${context.organizationSiteIds.length} site${context.organizationSiteIds.length === 1 ? "" : "s"} in this organization.\n\n` +
+    `The old owner is NOT removed automatically.`
+  );
+
+  if(!confirmed) return;
+
+  setOwnershipStatus("Transferring owner access...", "warn");
+
+  const { data: existingRows, error: existingError } = await client
+    .from("user_site_access")
+    .select("id, site_id, user_id, role")
+    .eq("user_id", newOwnerUserId)
+    .in("site_id", context.organizationSiteIds);
+
+  if(existingError){
+    console.log("Ownership existing access lookup error:", existingError);
+    setOwnershipStatus("Could not check existing access: " + existingError.message, "error");
+    return;
+  }
+
+  const existingBySiteId = new Map((existingRows || []).map(row => [row.site_id, row]));
+  const rowsToInsert = [];
+  const rowsToUpdate = [];
+
+  context.organizationSiteIds.forEach(siteId => {
+    const existing = existingBySiteId.get(siteId);
+
+    if(existing?.id){
+      if(String(existing.role || "").toLowerCase() !== "owner"){
+        rowsToUpdate.push(existing.id);
+      }
+    }else{
+      rowsToInsert.push({
+        user_id:newOwnerUserId,
+        site_id:siteId,
+        role:"owner"
+      });
+    }
+  });
+
+  if(rowsToInsert.length){
+    const { error: insertError } = await client
+      .from("user_site_access")
+      .insert(rowsToInsert);
+
+    if(insertError){
+      console.log("Ownership insert error:", insertError);
+      setOwnershipStatus("Could not add owner access: " + insertError.message, "error");
+      return;
+    }
+  }
+
+  if(rowsToUpdate.length){
+    const { error: updateError } = await client
+      .from("user_site_access")
+      .update({ role:"owner" })
+      .in("id", rowsToUpdate);
+
+    if(updateError){
+      console.log("Ownership role update error:", updateError);
+      setOwnershipStatus("Owner access added where missing, but some role updates failed: " + updateError.message, "warn");
+      await loadOrganizationOwnerTool();
+      return;
+    }
+  }
+
+  if(context.organizationId){
+    try{
+      const { error: orgUpdateError } = await client
+        .from("organizations")
+        .update({
+          owner_user_id:newOwnerUserId,
+          updated_at:new Date().toISOString()
+        })
+        .eq("id", context.organizationId);
+
+      if(orgUpdateError){
+        console.log("Optional organization owner_user_id update skipped/failed:", orgUpdateError);
+      }
+    }catch(err){
+      console.log("Optional organization owner update skipped:", err);
+    }
+  }
+
+  setOwnershipStatus(`Owner access transferred to ${userLabel}. Verify the new owner can log in before removing any old owner access.`, "success");
+
+  await loadSiteAccessUsers();
+  await loadOrganizationOwnerTool();
 }
 
 function generatePairingCode(){
@@ -2652,6 +2966,7 @@ async function loadMaintenancePage(showLoading=true){
   await loadPairingCodes();
   await loadDeviceLogs();
   await loadRelayOutputAssignments();
+  await loadOrganizationOwnerTool();
 
   renderDevices();
   renderCommands();
