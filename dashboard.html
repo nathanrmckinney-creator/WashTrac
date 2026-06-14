@@ -2475,31 +2475,56 @@
 
   select.innerHTML = `<option>Loading sites...</option>`;
 
-  /*
-    IMPORTANT:
-    Do not query site_members here. This project does not have a public.site_members table.
-    The old code caused this console error:
-    "Could not find the table 'public.site_members'"
+  let sites = [];
 
-    We load directly from public.sites instead.
-    Admins see all sites. Normal users see whatever RLS allows.
-  */
+  if(hasAdminAccess()){
+    const { data, error } = await client
+      .from("sites")
+      .select("*")
+      .order("name", { ascending:true });
 
-  const { data, error } = await client
-    .from("sites")
-    .select("*")
-    .order("name", { ascending:true });
+    if(error){
+      console.log("Sites load error:", error);
+      select.innerHTML = `<option value="">Error loading sites</option>`;
+      return "";
+    }
 
-  if(error){
-    console.log("Sites load error:", error);
-    select.innerHTML = `<option value="">Error loading sites</option>`;
-    return "";
+    sites = data || [];
+  }else{
+    const { data:userData, error:userError } = await client.auth.getUser();
+
+    if(userError || !userData?.user){
+      console.log("User load error:", userError);
+      select.innerHTML = `<option value="">No user found</option>`;
+      localStorage.removeItem("activeSiteId");
+      localStorage.removeItem("washtracActiveSiteId");
+      localStorage.removeItem("activeOrganizationId");
+      currentSiteId = null;
+      currentOrganizationId = null;
+      return "";
+    }
+
+    const { data, error } = await client
+      .from("user_site_access")
+      .select(`
+        site_id,
+        sites (*)
+      `)
+      .eq("user_id", userData.user.id);
+
+    if(error){
+      console.log("Assigned sites load error:", error);
+      select.innerHTML = `<option value="">Error loading sites</option>`;
+      return "";
+    }
+
+    sites = (data || [])
+      .map(row => row.sites || null)
+      .filter(site => site && site.id);
   }
 
-  const sites = data || [];
-
   if(!sites.length){
-    select.innerHTML = `<option value="">No sites found</option>`;
+    select.innerHTML = `<option value="">No sites assigned</option>`;
     localStorage.removeItem("activeSiteId");
     localStorage.removeItem("washtracActiveSiteId");
     localStorage.removeItem("activeOrganizationId");
