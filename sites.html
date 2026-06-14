@@ -1650,6 +1650,20 @@ if(!isClientLogin && !isAdminLogin){
             `).join("")
           : `<div class="mini-row"><div class="mini-main"><span class="mini-muted">No linked users found.</span></div><div class="pill">0</div></div>`;
 
+        const removableMembers = siteMembers.filter(member => {
+          if(!member?.id || !member?.user_id) return false;
+          if(currentUser?.id && member.user_id === currentUser.id) return false;
+          return true;
+        });
+
+        const removeOptionsHtml = removableMembers.length
+          ? removableMembers.map(member => `
+              <option value="${escapeText(member.id)}">
+                ${escapeText(member.role || "viewer")} • ${escapeText(String(member.user_id || "").slice(0, 8))}...
+              </option>
+            `).join("")
+          : `<option value="">No removable users</option>`;
+
         wrap.innerHTML += `
           <div class="site-card">
             <div class="site-card-top">
@@ -1715,6 +1729,25 @@ if(!isClientLogin && !isAdminLogin){
 
               <h4 style="margin-top:16px;">Pending Invites</h4>
               <div class="mini-list">${invitesHtml}</div>
+
+              <h4 style="margin-top:16px;">Remove Site Access</h4>
+              <div class="invite-grid">
+                <div class="field full-mobile">
+                  <label for="removeUser-${escapeText(site.id)}">Linked User</label>
+                  <select id="removeUser-${escapeText(site.id)}" ${manager && removableMembers.length ? "" : "disabled"}>
+                    ${removeOptionsHtml}
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label>&nbsp;</label>
+                  <button class="danger" onclick="removeSiteAccess('${escapeText(site.id)}')" ${manager && removableMembers.length ? "" : "disabled"}>Remove</button>
+                </div>
+              </div>
+
+              <div class="note">
+                ${manager ? "This removes access to this site only. It does not delete the user's WashTrac login." : "Only owner/admin users can remove site access."}
+              </div>
             </div>
           </div>
         `;
@@ -1871,6 +1904,61 @@ if(!isClientLogin && !isAdminLogin){
       roleSelect.value = "viewer";
 
       setStatus(`Invite saved for ${email}.`, "good");
+      await loadSites();
+    }
+
+    async function removeSiteAccess(siteId){
+      clearStatus();
+
+      const site = currentSites.find(item => item.id === siteId);
+      if(!site){
+        setStatus("Site not found.", "bad");
+        return;
+      }
+
+      if(!canManageSite(site)){
+        setStatus("Only owner/admin users can remove site access.", "bad");
+        return;
+      }
+
+      const select = document.getElementById(`removeUser-${siteId}`);
+      const accessId = select ? select.value : "";
+
+      if(!accessId){
+        setStatus("Choose a linked user to remove.", "bad");
+        return;
+      }
+
+      const member = acceptedMembers.find(row => row.id === accessId && row.site_id === siteId);
+      if(!member){
+        setStatus("Linked user not found. Reload the page and try again.", "bad");
+        return;
+      }
+
+      if(currentUser?.id && member.user_id === currentUser.id){
+        setStatus("You cannot remove your own access from this page.", "bad");
+        return;
+      }
+
+      const confirmed = confirm(
+        `Remove access to ${siteLabel(site)} for this user?\n\nUser ID: ${member.user_id}\nRole: ${member.role || "viewer"}\n\nThis does not delete their WashTrac login.`
+      );
+
+      if(!confirmed) return;
+
+      const { error } = await client
+        .from("user_site_access")
+        .delete()
+        .eq("id", accessId)
+        .eq("site_id", siteId);
+
+      if(error){
+        console.log("Remove site access error:", error);
+        setStatus("Could not remove site access: " + error.message, "bad");
+        return;
+      }
+
+      setStatus("Site access removed.", "good");
       await loadSites();
     }
 
