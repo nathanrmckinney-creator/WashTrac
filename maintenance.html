@@ -1783,7 +1783,9 @@ function getSelectedOrganizationContext(){
  return {
   siteId,
   organizationId,
-  organizationLabel: siteName(siteId),
+  organizationLabel: organizationId
+    ? `${siteName(siteId)} organization`
+    : `${siteName(siteId)} site`,
   organizationSiteIds: organizationSites.map(item => item.id).filter(Boolean)
 };
 
