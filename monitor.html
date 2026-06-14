@@ -2670,78 +2670,62 @@ async function setupRealtime(){
   if(monitorChannel){
     try{
       await client.removeChannel(monitorChannel);
-    }catch(err){
-      console.log("Monitor realtime remove error:", err);
-    }
+    }catch(err){}
     monitorChannel = null;
   }
 
   if(!activeSiteId || !hasAccessToActiveSite()){
-    console.log("MONITOR REALTIME NOT STARTED:", {
-      activeSiteId,
-      assignedSiteIds
-    });
     return;
   }
 
   const channelName = "monitor-live-" + activeSiteId + "-" + Date.now();
-  console.log("MONITOR REALTIME STARTING:", channelName);
 
-  function realtimeRefresh(payload, sourceTable){
+  function realtimeRefresh(payload){
     const eventSiteId =
       payload?.new?.site_id ||
       payload?.old?.site_id ||
       "";
 
-    console.log("MONITOR REALTIME EVENT:", {
-      table: sourceTable,
-      eventSiteId,
-      activeSiteId: getActiveSiteId(),
-      payload
-    });
-
     if(eventSiteId !== getActiveSiteId()) return;
 
     clearTimeout(refreshTimer);
 
-    // Refresh immediately. The top strip renders first inside loadMonitor().
     loadMonitor();
   }
 
   monitorChannel = client.channel(channelName)
+
     .on("postgres_changes", {
       event:"INSERT",
       schema:"public",
       table:"wash_activity"
-    }, (payload) => realtimeRefresh(payload, "wash_activity"))
+    }, realtimeRefresh)
 
     .on("postgres_changes", {
       event:"UPDATE",
       schema:"public",
       table:"wash_activity"
-    }, (payload) => realtimeRefresh(payload, "wash_activity"))
+    }, realtimeRefresh)
 
     .on("postgres_changes", {
       event:"*",
       schema:"public",
       table:"devices"
-    }, (payload) => realtimeRefresh(payload, "devices"))
+    }, realtimeRefresh)
 
     .on("postgres_changes", {
       event:"*",
       schema:"public",
       table:"site_system_control"
-    }, (payload) => realtimeRefresh(payload, "site_system_control"))
+    }, realtimeRefresh)
 
     .on("postgres_changes", {
       event:"*",
       schema:"public",
       table:"site_bay_status"
-    }, (payload) => realtimeRefresh(payload, "site_bay_status"))
+    }, realtimeRefresh)
 
     .subscribe((status) => {
-      console.log("MONITOR REALTIME STATUS:", status);
-
       if(status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED"){
         setTimeout(() => {
           if(!document.hidden){
