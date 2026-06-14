@@ -754,10 +754,8 @@ if(!hasAdminSession){
         </div>
 
         <div class="field">
-          <label for="newOwnerUserId">New Owner User</label>
-          <select id="newOwnerUserId">
-            <option value="">Select a site first</option>
-          </select>
+          <label for="newOwnerEmail">New Owner Email</label>
+          <input id="newOwnerEmail" type="email" placeholder="newowner@company.com">
         </div>
 
         <div class="field">
@@ -1802,9 +1800,9 @@ function setOwnershipStatus(message, tone = ""){
 async function loadOrganizationOwnerTool(){
   const orgLabelInput = document.getElementById("ownerOrgLabel");
   const currentOwnerInput = document.getElementById("currentOwnerLabel");
-  const newOwnerSelect = document.getElementById("newOwnerUserId");
+  const newOwnerEmailInput = document.getElementById("newOwnerEmail");
 
-  if(!orgLabelInput || !currentOwnerInput || !newOwnerSelect) return;
+  if(!orgLabelInput || !currentOwnerInput || !newOwnerEmailInput) return;
 
   ownershipCandidateUsers = [];
 
@@ -1813,13 +1811,14 @@ async function loadOrganizationOwnerTool(){
   if(!context.siteId || !context.organizationSiteIds.length){
     orgLabelInput.value = "Select a site first";
     currentOwnerInput.value = "No site selected";
-    newOwnerSelect.innerHTML = `<option value="">Select a site first</option>`;
+    newOwnerEmailInput.value = "";
+    newOwnerEmailInput.placeholder = "Select a site first";
     return;
   }
 
   orgLabelInput.value = context.organizationLabel;
   currentOwnerInput.value = "Loading...";
-  newOwnerSelect.innerHTML = `<option value="">Loading users...</option>`;
+  newOwnerEmailInput.placeholder = "newowner@company.com";
 
   rememberUserEmail(currentUser?.id, currentUser?.email);
   await loadUserEmailDirectory();
@@ -1848,7 +1847,6 @@ async function loadOrganizationOwnerTool(){
   if(accessError){
     console.log("Ownership access lookup error:", accessError);
     currentOwnerInput.value = "Could not load users";
-    newOwnerSelect.innerHTML = `<option value="">Could not load users</option>`;
     setOwnershipStatus("Could not load organization users: " + accessError.message, "error");
     return;
   }
@@ -1860,7 +1858,6 @@ async function loadOrganizationOwnerTool(){
 
     const existing = candidateMap.get(row.user_id) || {
       user_id: row.user_id,
-      email: getUserDisplay(row.user_id),
       roles:new Set(),
       siteIds:new Set()
     };
@@ -1886,49 +1883,68 @@ async function loadOrganizationOwnerTool(){
   currentOwnerInput.value = ownerUsers.length
     ? ownerUsers.map(user => getUserDisplay(user.user_id)).join(", ")
     : "No owner/admin found";
-
-  if(!ownershipCandidateUsers.length){
-    newOwnerSelect.innerHTML = `<option value="">No linked users found</option>`;
-    return;
-  }
-
-  newOwnerSelect.innerHTML =
-    `<option value="">Choose new owner</option>` +
-    ownershipCandidateUsers.map(user => {
-      const label = `${getUserDisplay(user.user_id)} • ${user.roles.join("/")} • ${user.site_count} site${user.site_count === 1 ? "" : "s"}`;
-      return `<option value="${escapeText(user.user_id)}">${escapeText(label)}</option>`;
-    }).join("");
 }
 
-async function transferOrganizationOwnerAccess(){
-  clearStatus();
+function findUserIdByEmail(email){
+  const normalized = normalizeEmail(email);
 
-  const context = getSelectedOrganizationContext();
-  const select = document.getElementById("newOwnerUserId");
-  const newOwnerUserId = select ? select.value : "";
-
-  if(!context.siteId || !context.organizationSiteIds.length){
-    setOwnershipStatus("Select a site first.", "warn");
-    return;
+  for(const [userId, knownEmail] of Object.entries(userEmailById || {})){
+    if(normalizeEmail(knownEmail) === normalized){
+      return userId;
+    }
   }
 
-  if(!newOwnerUserId){
-    setOwnershipStatus("Choose the new owner user.", "warn");
-    return;
+  return "";
+}
+
+async function createPendingOwnerInvitesForOrganization(email, context){
+  const now = new Date().toISOString();
+  const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+  const rowsToInsert = [];
+
+  const { data: existingInvites, error: existingInviteError } = await client
+    .from("site_invites")
+    .select("id, site_id, email, accepted_at")
+    .eq("email", email)
+    .in("site_id", context.organizationSiteIds)
+    .is("accepted_at", null);
+
+  if(existingInviteError){
+    console.log("Existing owner invite lookup error:", existingInviteError);
   }
 
-  const userLabel = getUserDisplay(newOwnerUserId);
+  const existingPendingSiteIds = new Set((existingInvites || []).map(row => row.site_id).filter(Boolean));
 
-  const confirmed = confirm(
-    `Give organization owner access to ${userLabel}?\n\n` +
-    `This grants owner access to ${context.organizationSiteIds.length} site${context.organizationSiteIds.length === 1 ? "" : "s"} in this organization.\n\n` +
-    `The old owner is NOT removed automatically.`
-  );
+  context.organizationSiteIds.forEach(siteId => {
+    if(existingPendingSiteIds.has(siteId)) return;
 
-  if(!confirmed) return;
+    rowsToInsert.push({
+      site_id:siteId,
+      email,
+      role:"owner",
+      invite_code:generateInviteCode(),
+      created_by:currentUser?.id || null,
+      expires_at:expiresAt
+    });
+  });
 
-  setOwnershipStatus("Transferring owner access...", "warn");
+  if(!rowsToInsert.length){
+    return 0;
+  }
 
+  const { error: insertError } = await client
+    .from("site_invites")
+    .insert(rowsToInsert);
+
+  if(insertError){
+    console.log("Owner invite insert error:", insertError);
+    throw insertError;
+  }
+
+  return rowsToInsert.length;
+}
+
+async function grantOwnerAccessToExistingUser(newOwnerUserId, email, context){
   const { data: existingRows, error: existingError } = await client
     .from("user_site_access")
     .select("id, site_id, user_id, role")
@@ -1937,8 +1953,7 @@ async function transferOrganizationOwnerAccess(){
 
   if(existingError){
     console.log("Ownership existing access lookup error:", existingError);
-    setOwnershipStatus("Could not check existing access: " + existingError.message, "error");
-    return;
+    throw existingError;
   }
 
   const existingBySiteId = new Map((existingRows || []).map(row => [row.site_id, row]));
@@ -1968,8 +1983,7 @@ async function transferOrganizationOwnerAccess(){
 
     if(insertError){
       console.log("Ownership insert error:", insertError);
-      setOwnershipStatus("Could not add owner access: " + insertError.message, "error");
-      return;
+      throw insertError;
     }
   }
 
@@ -1981,9 +1995,7 @@ async function transferOrganizationOwnerAccess(){
 
     if(updateError){
       console.log("Ownership role update error:", updateError);
-      setOwnershipStatus("Owner access added where missing, but some role updates failed: " + updateError.message, "warn");
-      await loadOrganizationOwnerTool();
-      return;
+      throw updateError;
     }
   }
 
@@ -2005,7 +2017,75 @@ async function transferOrganizationOwnerAccess(){
     }
   }
 
-  setOwnershipStatus(`Owner access transferred to ${userLabel}. Verify the new owner can log in before removing any old owner access.`, "success");
+  rememberUserEmail(newOwnerUserId, email);
+
+  return {
+    inserted:rowsToInsert.length,
+    updated:rowsToUpdate.length
+  };
+}
+
+async function transferOrganizationOwnerAccess(){
+  clearStatus();
+
+  const context = getSelectedOrganizationContext();
+  const emailInput = document.getElementById("newOwnerEmail");
+  const newOwnerEmail = normalizeEmail(emailInput ? emailInput.value : "");
+
+  if(!context.siteId || !context.organizationSiteIds.length){
+    setOwnershipStatus("Select a site first.", "warn");
+    return;
+  }
+
+  if(!newOwnerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newOwnerEmail)){
+    setOwnershipStatus("Enter a valid new owner email.", "warn");
+    return;
+  }
+
+  rememberUserEmail(currentUser?.id, currentUser?.email);
+  await loadUserEmailDirectory();
+
+  const existingUserId = findUserIdByEmail(newOwnerEmail);
+  const transferType = existingUserId ? "existing" : "invite";
+
+  const confirmed = confirm(
+    existingUserId
+      ? `Give organization owner access to ${newOwnerEmail}?\n\nThis grants owner access to ${context.organizationSiteIds.length} site${context.organizationSiteIds.length === 1 ? "" : "s"} in this organization.\n\nThe old owner is NOT removed automatically.`
+      : `${newOwnerEmail} does not have a WashTrac login yet.\n\nCreate pending owner invites for ${context.organizationSiteIds.length} site${context.organizationSiteIds.length === 1 ? "" : "s"} in this organization?\n\nWhen they sign up with this email and open Sites, the owner access will be linked.`
+  );
+
+  if(!confirmed) return;
+
+  setOwnershipStatus(
+    existingUserId ? "Transferring owner access..." : "Creating pending owner invites...",
+    "warn"
+  );
+
+  try{
+    if(existingUserId){
+      await grantOwnerAccessToExistingUser(existingUserId, newOwnerEmail, context);
+
+      setOwnershipStatus(
+        `Owner access transferred to ${newOwnerEmail}. Verify the new owner can log in before removing any old owner access.`,
+        "success"
+      );
+    }else{
+      const inviteCount = await createPendingOwnerInvitesForOrganization(newOwnerEmail, context);
+
+      setOwnershipStatus(
+        inviteCount
+          ? `Pending owner invite created for ${newOwnerEmail} across ${inviteCount} site${inviteCount === 1 ? "" : "s"}. Have them sign up with that exact email, then open Sites.`
+          : `Pending owner invite already exists for ${newOwnerEmail}. Have them sign up with that exact email, then open Sites.`,
+        "success"
+      );
+    }
+  }catch(err){
+    console.log("Ownership transfer/invite error:", err);
+    setOwnershipStatus("Ownership transfer failed: " + (err.message || "Unknown error"), "error");
+    return;
+  }
+
+  if(emailInput) emailInput.value = "";
 
   await loadSiteAccessUsers();
   await loadOrganizationOwnerTool();
