@@ -650,6 +650,7 @@ if(!hasAdminSession){
 
 <a href="membership.html">Membership</a>
 <a href="maintenance.html">Maintenance</a>
+<a href="user-accounts.html">User Accounts</a>
   <a href="#" onclick="goHome(event)">Back to Homepage</a>
   <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
 </div>
@@ -680,34 +681,23 @@ if(!hasAdminSession){
   <div class="main">
     <div class="desktop-menu-wrap">
       <button class="menu-btn" type="button" onclick="toggleDesktopMenu()">☰</button>
+
+      <div style="margin-top:10px;text-align:right;">
+        <button
+          class="success"
+          type="button"
+          onclick="window.location.href='user-accounts.html'"
+          style="padding:10px 14px;font-size:13px;white-space:nowrap;">
+          User Accounts
+        </button>
+      </div>
+
       <div class="hamburger-menu" id="desktopMenu">
         <a href="#" onclick="goHome(event)">Back to Homepage</a>
         <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
       </div>
     </div>
-
-    <div class="card" style="margin-bottom:20px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;">
-        <div>
-          <h3 style="margin:0;">User Accounts</h3>
-          <div class="muted" style="margin-top:6px;">
-            Master customer registry, keypad ownership, device tracking and support records.
-          </div>
-        </div>
-
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button
-            class="success"
-            type="button"
-            onclick="window.location.href='user-accounts.html'">
-            Open User Accounts
-          </button>
-        </div>
-      </div>
-    </div>
-
-
-    <div class="page-header">
+<div class="page-header">
       <h1>Maintenance <span class="admin-pill">SUPPORT</span></h1>
       <p>
         Customer support control center for devices, pairing codes, customer access, site codes, and remote Keypad commands.
