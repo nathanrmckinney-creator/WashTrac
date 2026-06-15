@@ -617,38 +617,6 @@ tbody tr:hover{background:rgba(37,99,235,.08);}
 }
 
 
-.user-accounts-menu-button{
-  position:absolute;
-  top:82px;
-  right:30px;
-  z-index:1100;
-}
-
-.user-accounts-menu-button button{
-  padding:10px 14px;
-  font-size:13px;
-  white-space:nowrap;
-}
-
-@media (max-width:900px){
-  .user-accounts-menu-button{
-    display:none !important;
-  }
-}
-
-@media (min-width:768px) and (max-width:1400px) and (orientation:landscape){
-  .user-accounts-menu-button{
-    top:78px !important;
-    right:30px !important;
-  }
-
-  .user-accounts-menu-button button{
-    padding:9px 11px !important;
-    font-size:12px !important;
-    border-radius:8px !important;
-  }
-}
-
 </style>
 </head>
 
@@ -719,21 +687,16 @@ if(!hasAdminSession){
       </div>
     </div>
 
-    <div class="user-accounts-menu-button">
-      <button
-        class="success"
-        type="button"
-        onclick="window.location.href='user-accounts.html'">
-        User Accounts
-      </button>
-    </div>
-
-        <div class="page-header">
+<div class="page-header">
       <h1>Maintenance <span class="admin-pill">SUPPORT</span></h1>
       <p>
         Customer support control center for devices, pairing codes, customer access, site codes, and remote Keypad commands.
         Maintenance is admin-only and should be used as the field support lifeline.
       </p>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <button class="success" type="button" onclick="window.location.href='user-accounts.html'">User Accounts</button>
     </div>
 
     <div class="summary">
