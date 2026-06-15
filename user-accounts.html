@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WashTrac User Accounts</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#020617;color:#fff;overflow-x:hidden;}
+    .app{display:flex;min-height:100vh;}
+
+    .sidebar{
+      width:220px;
+      background:
+        radial-gradient(
+          circle at 0% 0%,
+          rgba(37,99,235,.85) 0%,
+          rgba(37,99,235,.45) 6%,
+          rgba(37,99,235,.18) 10%,
+          rgba(37,99,235,.06) 14%,
+          transparent 16%
+        ),
+        linear-gradient(180deg,#0f172a 0%,#111827 100%);
+      padding:20px;
+      border-right:1px solid #1e293b;
+      flex-shrink:0;
+      position:fixed;
+      top:0;
+      left:0;
+      height:100vh;
+      overflow:hidden;
+    }
+
+    .sidebar::before{display:none;}
+    .sidebar > *,.nav{position:relative;z-index:1;}
+
+    .logo{margin-bottom:24px;}
+    .logo-image{width:180px;height:auto;display:block;}
+
+    .nav a{
+      display:block;
+      color:#cbd5f5;
+      text-decoration:none;
+      padding:10px 0;
+    }
+
+    .nav a:hover,.nav a.active{color:#fff;}
+
+    .main{
+      flex:1;
+      padding:30px;
+      position:relative;
+      margin-left:220px;
+    }
+
+    .main::before{display:none;}
+    .main > *{position:relative;z-index:1;}
+
+    .desktop-menu-wrap{
+      position:absolute !important;
+      top:24px !important;
+      right:30px !important;
+      z-index:2500 !important;
+    }
+
+    .menu-btn{
+      width:40px !important;
+      height:40px !important;
+      padding:0 !important;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#2563eb;
+      border:none;
+      color:#fff;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:bold;
+      font-size:13px;
+      line-height:1;
+    }
+
+    .hamburger-menu{
+      display:none;
+      position:absolute !important;
+      top:46px !important;
+      right:0 !important;
+      width:220px;
+      background:#0f172a;
+      border:1px solid #1e293b;
+      border-radius:12px;
+      padding:12px 16px;
+      box-shadow:0 12px 30px rgba(0,0,0,.45);
+      z-index:1500;
+    }
+
+    .hamburger-menu a{
+      display:block;
+      color:#cbd5f5;
+      text-decoration:none;
+      padding:10px 0;
+    }
+
+    .hamburger-menu a:hover{color:#fff;}
+    .hamburger-menu a.logout-link{color:#f87171;}
+
+    .mobile-topbar{
+      display:none;
+      align-items:center;
+      justify-content:space-between;
+      padding:16px 20px;
+      background:#0f172a;
+      border-bottom:1px solid #1e293b;
+      position:sticky;
+      top:0;
+      z-index:1400;
+    }
+
+    .mobile-logo{margin-bottom:0;}
+    .logo-image-mobile{width:150px;height:auto;display:block;}
+
+    .mobile-menu{
+      display:none;
+      position:fixed;
+      top:64px;
+      right:16px;
+      width:240px;
+      background:#0f172a;
+      border:1px solid #1e293b;
+      border-radius:12px;
+      padding:12px 16px;
+      box-shadow:0 12px 30px rgba(0,0,0,.45);
+      z-index:1500;
+    }
+
+    .mobile-menu a{
+      display:block;
+      color:#cbd5f5;
+      text-decoration:none;
+      padding:10px 0;
+    }
+
+    .mobile-menu a:hover{color:#fff;}
+    .mobile-menu a.logout-link{color:#f87171;}
+
+    .backdrop{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.35);
+      z-index:1100;
+    }
+
+    .page-header{
+      margin-bottom:20px;
+      padding-right:120px;
+    }
+
+    .page-header h1{
+      margin:0 0 10px 0;
+      font-size:42px;
+      letter-spacing:-.6px;
+      text-shadow:0 0 26px rgba(37,99,235,.16);
+    }
+
+    .page-header p{
+      margin:0;
+      color:#94a3b8;
+      line-height:1.5;
+      max-width:920px;
+    }
+
+    .admin-pill{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(37,99,235,.15);
+      color:#93c5fd;
+      font-size:12px;
+      font-weight:bold;
+      margin-left:10px;
+      vertical-align:middle;
+    }
+
+    .summary{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:16px;
+      margin-bottom:20px;
+    }
+
+    .summary-box{
+      background:linear-gradient(145deg,#111827 0%,#07111f 100%);
+      padding:18px;
+      border-radius:14px;
+      border:1px solid rgba(37,99,235,.32);
+      box-shadow:0 14px 28px rgba(0,0,0,.22), inset 0 0 18px rgba(37,99,235,.06);
+    }
+
+    .summary-box strong{
+      display:block;
+      font-size:30px;
+      margin-bottom:6px;
+      color:#fff;
+      font-weight:900;
+    }
+
+    .summary-box span{
+      color:#94a3b8;
+      font-size:14px;
+    }
+
+    .card{
+      background:linear-gradient(145deg,#111827 0%,#07111f 100%);
+      padding:20px;
+      border-radius:14px;
+      border:1px solid rgba(37,99,235,.28);
+      margin-bottom:20px;
+      box-shadow:0 16px 34px rgba(0,0,0,.28), inset 0 0 22px rgba(37,99,235,.045);
+    }
+
+    .card h3{
+      margin:0 0 16px 0;
+      font-family:Arial Black,Arial,Helvetica,sans-serif;
+      letter-spacing:.35px;
+      text-transform:uppercase;
+      color:#eaf4ff;
+    }
+
+    .toolbar{
+      display:grid;
+      grid-template-columns:1.4fr 1fr 1fr auto auto;
+      gap:12px;
+      align-items:end;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .field label{
+      color:#9fb0c8;
+      font-size:13px;
+      font-weight:800;
+      letter-spacing:.25px;
+    }
+
+    input,select{
+      width:100%;
+      padding:12px;
+      border-radius:8px;
+      border:1px solid rgba(51,65,85,.95);
+      background:linear-gradient(180deg,#0b1220,#07101d);
+      color:#fff;
+      font-size:15px;
+      outline:none;
+      box-shadow:inset 0 0 14px rgba(2,6,23,.34);
+    }
+
+    input::placeholder{color:#64748b;}
+
+    input:focus,select:focus{
+      border-color:#1ea7ff;
+      box-shadow:0 0 0 1px rgba(30,167,255,.18), 0 0 14px rgba(30,167,255,.16), inset 0 0 14px rgba(2,6,23,.34);
+    }
+
+    select option,select optgroup{
+      background:#0b1220 !important;
+      color:#fff !important;
+    }
+
+    button{
+      padding:12px 16px;
+      background:#2563eb;
+      color:#fff;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:bold;
+      border:1px solid rgba(96,165,250,.22);
+      box-shadow:0 10px 20px rgba(2,6,23,.18), inset 0 1px 0 rgba(255,255,255,.10);
+      touch-action:manipulation;
+      -webkit-tap-highlight-color:transparent;
+    }
+
+    button:hover{filter:brightness(1.08);}
+    button.secondary{background:linear-gradient(180deg,#475569,#334155);}
+    button.success{background:linear-gradient(180deg,#22c55e,#16a34a);border-color:rgba(134,239,172,.35);}
+    button.warn{background:linear-gradient(180deg,#f59e0b,#d97706);border-color:rgba(251,191,36,.35);}
+    button.danger{background:linear-gradient(180deg,#ef4444,#dc2626);border-color:rgba(248,113,113,.35);}
+
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    .table-wrap{
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.14);
+      background:rgba(2,6,23,.35);
+    }
+
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      min-width:1180px;
+    }
+
+    th,td{
+      padding:12px 9px;
+      border-bottom:1px solid #1f2937;
+      text-align:left;
+      vertical-align:middle;
+      font-size:13px;
+    }
+
+    th{
+      color:#93c5fd;
+      background:rgba(2,6,23,.46);
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.5px;
+      font-weight:900;
+      position:sticky;
+      top:0;
+      z-index:3;
+    }
+
+    td{color:#dbe5fb;}
+    tbody tr:hover{background:rgba(37,99,235,.08);}
+
+    .muted{color:#94a3b8;}
+    .small{font-size:12px;color:#94a3b8;line-height:1.35;}
+    .strong{font-weight:900;color:#fff;}
+
+    .tag{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background:#1e293b;
+      color:#cbd5e1;
+      font-size:12px;
+      font-weight:bold;
+      white-space:nowrap;
+      border:1px solid rgba(96,165,250,.18);
+    }
+
+    .tag.online,.tag.green{background:rgba(34,197,94,.16);color:#86efac;border-color:rgba(34,197,94,.24);}
+    .tag.offline,.tag.red{background:rgba(239,68,68,.16);color:#fca5a5;border-color:rgba(239,68,68,.24);}
+    .tag.pending,.tag.yellow{background:rgba(245,158,11,.16);color:#fcd34d;border-color:rgba(245,158,11,.24);}
+
+    .inline-code{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+      background:#020617;
+      border:1px solid #1f2937;
+      border-radius:8px;
+      padding:2px 6px;
+      color:#93c5fd;
+      white-space:nowrap;
+    }
+
+    .status{
+      margin-top:14px;
+      padding:12px 14px;
+      border-radius:8px;
+      background:linear-gradient(145deg,#0b1220,#06101d);
+      border:1px solid rgba(37,99,235,.22);
+      box-shadow:inset 0 0 16px rgba(37,99,235,.045);
+      color:#cbd5e1;
+      display:none;
+      line-height:1.4;
+    }
+
+    .status.show{display:block;}
+    .status.success{border-color:rgba(34,197,94,.35);color:#bbf7d0;background:rgba(20,83,45,.24);}
+    .status.error{border-color:rgba(239,68,68,.35);color:#fecaca;background:rgba(127,29,29,.24);}
+    .status.warn{border-color:rgba(245,158,11,.35);color:#fde68a;background:rgba(120,53,15,.24);}
+
+    .note{
+      color:#94a3b8;
+      font-size:14px;
+      line-height:1.5;
+      margin-top:12px;
+    }
+
+    .details-btn{
+      padding:8px 10px;
+      font-size:12px;
+      border-radius:7px;
+      background:linear-gradient(180deg,#475569,#334155);
+    }
+
+    .modal{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(2,6,23,.76);
+      z-index:5000;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+
+    .modal.show{display:flex;}
+
+    .modal-box{
+      width:100%;
+      max-width:980px;
+      max-height:88vh;
+      overflow:auto;
+      background:linear-gradient(145deg,#111827 0%,#07111f 100%);
+      border:1px solid rgba(37,99,235,.36);
+      border-radius:16px;
+      box-shadow:0 24px 70px rgba(0,0,0,.58);
+      padding:22px;
+    }
+
+    .modal-head{
+      display:flex;
+      justify-content:space-between;
+      gap:14px;
+      align-items:flex-start;
+      margin-bottom:16px;
+    }
+
+    .modal-head h2{
+      margin:0;
+      font-size:28px;
+      letter-spacing:-.3px;
+    }
+
+    .detail-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+    }
+
+    .detail-box{
+      background:linear-gradient(145deg,#0b1220,#06101d);
+      border:1px solid rgba(37,99,235,.22);
+      border-radius:12px;
+      padding:12px;
+      min-width:0;
+    }
+
+    .detail-box label{
+      display:block;
+      color:#93c5fd;
+      text-transform:uppercase;
+      font-size:11px;
+      letter-spacing:.55px;
+      font-weight:900;
+      margin-bottom:6px;
+    }
+
+    .detail-box div{
+      color:#dbe5fb;
+      overflow-wrap:anywhere;
+      line-height:1.35;
+    }
+
+    .close-btn{
+      background:linear-gradient(180deg,#475569,#334155);
+      padding:10px 12px;
+      min-width:40px;
+    }
+
+    @media (max-width:1200px){
+      .toolbar{grid-template-columns:1fr 1fr;}
+      .detail-grid{grid-template-columns:1fr 1fr;}
+    }
+
+    @media (max-width:900px){
+      .app{display:block;}
+      .sidebar{display:none;}
+      .desktop-menu-wrap{display:none !important;}
+      .mobile-topbar{display:flex;}
+      .main{padding:20px;margin-left:0;}
+      .page-header{padding-right:0;}
+      .page-header h1{font-size:34px;}
+      .summary{grid-template-columns:1fr;}
+      .toolbar{grid-template-columns:1fr;}
+      .toolbar button{width:100%;}
+      .detail-grid{grid-template-columns:1fr;}
+      table{min-width:1040px;}
+    }
+
+    @media (min-width:768px) and (max-width:1400px) and (orientation:landscape){
+      body{overflow-x:hidden !important;}
+      .app{display:flex !important;min-height:100vh !important;}
+      .sidebar{display:block !important;width:220px !important;}
+      .mobile-topbar{display:none !important;}
+
+      .desktop-menu-wrap{
+        display:block !important;
+        top:24px !important;
+        right:30px !important;
+      }
+
+      .desktop-menu-wrap .menu-btn{
+        width:40px !important;
+        height:40px !important;
+        padding:0 !important;
+        display:flex !important;
+        align-items:center !important;
+        justify-content:center !important;
+        font-size:13px !important;
+        border:none !important;
+        box-shadow:none !important;
+        border-radius:8px !important;
+      }
+
+      .main{
+        margin-left:220px !important;
+        padding:22px 24px 28px 24px !important;
+        max-width:calc(100vw - 220px) !important;
+        overflow-x:hidden !important;
+      }
+
+      .page-header{
+        margin-bottom:14px !important;
+        padding-right:120px !important;
+      }
+
+      .page-header h1{
+        font-size:34px !important;
+        margin-bottom:6px !important;
+        line-height:1.05 !important;
+      }
+
+      .page-header p{
+        font-size:13px !important;
+        line-height:1.35 !important;
+        max-width:760px !important;
+      }
+
+      .admin-pill{padding:4px 8px !important;font-size:10.5px !important;}
+
+      .summary{
+        grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+        gap:12px !important;
+        margin-bottom:14px !important;
+      }
+
+      .summary-box{padding:13px !important;border-radius:12px !important;}
+      .summary-box strong{font-size:23px !important;margin-bottom:4px !important;}
+      .summary-box span{font-size:12px !important;}
+
+      .card{padding:15px !important;margin-bottom:14px !important;border-radius:12px !important;}
+      .card h3{font-size:15px !important;margin-bottom:11px !important;line-height:1.1 !important;}
+
+      .toolbar{
+        grid-template-columns:1.2fr 1fr 1fr auto auto !important;
+        gap:10px !important;
+      }
+
+      .field label{font-size:12px !important;}
+      input,select{padding:9px 10px !important;font-size:13px !important;border-radius:8px !important;}
+      button:not(.menu-btn){padding:9px 11px !important;font-size:12px !important;border-radius:8px !important;}
+      .note,.small{font-size:12px !important;line-height:1.35 !important;}
+      .tag,.inline-code{padding:4px 7px !important;font-size:10.5px !important;}
+
+      .table-wrap{max-width:100% !important;overflow-x:auto !important;}
+      table{width:100% !important;min-width:1180px !important;}
+      th,td{padding:8px 7px !important;font-size:11.5px !important;}
+
+      .detail-grid{grid-template-columns:repeat(3,1fr) !important;}
+    }
+  </style>
+</head>
+
+<body>
+<script>
+const hasAdminSession =
+  sessionStorage.getItem("washtracAdmin") === "yes" ||
+  localStorage.getItem("washtracAdmin") === "yes";
+
+if(!hasAdminSession){
+  window.location.replace("index.html");
+}
+</script>
+
+<div class="mobile-topbar">
+  <div class="mobile-logo"><img src="washtrac-logo.png" alt="WashTrac" class="logo-image-mobile"></div>
+  <button class="menu-btn" type="button" onclick="toggleMobileMenu()">☰</button>
+</div>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="dashboard.html">Dashboard</a>
+  <a href="codes.html">Codes</a>
+  <a href="activity.html">Activity</a>
+  <a href="usage.html">Reports</a>
+  <a href="monitor.html">Monitor</a>
+
+  <hr style="border:none;border-top:1px solid #1e293b;margin:16px 0;">
+
+  <a href="membership.html">Membership</a>
+  <a href="maintenance.html">Maintenance</a>
+  <a class="active" href="user-accounts.html">User Accounts</a>
+  <a href="#" onclick="goHome(event)">Back to Homepage</a>
+  <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
+</div>
+
+<div class="backdrop" id="backdrop" onclick="closeMenus()"></div>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="logo"><img src="washtrac-logo.png" alt="WashTrac" class="logo-image"></div>
+
+    <div class="nav">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="codes.html">Codes</a>
+      <a href="activity.html">Activity</a>
+      <a href="usage.html">Reports</a>
+      <a href="monitor.html">Monitor</a>
+
+      <hr style="border:none;border-top:1px solid #1e293b;margin:16px 0;">
+
+      <a href="membership.html">Membership</a>
+      <a href="maintenance.html">Maintenance</a>
+      <a class="active" href="user-accounts.html">User Accounts</a>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="desktop-menu-wrap">
+      <button class="menu-btn" type="button" onclick="toggleDesktopMenu()">☰</button>
+      <div class="hamburger-menu" id="desktopMenu">
+        <a href="maintenance.html">Back to Maintenance</a>
+        <a href="#" onclick="goHome(event)">Back to Homepage</a>
+        <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
+      </div>
+    </div>
+
+    <div class="page-header">
+      <h1>User Accounts <span class="admin-pill">ADMIN REGISTRY</span></h1>
+      <p>
+        Master lookup for WashTrac customers, keypads, site ownership, pairing codes, LTE information, device status, and support tracking.
+      </p>
+    </div>
+
+    <div class="summary">
+      <div class="summary-box"><strong id="totalCustomers">0</strong><span>Keypad Customers</span></div>
+      <div class="summary-box"><strong id="totalKeypads">0</strong><span>Total Keypads</span></div>
+      <div class="summary-box"><strong id="onlineKeypads">0</strong><span>Online Keypads</span></div>
+      <div class="summary-box"><strong id="offlineKeypads">0</strong><span>Offline Keypads</span></div>
+    </div>
+
+    <div class="card">
+      <h3>Account Lookup</h3>
+
+      <div class="toolbar">
+        <div class="field">
+          <label for="accountSearch">Search</label>
+          <input id="accountSearch" placeholder="Name, email, site, device ID, serial, IMEI, SIM, pairing code..." oninput="renderAccounts()">
+        </div>
+
+        <div class="field">
+          <label for="statusFilter">Device Status</label>
+          <select id="statusFilter" onchange="renderAccounts()">
+            <option value="">All</option>
+            <option value="online">Online</option>
+            <option value="offline">Offline</option>
+            <option value="nopair">No Keypad</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="sortFilter">Sort</label>
+          <select id="sortFilter" onchange="renderAccounts()">
+            <option value="created_desc">Newest Signup</option>
+            <option value="created_asc">Oldest Signup</option>
+            <option value="account_asc">Account A-Z</option>
+            <option value="heartbeat_desc">Last Heartbeat</option>
+            <option value="wash_desc">Last Wash</option>
+          </select>
+        </div>
+
+        <button type="button" onclick="loadUserAccountsPage()">Refresh</button>
+        <button class="secondary" type="button" onclick="exportAccountsCsv()">Export CSV</button>
+      </div>
+
+      <div id="statusBox" class="status"></div>
+
+      <div class="note">
+        This page self-populates from <span class="inline-code">sites</span>, <span class="inline-code">devices</span>, <span class="inline-code">user_site_access</span>, <span class="inline-code">site_invites</span>, <span class="inline-code">device_pairing_codes</span>, and <span class="inline-code">wash_activity</span>. Missing fields show as “-” until the account/device starts reporting them.
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>All User Accounts</h3>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Account / Site</th>
+              <th>Owner / Admin</th>
+              <th>Email</th>
+              <th>Keypad ID</th>
+              <th>Device Serial</th>
+              <th>LTE / SIM</th>
+              <th>Pairing Code</th>
+              <th>Status</th>
+              <th>Signup</th>
+              <th>Last Heartbeat</th>
+              <th>Last Wash</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody id="accountsTableBody">
+            <tr><td colspan="12" class="muted">Loading accounts...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="detailsModal" onclick="closeDetailsOnBackdrop(event)">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div>
+        <h2 id="detailsTitle">Account Details</h2>
+        <div id="detailsSubtitle" class="small"></div>
+      </div>
+      <button class="close-btn" type="button" onclick="closeDetails()">✕</button>
+    </div>
+
+    <div class="detail-grid" id="detailsGrid"></div>
+
+    <div class="actions">
+      <button class="secondary" type="button" onclick="copyDetails()">Copy Details</button>
+      <button type="button" onclick="closeDetails()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
+const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const HEARTBEAT_ONLINE_MINUTES = 5;
+
+let currentUser = null;
+let allSites = [];
+let allDevices = [];
+let allAccessRows = [];
+let allInviteRows = [];
+let allPairingRows = [];
+let allLastWashRows = [];
+let userEmailById = {};
+let accountRows = [];
+let filteredRows = [];
+let selectedDetailRow = null;
+
+function escapeText(value){
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+function normalizeEmail(email){
+  return String(email || "").trim().toLowerCase();
+}
+
+function formatDateTime(value){
+  if(!value) return "-";
+  const d = new Date(value);
+  if(Number.isNaN(d.getTime())) return "-";
+  return d.toLocaleString();
+}
+
+function formatDate(value){
+  if(!value) return "-";
+  const d = new Date(value);
+  if(Number.isNaN(d.getTime())) return "-";
+  return d.toLocaleDateString();
+}
+
+function cleanDeviceDisplayName(value){
+  const raw = String(value || "").trim();
+  if(!raw) return "Unnamed Keypad";
+  return raw.replace(/CodeBox/gi, "Keypad");
+}
+
+function getDeviceLastSeen(device){
+  return device?.last_seen || device?.last_heartbeat || device?.heartbeat_at || device?.wash_state_updated_at || device?.updated_at || "";
+}
+
+function isDeviceOnline(device){
+  const heartbeat = getDeviceLastSeen(device);
+  if(!heartbeat) return false;
+
+  const seen = new Date(heartbeat);
+  if(Number.isNaN(seen.getTime())) return false;
+
+  const diffMinutes = (new Date() - seen) / 60000;
+  return diffMinutes <= HEARTBEAT_ONLINE_MINUTES;
+}
+
+function getFirstValue(obj, keys, fallback = ""){
+  if(!obj) return fallback;
+
+  for(const key of keys){
+    if(obj[key] !== undefined && obj[key] !== null && obj[key] !== ""){
+      return obj[key];
+    }
+  }
+
+  const metadata = obj.metadata || obj.network || {};
+  for(const key of keys){
+    if(metadata && metadata[key] !== undefined && metadata[key] !== null && metadata[key] !== ""){
+      return metadata[key];
+    }
+  }
+
+  return fallback;
+}
+
+function getDeviceSerial(device){
+  return getFirstValue(device, ["device_serial","serial","serial_number","hardware_serial","keypad_serial","id"], "-");
+}
+
+function getDeviceImei(device){
+  return getFirstValue(device, ["lte_imei","imei","modem_imei","lteImei","modemImei"], "");
+}
+
+function getDeviceSim(device){
+  return getFirstValue(device, ["lte_sim","sim_iccid","iccid","sim_id","lteSim","simIccid"], "");
+}
+
+function getDeviceCarrier(device){
+  return getFirstValue(device, ["lte_carrier","carrier","lteCarrier"], "");
+}
+
+function getDeviceApn(device){
+  return getFirstValue(device, ["lte_apn","apn","lteApn"], "");
+}
+
+function getDeviceVersion(device){
+  return getFirstValue(device, ["app_version","software_version","version","build_version"], "");
+}
+
+function getDeviceName(device){
+  return cleanDeviceDisplayName(getFirstValue(device, ["device_name","name","nickname"], "Unnamed Keypad"));
+}
+
+function siteName(site){
+  return site?.name || site?.site_name || "Unnamed Site";
+}
+
+function orgIdFromSite(site){
+  return site?.organization_id || site?.org_id || site?.company_id || "";
+}
+
+function accountNameFromSite(site){
+  return site?.account_name || site?.organization_name || site?.company_name || site?.business_name || siteName(site);
+}
+
+function setStatus(message,tone=""){
+  const box = document.getElementById("statusBox");
+  if(!box) return;
+
+  box.innerText = message || "";
+  box.className = "status show";
+  if(tone) box.classList.add(tone);
+}
+
+function clearStatus(){
+  const box = document.getElementById("statusBox");
+  if(!box) return;
+
+  box.innerText = "";
+  box.className = "status";
+}
+
+function toggleDesktopMenu(){
+  const desktopMenu = document.getElementById("desktopMenu");
+  const mobileMenu = document.getElementById("mobileMenu");
+  const backdrop = document.getElementById("backdrop");
+  const isOpen = desktopMenu.style.display === "block";
+
+  mobileMenu.style.display = "none";
+  desktopMenu.style.display = isOpen ? "none" : "block";
+  backdrop.style.display = isOpen ? "none" : "block";
+}
+
+function toggleMobileMenu(){
+  const desktopMenu = document.getElementById("desktopMenu");
+  const mobileMenu = document.getElementById("mobileMenu");
+  const backdrop = document.getElementById("backdrop");
+  const isOpen = mobileMenu.style.display === "block";
+
+  desktopMenu.style.display = "none";
+  mobileMenu.style.display = isOpen ? "none" : "block";
+  backdrop.style.display = isOpen ? "none" : "block";
+}
+
+function closeMenus(){
+  const mobileMenu = document.getElementById("mobileMenu");
+  const desktopMenu = document.getElementById("desktopMenu");
+  const backdrop = document.getElementById("backdrop");
+
+  if(mobileMenu) mobileMenu.style.display = "none";
+  if(desktopMenu) desktopMenu.style.display = "none";
+  if(backdrop) backdrop.style.display = "none";
+}
+
+function goHome(event){
+  if(event) event.preventDefault();
+  closeMenus();
+
+  localStorage.removeItem("washtracLoggedIn");
+  localStorage.removeItem("washtracAdmin");
+  sessionStorage.removeItem("washtracSessionActive");
+  sessionStorage.removeItem("washtracAdmin");
+  window.location.replace("index.html");
+}
+
+async function logout(event){
+  if(event) event.preventDefault();
+  closeMenus();
+
+  try{ await client.auth.signOut(); }catch(err){ console.log("logout error:", err); }
+
+  localStorage.removeItem("washtracLoggedIn");
+  localStorage.removeItem("washtracAdmin");
+  localStorage.removeItem("activeSiteId");
+  localStorage.removeItem("washtracActiveSiteId");
+  localStorage.removeItem("activeOrganizationId");
+  sessionStorage.removeItem("washtracSessionActive");
+  sessionStorage.removeItem("washtracAdmin");
+  window.location.replace("index.html");
+}
+
+function rememberUserEmail(userId,email){
+  if(!userId || !email) return;
+  userEmailById[userId] = normalizeEmail(email);
+}
+
+function getUserDisplay(userId){
+  if(!userId) return "-";
+  if(currentUser?.id && userId === currentUser.id) return currentUser.email || userEmailById[userId] || "You";
+  return userEmailById[userId] || String(userId).slice(0,8) + "...";
+}
+
+async function loadCurrentUser(){
+  const { data, error } = await client.auth.getUser();
+  if(error) console.log("User lookup error:", error);
+
+  currentUser = data?.user || {
+    id:"admin-session",
+    email:"admin@washtrac.local",
+    is_admin_session:true
+  };
+
+  rememberUserEmail(currentUser?.id,currentUser?.email);
+  return currentUser;
+}
+
+async function loadUserEmailDirectory(){
+  try{
+    const { data, error } = await client
+      .from("washtrac_user_emails")
+      .select("id,email");
+
+    if(error){
+      console.log("User email directory skipped:", error);
+      return;
+    }
+
+    (data || []).forEach(row => rememberUserEmail(row.id,row.email));
+  }catch(err){
+    console.log("User email directory skipped:", err);
+  }
+}
+
+async function loadSites(){
+  const { data, error } = await client
+    .from("sites")
+    .select("*")
+    .order("created_at",{ ascending:false });
+
+  if(error){
+    console.log("Sites load error:", error);
+    allSites = [];
+    setStatus("Could not load sites. Check RLS/admin access.", "error");
+    return [];
+  }
+
+  allSites = data || [];
+  return allSites;
+}
+
+async function loadDevices(){
+  const { data, error } = await client
+    .from("devices")
+    .select("*")
+    .order("created_at",{ ascending:false });
+
+  if(error){
+    console.log("Devices load error:", error);
+    allDevices = [];
+    return [];
+  }
+
+  allDevices = data || [];
+  return allDevices;
+}
+
+async function loadAccessRows(){
+  let result = await client
+    .from("user_site_access")
+    .select("*")
+    .order("created_at",{ ascending:false });
+
+  if(result.error){
+    console.log("user_site_access load error:", result.error);
+
+    result = await client
+      .from("site_members")
+      .select("*");
+  }
+
+  if(result.error){
+    allAccessRows = [];
+    return [];
+  }
+
+  allAccessRows = result.data || [];
+  return allAccessRows;
+}
+
+async function loadInviteRows(){
+  const { data, error } = await client
+    .from("site_invites")
+    .select("*")
+    .order("created_at",{ ascending:false });
+
+  if(error){
+    console.log("Invites load error:", error);
+    allInviteRows = [];
+    return [];
+  }
+
+  allInviteRows = data || [];
+
+  allInviteRows.forEach(invite => {
+    if(invite.accepted_by && invite.email) rememberUserEmail(invite.accepted_by, invite.email);
+  });
+
+  return allInviteRows;
+}
+
+async function loadPairingRows(){
+  const { data, error } = await client
+    .from("device_pairing_codes")
+    .select("*")
+    .order("created_at",{ ascending:false });
+
+  if(error){
+    console.log("Pairing load error:", error);
+    allPairingRows = [];
+    return [];
+  }
+
+  allPairingRows = data || [];
+  return allPairingRows;
+}
+
+async function loadLastWashRows(){
+  const { data, error } = await client
+    .from("wash_activity")
+    .select("id,site_id,device_id,created_at,event,status,metadata")
+    .order("created_at",{ ascending:false })
+    .limit(1000);
+
+  if(error){
+    console.log("Last wash load error:", error);
+    allLastWashRows = [];
+    return [];
+  }
+
+  allLastWashRows = data || [];
+  return allLastWashRows;
+}
+
+function getPrimaryOwnerForSite(siteId){
+  const accessForSite = allAccessRows.filter(row => row.site_id === siteId);
+  const owner = accessForSite.find(row => String(row.role || "").toLowerCase() === "owner") ||
+                accessForSite.find(row => String(row.role || "").toLowerCase() === "admin") ||
+                accessForSite[0];
+
+  const inviteForOwner = owner
+    ? allInviteRows.find(invite => invite.accepted_by === owner.user_id || normalizeEmail(invite.email) === normalizeEmail(userEmailById[owner.user_id]))
+    : null;
+
+  const pendingInvite = allInviteRows.find(invite => invite.site_id === siteId && !invite.accepted_at);
+  const acceptedInvite = allInviteRows.find(invite => invite.site_id === siteId && invite.accepted_at);
+  const bestInvite = inviteForOwner || acceptedInvite || pendingInvite;
+
+  const email = owner ? (userEmailById[owner.user_id] || bestInvite?.email || "") : (bestInvite?.email || "");
+  const role = owner?.role || bestInvite?.role || "";
+
+  return {
+    user_id: owner?.user_id || bestInvite?.accepted_by || "",
+    email: normalizeEmail(email),
+    role,
+    access_created_at: owner?.created_at || bestInvite?.created_at || "",
+    invite_code: bestInvite?.invite_code || "",
+    invite_status: bestInvite ? (bestInvite.accepted_at ? "Accepted" : "Pending") : ""
+  };
+}
+
+function getAdminEmailsForSite(siteId){
+  const emails = new Set();
+
+  allAccessRows
+    .filter(row => row.site_id === siteId)
+    .forEach(row => {
+      const email = userEmailById[row.user_id];
+      if(email) emails.add(normalizeEmail(email));
+    });
+
+  allInviteRows
+    .filter(row => row.site_id === siteId)
+    .forEach(row => {
+      if(row.email) emails.add(normalizeEmail(row.email));
+    });
+
+  return Array.from(emails);
+}
+
+function getPairingForSite(siteId){
+  const now = new Date();
+
+  const active = allPairingRows.find(row => {
+    if(row.site_id !== siteId) return false;
+    if(String(row.status || "").toLowerCase() !== "pending") return false;
+    if(!row.expires_at) return true;
+    const expires = new Date(row.expires_at);
+    if(Number.isNaN(expires.getTime())) return true;
+    return expires > now;
+  });
+
+  return active || allPairingRows.find(row => row.site_id === siteId) || null;
+}
+
+function isBillableWash(row){
+  const text = `${row.event || ""} ${row.status || ""} ${row.metadata?.status || ""} ${row.metadata?.event || ""}`.toLowerCase();
+
+  if(text.includes("invalid") || text.includes("denied") || text.includes("failed") || text.includes("rejected") || text.includes("error")) return false;
+  if(text.includes("add") || text.includes("delete") || text.includes("pair")) return false;
+
+  return true;
+}
+
+function getLastWashForSite(siteId, deviceId){
+  return allLastWashRows.find(row => {
+    if(row.site_id !== siteId) return false;
+    if(deviceId && row.device_id && row.device_id !== deviceId) return false;
+    return isBillableWash(row);
+  }) || allLastWashRows.find(row => row.site_id === siteId) || null;
+}
+
+function buildAccountRows(){
+  const rows = [];
+
+  allSites.forEach(site => {
+    const siteId = site.id;
+    const orgId = orgIdFromSite(site);
+    const devices = allDevices.filter(device => device.site_id === siteId);
+    const owner = getPrimaryOwnerForSite(siteId);
+    const adminEmails = getAdminEmailsForSite(siteId);
+    const pairing = getPairingForSite(siteId);
+
+    if(devices.length){
+      devices.forEach(device => {
+        const lastWash = getLastWashForSite(siteId, device.id);
+        rows.push(buildRow(site, device, owner, adminEmails, pairing, lastWash, orgId));
+      });
+    }else{
+      const lastWash = getLastWashForSite(siteId, "");
+      rows.push(buildRow(site, null, owner, adminEmails, pairing, lastWash, orgId));
+    }
+  });
+
+  accountRows = rows;
+  return rows;
+}
+
+function buildRow(site, device, owner, adminEmails, pairing, lastWash, organizationId){
+  const siteCreatedAt = site.created_at || site.inserted_at || site.signup_date || "";
+  const deviceCreatedAt = device?.created_at || "";
+  const signupDate = siteCreatedAt || deviceCreatedAt || owner.access_created_at || "";
+
+  const deviceStatus = device
+    ? (isDeviceOnline(device) ? "online" : "offline")
+    : "nopair";
+
+  const ownerName =
+    site.owner_name ||
+    site.contact_name ||
+    site.admin_name ||
+    site.account_owner_name ||
+    "";
+
+  const ownerEmail =
+    owner.email ||
+    site.owner_email ||
+    site.admin_email ||
+    site.email ||
+    "";
+
+  const adminEmailList = adminEmails.length ? adminEmails : (ownerEmail ? [ownerEmail] : []);
+
+  return {
+    account_name: accountNameFromSite(site),
+    organization_id: organizationId,
+    site_id: site.id || "",
+    site_name: siteName(site),
+    owner_name: ownerName,
+    owner_email: normalizeEmail(ownerEmail),
+    owner_user_id: owner.user_id || "",
+    owner_role: owner.role || "",
+    admin_emails: adminEmailList,
+    signup_date: signupDate,
+    site_created_at: siteCreatedAt,
+
+    device_id: device?.id || "",
+    keypad_id: getFirstValue(device, ["keypad_id","device_id","id"], ""),
+    device_name: device ? getDeviceName(device) : "No Keypad Paired",
+    device_serial: device ? getDeviceSerial(device) : "",
+    device_version: device ? getDeviceVersion(device) : "",
+    device_status: deviceStatus,
+    last_heartbeat: device ? getDeviceLastSeen(device) : "",
+
+    lte_carrier: device ? getDeviceCarrier(device) : "",
+    lte_apn: device ? getDeviceApn(device) : "",
+    lte_imei: device ? getDeviceImei(device) : "",
+    lte_sim: device ? getDeviceSim(device) : "",
+
+    pairing_code: pairing?.code || "",
+    pairing_status: pairing?.status || "",
+    pairing_expires_at: pairing?.expires_at || "",
+    pairing_created_at: pairing?.created_at || "",
+
+    last_wash_at: lastWash?.created_at || "",
+    last_wash_event: lastWash?.event || "",
+    last_wash_status: lastWash?.status || "",
+    raw_site: site,
+    raw_device: device,
+    raw_pairing: pairing,
+    raw_last_wash: lastWash
+  };
+}
+
+function renderSummary(){
+  const customerKeys = new Set();
+
+  accountRows.forEach(row => {
+    customerKeys.add(row.organization_id || row.site_id || row.owner_email || row.account_name);
+  });
+
+  const totalKeypads = accountRows.filter(row => row.device_id).length;
+  const online = accountRows.filter(row => row.device_status === "online").length;
+  const offline = accountRows.filter(row => row.device_id && row.device_status === "offline").length;
+
+  document.getElementById("totalCustomers").innerText = customerKeys.size;
+  document.getElementById("totalKeypads").innerText = totalKeypads;
+  document.getElementById("onlineKeypads").innerText = online;
+  document.getElementById("offlineKeypads").innerText = offline;
+}
+
+function renderAccounts(){
+  const tbody = document.getElementById("accountsTableBody");
+  const search = String(document.getElementById("accountSearch").value || "").trim().toLowerCase();
+  const status = document.getElementById("statusFilter").value || "";
+  const sort = document.getElementById("sortFilter").value || "created_desc";
+
+  let rows = [...accountRows];
+
+  if(status){
+    rows = rows.filter(row => row.device_status === status);
+  }
+
+  if(search){
+    rows = rows.filter(row => {
+      const haystack = [
+        row.account_name,
+        row.site_name,
+        row.owner_name,
+        row.owner_email,
+        row.owner_user_id,
+        row.admin_emails.join(" "),
+        row.organization_id,
+        row.site_id,
+        row.device_id,
+        row.keypad_id,
+        row.device_name,
+        row.device_serial,
+        row.device_version,
+        row.lte_carrier,
+        row.lte_apn,
+        row.lte_imei,
+        row.lte_sim,
+        row.pairing_code,
+        row.pairing_status,
+        row.last_wash_event,
+        row.last_wash_status
+      ].join(" ").toLowerCase();
+
+      return haystack.includes(search);
+    });
+  }
+
+  rows.sort((a,b) => {
+    if(sort === "account_asc") return String(a.account_name || "").localeCompare(String(b.account_name || ""));
+    if(sort === "created_asc") return new Date(a.signup_date || 0) - new Date(b.signup_date || 0);
+    if(sort === "heartbeat_desc") return new Date(b.last_heartbeat || 0) - new Date(a.last_heartbeat || 0);
+    if(sort === "wash_desc") return new Date(b.last_wash_at || 0) - new Date(a.last_wash_at || 0);
+    return new Date(b.signup_date || 0) - new Date(a.signup_date || 0);
+  });
+
+  filteredRows = rows;
+  tbody.innerHTML = "";
+
+  if(!rows.length){
+    tbody.innerHTML = `<tr><td colspan="12" class="muted">No accounts match the current filters.</td></tr>`;
+    return;
+  }
+
+  rows.forEach((row,index) => {
+    const statusTag = row.device_status === "online"
+      ? `<span class="tag online">Online</span>`
+      : row.device_status === "offline"
+        ? `<span class="tag offline">Offline</span>`
+        : `<span class="tag yellow">No Keypad</span>`;
+
+    const lteText = [
+      row.lte_carrier ? `Carrier: ${escapeText(row.lte_carrier)}` : "",
+      row.lte_imei ? `IMEI: ${escapeText(row.lte_imei)}` : "",
+      row.lte_sim ? `SIM: ${escapeText(row.lte_sim)}` : ""
+    ].filter(Boolean).join("<br>");
+
+    const pairingText = row.pairing_code
+      ? `<span class="inline-code">${escapeText(row.pairing_code)}</span><div class="small">${escapeText(row.pairing_status || "")} ${row.pairing_expires_at ? "• Expires " + escapeText(formatDateTime(row.pairing_expires_at)) : ""}</div>`
+      : `<span class="muted">-</span>`;
+
+    tbody.innerHTML += `
+      <tr>
+        <td>
+          <div class="strong">${escapeText(row.account_name || "-")}</div>
+          <div class="small">Site: ${escapeText(row.site_name || "-")}</div>
+          <div class="small">Org: ${escapeText(row.organization_id || "-")}</div>
+        </td>
+
+        <td>
+          <div class="strong">${escapeText(row.owner_name || row.owner_role || "Owner/Admin")}</div>
+          <div class="small">Role: ${escapeText(row.owner_role || "-")}</div>
+        </td>
+
+        <td>
+          <div>${escapeText(row.owner_email || "-")}</div>
+          <div class="small">${escapeText((row.admin_emails || []).filter(Boolean).join(", ") || "-")}</div>
+        </td>
+
+        <td>
+          <span class="inline-code">${escapeText(row.keypad_id || row.device_id || "-")}</span>
+          <div class="small">${escapeText(row.device_name || "-")}</div>
+        </td>
+
+        <td>
+          <div>${escapeText(row.device_serial || "-")}</div>
+          <div class="small">Version: ${escapeText(row.device_version || "-")}</div>
+        </td>
+
+        <td>${lteText || `<span class="muted">-</span>`}</td>
+
+        <td>${pairingText}</td>
+
+        <td>${statusTag}</td>
+
+        <td>${escapeText(formatDate(row.signup_date))}</td>
+        <td>${escapeText(formatDateTime(row.last_heartbeat))}</td>
+        <td>${escapeText(formatDateTime(row.last_wash_at))}</td>
+
+        <td>
+          <button class="details-btn" type="button" onclick="openDetails(${index})">View</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+function detailItem(label,value){
+  return `
+    <div class="detail-box">
+      <label>${escapeText(label)}</label>
+      <div>${escapeText(value || "-")}</div>
+    </div>
+  `;
+}
+
+function openDetails(filteredIndex){
+  selectedDetailRow = filteredRows[filteredIndex];
+  if(!selectedDetailRow) return;
+
+  const row = selectedDetailRow;
+
+  document.getElementById("detailsTitle").innerText = row.account_name || "Account Details";
+  document.getElementById("detailsSubtitle").innerText = `${row.site_name || "Site"} • ${row.owner_email || "No email"}`;
+
+  const grid = document.getElementById("detailsGrid");
+
+  grid.innerHTML = [
+    detailItem("Account Name", row.account_name),
+    detailItem("Owner Name", row.owner_name),
+    detailItem("Owner Email", row.owner_email),
+    detailItem("Admin Emails", (row.admin_emails || []).join(", ")),
+    detailItem("Owner User ID", row.owner_user_id),
+    detailItem("Owner Role", row.owner_role),
+
+    detailItem("Organization ID", row.organization_id),
+    detailItem("Site ID", row.site_id),
+    detailItem("Site Name", row.site_name),
+    detailItem("Signup Date", formatDateTime(row.signup_date)),
+    detailItem("Site Created", formatDateTime(row.site_created_at)),
+
+    detailItem("Device ID", row.device_id),
+    detailItem("Keypad ID", row.keypad_id),
+    detailItem("Device Name", row.device_name),
+    detailItem("Device Serial", row.device_serial),
+    detailItem("Software Version", row.device_version),
+    detailItem("Device Status", row.device_status),
+    detailItem("Last Heartbeat", formatDateTime(row.last_heartbeat)),
+
+    detailItem("LTE Carrier", row.lte_carrier),
+    detailItem("LTE APN", row.lte_apn),
+    detailItem("Modem IMEI", row.lte_imei),
+    detailItem("SIM ICCID / SIM ID", row.lte_sim),
+
+    detailItem("6-Digit Add Device Code", row.pairing_code),
+    detailItem("Pairing Status", row.pairing_status),
+    detailItem("Pairing Created", formatDateTime(row.pairing_created_at)),
+    detailItem("Pairing Expires", formatDateTime(row.pairing_expires_at)),
+
+    detailItem("Last Wash", formatDateTime(row.last_wash_at)),
+    detailItem("Last Wash Event", row.last_wash_event),
+    detailItem("Last Wash Status", row.last_wash_status)
+  ].join("");
+
+  document.getElementById("detailsModal").classList.add("show");
+}
+
+function closeDetails(){
+  document.getElementById("detailsModal").classList.remove("show");
+}
+
+function closeDetailsOnBackdrop(event){
+  if(event.target && event.target.id === "detailsModal"){
+    closeDetails();
+  }
+}
+
+async function copyDetails(){
+  if(!selectedDetailRow) return;
+
+  const row = selectedDetailRow;
+  const text = [
+    `Account: ${row.account_name || "-"}`,
+    `Site: ${row.site_name || "-"}`,
+    `Owner: ${row.owner_name || "-"}`,
+    `Owner Email: ${row.owner_email || "-"}`,
+    `Admin Emails: ${(row.admin_emails || []).join(", ") || "-"}`,
+    `Organization ID: ${row.organization_id || "-"}`,
+    `Site ID: ${row.site_id || "-"}`,
+    `Device ID: ${row.device_id || "-"}`,
+    `Keypad ID: ${row.keypad_id || "-"}`,
+    `Device Serial: ${row.device_serial || "-"}`,
+    `Software Version: ${row.device_version || "-"}`,
+    `LTE Carrier: ${row.lte_carrier || "-"}`,
+    `LTE APN: ${row.lte_apn || "-"}`,
+    `Modem IMEI: ${row.lte_imei || "-"}`,
+    `SIM ICCID / SIM ID: ${row.lte_sim || "-"}`,
+    `Pairing Code: ${row.pairing_code || "-"}`,
+    `Status: ${row.device_status || "-"}`,
+    `Signup Date: ${formatDateTime(row.signup_date)}`,
+    `Last Heartbeat: ${formatDateTime(row.last_heartbeat)}`,
+    `Last Wash: ${formatDateTime(row.last_wash_at)}`
+  ].join("\n");
+
+  try{
+    await navigator.clipboard.writeText(text);
+    alert("Account details copied.");
+  }catch(err){
+    console.log("Copy failed:", err);
+    alert(text);
+  }
+}
+
+function csvEscape(value){
+  const text = String(value ?? "");
+  return `"${text.replaceAll('"','""')}"`;
+}
+
+function exportAccountsCsv(){
+  const rows = filteredRows.length ? filteredRows : accountRows;
+
+  const headers = [
+    "Account",
+    "Site",
+    "Owner Name",
+    "Owner Email",
+    "Admin Emails",
+    "Organization ID",
+    "Site ID",
+    "Device ID",
+    "Keypad ID",
+    "Device Name",
+    "Device Serial",
+    "Software Version",
+    "LTE Carrier",
+    "LTE APN",
+    "Modem IMEI",
+    "SIM ICCID / SIM ID",
+    "Pairing Code",
+    "Pairing Status",
+    "Signup Date",
+    "Last Heartbeat",
+    "Last Wash",
+    "Device Status"
+  ];
+
+  const lines = [headers.map(csvEscape).join(",")];
+
+  rows.forEach(row => {
+    lines.push([
+      row.account_name,
+      row.site_name,
+      row.owner_name,
+      row.owner_email,
+      (row.admin_emails || []).join("; "),
+      row.organization_id,
+      row.site_id,
+      row.device_id,
+      row.keypad_id,
+      row.device_name,
+      row.device_serial,
+      row.device_version,
+      row.lte_carrier,
+      row.lte_apn,
+      row.lte_imei,
+      row.lte_sim,
+      row.pairing_code,
+      row.pairing_status,
+      formatDateTime(row.signup_date),
+      formatDateTime(row.last_heartbeat),
+      formatDateTime(row.last_wash_at),
+      row.device_status
+    ].map(csvEscape).join(","));
+  });
+
+  const blob = new Blob([lines.join("\n")], { type:"text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "washtrac-user-accounts.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+async function loadUserAccountsPage(){
+  clearStatus();
+  setStatus("Loading user accounts...", "");
+
+  await loadCurrentUser();
+  await loadUserEmailDirectory();
+
+  await Promise.all([
+    loadSites(),
+    loadDevices(),
+    loadAccessRows(),
+    loadInviteRows(),
+    loadPairingRows(),
+    loadLastWashRows()
+  ]);
+
+  await loadUserEmailDirectory();
+
+  buildAccountRows();
+  renderSummary();
+  renderAccounts();
+
+  setStatus(`Loaded ${accountRows.length} account/device rows.`, "success");
+}
+
+window.addEventListener("load", loadUserAccountsPage);
+</script>
+</body>
+</html>
