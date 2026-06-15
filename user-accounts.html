@@ -313,7 +313,7 @@
       width:100%;
       border-collapse:separate;
       border-spacing:0;
-      min-width:1180px;
+      min-width:1260px;
     }
 
     th,td{
@@ -342,6 +342,21 @@
     .muted{color:#94a3b8;}
     .small{font-size:12px;color:#94a3b8;line-height:1.35;}
     .strong{font-weight:900;color:#fff;}
+
+    .account-name{
+      color:#38bdf8;
+      font-weight:900;
+      text-shadow:0 0 14px rgba(56,189,248,.16);
+    }
+
+    .admin-extra{
+      color:#94a3b8;
+      font-size:12px;
+      line-height:1.35;
+      margin-top:3px;
+      white-space:nowrap;
+    }
+
 
     .tag{
       display:inline-block;
@@ -492,7 +507,7 @@
       .toolbar{grid-template-columns:1fr;}
       .toolbar button{width:100%;}
       .detail-grid{grid-template-columns:1fr;}
-      table{min-width:1040px;}
+      table{min-width:1120px;}
     }
 
     @media (min-width:768px) and (max-width:1400px) and (orientation:landscape){
@@ -650,9 +665,9 @@ if(!hasAdminSession){
     </div>
 
     <div class="summary">
-      <div class="summary-box"><strong id="totalCustomers">0</strong><span>Keypad Customers</span></div>
+      <div class="summary-box"><strong id="totalCustomers">0</strong><span>Customer Accounts</span></div>
+      <div class="summary-box"><strong id="totalSites">0</strong><span>Total Sites</span></div>
       <div class="summary-box"><strong id="totalKeypads">0</strong><span>Total Keypads</span></div>
-      <div class="summary-box"><strong id="onlineKeypads">0</strong><span>Online Keypads</span></div>
       <div class="summary-box"><strong id="offlineKeypads">0</strong><span>Offline Keypads</span></div>
     </div>
 
@@ -709,6 +724,7 @@ if(!hasAdminSession){
               <th>Email</th>
               <th>Keypad ID</th>
               <th>Device Serial</th>
+              <th>Software</th>
               <th>LTE / SIM</th>
               <th>Pairing Code</th>
               <th>Status</th>
@@ -719,7 +735,7 @@ if(!hasAdminSession){
             </tr>
           </thead>
           <tbody id="accountsTableBody">
-            <tr><td colspan="12" class="muted">Loading accounts...</td></tr>
+            <tr><td colspan="13" class="muted">Loading accounts...</td></tr>
           </tbody>
         </table>
       </div>
@@ -1274,17 +1290,40 @@ function renderSummary(){
   const customerKeys = new Set();
 
   accountRows.forEach(row => {
-    customerKeys.add(row.organization_id || row.site_id || row.owner_email || row.account_name);
+    customerKeys.add(row.organization_id || row.owner_email || row.account_name || row.site_id);
   });
 
+  const siteKeys = new Set(allSites.map(site => site.id).filter(Boolean));
   const totalKeypads = accountRows.filter(row => row.device_id).length;
-  const online = accountRows.filter(row => row.device_status === "online").length;
   const offline = accountRows.filter(row => row.device_id && row.device_status === "offline").length;
 
   document.getElementById("totalCustomers").innerText = customerKeys.size;
+  document.getElementById("totalSites").innerText = siteKeys.size;
   document.getElementById("totalKeypads").innerText = totalKeypads;
-  document.getElementById("onlineKeypads").innerText = online;
   document.getElementById("offlineKeypads").innerText = offline;
+}
+
+
+function formatAdminEmailSummary(ownerEmail, adminEmails){
+  const cleanOwner = normalizeEmail(ownerEmail);
+  const unique = Array.from(new Set((adminEmails || []).map(normalizeEmail).filter(Boolean)));
+  const extras = unique.filter(email => email !== cleanOwner);
+
+  if(!cleanOwner && !unique.length){
+    return { main:"-", extra:"" };
+  }
+
+  if(cleanOwner){
+    return {
+      main: cleanOwner,
+      extra: extras.length ? `+${extras.length} additional admin${extras.length === 1 ? "" : "s"}` : ""
+    };
+  }
+
+  return {
+    main: unique[0] || "-",
+    extra: unique.length > 1 ? `+${unique.length - 1} additional admin${unique.length - 1 === 1 ? "" : "s"}` : ""
+  };
 }
 
 function renderAccounts(){
@@ -1341,7 +1380,7 @@ function renderAccounts(){
   tbody.innerHTML = "";
 
   if(!rows.length){
-    tbody.innerHTML = `<tr><td colspan="12" class="muted">No accounts match the current filters.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="13" class="muted">No accounts match the current filters.</td></tr>`;
     return;
   }
 
@@ -1358,6 +1397,8 @@ function renderAccounts(){
       row.lte_sim ? `SIM: ${escapeText(row.lte_sim)}` : ""
     ].filter(Boolean).join("<br>");
 
+    const adminEmailDisplay = formatAdminEmailSummary(row.owner_email, row.admin_emails);
+
     const pairingText = row.pairing_code
       ? `<span class="inline-code">${escapeText(row.pairing_code)}</span><div class="small">${escapeText(row.pairing_status || "")} ${row.pairing_expires_at ? "• Expires " + escapeText(formatDateTime(row.pairing_expires_at)) : ""}</div>`
       : `<span class="muted">-</span>`;
@@ -1365,7 +1406,7 @@ function renderAccounts(){
     tbody.innerHTML += `
       <tr>
         <td>
-          <div class="strong">${escapeText(row.account_name || "-")}</div>
+          <div class="account-name">${escapeText(row.account_name || "-")}</div>
           <div class="small">Site: ${escapeText(row.site_name || "-")}</div>
           <div class="small">Org: ${escapeText(row.organization_id || "-")}</div>
         </td>
@@ -1376,8 +1417,8 @@ function renderAccounts(){
         </td>
 
         <td>
-          <div>${escapeText(row.owner_email || "-")}</div>
-          <div class="small">${escapeText((row.admin_emails || []).filter(Boolean).join(", ") || "-")}</div>
+          <div>${escapeText(adminEmailDisplay.main)}</div>
+          <div class="admin-extra">${escapeText(adminEmailDisplay.extra)}</div>
         </td>
 
         <td>
@@ -1387,7 +1428,10 @@ function renderAccounts(){
 
         <td>
           <div>${escapeText(row.device_serial || "-")}</div>
-          <div class="small">Version: ${escapeText(row.device_version || "-")}</div>
+        </td>
+
+        <td>
+          <span class="inline-code">${escapeText(row.device_version || "-")}</span>
         </td>
 
         <td>${lteText || `<span class="muted">-</span>`}</td>
