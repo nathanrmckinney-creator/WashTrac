@@ -616,6 +616,7 @@ tbody tr:hover{background:rgba(37,99,235,.08);}
   }
 }
 
+
 </style>
 </head>
 
@@ -650,7 +651,6 @@ if(!hasAdminSession){
 
 <a href="membership.html">Membership</a>
 <a href="maintenance.html">Maintenance</a>
-<a href="user-accounts.html">User Accounts</a>
   <a href="#" onclick="goHome(event)">Back to Homepage</a>
   <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
 </div>
@@ -681,17 +681,6 @@ if(!hasAdminSession){
   <div class="main">
     <div class="desktop-menu-wrap">
       <button class="menu-btn" type="button" onclick="toggleDesktopMenu()">☰</button>
-
-      <div style="margin-top:40px;text-align:right;">
-        <button
-          class="success"
-          type="button"
-          onclick="window.location.href='user-accounts.html'"
-          style="padding:10px 14px;font-size:13px;white-space:nowrap;">
-          User Accounts
-        </button>
-      </div>
-
       <div class="hamburger-menu" id="desktopMenu">
         <a href="#" onclick="goHome(event)">Back to Homepage</a>
         <a href="#" class="logout-link" onclick="logout(event)">Logout</a>
@@ -703,6 +692,15 @@ if(!hasAdminSession){
         Customer support control center for devices, pairing codes, customer access, site codes, and remote Keypad commands.
         Maintenance is admin-only and should be used as the field support lifeline.
       </p>
+    </div>
+
+    <div class="actions" style="margin-top:-8px;margin-bottom:20px;">
+      <button
+        class="success"
+        type="button"
+        onclick="window.location.href='user-accounts.html'">
+        User Accounts
+      </button>
     </div>
 
     <div class="summary">
