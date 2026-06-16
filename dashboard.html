@@ -1961,6 +1961,64 @@
       return Math.round(number * 100) / 100;
     }
 
+async function deleteDepartment(){
+
+  const department =
+    document.getElementById("costDepartmentSelect")?.value;
+
+  if(!department){
+    alert("Select a department first.");
+    return;
+  }
+
+  const protectedDepartments = [
+    "New Cars",
+    "Pre Owned",
+    "Service",
+    "Detail",
+    "Manager",
+    "Temporary",
+    "Other",
+    "Custom",
+    "Membership"
+  ];
+
+  if(protectedDepartments.includes(department)){
+    alert(
+      "Default WashTrac departments cannot be removed."
+    );
+    return;
+  }
+
+  const confirmed = confirm(
+    `Remove "${department}" and move all wash history to Other?`
+  );
+
+  if(!confirmed) return;
+
+  const activeSiteId = getActiveSiteId();
+
+  const { error } = await client
+    .from("wash_activity")
+    .update({
+      department: "Other"
+    })
+    .eq("site_id", activeSiteId)
+    .eq("department", department);
+
+  if(error){
+    console.log("Department remove error:", error);
+    alert("Failed to remove department.");
+    return;
+  }
+
+  setCostPerCarMessage(
+    `Department "${department}" removed successfully.`
+  );
+
+  scheduleDashboardRefresh(500);
+}
+    
     function setCostPerCarMessage(message){
       const box = document.getElementById("costPerCarMessage");
       if(!box) return;
