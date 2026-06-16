@@ -1279,9 +1279,18 @@
               <span>Apply this price to all departments</span>
             </label>
 
-            <div class="controls">
-              <button type="button" onclick="saveCostPerCar()">Save Cost Per Car</button>
-            </div>
+           <div class="controls">
+  <button type="button" onclick="saveCostPerCar()">
+    Save Cost Per Car
+  </button>
+
+  <button
+    type="button"
+    class="danger"
+    onclick="deleteDepartment()">
+    Remove Department
+  </button>
+</div>
 
             <div id="costPerCarMessage" class="control-status"></div>
 
