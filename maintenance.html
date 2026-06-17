@@ -146,6 +146,31 @@
     .mini-select{width:auto;min-width:110px;padding:8px 10px;font-size:13px;}
     .small-btn{padding:8px 10px;font-size:12px;border-radius:7px;}
 
+    .pagination{
+      display:flex;
+      justify-content:center;
+      gap:8px;
+      margin-top:14px;
+      flex-wrap:wrap;
+    }
+
+    .page-btn{
+      min-width:38px;
+      height:34px;
+      padding:0 10px;
+      border-radius:10px;
+      border:1px solid rgba(148,163,184,.35);
+      background:rgba(15,23,42,.85);
+      color:white;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .page-btn.active{
+      background:linear-gradient(135deg,#2563eb,#38bdf8);
+      border-color:rgba(56,189,248,.8);
+    }
+
     .signal-wrap{display:flex;align-items:flex-end;gap:4px;height:24px;margin-top:8px;}
     .signal-bar{width:7px;border-radius:3px 3px 0 0;background:#334155;box-shadow:none;}
     .signal-bar.on{background:#2563eb;box-shadow:0 0 8px rgba(37,99,235,.45);}
@@ -920,6 +945,7 @@ if(!hasAdminSession){
           <tbody id="codesTableBody"></tbody>
         </table>
       </div>
+      <div id="codesPagination" class="pagination"></div>
     </div>
 
 
@@ -1112,6 +1138,7 @@ if(!hasAdminSession){
           <tbody id="commandsTableBody"></tbody>
         </table>
       </div>
+      <div id="commandsPagination" class="pagination"></div>
     </div>
 
     <div class="card">
@@ -1126,6 +1153,7 @@ if(!hasAdminSession){
           <tbody id="logsTableBody"></tbody>
         </table>
       </div>
+      <div id="logsPagination" class="pagination"></div>
       <div class="note">
         Logs appear here after a Keypad completes <span class="inline-code">pull_logs</span> and writes to <span class="inline-code">device_logs</span>.
       </div>
@@ -1154,6 +1182,11 @@ let quietRefreshInProgress = false;
 let ownershipCandidateUsers = [];
 let userEmailById = {};
 
+const MAINTENANCE_PAGE_SIZE = 20;
+let currentCodesPage = 1;
+let currentCommandsPage = 1;
+let currentLogsPage = 1;
+
 function escapeText(value){
   return String(value ?? "")
     .replaceAll("&","&amp;")
@@ -1162,6 +1195,49 @@ function escapeText(value){
     .replaceAll('"',"&quot;")
     .replaceAll("'","&#039;");
 }
+
+function renderMaintenancePagination(containerId, totalRows, currentPage, onClickName){
+  const box = document.getElementById(containerId);
+  if(!box) return;
+
+  const totalPages = Math.ceil(totalRows / MAINTENANCE_PAGE_SIZE);
+
+  if(totalPages <= 1){
+    box.innerHTML = "";
+    return;
+  }
+
+  let html = "";
+
+  for(let i = 1; i <= totalPages; i++){
+    html += `
+      <button
+        class="page-btn ${i === currentPage ? "active" : ""}"
+        type="button"
+        onclick="${onClickName}(${i})">
+        ${i}
+      </button>
+    `;
+  }
+
+  box.innerHTML = html;
+}
+
+function setCodesPage(page){
+  currentCodesPage = page;
+  renderCodes();
+}
+
+function setCommandsPage(page){
+  currentCommandsPage = page;
+  renderCommands();
+}
+
+function setLogsPage(page){
+  currentLogsPage = page;
+  renderDeviceLogs();
+}
+
 
 
 function normalizeEmail(email){
@@ -1385,7 +1461,7 @@ async function loadRecentCommands(){
     .select("*")
     .in("device_id",deviceIds)
     .order("created_at",{ascending:false})
-    .limit(20);
+    .limit(100);
 
   if(error){
     console.log("Commands load error:",error);
@@ -1394,6 +1470,7 @@ async function loadRecentCommands(){
   }
 
   recentCommands=data||[];
+  currentCommandsPage = 1;
   return recentCommands;
 }
 
@@ -1423,6 +1500,7 @@ async function loadSiteCodes(){
   }
 
   siteCodes = data || [];
+  currentCodesPage = 1;
   renderCodes();
   renderSummary();
   return siteCodes;
@@ -1434,10 +1512,18 @@ function renderCodes(){
 
   if(!siteCodes.length){
     tbody.innerHTML = `<tr><td colspan="6" class="muted">No codes found for this site.</td></tr>`;
+    renderMaintenancePagination("codesPagination", 0, 1, "setCodesPage");
     return;
   }
 
-  siteCodes.forEach(item => {
+  const totalPages = Math.max(1, Math.ceil(siteCodes.length / MAINTENANCE_PAGE_SIZE));
+  if(currentCodesPage > totalPages) currentCodesPage = totalPages;
+  if(currentCodesPage < 1) currentCodesPage = 1;
+
+  const start = (currentCodesPage - 1) * MAINTENANCE_PAGE_SIZE;
+  const pageRows = siteCodes.slice(start, start + MAINTENANCE_PAGE_SIZE);
+
+  pageRows.forEach(item => {
     const active = item.is_active !== false;
     tbody.innerHTML += `
       <tr>
@@ -1455,6 +1541,8 @@ function renderCodes(){
       </tr>
     `;
   });
+
+  renderMaintenancePagination("codesPagination", siteCodes.length, currentCodesPage, "setCodesPage");
 }
 
 async function addSupportCode(){
@@ -2775,7 +2863,7 @@ async function loadDeviceLogs(){
     .from("device_logs")
     .select("*")
     .order("created_at", { ascending:false })
-    .limit(25);
+    .limit(100);
 
   if(siteId){
     query = query.eq("site_id", siteId);
@@ -2791,6 +2879,7 @@ async function loadDeviceLogs(){
   }
 
   deviceLogs = data || [];
+  currentLogsPage = 1;
   renderDeviceLogs();
   return deviceLogs;
 }
@@ -2803,10 +2892,18 @@ function renderDeviceLogs(){
 
   if(!deviceLogs.length){
     tbody.innerHTML = `<tr><td colspan="4" class="muted">No logs found yet.</td></tr>`;
+    renderMaintenancePagination("logsPagination", 0, 1, "setLogsPage");
     return;
   }
 
-  deviceLogs.forEach(log => {
+  const totalPages = Math.max(1, Math.ceil(deviceLogs.length / MAINTENANCE_PAGE_SIZE));
+  if(currentLogsPage > totalPages) currentLogsPage = totalPages;
+  if(currentLogsPage < 1) currentLogsPage = 1;
+
+  const start = (currentLogsPage - 1) * MAINTENANCE_PAGE_SIZE;
+  const pageRows = deviceLogs.slice(start, start + MAINTENANCE_PAGE_SIZE);
+
+  pageRows.forEach(log => {
     const device = allDevices.find(item => item.id === log.device_id);
     const deviceText = device ? getDeviceName(device) : (log.device_id || "Unknown device");
     const fileName = log.file_name || "Device log";
@@ -2829,6 +2926,8 @@ function renderDeviceLogs(){
       </tr>
     `;
   });
+
+  renderMaintenancePagination("logsPagination", deviceLogs.length, currentLogsPage, "setLogsPage");
 }
 
 function downloadLogText(logId){
@@ -2921,10 +3020,16 @@ function renderCommands(){
 
   if(!recentCommands.length){
     tbody.innerHTML=`<tr><td colspan="6" class="muted">No recent commands found.</td></tr>`;
+    renderMaintenancePagination("commandsPagination", 0, 1, "setCommandsPage");
     return;
   }
 
-  const commandsToShow = recentCommands.slice(0, 20);
+  const totalPages = Math.max(1, Math.ceil(recentCommands.length / MAINTENANCE_PAGE_SIZE));
+  if(currentCommandsPage > totalPages) currentCommandsPage = totalPages;
+  if(currentCommandsPage < 1) currentCommandsPage = 1;
+
+  const start = (currentCommandsPage - 1) * MAINTENANCE_PAGE_SIZE;
+  const commandsToShow = recentCommands.slice(start, start + MAINTENANCE_PAGE_SIZE);
 
   commandsToShow.forEach(cmd=>{
     const status=String(cmd.status||"pending").toLowerCase();
@@ -2943,6 +3048,8 @@ function renderCommands(){
         <td>${escapeText(message||"-")}</td>
       </tr>`;
   });
+
+  renderMaintenancePagination("commandsPagination", recentCommands.length, currentCommandsPage, "setCommandsPage");
 }
 
 function selectDevice(deviceId){
