@@ -27,9 +27,8 @@ body{
   margin:0;
   font-family:Arial, Helvetica, sans-serif;
   background:
-    radial-gradient(circle at 50% -18%, rgba(37,99,235,.34), transparent 34%),
-    radial-gradient(circle at 104% -4%, rgba(56,189,248,.14), transparent 32%),
-    radial-gradient(circle at -8% 105%, rgba(37,99,235,.16), transparent 38%),
+    radial-gradient(circle at 104% -4%, rgba(56,189,248,.08), transparent 28%),
+    radial-gradient(circle at -8% 105%, rgba(37,99,235,.14), transparent 38%),
     #020617;
   color:white;
   overflow-x:hidden;
@@ -124,7 +123,7 @@ body{
   height:calc(100vh - 18px);
   min-height:calc(100vh - 18px);
   display:grid;
-  grid-template-rows:78px 46px 128px 1fr 56px;
+  grid-template-rows:64px 46px 128px 1fr 56px;
   gap:12px;
   overflow:hidden;
 }
@@ -135,7 +134,7 @@ body{
   grid-template-columns:1fr auto;
   align-items:start;
   position:relative;
-  min-height:78px;
+  min-height:64px;
 }
 
 .page-header{
@@ -143,7 +142,7 @@ body{
   justify-self:start;
   border-left:4px solid #38bdf8;
   padding:2px 0;
-  transform:translateY(20px);
+  transform:translateY(18px);
 }
 .page-header h1{
   margin:0 0 0 18px;
@@ -165,7 +164,7 @@ body{
   display:block;
   justify-self:end;
   margin-right:10px;
-  margin-top:-0px;
+  margin-top:-14px;
   filter:drop-shadow(0 0 18px rgba(37,99,235,.42));
   transform:none;
 }
@@ -808,7 +807,7 @@ body{
 
   @media (max-height:850px) and (min-width:901px){
   .monitor-shell{
-  grid-template-rows:62px 38px 100px 1fr 46px;
+  grid-template-rows:54px 38px 100px 1fr 46px;
   gap:7px;
 }
 
@@ -854,17 +853,17 @@ body{
  .monitor-brand-logo{
     width:260px;
     margin-right:8px;
-    margin-top:-20px;
+    margin-top:-24px;
     transform:none;
   }
 
-      .page-header{
-    transform:translateY(-6px);
+  .page-header{
+    transform:translateY(8px);
   }
 
   .page-header h1{
     font-size:36px;
-    margin-top:-6px;
+    margin-top:0;
   }
     
 }
@@ -877,24 +876,24 @@ body{
   .monitor-shell{
     height:calc(100vh - 14px);
     min-height:calc(100vh - 14px);
-    grid-template-rows:58px 36px 92px 1fr 44px;
+    grid-template-rows:50px 36px 92px 1fr 44px;
     gap:7px;
   }
 
   .monitor-brand-logo{
     width:220px;
     margin-right:6px;
-    margin-top:-22px;
+    margin-top:-24px;
     transform:none;
   }
 
   .page-header{
-    transform:translateY(18px);
+    transform:translateY(12px);
   }
 
   .page-header h1{
     font-size:30px;
-    margin-top:-10px;
+    margin-top:0;
   }
 
   .billing-card h3,
