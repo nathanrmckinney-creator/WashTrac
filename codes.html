@@ -101,6 +101,41 @@
     button.secondary{background:#334155;}
     button.remove-btn{background:#dc2626;padding:10px 14px;}
     .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+
+
+    .pagination{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:8px;
+      margin-top:16px;
+      flex-wrap:wrap;
+    }
+
+    .page-btn{
+      min-width:38px;
+      height:34px;
+      padding:0 10px;
+      border-radius:10px;
+      border:1px solid rgba(148,163,184,.35);
+      background:rgba(15,23,42,.85);
+      color:#fff;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .page-btn.active{
+      background:linear-gradient(135deg,#2563eb,#38bdf8);
+      border-color:rgba(56,189,248,.8);
+    }
+
+    .pagination-status{
+      width:100%;
+      text-align:center;
+      color:#94a3b8;
+      font-size:13px;
+      margin-top:4px;
+    }
     table{width:100%;border-collapse:collapse;min-width:980px;}
     th, td{padding:14px 10px;border-bottom:1px solid #1f2937;text-align:left;vertical-align:middle;}
     th{color:#93c5fd;font-size:13px;text-transform:uppercase;letter-spacing:.5px;}
@@ -725,6 +760,23 @@
     max-width:calc(100vw - 48px) !important;
     padding:16px !important;
   }
+
+
+  .pagination{
+    margin-top:12px !important;
+    gap:6px !important;
+  }
+
+  .page-btn{
+    min-width:32px !important;
+    height:30px !important;
+    font-size:11px !important;
+    border-radius:8px !important;
+  }
+
+  .pagination-status{
+    font-size:11.5px !important;
+  }
 }
 
 @media (min-width:768px) and (max-width:1400px) and (orientation:landscape){
@@ -958,17 +1010,17 @@ document.addEventListener("DOMContentLoaded", function(){
       <div class="search-grid">
         <div class="field">
           <label for="searchCode">Search by code</label>
-          <input id="searchCode" placeholder="Code" oninput="renderCodes()">
+          <input id="searchCode" placeholder="Code" oninput="renderCodes(1)">
         </div>
 
         <div class="field">
           <label for="searchDepartment">Search by department</label>
-          <input id="searchDepartment" placeholder="Department" oninput="renderCodes()">
+          <input id="searchDepartment" placeholder="Department" oninput="renderCodes(1)">
         </div>
 
         <div class="field">
           <label for="searchName">Search by name</label>
-          <input id="searchName" placeholder="Name" oninput="renderCodes()">
+          <input id="searchName" placeholder="Name" oninput="renderCodes(1)">
         </div>
       </div>
 
@@ -999,6 +1051,7 @@ document.addEventListener("DOMContentLoaded", function(){
           <tbody id="codesTableBody"></tbody>
         </table>
       </div>
+      <div id="codesPagination" class="pagination"></div>
     </div>
   </div>
 </div>
@@ -1096,6 +1149,8 @@ if(!isClientLogin && !isAdminLogin){
 let allCodes = [];
 let allActivity = [];
 let lastRenderedCodes = [];
+let currentCodesPage = 1;
+const CODES_PAGE_SIZE = 20;
 let codesLoadInProgress = false;
 let currentSiteId = null;
 let currentOrganizationId = null;
@@ -1772,7 +1827,7 @@ async function loadCodesPage(){
     allActivity = activity;
 
     renderSystemHeartbeat(devices);
-    renderCodes();
+    renderCodes(1);
     renderSummary();
   }catch(err){
     console.log("loadCodesPage error:", err);
@@ -1823,7 +1878,11 @@ function escapeText(value){
     .replaceAll("'", "&#039;");
 }
 
-function renderCodes(){
+function renderCodes(page = null){
+  if(page !== null){
+    currentCodesPage = Number(page) || 1;
+  }
+
   const codeSearch = document.getElementById("searchCode").value.trim().toLowerCase();
   const deptSearch = document.getElementById("searchDepartment").value.trim().toLowerCase();
   const nameSearch = document.getElementById("searchName").value.trim().toLowerCase();
@@ -1842,19 +1901,32 @@ function renderCodes(){
   tbody.innerHTML = "";
 
   if(!getActiveSiteId()){
+    lastRenderedCodes = [];
+    currentCodesPage = 1;
+    renderCodesPagination(0);
     tbody.innerHTML = `<tr><td colspan="9" class="muted">No active site selected.</td></tr>`;
     return;
   }
 
   if(!filtered.length){
     lastRenderedCodes = [];
+    currentCodesPage = 1;
+    renderCodesPagination(0);
     tbody.innerHTML = `<tr><td colspan="9" class="muted">No matching codes found.</td></tr>`;
     return;
   }
 
   lastRenderedCodes = filtered;
 
-  filtered.forEach(item => {
+  const totalPages = Math.ceil(filtered.length / CODES_PAGE_SIZE);
+  if(currentCodesPage < 1) currentCodesPage = 1;
+  if(currentCodesPage > totalPages) currentCodesPage = totalPages;
+
+  const start = (currentCodesPage - 1) * CODES_PAGE_SIZE;
+  const end = start + CODES_PAGE_SIZE;
+  const pageRows = filtered.slice(start, end);
+
+  pageRows.forEach(item => {
     const code = getCodeValue(item);
     const stats = getCodeStats(code);
     const lastUsed = stats.lastUsed ? new Date(stats.lastUsed).toLocaleString() : "-";
@@ -1877,13 +1949,45 @@ function renderCodes(){
     tr.querySelector(".remove-btn").addEventListener("click", () => removeCode(id, code));
     tbody.appendChild(tr);
   });
+
+  renderCodesPagination(filtered.length);
+}
+
+function renderCodesPagination(totalRows){
+  const box = document.getElementById("codesPagination");
+  if(!box) return;
+
+  const totalPages = Math.ceil(totalRows / CODES_PAGE_SIZE);
+
+  if(totalPages <= 1){
+    box.innerHTML = "";
+    return;
+  }
+
+  let html = "";
+
+  for(let i = 1; i <= totalPages; i++){
+    html += `
+      <button
+        class="page-btn ${i === currentCodesPage ? "active" : ""}"
+        type="button"
+        onclick="renderCodes(${i})">
+        ${i}
+      </button>
+    `;
+  }
+
+  const start = ((currentCodesPage - 1) * CODES_PAGE_SIZE) + 1;
+  const end = Math.min(currentCodesPage * CODES_PAGE_SIZE, totalRows);
+
+  box.innerHTML = html + `<div class="pagination-status">Showing ${start}-${end} of ${totalRows} active matching codes.</div>`;
 }
 
 function clearSearch(){
   document.getElementById("searchCode").value = "";
   document.getElementById("searchDepartment").value = "";
   document.getElementById("searchName").value = "";
-  renderCodes();
+  renderCodes(1);
 }
 
 function csvEscape(value){
