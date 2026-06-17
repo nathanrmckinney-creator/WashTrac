@@ -247,6 +247,38 @@ tbody tr:hover{
   background:rgba(37,99,235,.08);
 }
 
+.pagination{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+  margin-top:16px;
+  flex-wrap:wrap;
+}
+
+.page-btn{
+  min-width:38px;
+  height:34px;
+  padding:0 11px !important;
+  border-radius:10px;
+  border:1px solid rgba(148,163,184,.35) !important;
+  background:linear-gradient(180deg,#1e293b,#0f172a) !important;
+  color:#ffffff;
+  font-weight:900;
+  cursor:pointer;
+  box-shadow:0 10px 18px rgba(2,6,23,.18), inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+.page-btn.active{
+  background:linear-gradient(135deg,#2563eb,#38bdf8) !important;
+  border-color:rgba(56,189,248,.8) !important;
+}
+
+.page-btn:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
 .system-banner,
 .status-line{
   text-shadow:none;
@@ -518,6 +550,19 @@ input{
     font-size:11.5px !important;
   }
 
+  .page-btn{
+    min-width:32px !important;
+    height:30px !important;
+    padding:0 8px !important;
+    font-size:11px !important;
+    border-radius:8px !important;
+  }
+
+  .pagination{
+    gap:6px !important;
+    margin-top:12px !important;
+  }
+
   .notice{
     font-size:12px !important;
     margin-top:10px !important;
@@ -650,6 +695,7 @@ document.addEventListener("DOMContentLoaded", function(){
           <option value="7days" selected>Last 7 Days</option>
           <option value="14days">Last 14 Days</option>
           <option value="30days">Last 30 Days</option>
+          <option value="90days" selected>Last 90 Days</option>
           <option value="custom">Custom Range</option>
           <option value="all">Latest Loaded Only</option>
         </select>
@@ -657,8 +703,10 @@ document.addEventListener("DOMContentLoaded", function(){
         <input id="endDate" type="date" onchange="setCustomPreset()">
         <select id="rowLimit">
           <option value="100">100 rows</option>
-          <option value="250" selected>250 rows</option>
+          <option value="250">250 rows</option>
           <option value="500">500 rows</option>
+          <option value="1000" selected>1000 rows</option>
+          <option value="2000">2000 rows</option>
         </select>
       </div>
 
@@ -696,6 +744,8 @@ document.addEventListener("DOMContentLoaded", function(){
         </table>
       </div>
 
+      <div id="activityPagination" class="pagination"></div>
+
       <div class="notice">
         This page does not use realtime subscriptions or automatic polling. Use Apply / Refresh when you want updated history.
       </div>
@@ -720,7 +770,9 @@ let currentSiteId = null;
 let activityLoadToken = 0;
 let lastFilteredActivityRows = [];
 let lastRawActivityCount = 0;
-const ACTIVITY_DISPLAY_LIMIT = 20;
+let currentActivityPage = 1;
+const ACTIVITY_PAGE_SIZE = 20;
+const ACTIVITY_DISPLAY_LIMIT = ACTIVITY_PAGE_SIZE;
 const HEARTBEAT_ONLINE_MINUTES = 5;
 const ACTIVITY_SEARCH_STORAGE_KEY = "washtracActivitySearchSettings";
 const ACTIVITY_SEARCH_FIELD_IDS = [
@@ -878,6 +930,9 @@ function applyDatePreset(){
   }else if(preset === "30days"){
     start = new Date(now);
     start.setDate(start.getDate() - 29);
+  }else if(preset === "90days"){
+    start = new Date(now);
+    start.setDate(start.getDate() - 89);
   }
 
   startInput.value = start ? toDateInputValue(start) : "";
@@ -1188,6 +1243,8 @@ function resetActivityEmpty(message = "No active site selected."){
   document.getElementById("uniqueDepartments").innerText = "0";
   document.getElementById("uniqueBays").innerText = "0";
   document.getElementById("activityTableBody").innerHTML = `<tr><td colspan="6">${escapeText(message)}</td></tr>`;
+  const pagination = document.getElementById("activityPagination");
+  if(pagination) pagination.innerHTML = "";
 }
 
 function updateSummary(rows){
@@ -1197,17 +1254,83 @@ function updateSummary(rows){
   document.getElementById("uniqueBays").innerText = new Set(rows.map(r => r.bay).filter(Boolean)).size;
 }
 
-function renderRows(rows){
+function renderActivityPagination(totalRows){
+  const box = document.getElementById("activityPagination");
+  if(!box) return;
+
+  const totalPages = Math.ceil(totalRows / ACTIVITY_PAGE_SIZE);
+
+  if(totalPages <= 1){
+    box.innerHTML = "";
+    return;
+  }
+
+  let html = "";
+
+  html += `
+    <button
+      type="button"
+      class="page-btn"
+      ${currentActivityPage === 1 ? "disabled" : ""}
+      onclick="goActivityPage(${currentActivityPage - 1})">
+      Prev
+    </button>
+  `;
+
+  for(let i = 1; i <= totalPages; i++){
+    html += `
+      <button
+        type="button"
+        class="page-btn ${i === currentActivityPage ? "active" : ""}"
+        onclick="goActivityPage(${i})">
+        ${i}
+      </button>
+    `;
+  }
+
+  html += `
+    <button
+      type="button"
+      class="page-btn"
+      ${currentActivityPage === totalPages ? "disabled" : ""}
+      onclick="goActivityPage(${currentActivityPage + 1})">
+      Next
+    </button>
+  `;
+
+  box.innerHTML = html;
+}
+
+function goActivityPage(page){
+  const totalPages = Math.max(1, Math.ceil(lastFilteredActivityRows.length / ACTIVITY_PAGE_SIZE));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  renderRows(lastFilteredActivityRows, safePage);
+
+  const start = lastFilteredActivityRows.length ? ((safePage - 1) * ACTIVITY_PAGE_SIZE) + 1 : 0;
+  const end = Math.min(safePage * ACTIVITY_PAGE_SIZE, lastFilteredActivityRows.length);
+
+  setStatus(`Showing ${start}-${end} of ${lastFilteredActivityRows.length} matching rows. Page ${safePage} of ${totalPages}.`, "success");
+}
+
+function renderRows(rows, page = 1){
   const tbody = document.getElementById("activityTableBody");
   tbody.innerHTML = "";
 
+  currentActivityPage = page;
+
   if(!rows.length){
     tbody.innerHTML = `<tr><td colspan="6">No matching activity found. Try clearing text filters or expanding the date range.</td></tr>`;
+    renderActivityPagination(0);
     updateSummary([]);
     return;
   }
 
-  const displayRows = rows.slice(0, ACTIVITY_DISPLAY_LIMIT);
+  const totalPages = Math.max(1, Math.ceil(rows.length / ACTIVITY_PAGE_SIZE));
+  if(currentActivityPage > totalPages) currentActivityPage = totalPages;
+
+  const startIndex = (currentActivityPage - 1) * ACTIVITY_PAGE_SIZE;
+  const endIndex = startIndex + ACTIVITY_PAGE_SIZE;
+  const displayRows = rows.slice(startIndex, endIndex);
 
   displayRows.forEach(row => {
     const tr = document.createElement("tr");
@@ -1222,12 +1345,7 @@ function renderRows(rows){
     tbody.appendChild(tr);
   });
 
-  if(rows.length > ACTIVITY_DISPLAY_LIMIT){
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="6" class="notice">Showing the first ${ACTIVITY_DISPLAY_LIMIT} matching activity lines. Export CSV still includes all ${rows.length} filtered rows.</td>`;
-    tbody.appendChild(tr);
-  }
-
+  renderActivityPagination(rows.length);
   updateSummary(rows);
 }
 
@@ -1378,7 +1496,8 @@ async function loadActivity(){
       setStatus(`No activity found for today. Try Yesterday or Last 7 Days. Checked at ${nowText}.`, "warn");
     }else{
       const displayedCount = Math.min(filteredRows.length, ACTIVITY_DISPLAY_LIMIT);
-      setStatus(`Showing ${displayedCount} on screen of ${filteredRows.length} matching rows. Loaded ${rawRows.length} ${rowWord} at ${nowText}.`, "success");
+      const totalPages = Math.max(1, Math.ceil(filteredRows.length / ACTIVITY_PAGE_SIZE));
+      setStatus(`Showing 1-${displayedCount} of ${filteredRows.length} matching rows. Page 1 of ${totalPages}. Loaded ${rawRows.length} ${rowWord} at ${nowText}.`, "success");
     }
   }catch(err){
     console.log("Load activity error:", err);
@@ -1456,8 +1575,8 @@ function clearFilters(){
   document.getElementById("filterName").value = "";
   document.getElementById("filterBay").value = "";
   document.getElementById("filterEvent").value = "";
-  document.getElementById("datePreset").value = "7days";
-  document.getElementById("rowLimit").value = "250";
+  document.getElementById("datePreset").value = "90days";
+  document.getElementById("rowLimit").value = "1000";
   applyDatePreset();
   saveActivitySearchSettings();
   loadActivity();
