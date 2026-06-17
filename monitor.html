@@ -1744,6 +1744,9 @@ function sortBillingDepartmentNames(departments){
 function getBillingDepartmentList(activityRows = [], codes = []){
   const map = new Map();
 
+  // Keep the standard WashTrac departments available, but do NOT let old activity rows
+  // recreate deleted custom departments on Monitor. Deleted/custom departments should
+  // only appear when they still exist in active access codes or current department pricing.
   BILLING_DEPARTMENT_ORDER.forEach(department => {
     map.set(department.toLowerCase(), department);
   });
@@ -1753,20 +1756,17 @@ function getBillingDepartmentList(activityRows = [], codes = []){
     if(department) map.set(department.toLowerCase(), department);
   });
 
-  (codes || []).forEach(code => {
-    const department = normalizeBillingDepartment(
-      code.department ||
-      code.dept ||
-      code.department_name ||
-      code.metadata?.department
-    );
-    if(department) map.set(department.toLowerCase(), department);
-  });
-
-  (activityRows || []).forEach(row => {
-    const department = normalizeBillingDepartment(row.department || row.metadata?.department);
-    if(department) map.set(department.toLowerCase(), department);
-  });
+  (codes || [])
+    .filter(code => code && code.is_active !== false)
+    .forEach(code => {
+      const department = normalizeBillingDepartment(
+        code.department ||
+        code.dept ||
+        code.department_name ||
+        code.metadata?.department
+      );
+      if(department) map.set(department.toLowerCase(), department);
+    });
 
   return sortBillingDepartmentNames(Array.from(map.values()));
 }
@@ -2369,13 +2369,9 @@ function renderLiveDepartmentBilling(rows, codes = []){
     const department = normalizeBillingDepartment(row.department || row.metadata?.department);
     if(!department) return;
 
-    if(!map[department]){
-      map[department] = {
-        department,
-        carsToday: 0,
-        carsMonth: 0
-      };
-    }
+    // If a custom department was deleted, do not count old historical activity for it.
+    // This keeps Monitor synced with the active/current department list automatically.
+    if(!map[department]) return;
 
     map[department].carsMonth += 1;
 
