@@ -75,7 +75,7 @@ body{
   min-height:100vh;
 }
 
-.desktop-menu-wrap{position:absolute;top:18px;right:22px;z-index:1200;}
+.desktop-menu-wrap{display:none !important;}
 .menu-btn{
   background:linear-gradient(145deg,#2563eb,#1d4ed8);
   border:1px solid rgba(147,197,253,.38);
@@ -121,11 +121,11 @@ body{
 
 /* ================= HEADER ================= */
 .monitor-top{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  min-height:78px;
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:start;
   position:relative;
+  min-height:78px;
 }
 
 .page-header{
@@ -150,12 +150,14 @@ body{
 
 .monitor-brand-logo{
   grid-column:2;
-  width:365px;
+  width:300px;
   height:auto;
   display:block;
-  justify-self:center;
+  justify-self:end;
+  margin-right:10px;
+  margin-top:-10px;
   filter:drop-shadow(0 0 18px rgba(37,99,235,.42));
-  transform:translateY(-24px);
+  transform:none;
 }
 
 .banner{
@@ -840,8 +842,10 @@ body{
   }
 
  .monitor-brand-logo{
-    width:280px;
-    transform:translateY(-20px);
+    width:260px;
+    margin-right:8px;
+    margin-top:-8px;
+    transform:none;
   }
 
       .page-header{
@@ -868,8 +872,10 @@ body{
   }
 
   .monitor-brand-logo{
-    width:250px;
-    transform:translateY(-16px);
+    width:220px;
+    margin-right:6px;
+    margin-top:-7px;
+    transform:none;
   }
 
   .page-header h1{
@@ -1396,6 +1402,7 @@ document.addEventListener("DOMContentLoaded", function(){
     </div>
   </div>
 
+  <div class="main">
     <div class="monitor-shell">
       <div class="monitor-top">
         <div class="page-header">
@@ -1506,28 +1513,34 @@ function toggleDesktopMenu(){
   const desktopMenu = document.getElementById("desktopMenu");
   const mobileMenu = document.getElementById("mobileMenu");
   const backdrop = document.getElementById("backdrop");
-  const isOpen = desktopMenu.style.display === "block";
+  if(!desktopMenu) return;
 
-  mobileMenu.style.display = "none";
+  const isOpen = desktopMenu.style.display === "block";
+  if(mobileMenu) mobileMenu.style.display = "none";
   desktopMenu.style.display = isOpen ? "none" : "block";
-  backdrop.style.display = isOpen ? "none" : "block";
+  if(backdrop) backdrop.style.display = isOpen ? "none" : "block";
 }
 
 function toggleMobileMenu(){
   const desktopMenu = document.getElementById("desktopMenu");
   const mobileMenu = document.getElementById("mobileMenu");
   const backdrop = document.getElementById("backdrop");
-  const isOpen = mobileMenu.style.display === "block";
+  if(!mobileMenu) return;
 
-  desktopMenu.style.display = "none";
+  const isOpen = mobileMenu.style.display === "block";
+  if(desktopMenu) desktopMenu.style.display = "none";
   mobileMenu.style.display = isOpen ? "none" : "block";
-  backdrop.style.display = isOpen ? "none" : "block";
+  if(backdrop) backdrop.style.display = isOpen ? "none" : "block";
 }
 
 function closeMenus(){
-  document.getElementById("mobileMenu").style.display = "none";
-  document.getElementById("desktopMenu").style.display = "none";
-  document.getElementById("backdrop").style.display = "none";
+  const mobileMenu = document.getElementById("mobileMenu");
+  const desktopMenu = document.getElementById("desktopMenu");
+  const backdrop = document.getElementById("backdrop");
+
+  if(mobileMenu) mobileMenu.style.display = "none";
+  if(desktopMenu) desktopMenu.style.display = "none";
+  if(backdrop) backdrop.style.display = "none";
 }
 
 function goHome(event){
