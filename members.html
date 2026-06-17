@@ -172,6 +172,35 @@
     .status.warn{border-color:rgba(245,158,11,.35);color:#fde68a;}
     .status.error{border-color:rgba(239,68,68,.35);color:#fecaca;}
 
+    .pagination{
+      display:flex;
+      justify-content:center;
+      gap:8px;
+      margin-top:18px;
+      flex-wrap:wrap;
+    }
+
+    .page-btn{
+      min-width:38px;
+      height:34px;
+      padding:0 12px;
+      border-radius:10px;
+      border:1px solid rgba(148,163,184,.35);
+      background:rgba(15,23,42,.85);
+      color:#ffffff;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .page-btn.active{
+      background:linear-gradient(135deg,#2563eb,#38bdf8);
+      border-color:rgba(56,189,248,.8);
+    }
+
+    .page-btn:hover{
+      filter:brightness(1.08);
+    }
+
     .modal{
       display:none;
       position:fixed;
@@ -880,6 +909,7 @@ document.addEventListener("DOMContentLoaded", function(){
           </tbody>
         </table>
       </div>
+      <div id="membersPagination" class="pagination"></div>
     </div>
   </div>
 </div>
@@ -971,6 +1001,8 @@ let allSites = [];
 let allMembers = [];
 let allMembershipActivity = [];
 let lastRenderedMembers = [];
+let currentMembersPage = 1;
+const MEMBERS_PAGE_SIZE = 20;
 let loadInProgress = false;
 
 window.addEventListener("pageshow", function(){
@@ -1499,20 +1531,30 @@ function getFilteredMembers(){
   return filtered;
 }
 
-function renderMembers(){
+function renderMembers(page = 1){
   const filtered = getFilteredMembers();
   const tbody = document.getElementById("membersTableBody");
   tbody.innerHTML = "";
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / MEMBERS_PAGE_SIZE));
+
+  currentMembersPage = Number(page || 1);
+  if(currentMembersPage < 1) currentMembersPage = 1;
+  if(currentMembersPage > totalPages) currentMembersPage = totalPages;
+
   if(!filtered.length){
     lastRenderedMembers = [];
     tbody.innerHTML = `<tr><td colspan="11" class="muted">No matching members found.</td></tr>`;
+    renderMembersPagination(0);
     return;
   }
 
   lastRenderedMembers = filtered;
 
-  filtered.forEach(member => {
+  const startIndex = (currentMembersPage - 1) * MEMBERS_PAGE_SIZE;
+  const pageRows = filtered.slice(startIndex, startIndex + MEMBERS_PAGE_SIZE);
+
+  pageRows.forEach(member => {
     const status = getMembershipStatus(member);
     const monthlyCount = getMemberMonthlyCount(member.id);
     const lastWash = getMemberLastWash(member.id);
@@ -1540,6 +1582,35 @@ function renderMembers(){
     tr.querySelector(`.${activeClass}`).addEventListener("click", () => toggleMemberActive(member.id));
     tbody.appendChild(tr);
   });
+
+  renderMembersPagination(filtered.length);
+}
+
+function renderMembersPagination(totalRows){
+  const box = document.getElementById("membersPagination");
+  if(!box) return;
+
+  const totalPages = Math.ceil(totalRows / MEMBERS_PAGE_SIZE);
+
+  if(totalPages <= 1){
+    box.innerHTML = "";
+    return;
+  }
+
+  let html = "";
+
+  for(let i = 1; i <= totalPages; i++){
+    html += `
+      <button
+        class="page-btn ${i === currentMembersPage ? "active" : ""}"
+        type="button"
+        onclick="renderMembers(${i})">
+        ${i}
+      </button>
+    `;
+  }
+
+  box.innerHTML = html;
 }
 
 function clearSearch(){
