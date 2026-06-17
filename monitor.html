@@ -1003,44 +1003,100 @@ body{
   .monitor-footer-fill::after{justify-self:start;}
 }
 
-/* Fold open / medium screens */
 @media (min-width:601px) and (max-width:900px){
 
+  body{overflow-y:auto;}
+
+  .main{
+    padding:10px 14px;
+  }
+
+  .monitor-shell{
+    height:auto;
+    min-height:auto;
+    display:block;
+    overflow:visible;
+  }
+
+  .monitor-top{
+    min-height:64px;
+  }
+
+  .page-header h1{
+    font-size:30px;
+  }
+
+  .monitor-brand-logo{
+    width:245px;
+    transform:translateY(-8px);
+  }
+
   .status-row{
-    min-height:90px;
-    gap:8px;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+    margin-bottom:12px;
   }
 
   .status-card{
-    min-height:90px;
-    padding:10px 50px;
+    min-height:96px;
+    padding:12px 18px 12px 58px;
   }
 
   .status-card::after{
-    width:38px;
-    height:38px;
-    left:14px;
+    width:40px;
+    height:40px;
+    left:12px;
     font-size:24px !important;
   }
 
   .status-card h3{
-    font-size:11px;
-    margin-bottom:4px;
+    font-size:12px;
   }
 
   .status-card > div:not(.device-monitor-list){
-    font-size:17px;
+    font-size:18px;
   }
 
-  #washStatusCard .status-pill{
-    font-size:16px !important;
-    padding:5px 9px;
+  .monitor-grid{
+    grid-template-columns:1fr 1fr;
+    gap:12px;
   }
 
-  #lockoutWindow{
-    font-size:15px !important;
+  .billing-card{
+    grid-column:1;
   }
 
+  .daily-count-card{
+    grid-column:2;
+  }
+
+  .activity-card{
+    grid-column:1 / -1;
+  }
+
+  .daily-count-main{
+    width:150px;
+    height:150px;
+    font-size:72px;
+  }
+
+  .monthly-count-main{
+    width:140px;
+    height:110px;
+    font-size:52px;
+  }
+
+  .activity-row,
+  .billing-compact-row{
+    font-size:12px;
+    padding:7px 0;
+  }
+
+  .monitor-footer-fill{
+    margin-top:12px;
+    font-size:12px;
+    padding:0 18px;
+  }
 }
   
 @media (max-width:600px){
