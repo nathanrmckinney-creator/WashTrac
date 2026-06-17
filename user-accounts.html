@@ -490,6 +490,32 @@
       min-width:40px;
     }
 
+
+    .pagination{
+      display:flex;
+      justify-content:center;
+      gap:8px;
+      margin-top:16px;
+      flex-wrap:wrap;
+    }
+
+    .page-btn{
+      min-width:38px;
+      height:34px;
+      padding:0 10px;
+      border-radius:10px;
+      border:1px solid rgba(148,163,184,.35);
+      background:rgba(15,23,42,.85);
+      color:white;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .page-btn.active{
+      background:linear-gradient(135deg,#2563eb,#38bdf8);
+      border-color:rgba(56,189,248,.8);
+    }
+
     @media (max-width:1200px){
       .toolbar{grid-template-columns:1fr 1fr;}
       .detail-grid{grid-template-columns:1fr 1fr;}
@@ -739,6 +765,8 @@ if(!hasAdminSession){
           </tbody>
         </table>
       </div>
+
+      <div id="accountsPagination" class="pagination"></div>
     </div>
   </div>
 </div>
@@ -780,6 +808,8 @@ let userEmailById = {};
 let accountRows = [];
 let filteredRows = [];
 let selectedDetailRow = null;
+let currentAccountsPage = 1;
+const ACCOUNTS_PAGE_SIZE = 30;
 
 function escapeText(value){
   return String(value ?? "")
@@ -1326,11 +1356,15 @@ function formatAdminEmailSummary(ownerEmail, adminEmails){
   };
 }
 
-function renderAccounts(){
+function renderAccounts(resetPage = true){
   const tbody = document.getElementById("accountsTableBody");
   const search = String(document.getElementById("accountSearch").value || "").trim().toLowerCase();
   const status = document.getElementById("statusFilter").value || "";
   const sort = document.getElementById("sortFilter").value || "created_desc";
+
+  if(resetPage){
+    currentAccountsPage = 1;
+  }
 
   let rows = [...accountRows];
 
@@ -1381,10 +1415,20 @@ function renderAccounts(){
 
   if(!rows.length){
     tbody.innerHTML = `<tr><td colspan="13" class="muted">No accounts match the current filters.</td></tr>`;
+    renderAccountsPagination();
     return;
   }
 
-  rows.forEach((row,index) => {
+  const totalPages = Math.ceil(rows.length / ACCOUNTS_PAGE_SIZE);
+  if(currentAccountsPage > totalPages) currentAccountsPage = totalPages;
+  if(currentAccountsPage < 1) currentAccountsPage = 1;
+
+  const startIndex = (currentAccountsPage - 1) * ACCOUNTS_PAGE_SIZE;
+  const pageRows = rows.slice(startIndex, startIndex + ACCOUNTS_PAGE_SIZE);
+
+  pageRows.forEach((row,pageIndex) => {
+    const filteredIndex = startIndex + pageIndex;
+
     const statusTag = row.device_status === "online"
       ? `<span class="tag online">Online</span>`
       : row.device_status === "offline"
@@ -1445,11 +1489,45 @@ function renderAccounts(){
         <td>${escapeText(formatDateTime(row.last_wash_at))}</td>
 
         <td>
-          <button class="details-btn" type="button" onclick="openDetails(${index})">View</button>
+          <button class="details-btn" type="button" onclick="openDetails(${filteredIndex})">View</button>
         </td>
       </tr>
     `;
   });
+
+  renderAccountsPagination();
+}
+
+function renderAccountsPage(page){
+  currentAccountsPage = page;
+  renderAccounts(false);
+}
+
+function renderAccountsPagination(){
+  const box = document.getElementById("accountsPagination");
+  if(!box) return;
+
+  const totalPages = Math.ceil((filteredRows || []).length / ACCOUNTS_PAGE_SIZE);
+
+  if(totalPages <= 1){
+    box.innerHTML = "";
+    return;
+  }
+
+  let html = "";
+
+  for(let i = 1; i <= totalPages; i++){
+    html += `
+      <button
+        class="page-btn ${i === currentAccountsPage ? "active" : ""}"
+        type="button"
+        onclick="renderAccountsPage(${i})">
+        ${i}
+      </button>
+    `;
+  }
+
+  box.innerHTML = html;
 }
 
 function detailItem(label,value){
