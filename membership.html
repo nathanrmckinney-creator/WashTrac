@@ -748,6 +748,31 @@
   }
 }
 
+    .pagination{
+      display:flex;
+      justify-content:center;
+      gap:8px;
+      margin-top:18px;
+      flex-wrap:wrap;
+    }
+
+    .page-btn{
+      min-width:38px;
+      height:34px;
+      padding:0 11px;
+      border-radius:10px;
+      border:1px solid rgba(148,163,184,.35);
+      background:rgba(15,23,42,.85);
+      color:white;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .page-btn.active{
+      background:linear-gradient(135deg,#2563eb,#38bdf8);
+      border-color:rgba(56,189,248,.8);
+    }
+
   </style>
 </head>
 
@@ -973,6 +998,8 @@ document.addEventListener("DOMContentLoaded", function(){
           <tbody id="membershipActivityBody"></tbody>
         </table>
       </div>
+
+      <div id="membershipActivityPagination" class="pagination"></div>
     </div>
   </div>
 </div>
@@ -1062,6 +1089,8 @@ let allMembers = [];
 let allMembershipActivity = [];
 let lastRenderedMembers = [];
 let loadInProgress = false;
+let currentMembershipActivityPage = 1;
+const MEMBERSHIP_ACTIVITY_PAGE_SIZE = 20;
 
 window.addEventListener("pageshow", function(){
   const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
@@ -1443,6 +1472,7 @@ function resetEmpty(){
   }
 
   document.getElementById("membershipActivityBody").innerHTML = `<tr><td colspan="7" class="muted">No membership activity found.</td></tr>`;
+  renderMembershipActivityPagination();
 }
 
 async function loadMembershipPage(){
@@ -1468,7 +1498,8 @@ async function loadMembershipPage(){
 
     renderSummary();
     renderMembers();
-    renderMembershipActivity();
+    currentMembershipActivityPage = 1;
+    renderMembershipActivity(1);
   }catch(err){
     console.log("loadMembershipPage error:", err);
     setStatus("Could not load membership page.", "error");
@@ -1576,16 +1607,28 @@ function renderMembers(){
   });
 }
 
-function renderMembershipActivity(){
+function renderMembershipActivity(page = currentMembershipActivityPage){
   const tbody = document.getElementById("membershipActivityBody");
   tbody.innerHTML = "";
 
+  const totalPages = Math.ceil(allMembershipActivity.length / MEMBERSHIP_ACTIVITY_PAGE_SIZE);
+
+  if(page < 1) page = 1;
+  if(totalPages && page > totalPages) page = totalPages;
+
+  currentMembershipActivityPage = page;
+
   if(!allMembershipActivity.length){
     tbody.innerHTML = `<tr><td colspan="7" class="muted">No membership activity found for the current month.</td></tr>`;
+    renderMembershipActivityPagination();
     return;
   }
 
-  allMembershipActivity.slice(0, 20).forEach(row => {
+  const start = (currentMembershipActivityPage - 1) * MEMBERSHIP_ACTIVITY_PAGE_SIZE;
+  const end = start + MEMBERSHIP_ACTIVITY_PAGE_SIZE;
+  const pageRows = allMembershipActivity.slice(start, end);
+
+  pageRows.forEach(row => {
     const member = allMembers.find(item => String(item.id) === String(row.membership_id));
     const status = member ? getMembershipStatus(member) : null;
     const monthlyCount = getMemberMonthlyCount(row.membership_id);
@@ -1602,8 +1645,36 @@ function renderMembershipActivity(){
       </tr>
     `;
   });
+
+  renderMembershipActivityPagination();
 }
 
+function renderMembershipActivityPagination(){
+  const box = document.getElementById("membershipActivityPagination");
+  if(!box) return;
+
+  const totalPages = Math.ceil(allMembershipActivity.length / MEMBERSHIP_ACTIVITY_PAGE_SIZE);
+
+  if(totalPages <= 1){
+    box.innerHTML = "";
+    return;
+  }
+
+  let html = "";
+
+  for(let i = 1; i <= totalPages; i++){
+    html += `
+      <button
+        class="page-btn ${i === currentMembershipActivityPage ? "active" : ""}"
+        type="button"
+        onclick="renderMembershipActivity(${i})">
+        ${i}
+      </button>
+    `;
+  }
+
+  box.innerHTML = html;
+}
 function clearSearch(){
   if(document.getElementById("searchName")) document.getElementById("searchName").value = "";
   if(document.getElementById("searchPlate")) document.getElementById("searchPlate").value = "";
