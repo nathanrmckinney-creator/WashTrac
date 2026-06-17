@@ -1986,16 +1986,31 @@ function updateFooterHeartbeat(devices = []){
   setFooterValue("lastHeartbeatFooter", "↻ LAST HEARTBEAT", newestLastSeen ? formatFooterDateTime(newestLastSeen) : "--");
 }
 
-function updateCurrentWashName(name){
+function monitorHasActiveWash(devices = []){
+  const onlineDevice = (devices || []).find(device => deviceOnlineFromLastSeen(device.last_seen)) || {};
+  const status = String(onlineDevice.wash_status || "ready").toLowerCase();
+  const queueCount = Number(onlineDevice.wash_queue_count || 0);
+
+  return status === "washing" ||
+         status === "active" ||
+         status === "running" ||
+         queueCount > 0;
+}
+
+function updateCurrentWashName(name, isActiveWash = false){
   const el = document.getElementById("currentWashNameFooter");
   if(!el) return;
-  el.innerText = `CURRENT WASH: ${name || "--"}`;
+
+  const label = isActiveWash ? "CURRENT WASH" : "LAST WASH";
+  el.innerText = `${label}: ${name || "--"}`;
 }
 
 function updateFooterLastWash(row){
+  const isActiveWash = window.latestMonitorWashIsActive === true;
+
   if(!row){
     setFooterValue("lastWashFooter", "⌁ LAST WASH", "--");
-    updateCurrentWashName("--");
+    updateCurrentWashName("--", isActiveWash);
     return;
   }
 
@@ -2007,7 +2022,7 @@ function updateFooterLastWash(row){
     row.assigned_to ||
     "--";
 
-  updateCurrentWashName(washName);
+  updateCurrentWashName(washName, isActiveWash);
 
   setFooterValue(
     "lastWashFooter",
@@ -2156,6 +2171,7 @@ function renderNoSite(){
   const monthlyCountEl = document.getElementById("monthlyWashCount");
   if(dailyCountEl) dailyCountEl.innerText = "0";
   if(monthlyCountEl) monthlyCountEl.innerText = "0";
+  window.latestMonitorWashIsActive = false;
   updateFooterHeartbeat([]);
   updateFooterLastWash(null);
   
@@ -2624,6 +2640,7 @@ async function loadMonitor(){
     const hasOnlineDevice = hasPairedDevice && devices.some(device => deviceOnlineFromLastSeen(device.last_seen));
 
     window.latestMonitorDevices = devices || [];
+    window.latestMonitorWashIsActive = monitorHasActiveWash(devices || []);
     renderDevices(devices || []);
     renderControl(control, hasOnlineDevice, hasPairedDevice);
     updateFooterHeartbeat(devices || []);
