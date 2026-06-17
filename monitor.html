@@ -1005,11 +1005,25 @@ body{
 
 @media (min-width:601px) and (max-width:900px){
 
-  body{overflow-y:auto;}
+  body{
+    overflow-x:hidden;
+    overflow-y:auto;
+  }
+
+  .sidebar,
+  .desktop-menu-wrap{
+    display:none !important;
+  }
+
+  .app{
+    display:block !important;
+    min-height:auto;
+  }
 
   .main{
-    .main{
-  padding:10px 10px 10px 24px;
+    margin-left:0 !important;
+    padding:10px 10px 10px 18px !important;
+    min-height:auto;
   }
 
   .monitor-shell{
@@ -1020,47 +1034,102 @@ body{
   }
 
   .monitor-top{
-    min-height:64px;
+    display:grid;
+    grid-template-columns:1fr auto;
+    align-items:start;
+    min-height:58px;
+    margin-bottom:6px;
+  }
+
+  .page-header{
+    border-left:4px solid #38bdf8;
+    text-align:left;
+    transform:translateY(8px);
   }
 
   .page-header h1{
-    font-size:30px;
+    font-size:28px;
+    margin:0 0 0 12px;
+    line-height:1;
   }
 
   .monitor-brand-logo{
-    width:245px;
-    transform:translateY(-8px);
+    display:block;
+    grid-column:2;
+    width:220px;
+    margin-right:2px;
+    margin-top:-4px;
+    transform:none;
+    justify-self:end;
+  }
+
+  .banner{
+    min-height:38px;
+    font-size:16px;
+    padding:6px 12px;
+    margin-bottom:10px;
   }
 
   .status-row{
     grid-template-columns:repeat(2,1fr);
     gap:10px;
+    min-height:auto;
     margin-bottom:12px;
   }
 
   .status-card{
-    min-height:96px;
-    padding:12px 18px 12px 58px;
+    min-height:92px;
+    padding:10px 14px 10px 54px;
   }
 
   .status-card::after{
-    width:40px;
-    height:40px;
-    left:12px;
-    font-size:24px !important;
+    width:38px;
+    height:38px;
+    left:10px;
+    border-radius:12px;
+    font-size:23px !important;
+  }
+
+  #washStatusCard::after{
+    font-size:25px !important;
   }
 
   .status-card h3{
-    font-size:12px;
+    font-size:11px;
+    margin-bottom:5px;
+    letter-spacing:.45px;
   }
 
   .status-card > div:not(.device-monitor-list){
-    font-size:18px;
+    font-size:17px;
+    line-height:1.05;
+  }
+
+  .status-pill{
+    min-width:auto;
+    padding:5px 9px;
+    font-size:15px;
+  }
+
+  #washStatusCard .status-pill{
+    font-size:15px !important;
+    padding:5px 8px;
+  }
+
+  #lockoutWindow{
+    top:0 !important;
+    font-size:15px !important;
+  }
+
+  #lockoutWindowCard h3{
+    top:0 !important;
   }
 
   .monitor-grid{
+    display:grid;
     grid-template-columns:1fr 1fr;
     gap:12px;
+    min-height:auto;
   }
 
   .billing-card{
@@ -1075,16 +1144,41 @@ body{
     grid-column:1 / -1;
   }
 
+  .card{
+    padding:12px;
+  }
+
+  .billing-card h3,
+  .activity-card h3{
+    font-size:17px;
+    margin-bottom:8px;
+  }
+
+  .daily-count-card h3{
+    font-size:20px;
+    margin-bottom:8px;
+  }
+
   .daily-count-main{
     width:150px;
     height:150px;
     font-size:72px;
   }
 
+  .monthly-count-wrap{
+    margin-top:12px;
+    padding-top:12px;
+  }
+
   .monthly-count-main{
     width:140px;
     height:110px;
     font-size:52px;
+  }
+
+  .daily-count-label{
+    font-size:13px;
+    margin-top:7px;
   }
 
   .activity-row,
@@ -1095,6 +1189,7 @@ body{
 
   .monitor-footer-fill{
     margin-top:12px;
+    min-height:44px;
     font-size:12px;
     padding:0 18px;
   }
@@ -1114,19 +1209,20 @@ body{
 
   .sidebar,
   .desktop-menu-wrap{
-    display:none;
+    display:none !important;
   }
 
   .mobile-topbar{
-  display:flex;
-  padding:4px 10px;
-    min-height:42px;
-  justify-content:center;
-}
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:2px 10px;
+    min-height:34px;
+  }
 
-.logo-image-mobile{
-  width:90px;
-}
+  .logo-image-mobile{
+    width:78px;
+  }
 
   .mobile-menu{
     top:58px;
@@ -1135,7 +1231,7 @@ body{
   }
 
   .main{
-    padding:12px;
+    padding:0 12px 12px 12px;
     margin-left:0;
     min-height:auto;
   }
@@ -1148,38 +1244,41 @@ body{
   }
 
   .monitor-top{
-  display:block;
-  min-height:0;
-  padding:0;
-  margin-bottom:0;
-}
+    display:block;
+    min-height:0 !important;
+    padding:0 !important;
+    margin-top:-10px !important;
+    margin-bottom:-4px !important;
+  }
 
-.monitor-brand-logo{
-  display:none;
-}
+  .monitor-brand-logo{
+    display:none;
+  }
 
   .page-header{
-  margin:0;
-  padding:0;
-  border-left:3px solid #38bdf8;
-}
+    margin:0 !important;
+    padding:0 !important;
+    border-left:3px solid #38bdf8;
+    transform:translateY(-10px) !important;
+  }
 
   .page-header h1{
-  font-size:18px;
-  line-height:1;
-  margin:0 0 0 8px;
-  padding:0;
-}
+    font-size:17px !important;
+    line-height:1 !important;
+    margin:0 0 0 7px !important;
+    padding:0 !important;
+  }
 
-.page-header p{
-  display:none;
-}
+  .page-header p{
+    display:none;
+  }
+
   .banner{
     font-size:13px;
     line-height:1.2;
     min-height:auto;
-    padding:8px 10px;
-    margin:10px 0;
+    padding:7px 10px;
+    margin:6px 0 10px 0;
     border-radius:9px;
     letter-spacing:.35px;
   }
@@ -1198,12 +1297,12 @@ body{
   }
 
   .status-card{
-  min-height:110px;
-  padding:12px;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-}
+    min-height:104px;
+    padding:10px;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+  }
 
   .status-card::before{
     width:100%;
@@ -1211,55 +1310,55 @@ body{
   }
 
   .status-card::after{
-    width:38px;
-    height:38px;
-    left:12px;
-    border-radius:12px;
-    font-size:26px !important;
+    width:34px;
+    height:34px;
+    left:10px;
+    border-radius:11px;
+    font-size:23px !important;
   }
 
   #washStatusCard::after{
-    font-size:30px !important;
-  }
-
-  .status-row .status-card:nth-child(2)::after{
     font-size:26px !important;
   }
 
+  .status-row .status-card:nth-child(2)::after{
+    font-size:23px !important;
+  }
+
   .status-row .status-card:nth-child(3)::after{
-    font-size:24px !important;
+    font-size:22px !important;
   }
 
   .status-row .status-card:nth-child(4)::after{
-    font-size:28px !important;
+    font-size:25px !important;
   }
 
   .status-card h3{
-  font-size:11px;
-  line-height:1.1;
-  margin:0 0 6px 0;
-  text-align:center;
-  letter-spacing:.45px;
-  width:100%;
-}
+    font-size:10px;
+    line-height:1.1;
+    margin:0 0 5px 0;
+    text-align:center;
+    letter-spacing:.35px;
+    width:100%;
+  }
 
   .status-card > div:not(.device-monitor-list){
-  font-size:18px;
-  text-align:center;
-  line-height:1.1;
-  width:100%;
-}
+    font-size:16px;
+    text-align:center;
+    line-height:1.1;
+    width:100%;
+  }
 
   .status-pill{
     min-width:auto;
-    padding:6px 10px;
-    font-size:16px;
+    padding:5px 8px;
+    font-size:15px;
   }
 
   #washStatusCard .status-pill{
-    font-size:16px !important;
+    font-size:15px !important;
     line-height:1.05 !important;
-    padding:6px 9px;
+    padding:5px 8px;
   }
 
   #washStatusCard.wash-status-full h3,
@@ -1270,7 +1369,7 @@ body{
 
   #lockoutWindow{
     top:0 !important;
-    font-size:16px !important;
+    font-size:15px !important;
     line-height:1.15;
   }
 
