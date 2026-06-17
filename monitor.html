@@ -1003,7 +1003,7 @@ body{
   .monitor-footer-fill::after{justify-self:start;}
 }
 
-@media (max-width:900px){
+@media (max-width:600px){
   body{
     overflow-x:hidden;
     overflow-y:auto;
@@ -1021,13 +1021,15 @@ body{
   }
 
   .mobile-topbar{
-    display:flex;
-    padding:12px 14px;
-  }
+  display:flex;
+  padding:6px 10px;
+  min-height:48px;
+  justify-content:center;
+}
 
-  .logo-image-mobile{
-    width:132px;
-  }
+.logo-image-mobile{
+  width:105px;
+}
 
   .mobile-menu{
     top:58px;
@@ -1049,12 +1051,11 @@ body{
   }
 
   .monitor-top{
-    display:block;
-    min-height:auto;
-    padding:0;
-    margin-bottom:10px;
-  }
-
+  display:block;
+  min-height:auto;
+  padding:0;
+  margin-bottom:4px;
+}
   .monitor-brand-logo{
     display:none;
   }
@@ -1068,10 +1069,9 @@ body{
   }
 
   .page-header h1{
-    font-size:24px;
-    margin:0 0 0 10px;
-    letter-spacing:.35px;
-  }
+  font-size:20px;
+  margin:0 0 0 8px;
+}
 
   .page-header p{
     display:none;
