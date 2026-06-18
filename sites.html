@@ -919,7 +919,7 @@ if(!isClientLogin && !isAdminLogin){
           <span class="live-pill">LOCATIONS</span>
         </h1>
         <p>
-          Add wash locations to your organization, assign users to specific sites, and manage access when employees join or leave.
+          Add wash locations, pair physical keypads to the correct site, and manage user access for each location.
         </p>
       </div>
 
@@ -974,7 +974,7 @@ if(!isClientLogin && !isAdminLogin){
           <div id="siteStatus" class="status"></div>
 
           <div class="note">
-            Add a new wash location to your organization. New sites appear in the dashboard site switcher, are linked to your account, and automatically create the selected number of bays.
+            Add Site creates the wash location in WashTrac. After the site is created, use Pair Keypad under Site Management to connect the physical WashTrac Keypad/controller to that location.
           </div>
         </div>
 
@@ -999,14 +999,14 @@ if(!isClientLogin && !isAdminLogin){
 
           <div class="site-row">
             <div>
-              <div class="site-name">6-Digit Pairing Code</div>
-              <div class="site-meta">Used only when connecting a physical WashTrac Keypad to a location.</div>
+              <div class="site-name">Pair Keypad</div>
+              <div class="site-meta">After adding a site, use the keypad pairing code or device ID to connect the physical WashTrac Keypad to that location.</div>
             </div>
             <div class="pill yellow">Device</div>
           </div>
 
           <div class="note">
-            Sites represent physical wash locations. Users do not create sites when invited. They simply gain access to the locations assigned to them. If an invited user does not have a WashTrac account yet, access will be granted automatically after they sign up using the same email address.
+            Sites are physical wash locations. Users are people who are invited by email. Keypads are physical devices and must be paired separately to the correct site before they can report activity, monitor status, or validate wash codes for that location.
           </div>
         </div>
       </div>
@@ -1030,6 +1030,7 @@ if(!isClientLogin && !isAdminLogin){
     let acceptedMembers = [];
     let userEmailLookup = {};
     let siteBayCounts = {};
+    let currentDevices = [];
 
     function toggleMobileMenu(){
       const menu = document.getElementById("mobileMenu");
@@ -1243,6 +1244,168 @@ if(!isClientLogin && !isAdminLogin){
         siteBayCounts[row.site_id] = (siteBayCounts[row.site_id] || 0) + 1;
       });
     }
+
+    async function loadDevicesForSites(){
+      currentDevices = [];
+      const siteIds = currentSites.map(site => site.id).filter(Boolean);
+
+      if(!siteIds.length) return [];
+
+      const { data, error } = await client
+        .from("devices")
+        .select("*")
+        .in("site_id", siteIds)
+        .order("last_seen", { ascending:false });
+
+      if(error){
+        console.log("Devices load error:", error);
+        return [];
+      }
+
+      currentDevices = data || [];
+      return currentDevices;
+    }
+
+    function deviceLabel(device){
+      return device.device_name ||
+             device.name ||
+             device.serial_number ||
+             device.device_id ||
+             device.id ||
+             "WashTrac Keypad";
+    }
+
+    function deviceIdentifier(device){
+      return device.serial_number ||
+             device.device_id ||
+             device.id ||
+             "Unknown ID";
+    }
+
+    function deviceStatusText(device){
+      if(!device.last_seen) return "NOT SEEN";
+
+      const lastSeen = new Date(device.last_seen);
+      if(Number.isNaN(lastSeen.getTime())) return "UNKNOWN";
+
+      const diffMinutes = (Date.now() - lastSeen.getTime()) / 60000;
+      return diffMinutes < 5 ? "ONLINE" : "OFFLINE";
+    }
+
+    function deviceStatusClass(device){
+      return deviceStatusText(device) === "ONLINE" ? "green" : "red";
+    }
+
+    function formatDeviceLastSeen(device){
+      if(!device.last_seen) return "Never seen";
+
+      const lastSeen = new Date(device.last_seen);
+      if(Number.isNaN(lastSeen.getTime())) return "Unknown";
+
+      return lastSeen.toLocaleString();
+    }
+
+    function renderSiteDevices(siteId){
+      const devices = currentDevices.filter(device => device.site_id === siteId);
+
+      if(!devices.length){
+        return `<div class="mini-row"><div class="mini-main"><span class="mini-muted">No keypad paired to this site yet.</span></div><div class="pill yellow">Unpaired</div></div>`;
+      }
+
+      return devices.map(device => `
+        <div class="mini-row">
+          <div class="mini-main">
+            <strong>${escapeText(deviceLabel(device))}</strong>
+            <div class="mini-muted">ID: ${escapeText(deviceIdentifier(device))}</div>
+            <div class="mini-muted">Last seen: ${escapeText(formatDeviceLastSeen(device))}</div>
+          </div>
+          <div class="pill ${deviceStatusClass(device)}">${escapeText(deviceStatusText(device))}</div>
+        </div>
+      `).join("");
+    }
+
+    async function pairKeypadToSite(siteId){
+      clearStatus();
+
+      const site = currentSites.find(item => item.id === siteId);
+      if(!site){
+        setStatus("Site not found.", "bad");
+        return;
+      }
+
+      if(!canManageSite(site)){
+        setStatus("Only owner/admin users can pair a keypad to this site.", "bad");
+        return;
+      }
+
+      const input = document.getElementById(`pairCode-${siteId}`);
+      const rawValue = String(input?.value || "").trim();
+
+      if(!rawValue){
+        setStatus("Enter the keypad pairing code or device ID.", "bad");
+        return;
+      }
+
+      const pairValue = rawValue.toUpperCase();
+      const nowIso = new Date().toISOString();
+
+      async function tryDeviceLookup(columnName, value){
+        try{
+          const { data, error } = await client
+            .from("devices")
+            .select("*")
+            .eq(columnName, value)
+            .limit(1);
+
+          if(error){
+            console.log(`Device lookup error on ${columnName}:`, error);
+            return null;
+          }
+
+          return data && data.length ? data[0] : null;
+        }catch(err){
+          console.log(`Device lookup failed on ${columnName}:`, err);
+          return null;
+        }
+      }
+
+      let device =
+        await tryDeviceLookup("pairing_code", pairValue) ||
+        await tryDeviceLookup("pair_code", pairValue) ||
+        await tryDeviceLookup("device_id", pairValue) ||
+        await tryDeviceLookup("serial_number", pairValue) ||
+        await tryDeviceLookup("id", pairValue);
+
+      if(!device){
+        setStatus("No keypad found for that pairing code or device ID. Make sure the keypad is online and showing the correct code.", "bad");
+        return;
+      }
+
+      const updatePayload = {
+        site_id: siteId,
+        updated_at: nowIso
+      };
+
+      if(site.organization_id){
+        updatePayload.organization_id = site.organization_id;
+      }
+
+      const { error: updateError } = await client
+        .from("devices")
+        .update(updatePayload)
+        .eq("id", device.id);
+
+      if(updateError){
+        console.log("Pair keypad update error:", updateError);
+        setStatus("Could not pair keypad: " + updateError.message, "bad");
+        return;
+      }
+
+      if(input) input.value = "";
+      setStatus(`Keypad paired to ${siteLabel(site)}.`, "good");
+      await loadSites();
+    }
+
 
     async function syncSiteBays(site, requestedCount){
       const siteId = typeof site === "string" ? site : site?.id;
@@ -1568,6 +1731,7 @@ if(!isClientLogin && !isAdminLogin){
 
       await loadInviteAndMemberData();
       await loadBayCountsForSites();
+      await loadDevicesForSites();
       renderSites();
       return currentSites;
     }
@@ -1785,6 +1949,30 @@ if(!isClientLogin && !isAdminLogin){
               </div>
               <div class="note">
                 ${manager ? "Changing this updates the bay rows used by Dashboard and Monitor." : "Only owner/admin users can change bay setup."}
+              </div>
+            </div>
+
+            <div class="invite-box" style="margin-top:0; padding-top:0; border-top:none; margin-bottom:16px;">
+              <h4>Paired Keypads</h4>
+              <div class="mini-list">${renderSiteDevices(site.id)}</div>
+
+              <div class="invite-box" style="margin-top:12px;">
+                <h4>Pair Keypad To This Site</h4>
+                <div class="invite-grid">
+                  <div class="field full-mobile">
+                    <label for="pairCode-${escapeText(site.id)}">Pairing Code Or Device ID</label>
+                    <input id="pairCode-${escapeText(site.id)}" placeholder="Example: 123456 or WT-000001" ${manager ? "" : "disabled"}>
+                  </div>
+
+                  <div class="field">
+                    <label>&nbsp;</label>
+                    <button onclick="pairKeypadToSite('${escapeText(site.id)}')" ${manager ? "" : "disabled"}>Pair</button>
+                  </div>
+                </div>
+
+                <div class="note">
+                  ${manager ? "Add Site only creates the location. Pair Keypad links the physical WashTrac controller/keypad to this site so activity, monitor status, and wash validation report to the correct location." : "Only owner/admin users can pair a keypad to this site."}
+                </div>
               </div>
             </div>
 
