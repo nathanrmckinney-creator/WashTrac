@@ -1056,7 +1056,10 @@ document.addEventListener("DOMContentLoaded", function(){
     </div>
 
     <div class="card">
-      <h3>Active Codes</h3>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+        <h3 style="margin:0;">Active Codes</h3>
+        <button id="showAllCodesButton" class="secondary" type="button" onclick="toggleAllCodeReveal()">Show All</button>
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
@@ -1778,6 +1781,7 @@ function resetCodesEmpty(){
   document.getElementById("topUsedCode").innerText = "-";
   document.getElementById("totalUses").innerText = "0";
   document.getElementById("codesTableBody").innerHTML = `<tr><td colspan="9" class="muted">No active site selected.</td></tr>`;
+  updateShowAllCodesButton([]);
   renderSystemHeartbeat([]);
 }
 
@@ -1920,6 +1924,64 @@ function maskedCode(isRevealed, code){
   return isRevealed ? escapeText(code || "-") : "XXXX";
 }
 
+function getCodeRowKey(item){
+  return String(getCodeId(item) || getCodeValue(item) || "");
+}
+
+function getFilteredActiveCodes(){
+  const codeSearch = document.getElementById("searchCode").value.trim().toLowerCase();
+  const deptSearch = document.getElementById("searchDepartment").value.trim().toLowerCase();
+  const nameSearch = document.getElementById("searchName").value.trim().toLowerCase();
+
+  return allCodes.filter(item => {
+    if(!getIsActive(item)) return false;
+
+    const code = String(getCodeValue(item)).toLowerCase();
+    const dept = String(getCodeDepartment(item)).toLowerCase();
+    const name = String(getCodeName(item)).toLowerCase();
+
+    return code.includes(codeSearch) && dept.includes(deptSearch) && name.includes(nameSearch);
+  });
+}
+
+function updateShowAllCodesButton(rows){
+  const btn = document.getElementById("showAllCodesButton");
+  if(!btn) return;
+
+  const validRows = (rows || []).filter(item => getCodeRowKey(item));
+
+  if(!validRows.length){
+    btn.disabled = true;
+    btn.innerText = "Show All";
+    return;
+  }
+
+  const allRevealed = validRows.every(item => revealedCodeRows.has(getCodeRowKey(item)));
+  btn.disabled = false;
+  btn.innerText = allRevealed ? "Hide All" : "Show All";
+}
+
+function toggleAllCodeReveal(){
+  const rows = getFilteredActiveCodes();
+  const validRows = rows.filter(item => getCodeRowKey(item));
+
+  if(!validRows.length) return;
+
+  const allRevealed = validRows.every(item => revealedCodeRows.has(getCodeRowKey(item)));
+
+  validRows.forEach(item => {
+    const key = getCodeRowKey(item);
+
+    if(allRevealed){
+      revealedCodeRows.delete(key);
+    }else{
+      revealedCodeRows.add(key);
+    }
+  });
+
+  renderCodes(currentCodesPage);
+}
+
 function toggleCodeReveal(rowId){
   const key = String(rowId || "");
   if(!key) return;
@@ -1951,19 +2013,8 @@ function renderCodes(page = null){
     currentCodesPage = Number(page) || 1;
   }
 
-  const codeSearch = document.getElementById("searchCode").value.trim().toLowerCase();
-  const deptSearch = document.getElementById("searchDepartment").value.trim().toLowerCase();
-  const nameSearch = document.getElementById("searchName").value.trim().toLowerCase();
-
-  const filtered = allCodes.filter(item => {
-    if(!getIsActive(item)) return false;
-
-    const code = String(getCodeValue(item)).toLowerCase();
-    const dept = String(getCodeDepartment(item)).toLowerCase();
-    const name = String(getCodeName(item)).toLowerCase();
-
-    return code.includes(codeSearch) && dept.includes(deptSearch) && name.includes(nameSearch);
-  });
+  const filtered = getFilteredActiveCodes();
+  updateShowAllCodesButton(filtered);
 
   const tbody = document.getElementById("codesTableBody");
   tbody.innerHTML = "";
@@ -2000,7 +2051,7 @@ function renderCodes(page = null){
     const lastUsed = stats.lastUsed ? new Date(stats.lastUsed).toLocaleString() : "-";
     const id = getCodeId(item);
 
-    const rowKey = String(id || code);
+    const rowKey = getCodeRowKey(item);
     const revealed = revealedCodeRows.has(rowKey);
     const displayCode = maskedCode(revealed, code);
 
