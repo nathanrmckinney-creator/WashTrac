@@ -731,7 +731,18 @@ document.addEventListener("DOMContentLoaded", function(){
           <thead>
             <tr>
               <th>Time</th>
-              <th>Code</th>
+              <th>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <span>Code</span>
+    <button type="button"
+            class="secondary"
+            onclick="toggleAllCodeReveal()"
+            id="showAllCodesButton"
+            style="padding:5px 10px;font-size:11px;line-height:1;">
+      Show All
+    </button>
+  </div>
+</th>
               <th>Department</th>
               <th>Name</th>
               <th>Bay</th>
@@ -789,6 +800,12 @@ const ACTIVITY_SEARCH_FIELD_IDS = [
 
 function getActiveSiteId(){
   return currentSiteId || localStorage.getItem("activeSiteId") || "";
+}
+
+
+function toggleAllCodeReveal(){
+  // Existing activity page does not currently mask codes.
+  // Button reserved for future code show/hide support.
 }
 
 function escapeText(value){
