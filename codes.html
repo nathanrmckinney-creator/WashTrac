@@ -182,6 +182,29 @@
     .view-btn{background:#334155;padding:10px 14px;}
     .view-btn:hover{background:#475569;}
 
+    .code-cell{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:nowrap;
+      white-space:nowrap;
+    }
+
+    .code-mask{
+      display:inline-block;
+      min-width:44px;
+      letter-spacing:1px;
+    }
+
+    .reveal-code-btn{
+      background:linear-gradient(180deg,#475569,#334155);
+      padding:6px 9px;
+      border-radius:7px;
+      font-size:11px;
+      line-height:1;
+      min-width:42px;
+    }
+
     .activity-modal{
       display:none;
       position:fixed;
@@ -713,6 +736,7 @@
 
   button,
   .view-btn,
+  .reveal-code-btn,
   .close-modal-btn,
   button.remove-btn{
     padding:9px 11px !important;
@@ -1157,6 +1181,8 @@ let currentOrganizationId = null;
 let codesLoadToken = 0;
 let refreshTimer = null;
 let selectedActivityCode = "";
+const revealedCodeRows = new Set();
+const revealedActivityRows = new Set();
 let systemOnline = false;
 let systemOnlineReason = "No recent Keypad heartbeat detected.";
 const HEARTBEAT_ONLINE_MINUTES = 5;
@@ -1365,12 +1391,16 @@ function activityName(row){
 
 function normalizeActivity(row){
   return {
+    id: cleanValue(row.id, ""),
     event_time: cleanValue(row.event_time, cleanValue(row.created_at, "")),
     code: activityCode(row),
     department: cleanValue(row.department, cleanValue(row.metadata?.department, "Unassigned")),
     name: activityName(row),
     bay: cleanValue(row.bay, ""),
-    event: cleanValue(row.event, cleanValue(row.status, ""))
+    event: cleanValue(row.event, cleanValue(row.status, "")),
+    status: cleanValue(row.status, ""),
+    metadata: row.metadata || {},
+    device: cleanValue(row.device, "")
   };
 }
 
@@ -1466,7 +1496,7 @@ function openCodeActivity(code){
   const department = matchingCode ? getCodeDepartment(matchingCode) : "Unassigned";
   const name = matchingCode ? getCodeName(matchingCode) : "";
 
-  document.getElementById("activityModalTitle").innerText = `Code ${selectedActivityCode}`;
+  document.getElementById("activityModalTitle").innerText = "Code XXXX";
   document.getElementById("activityModalSubtitle").innerText =
     `${department}${name ? " • " + name : ""}`;
 
@@ -1542,15 +1572,23 @@ function renderCodeActivityDetails(){
     return;
   }
 
-  rows.forEach(row => {
+  rows.forEach((row, index) => {
     const granted = isGrantedActivity(row);
     const pillClass = granted ? "pill-granted" : "pill-denied";
     const eventText = row.event || (granted ? "Granted" : "Denied");
+    const rowKey = String(row.id || `${row.event_time || "row"}-${index}`);
+    const revealed = revealedActivityRows.has(rowKey);
+    const displayCode = maskedCode(revealed, row.code || selectedActivityCode);
 
     tbody.innerHTML += `
       <tr>
         <td>${escapeText(formatDateTime(row.event_time))}</td>
-        <td><strong>${escapeText(row.code || selectedActivityCode)}</strong></td>
+        <td>
+          <div class="code-cell">
+            <strong class="code-mask">${displayCode}</strong>
+            <button class="reveal-code-btn" type="button" onclick="toggleActivityCodeReveal('${escapeText(rowKey)}')">${revealed ? "Hide" : "Show"}</button>
+          </div>
+        </td>
         <td>${escapeText(row.department || "Unassigned")}</td>
         <td>${escapeText(row.bay || "-")}</td>
         <td><span class="${pillClass}">${escapeText(eventText)}</span></td>
@@ -1866,7 +1904,7 @@ function renderSummary(){
   document.getElementById("totalUses").innerText = totalUses;
 
   const top = [...codeUsage].sort((a,b) => Number(b.uses || 0) - Number(a.uses || 0))[0];
-  document.getElementById("topUsedCode").innerText = top && top.uses > 0 ? top.code : "-";
+  document.getElementById("topUsedCode").innerText = top && top.uses > 0 ? "XXXX" : "-";
 }
 
 function escapeText(value){
@@ -1876,6 +1914,36 @@ function escapeText(value){
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function maskedCode(isRevealed, code){
+  return isRevealed ? escapeText(code || "-") : "XXXX";
+}
+
+function toggleCodeReveal(rowId){
+  const key = String(rowId || "");
+  if(!key) return;
+
+  if(revealedCodeRows.has(key)){
+    revealedCodeRows.delete(key);
+  }else{
+    revealedCodeRows.add(key);
+  }
+
+  renderCodes(currentCodesPage);
+}
+
+function toggleActivityCodeReveal(rowId){
+  const key = String(rowId || "");
+  if(!key) return;
+
+  if(revealedActivityRows.has(key)){
+    revealedActivityRows.delete(key);
+  }else{
+    revealedActivityRows.add(key);
+  }
+
+  renderCodeActivityDetails();
 }
 
 function renderCodes(page = null){
@@ -1932,9 +2000,18 @@ function renderCodes(page = null){
     const lastUsed = stats.lastUsed ? new Date(stats.lastUsed).toLocaleString() : "-";
     const id = getCodeId(item);
 
+    const rowKey = String(id || code);
+    const revealed = revealedCodeRows.has(rowKey);
+    const displayCode = maskedCode(revealed, code);
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td><strong>${escapeText(code)}</strong></td>
+      <td>
+        <div class="code-cell">
+          <strong class="code-mask">${displayCode}</strong>
+          <button class="reveal-code-btn" type="button">${revealed ? "Hide" : "Show"}</button>
+        </div>
+      </td>
       <td><span class="tag">${escapeText(getCodeDepartment(item))}</span></td>
       <td>${escapeText(getCodeName(item))}</td>
       <td>${stats.uses || 0}</td>
@@ -1945,6 +2022,7 @@ function renderCodes(page = null){
       <td><button class="remove-btn" type="button" title="${escapeText(systemOnlineReason)}">Remove</button></td>
     `;
 
+    tr.querySelector(".reveal-code-btn").addEventListener("click", () => toggleCodeReveal(rowKey));
     tr.querySelector(".view-btn").addEventListener("click", () => openCodeActivity(code));
     tr.querySelector(".remove-btn").addEventListener("click", () => removeCode(id, code));
     tbody.appendChild(tr);
