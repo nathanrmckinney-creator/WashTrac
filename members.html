@@ -154,6 +154,8 @@
   padding:6px 9px;
   border-radius:7px;
   font-size:11px;
+  line-height:1;
+  min-width:42px;
 }
 
 
@@ -911,9 +913,14 @@ document.addEventListener("DOMContentLoaded", function(){
               <th>
 <div style="display:flex;align-items:center;gap:8px;">
 <span>Code</span>
-<button id="showAllMemberCodesButton" class="secondary" type="button"
+<button
+id="showAllMemberCodesButton"
+class="secondary"
+type="button"
 onclick="toggleAllMemberCodes()"
-style="padding:5px 10px;font-size:11px;">Show All</button>
+style="padding:5px 10px;font-size:11px;line-height:1;">
+Show All
+</button>
 </div>
 </th>
               <th>Name</th>
