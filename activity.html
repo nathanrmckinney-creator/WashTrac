@@ -133,6 +133,31 @@ td{color:#e5e7eb;}
 .warn-text{color:#fde68a;}
 
 
+.code-cell{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:nowrap;
+  white-space:nowrap;
+}
+
+.code-mask{
+  display:inline-block;
+  min-width:44px;
+  letter-spacing:1px;
+}
+
+.reveal-code-btn{
+  background:linear-gradient(180deg,#475569,#334155);
+  padding:6px 9px;
+  border-radius:7px;
+  font-size:11px;
+  line-height:1;
+  min-width:42px;
+}
+
+
+
 
 /* PREMIUM WASHTRAC POLISH - matches dashboard/codes/reports styling */
 .main::before{
@@ -803,9 +828,65 @@ function getActiveSiteId(){
 }
 
 
+const revealedActivityCodeRows = new Set();
+
+function getActivityRowKey(row, index = 0){
+  return String(row.id || `${row.event_time || "row"}-${row.code || "code"}-${index}`);
+}
+
+function maskedCode(isRevealed, code){
+  return isRevealed ? escapeText(code || "-") : "XXXX";
+}
+
+function updateShowAllCodesButton(rows){
+  const btn = document.getElementById("showAllCodesButton");
+  if(!btn) return;
+
+  const validRows = (rows || []).filter((row, index) => getActivityRowKey(row, index));
+
+  if(!validRows.length){
+    btn.disabled = true;
+    btn.innerText = "Show All";
+    return;
+  }
+
+  const allRevealed = validRows.every((row, index) => revealedActivityCodeRows.has(getActivityRowKey(row, index)));
+  btn.disabled = false;
+  btn.innerText = allRevealed ? "Hide All" : "Show All";
+}
+
 function toggleAllCodeReveal(){
-  // Existing activity page does not currently mask codes.
-  // Button reserved for future code show/hide support.
+  const rows = lastFilteredActivityRows || [];
+  const validRows = rows.filter((row, index) => getActivityRowKey(row, index));
+
+  if(!validRows.length) return;
+
+  const allRevealed = validRows.every((row, index) => revealedActivityCodeRows.has(getActivityRowKey(row, index)));
+
+  validRows.forEach((row, index) => {
+    const key = getActivityRowKey(row, index);
+
+    if(allRevealed){
+      revealedActivityCodeRows.delete(key);
+    }else{
+      revealedActivityCodeRows.add(key);
+    }
+  });
+
+  renderRows(lastFilteredActivityRows, currentActivityPage);
+}
+
+function toggleActivityCodeReveal(rowId){
+  const key = String(rowId || "");
+  if(!key) return;
+
+  if(revealedActivityCodeRows.has(key)){
+    revealedActivityCodeRows.delete(key);
+  }else{
+    revealedActivityCodeRows.add(key);
+  }
+
+  renderRows(lastFilteredActivityRows, currentActivityPage);
 }
 
 function escapeText(value){
@@ -1262,6 +1343,7 @@ function resetActivityEmpty(message = "No active site selected."){
   document.getElementById("activityTableBody").innerHTML = `<tr><td colspan="6">${escapeText(message)}</td></tr>`;
   const pagination = document.getElementById("activityPagination");
   if(pagination) pagination.innerHTML = "";
+  updateShowAllCodesButton([]);
 }
 
 function updateSummary(rows){
@@ -1338,6 +1420,7 @@ function renderRows(rows, page = 1){
   if(!rows.length){
     tbody.innerHTML = `<tr><td colspan="6">No matching activity found. Try clearing text filters or expanding the date range.</td></tr>`;
     renderActivityPagination(0);
+    updateShowAllCodesButton([]);
     updateSummary([]);
     return;
   }
@@ -1349,20 +1432,33 @@ function renderRows(rows, page = 1){
   const endIndex = startIndex + ACTIVITY_PAGE_SIZE;
   const displayRows = rows.slice(startIndex, endIndex);
 
-  displayRows.forEach(row => {
+  displayRows.forEach((row, index) => {
+    const absoluteIndex = startIndex + index;
+    const rowKey = getActivityRowKey(row, absoluteIndex);
+    const revealed = revealedActivityCodeRows.has(rowKey);
+    const displayCode = maskedCode(revealed, row.code || "");
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${escapeText(formatTime(row.event_time))}</td>
-      <td>${escapeText(row.code || "")}</td>
+      <td>
+        <div class="code-cell">
+          <strong class="code-mask">${displayCode}</strong>
+          <button class="reveal-code-btn" type="button">${revealed ? "Hide" : "Show"}</button>
+        </div>
+      </td>
       <td>${escapeText(row.department || "")}</td>
       <td>${escapeText(row.name || "")}</td>
       <td>${escapeText(row.bay || "")}</td>
       <td>${escapeText(row.event || "")}</td>
     `;
+
+    tr.querySelector(".reveal-code-btn").addEventListener("click", () => toggleActivityCodeReveal(rowKey));
     tbody.appendChild(tr);
   });
 
   renderActivityPagination(rows.length);
+  updateShowAllCodesButton(rows);
   updateSummary(rows);
 }
 
