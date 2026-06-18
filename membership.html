@@ -156,6 +156,31 @@
     th{color:#93c5fd;font-size:13px;text-transform:uppercase;letter-spacing:.5px;}
     .muted{color:#94a3b8;}
 
+
+.code-cell{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:nowrap;
+  white-space:nowrap;
+}
+
+.code-mask{
+  display:inline-block;
+  min-width:44px;
+  letter-spacing:1px;
+}
+
+.reveal-code-btn{
+  background:linear-gradient(180deg,#475569,#334155);
+  padding:6px 9px;
+  border-radius:7px;
+  font-size:11px;
+  line-height:1;
+  min-width:42px;
+}
+
+
     .tag{display:inline-block;padding:6px 10px;border-radius:999px;background:#1e293b;color:#cbd5e1;font-size:12px;font-weight:bold;white-space:nowrap;}
 
     .status-pill{
@@ -989,7 +1014,19 @@ document.addEventListener("DOMContentLoaded", function(){
               <th>Date / Time</th>
               <th>Name</th>
               <th>License Plate</th>
-              <th>Code</th>
+              <th>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span>Code</span>
+                  <button
+                    id="showAllMembershipCodesButton"
+                    class="secondary"
+                    type="button"
+                    onclick="toggleAllMembershipCodeReveal()"
+                    style="padding:5px 10px;font-size:11px;line-height:1;">
+                    Show All
+                  </button>
+                </div>
+              </th>
               <th>Expiration</th>
               <th>Wash Count This Month</th>
               <th>Site</th>
@@ -1091,6 +1128,7 @@ let lastRenderedMembers = [];
 let loadInProgress = false;
 let currentMembershipActivityPage = 1;
 const MEMBERSHIP_ACTIVITY_PAGE_SIZE = 20;
+const revealedMembershipActivityRows = new Set();
 
 window.addEventListener("pageshow", function(){
   const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
@@ -1100,6 +1138,70 @@ window.addEventListener("pageshow", function(){
     window.location.replace("login.html");
   }
 });
+
+function getMembershipActivityRowKey(row, index = 0){
+  return String(row.id || `${row.wash_time || row.created_at || "row"}-${row.membership_id || "member"}-${row.code || "code"}-${index}`);
+}
+
+function maskedCode(isRevealed, code){
+  return isRevealed ? escapeText(code || "-") : "XXXX";
+}
+
+function updateShowAllMembershipCodesButton(rows){
+  const btn = document.getElementById("showAllMembershipCodesButton");
+  if(!btn) return;
+
+  const validRows = (rows || []).filter((row, index) => getMembershipActivityRowKey(row, index));
+
+  if(!validRows.length){
+    btn.disabled = true;
+    btn.innerText = "Show All";
+    return;
+  }
+
+  const allRevealed = validRows.every((row, index) =>
+    revealedMembershipActivityRows.has(getMembershipActivityRowKey(row, index))
+  );
+
+  btn.disabled = false;
+  btn.innerText = allRevealed ? "Hide All" : "Show All";
+}
+
+function toggleAllMembershipCodeReveal(){
+  const rows = allMembershipActivity || [];
+  const validRows = rows.filter((row, index) => getMembershipActivityRowKey(row, index));
+
+  if(!validRows.length) return;
+
+  const allRevealed = validRows.every((row, index) =>
+    revealedMembershipActivityRows.has(getMembershipActivityRowKey(row, index))
+  );
+
+  validRows.forEach((row, index) => {
+    const key = getMembershipActivityRowKey(row, index);
+
+    if(allRevealed){
+      revealedMembershipActivityRows.delete(key);
+    }else{
+      revealedMembershipActivityRows.add(key);
+    }
+  });
+
+  renderMembershipActivity(currentMembershipActivityPage);
+}
+
+function toggleMembershipCodeReveal(rowId){
+  const key = String(rowId || "");
+  if(!key) return;
+
+  if(revealedMembershipActivityRows.has(key)){
+    revealedMembershipActivityRows.delete(key);
+  }else{
+    revealedMembershipActivityRows.add(key);
+  }
+
+  renderMembershipActivity(currentMembershipActivityPage);
+}
 
 function getActiveSiteId(){
   return currentSiteId || localStorage.getItem("activeSiteId") || "";
@@ -1472,6 +1574,7 @@ function resetEmpty(){
   }
 
   document.getElementById("membershipActivityBody").innerHTML = `<tr><td colspan="7" class="muted">No membership activity found.</td></tr>`;
+  updateShowAllMembershipCodesButton([]);
   renderMembershipActivityPagination();
 }
 
@@ -1620,6 +1723,7 @@ function renderMembershipActivity(page = currentMembershipActivityPage){
 
   if(!allMembershipActivity.length){
     tbody.innerHTML = `<tr><td colspan="7" class="muted">No membership activity found for the current month.</td></tr>`;
+    updateShowAllMembershipCodesButton([]);
     renderMembershipActivityPagination();
     return;
   }
@@ -1628,17 +1732,31 @@ function renderMembershipActivity(page = currentMembershipActivityPage){
   const end = start + MEMBERSHIP_ACTIVITY_PAGE_SIZE;
   const pageRows = allMembershipActivity.slice(start, end);
 
-  pageRows.forEach(row => {
+  pageRows.forEach((row, index) => {
+    const absoluteIndex = start + index;
     const member = allMembers.find(item => String(item.id) === String(row.membership_id));
     const status = member ? getMembershipStatus(member) : null;
     const monthlyCount = getMemberMonthlyCount(row.membership_id);
+    const rowKey = getMembershipActivityRowKey(row, absoluteIndex);
+    const revealed = revealedMembershipActivityRows.has(rowKey);
+    const displayCode = maskedCode(revealed, row.code || member?.code || "");
 
     tbody.innerHTML += `
       <tr>
         <td>${escapeText(formatDateTime(row.wash_time || row.created_at))}</td>
         <td>${escapeText(member ? getMemberName(member) : (row.member_name || "-"))}</td>
         <td><span class="tag">${escapeText(displayPlate(row.license_plate || member?.license_plate || ""))}</span></td>
-        <td><strong>${escapeText(row.code || member?.code || "")}</strong></td>
+        <td>
+          <div class="code-cell">
+            <strong class="code-mask">${displayCode}</strong>
+            <button
+              class="reveal-code-btn"
+              type="button"
+              onclick="toggleMembershipCodeReveal('${escapeText(rowKey)}')">
+              ${revealed ? "Hide" : "Show"}
+            </button>
+          </div>
+        </td>
         <td class="${status ? status.dateClass : ""}">${escapeText(formatDate(member?.expiration_date || row.expiration_date || ""))}</td>
         <td>${monthlyCount}</td>
         <td>${escapeText(getSiteName(row.site_id))}</td>
@@ -1646,6 +1764,7 @@ function renderMembershipActivity(page = currentMembershipActivityPage){
     `;
   });
 
+  updateShowAllMembershipCodesButton(allMembershipActivity);
   renderMembershipActivityPagination();
 }
 
