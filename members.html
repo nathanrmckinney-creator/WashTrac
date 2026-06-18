@@ -742,16 +742,26 @@
 }
 
   
-/* FINAL CODE REVEAL BUTTON LOCK
-   Keep Members page code buttons matching Membership page exactly. */
+/* FINAL MEMBERS CODE BUTTON MATCH - matches membership.html */
+#membersTableBody td:first-child,
+thead th:first-child{
+  min-width:118px !important;
+  width:118px !important;
+}
+
 #showAllMemberCodesButton{
   padding:5px 10px !important;
   font-size:11px !important;
   line-height:1 !important;
   border-radius:7px !important;
   font-weight:700 !important;
-  min-width:auto !important;
+  white-space:nowrap !important;
+  min-width:62px !important;
+  width:auto !important;
   height:auto !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
 }
 
 .reveal-code-btn{
@@ -763,8 +773,27 @@
   font-size:11px !important;
   line-height:1 !important;
   min-width:42px !important;
+  width:auto !important;
   height:auto !important;
   font-weight:700 !important;
+  white-space:nowrap !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+
+.code-cell{
+  display:flex !important;
+  align-items:center !important;
+  gap:8px !important;
+  flex-wrap:nowrap !important;
+  white-space:nowrap !important;
+}
+
+.code-mask{
+  display:inline-block !important;
+  min-width:44px !important;
+  letter-spacing:1px !important;
 }
 
   </style>
@@ -937,18 +966,18 @@ document.addEventListener("DOMContentLoaded", function(){
           <thead>
             <tr>
               <th>
-<div style="display:flex;align-items:center;gap:8px;">
-<span>Code</span>
-<button
-  id="showAllMemberCodesButton"
-  class="secondary"
-  type="button"
-  onclick="toggleAllMemberCodes()"
-  style="padding:5px 10px;font-size:11px;line-height:1;">
-  Show All
-</button>
-</div>
-</th>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;white-space:nowrap;">
+                  <span>Code</span>
+                  <button
+                    id="showAllMemberCodesButton"
+                    class="secondary"
+                    type="button"
+                    onclick="toggleAllMemberCodes()"
+                    style="padding:5px 10px;font-size:11px;line-height:1;">
+                    Show All
+                  </button>
+                </div>
+              </th>
               <th>Name</th>
               <th>License Plate</th>
               <th>Start Date</th>
