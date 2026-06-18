@@ -1056,15 +1056,23 @@ document.addEventListener("DOMContentLoaded", function(){
     </div>
 
     <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
-        <h3 style="margin:0;">Active Codes</h3>
-        <button id="showAllCodesButton" class="secondary" type="button" onclick="toggleAllCodeReveal()">Show All</button>
-      </div>
+      <h3 style="margin-bottom:12px;">Active Codes</h3>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Code</th>
+              <th>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span>Code</span>
+                  <button id="showAllCodesButton"
+                          class="secondary"
+                          type="button"
+                          onclick="toggleAllCodeReveal()"
+                          style="padding:5px 10px;font-size:11px;line-height:1;">
+                    Show All
+                  </button>
+                </div>
+              </th>
               <th>Department</th>
               <th>Name</th>
               <th>Uses</th>
