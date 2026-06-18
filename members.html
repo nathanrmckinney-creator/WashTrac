@@ -140,6 +140,23 @@
     th{color:#93c5fd;font-size:13px;text-transform:uppercase;letter-spacing:.5px;}
     .muted{color:#94a3b8;}
 
+.code-cell{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  white-space:nowrap;
+}
+.code-mask{
+  min-width:44px;
+}
+.reveal-code-btn{
+  background:linear-gradient(180deg,#475569,#334155);
+  padding:6px 9px;
+  border-radius:7px;
+  font-size:11px;
+}
+
+
     .tag{display:inline-block;padding:6px 10px;border-radius:999px;background:#1e293b;color:#cbd5e1;font-size:12px;font-weight:bold;white-space:nowrap;}
 
     .status-pill{
@@ -891,7 +908,14 @@ document.addEventListener("DOMContentLoaded", function(){
         <table>
           <thead>
             <tr>
-              <th>Code</th>
+              <th>
+<div style="display:flex;align-items:center;gap:8px;">
+<span>Code</span>
+<button id="showAllMemberCodesButton" class="secondary" type="button"
+onclick="toggleAllMemberCodes()"
+style="padding:5px 10px;font-size:11px;">Show All</button>
+</div>
+</th>
               <th>Name</th>
               <th>License Plate</th>
               <th>Start Date</th>
@@ -1004,6 +1028,35 @@ let lastRenderedMembers = [];
 let currentMembersPage = 1;
 const MEMBERS_PAGE_SIZE = 20;
 let loadInProgress = false;
+
+const revealedMemberCodes = new Set();
+
+function updateShowAllMemberCodesButton(){
+ const btn=document.getElementById("showAllMemberCodesButton");
+ if(!btn)return;
+ const allVisible=(lastRenderedMembers||[]).every(m=>revealedMemberCodes.has(String(m.id)));
+ btn.innerText=allVisible?"Hide All":"Show All";
+}
+
+function toggleAllMemberCodes(){
+ const allVisible=(lastRenderedMembers||[]).every(m=>revealedMemberCodes.has(String(m.id)));
+ (lastRenderedMembers||[]).forEach(m=>{
+   if(allVisible) revealedMemberCodes.delete(String(m.id));
+   else revealedMemberCodes.add(String(m.id));
+ });
+ renderMembers(currentMembersPage);
+}
+
+function maskMemberCode(member){
+ return revealedMemberCodes.has(String(member.id)) ? getMemberCode(member) : "XXXX";
+}
+
+function toggleMemberCode(memberId){
+ if(revealedMemberCodes.has(String(memberId))) revealedMemberCodes.delete(String(memberId));
+ else revealedMemberCodes.add(String(memberId));
+ renderMembers(currentMembersPage);
+}
+
 
 window.addEventListener("pageshow", function(){
   const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
@@ -1565,7 +1618,14 @@ function renderMembers(page = 1){
     tr.className = status.rowClass || "";
 
     tr.innerHTML = `
-      <td><strong>${escapeText(getMemberCode(member))}</strong></td>
+      <td>
+<div class="code-cell">
+<strong class="code-mask">${escapeText(maskMemberCode(member))}</strong>
+<button class="reveal-code-btn" type="button" onclick="toggleMemberCode('${member.id}')">
+${revealedMemberCodes.has(String(member.id)) ? "Hide" : "Show"}
+</button>
+</div>
+</td>
       <td>${escapeText(getMemberName(member))}</td>
       <td><span class="tag">${escapeText(displayPlate(member.license_plate))}</span></td>
       <td>${escapeText(formatDate(member.start_date))}</td>
@@ -1583,6 +1643,7 @@ function renderMembers(page = 1){
     tbody.appendChild(tr);
   });
 
+  updateShowAllMemberCodesButton();
   renderMembersPagination(filtered.length);
 }
 
