@@ -60,6 +60,25 @@
 
     .login-card h2{margin:0 0 20px 0;font-size:26px;}
 
+    .invite-banner{
+      display:none;
+      margin:0 0 18px 0;
+      padding:14px 14px;
+      border-radius:12px;
+      background:rgba(37,99,235,.16);
+      border:1px solid rgba(96,165,250,.34);
+      color:#dbeafe;
+      line-height:1.45;
+      font-size:14px;
+      box-shadow:inset 0 0 18px rgba(37,99,235,.06);
+    }
+
+    .invite-banner.show{display:block;}
+
+    .invite-banner strong{
+      color:#ffffff;
+    }
+
     .field{margin-bottom:16px;}
 
     .field label{
@@ -149,7 +168,7 @@
   }
 
 }
-    
+
 @media (max-width:900px){
   .login-shell{
     margin-top:-40px !important;
@@ -178,7 +197,9 @@
     </div>
 
     <div class="login-card">
-      <h2>Sign in</h2>
+      <h2 id="loginTitle">Sign in</h2>
+
+      <div class="invite-banner" id="inviteBanner"></div>
 
       <form onsubmit="login(event)">
         <div class="field">
@@ -206,10 +227,10 @@
     Forgot Password?
   </a>
 </div>
-        
+
         <div style="text-align:center; margin-top:20px;">
           <span style="color:#9fb3c8;">Don't have an account?</span>
-          <a href="signup.html" style="color:#1ea7ff; margin-left:6px;">
+          <a id="signupLink" href="signup.html" style="color:#1ea7ff; margin-left:6px;">
             Sign Up
           </a>
         </div>
@@ -238,6 +259,14 @@ const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   }
 });
 
+const urlParams = new URLSearchParams(window.location.search);
+const inviteCodeFromUrl = String(urlParams.get("invite") || "").trim();
+const inviteEmailFromUrl = String(urlParams.get("email") || "").trim().toLowerCase();
+
+function hasInviteLink(){
+  return !!inviteCodeFromUrl;
+}
+
 function setStatus(message, type = "") {
   const box = document.getElementById("statusBox");
   box.innerText = message;
@@ -251,7 +280,59 @@ function clearStatus() {
   box.className = "status";
 }
 
-async function loadSitesForUser(userId) {
+function normalizeEmail(email){
+  return String(email || "").trim().toLowerCase();
+}
+
+function escapeText(value){
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function setupInviteUi(){
+  if(!hasInviteLink()) return;
+
+  const title = document.getElementById("loginTitle");
+  const banner = document.getElementById("inviteBanner");
+  const emailInput = document.getElementById("user");
+  const signupLink = document.getElementById("signupLink");
+
+  if(title){
+    title.innerText = "Accept Invite";
+  }
+
+  if(inviteEmailFromUrl && emailInput){
+    emailInput.value = inviteEmailFromUrl;
+  }
+
+  if(signupLink){
+    const qs = new URLSearchParams();
+    qs.set("invite", inviteCodeFromUrl);
+    if(inviteEmailFromUrl) qs.set("email", inviteEmailFromUrl);
+    signupLink.href = `signup.html?${qs.toString()}`;
+  }
+
+  if(banner){
+    const emailLine = inviteEmailFromUrl
+      ? `<br>Use <strong>${escapeText(inviteEmailFromUrl)}</strong> to sign in or create your account.`
+      : "";
+
+    banner.innerHTML = `
+      You've been invited to access a WashTrac site.
+      ${emailLine}
+      <br>After login, WashTrac will automatically link your account to the invited site.
+    `;
+    banner.className = "invite-banner show";
+  }
+}
+
+setupInviteUi();
+
+async function loadSitesFromUserSites(userId) {
   return await client
     .from("user_sites")
     .select(`
@@ -267,6 +348,210 @@ async function loadSitesForUser(userId) {
     .eq("user_id", userId);
 }
 
+async function loadSitesFromUserSiteAccess(userId) {
+  const { data, error } = await client
+    .from("user_site_access")
+    .select(`
+      site_id,
+      role,
+      sites (
+        id,
+        name,
+        organization_id
+      )
+    `)
+    .eq("user_id", userId);
+
+  if(error){
+    return { data:null, error };
+  }
+
+  const normalized = (data || [])
+    .filter(row => row && row.site_id)
+    .map(row => ({
+      site_id: row.site_id,
+      organization_id: row.sites?.organization_id || "",
+      can_view_all_sites: String(row.role || "").toLowerCase() === "owner" || String(row.role || "").toLowerCase() === "admin",
+      role: row.role || "viewer",
+      sites: row.sites || null
+    }));
+
+  return { data: normalized, error:null };
+}
+
+async function loadSitesForUser(userId) {
+  let primary = await loadSitesFromUserSites(userId);
+
+  if(!primary.error && primary.data && primary.data.length){
+    return primary;
+  }
+
+  const fallback = await loadSitesFromUserSiteAccess(userId);
+
+  if(!fallback.error && fallback.data && fallback.data.length){
+    return fallback;
+  }
+
+  if(primary.error && fallback.error){
+    return primary;
+  }
+
+  return primary;
+}
+
+function saveLoginSiteState(siteLinks){
+  const firstSite = siteLinks[0];
+  const firstSiteId = firstSite.site_id || firstSite.sites?.id || "";
+  const firstOrgId = firstSite.organization_id || firstSite.sites?.organization_id || "";
+
+  localStorage.setItem("washtracLoggedIn", "yes");
+
+  localStorage.setItem("selectedSiteId", firstSiteId);
+  localStorage.setItem("selectedOrgId", firstOrgId);
+
+  localStorage.setItem("activeSiteId", firstSiteId);
+  localStorage.setItem("washtracActiveSiteId", firstSiteId);
+  localStorage.setItem("activeOrganizationId", firstOrgId);
+
+  localStorage.setItem("canViewAllSites", firstSite.can_view_all_sites ? "true" : "false");
+  localStorage.setItem("availableSites", JSON.stringify(siteLinks));
+}
+
+async function getPendingInviteByCode(inviteCode, email){
+  let query = client
+    .from("site_invites")
+    .select("*")
+    .eq("invite_code", inviteCode)
+    .is("accepted_at", null)
+    .limit(1);
+
+  if(email){
+    query = query.eq("email", normalizeEmail(email));
+  }
+
+  const { data, error } = await query;
+
+  if(error){
+    return { invite:null, error };
+  }
+
+  return { invite:(data && data.length ? data[0] : null), error:null };
+}
+
+async function acceptInviteForUser(user){
+  if(!hasInviteLink()){
+    return { accepted:false, skipped:true };
+  }
+
+  if(!user?.id){
+    return { accepted:false, skipped:false, error:"No logged-in user found for invite." };
+  }
+
+  const loginEmail = normalizeEmail(user.email || "");
+  const invitedEmail = normalizeEmail(inviteEmailFromUrl || loginEmail);
+
+  if(inviteEmailFromUrl && loginEmail && loginEmail !== invitedEmail){
+    return {
+      accepted:false,
+      skipped:false,
+      error:`This invite was sent to ${invitedEmail}. Please sign in with that same email.`
+    };
+  }
+
+  const inviteResult = await getPendingInviteByCode(inviteCodeFromUrl, invitedEmail);
+
+  if(inviteResult.error){
+    return {
+      accepted:false,
+      skipped:false,
+      error:inviteResult.error.message || "Could not look up this invite."
+    };
+  }
+
+  const invite = inviteResult.invite;
+
+  if(!invite){
+    return {
+      accepted:false,
+      skipped:false,
+      error:"This invite was not found, already accepted, or removed."
+    };
+  }
+
+  if(invite.expires_at && new Date(invite.expires_at) < new Date()){
+    return {
+      accepted:false,
+      skipped:false,
+      error:"This invite has expired. Ask the site owner to send a new invite."
+    };
+  }
+
+  const { data: existingAccess, error: existingError } = await client
+    .from("user_site_access")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("site_id", invite.site_id)
+    .limit(1);
+
+  if(existingError){
+    return {
+      accepted:false,
+      skipped:false,
+      error:existingError.message || "Could not check existing site access."
+    };
+  }
+
+  if(!existingAccess || !existingAccess.length){
+    let accessResult = await client
+      .from("user_site_access")
+      .insert([{
+        user_id: user.id,
+        site_id: invite.site_id,
+        role: invite.role || "viewer",
+        email: normalizeEmail(user.email || invite.email)
+      }]);
+
+    if(accessResult.error && String(accessResult.error.message || "").toLowerCase().includes("email")){
+      accessResult = await client
+        .from("user_site_access")
+        .insert([{
+          user_id: user.id,
+          site_id: invite.site_id,
+          role: invite.role || "viewer"
+        }]);
+    }
+
+    if(accessResult.error){
+      return {
+        accepted:false,
+        skipped:false,
+        error:accessResult.error.message || "Could not link this invite to your account."
+      };
+    }
+  }
+
+  const { error: acceptError } = await client
+    .from("site_invites")
+    .update({
+      accepted_at: new Date().toISOString(),
+      accepted_by: user.id
+    })
+    .eq("id", invite.id);
+
+  if(acceptError){
+    return {
+      accepted:false,
+      skipped:false,
+      error:acceptError.message || "Access was linked, but the invite could not be marked accepted."
+    };
+  }
+
+  localStorage.setItem("activeSiteId", invite.site_id);
+  localStorage.setItem("selectedSiteId", invite.site_id);
+
+  return { accepted:true, invite };
+}
+
 async function restoreLoggedInUser(userId) {
   const { data: siteLinks, error } = await loadSitesForUser(userId);
 
@@ -274,13 +559,7 @@ async function restoreLoggedInUser(userId) {
     return false;
   }
 
-  const firstSite = siteLinks[0];
-
-  localStorage.setItem("washtracLoggedIn", "yes");
-  localStorage.setItem("selectedSiteId", firstSite.site_id);
-  localStorage.setItem("selectedOrgId", firstSite.organization_id);
-  localStorage.setItem("canViewAllSites", firstSite.can_view_all_sites ? "true" : "false");
-  localStorage.setItem("availableSites", JSON.stringify(siteLinks));
+  saveLoginSiteState(siteLinks);
 
   return true;
 }
@@ -291,6 +570,17 @@ async function checkExistingSession() {
     const session = data && data.session;
 
     if (session && session.user) {
+      if(hasInviteLink()){
+        setStatus("Accepting invite...", "");
+
+        const inviteResult = await acceptInviteForUser(session.user);
+
+        if(!inviteResult.accepted && !inviteResult.skipped){
+          setStatus(inviteResult.error || "Could not accept invite.", "error");
+          return;
+        }
+      }
+
       const restored = await restoreLoggedInUser(session.user.id);
 
       if (restored) {
@@ -348,7 +638,7 @@ async function forgotPassword() {
 
   setStatus("Password reset email sent. Check your inbox.", "success");
 }
-  
+
 async function login(event) {
   event.preventDefault();
   clearStatus();
@@ -358,11 +648,16 @@ async function login(event) {
   const password = document.getElementById("pass").value.trim();
 
   btn.disabled = true;
-  btn.innerText = "Logging in...";
+  btn.innerText = hasInviteLink() ? "Accepting..." : "Logging in...";
 
   try {
     if (!email || !password) {
       setStatus("Enter email and password.", "error");
+      return;
+    }
+
+    if(hasInviteLink() && inviteEmailFromUrl && normalizeEmail(email) !== inviteEmailFromUrl){
+      setStatus(`This invite was sent to ${inviteEmailFromUrl}. Please use that email.`, "error");
       return;
     }
 
@@ -377,6 +672,17 @@ async function login(event) {
     }
 
     const user = loginData.user;
+
+    if(hasInviteLink()){
+      setStatus("Login successful. Accepting invite...");
+
+      const inviteResult = await acceptInviteForUser(user);
+
+      if(!inviteResult.accepted && !inviteResult.skipped){
+        setStatus(inviteResult.error || "Could not accept invite.", "error");
+        return;
+      }
+    }
 
     let { data: siteLinks, error: siteError } = await loadSitesForUser(user.id);
 
@@ -410,15 +716,9 @@ async function login(event) {
       return;
     }
 
-    const firstSite = siteLinks[0];
+    saveLoginSiteState(siteLinks);
 
-    localStorage.setItem("washtracLoggedIn", "yes");
-    localStorage.setItem("selectedSiteId", firstSite.site_id);
-    localStorage.setItem("selectedOrgId", firstSite.organization_id);
-    localStorage.setItem("canViewAllSites", firstSite.can_view_all_sites ? "true" : "false");
-    localStorage.setItem("availableSites", JSON.stringify(siteLinks));
-
-    setStatus("Login successful.", "success");
+    setStatus(hasInviteLink() ? "Invite accepted. Opening dashboard..." : "Login successful.", "success");
     window.location.replace("dashboard.html");
 
   } finally {
