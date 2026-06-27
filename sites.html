@@ -347,6 +347,11 @@
       background:rgba(127,29,29,.24);
     }
 
+    .status.inline-status{
+      margin-top:12px;
+      margin-bottom:4px;
+    }
+
     .site-card{
       background:#0b1220;
       border:1px solid #1f2937;
@@ -1036,6 +1041,7 @@ if(!isClientLogin && !isAdminLogin){
     let userEmailLookup = {};
     let siteBayCounts = {};
     let currentDevices = [];
+    let inviteStatusBySite = {};
 
     function toggleMobileMenu(){
       const menu = document.getElementById("mobileMenu");
@@ -1109,6 +1115,35 @@ if(!isClientLogin && !isAdminLogin){
       const box = document.getElementById("siteStatus");
       box.innerText = "";
       box.className = "status";
+    }
+
+    function setInviteStatus(siteId, message, type = ""){
+      inviteStatusBySite[siteId] = { message, type };
+      const box = document.getElementById(`inviteStatus-${siteId}`);
+      if(!box) return;
+
+      box.innerText = message;
+      box.className = "status inline-status show";
+      if(type) box.classList.add(type);
+    }
+
+    function clearInviteStatus(siteId){
+      delete inviteStatusBySite[siteId];
+      const box = document.getElementById(`inviteStatus-${siteId}`);
+      if(!box) return;
+
+      box.innerText = "";
+      box.className = "status inline-status";
+    }
+
+    function renderInviteStatus(siteId){
+      const status = inviteStatusBySite[siteId];
+      const className = status?.message
+        ? `status inline-status show ${status.type || ""}`.trim()
+        : "status inline-status";
+      const message = status?.message || "";
+
+      return `<div id="inviteStatus-${escapeText(siteId)}" class="${escapeText(className)}">${escapeText(message)}</div>`;
     }
 
     function clearForm(){
@@ -1950,15 +1985,22 @@ if(!isClientLogin && !isAdminLogin){
         const manager = canManageSite(site);
 
         const invitesHtml = siteInvites.length
-          ? siteInvites.map(invite => `
-              <div class="mini-row">
-                <div class="mini-main">
-                  <strong>${escapeText(invite.email)}</strong>
-                  <div class="mini-muted">Pending invite • Code: ${escapeText(invite.invite_code || "")}</div>
+          ? siteInvites.map(invite => {
+              const canRemoveInvite = manager && invite?.id;
+
+              return `
+                <div class="mini-row">
+                  <div class="mini-main">
+                    <strong>${escapeText(invite.email)}</strong>
+                    <div class="mini-muted">Pending invite • Code: ${escapeText(invite.invite_code || "")}</div>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:8px; justify-content:flex-end;">
+                    <div class="pill yellow">${escapeText(invite.role || "viewer")}</div>
+                    ${canRemoveInvite ? `<button class="danger" style="padding:7px 10px; font-size:12px;" onclick="removePendingInvite('${escapeText(site.id)}','${escapeText(invite.id)}')">Remove</button>` : ""}
+                  </div>
                 </div>
-                <div class="pill yellow">${escapeText(invite.role || "viewer")}</div>
-              </div>
-            `).join("")
+              `;
+            }).join("")
           : `<div class="mini-row"><div class="mini-main"><span class="mini-muted">No pending invites.</span></div><div class="pill">0</div></div>`;
 
         const membersHtml = siteMembers.length
@@ -2067,6 +2109,8 @@ if(!isClientLogin && !isAdminLogin){
                   <button onclick="inviteUser('${escapeText(site.id)}')" ${manager ? "" : "disabled"}>Invite</button>
                 </div>
               </div>
+
+              ${renderInviteStatus(site.id)}
 
               <div class="note">
                 ${manager ? "Invited users are linked by email. If they do not have an account yet, they will be linked after signing up with that email." : "Only owner/admin users can invite others to this site."}
@@ -2343,16 +2387,16 @@ if(!isClientLogin && !isAdminLogin){
     }
 
     async function inviteUser(siteId){
-      clearStatus();
+      clearInviteStatus(siteId);
 
       const site = currentSites.find(item => item.id === siteId);
       if(!site){
-        setStatus("Site not found.", "bad");
+        setInviteStatus(siteId, "Site not found.", "bad");
         return;
       }
 
       if(!canManageSite(site)){
-        setStatus("Only owner/admin users can invite others.", "bad");
+        setInviteStatus(siteId, "Only owner/admin users can invite others.", "bad");
         return;
       }
 
@@ -2363,17 +2407,17 @@ if(!isClientLogin && !isAdminLogin){
       const role = roleSelect.value || "viewer";
 
       if(!email){
-        setStatus("Enter an email address to invite.", "bad");
+        setInviteStatus(siteId, "Enter an email address to invite.", "bad");
         return;
       }
 
       if(!isValidEmail(email)){
-        setStatus("Enter a valid email address.", "bad");
+        setInviteStatus(siteId, "Enter a valid email address.", "bad");
         return;
       }
 
       if(email === normalizeEmail(currentUser.email)){
-        setStatus("You already have access to this site.", "bad");
+        setInviteStatus(siteId, "You already have access to this site.", "bad");
         return;
       }
 
@@ -2382,7 +2426,7 @@ if(!isClientLogin && !isAdminLogin){
       );
 
       if(existingPending){
-        setStatus(`Invite already exists for ${email}. Resending email...`);
+        setInviteStatus(siteId, `Invite already exists for ${email}. Resending email...`);
 
         const resendResult = await sendSiteInviteEmail({
           email,
@@ -2392,18 +2436,18 @@ if(!isClientLogin && !isAdminLogin){
         });
 
         if(!resendResult.ok){
-          setStatus(resendResult.message || "Invite is pending, but the email could not be resent.", "bad");
+          setInviteStatus(siteId, resendResult.message || "Invite is pending, but the email could not be resent.", "bad");
           return;
         }
 
-        setStatus(`Invite email resent to ${email}.`, "good");
+        setInviteStatus(siteId, `Invite email resent to ${email}.`, "good");
         return;
       }
 
       const inviteCode = generateInviteCode();
       const expiresAt = addDays(new Date(), 14).toISOString();
 
-      setStatus(`Saving invite for ${email}...`);
+      setInviteStatus(siteId, `Saving invite for ${email}...`);
 
       const { error } = await client
         .from("site_invites")
@@ -2418,11 +2462,11 @@ if(!isClientLogin && !isAdminLogin){
 
       if(error){
         console.log("Invite insert error:", error);
-        setStatus("Could not create invite. Make sure the site_invites table exists.", "bad");
+        setInviteStatus(siteId, "Could not create invite. Make sure the site_invites table exists.", "bad");
         return;
       }
 
-      setStatus(`Invite saved. Sending email to ${email}...`);
+      setInviteStatus(siteId, `Invite saved. Sending email to ${email}...`);
 
       const emailResult = await sendSiteInviteEmail({
         email,
@@ -2433,7 +2477,7 @@ if(!isClientLogin && !isAdminLogin){
 
       if(!emailResult.ok){
         console.log("Invite saved but email failed:", emailResult);
-        setStatus(emailResult.message || `Invite saved for ${email}, but email failed.`, "bad");
+        setInviteStatus(siteId, emailResult.message || `Invite saved for ${email}, but email failed.`, "bad");
         await loadSites();
         return;
       }
@@ -2441,7 +2485,55 @@ if(!isClientLogin && !isAdminLogin){
       emailInput.value = "";
       roleSelect.value = "viewer";
 
-      setStatus(`Invite sent to ${email}.`, "good");
+      setInviteStatus(siteId, `Invite sent to ${email}.`, "good");
+      await loadSites();
+    }
+
+    async function removePendingInvite(siteId, inviteId){
+      clearInviteStatus(siteId);
+
+      const site = currentSites.find(item => item.id === siteId);
+      if(!site){
+        setInviteStatus(siteId, "Site not found.", "bad");
+        return;
+      }
+
+      if(!canManageSite(site)){
+        setInviteStatus(siteId, "Only owner/admin users can remove pending invites.", "bad");
+        return;
+      }
+
+      if(!inviteId){
+        setInviteStatus(siteId, "Pending invite not found. Reload the page and try again.", "bad");
+        return;
+      }
+
+      const invite = pendingInvites.find(row => row.id === inviteId && row.site_id === siteId);
+      if(!invite){
+        setInviteStatus(siteId, "Pending invite not found. Reload the page and try again.", "bad");
+        return;
+      }
+
+      const confirmed = confirm(
+        `Remove pending invite for ${invite.email}?\n\nSite: ${siteLabel(site)}\nRole: ${invite.role || "viewer"}\nCode: ${invite.invite_code || ""}`
+      );
+
+      if(!confirmed) return;
+
+      const { error } = await client
+        .from("site_invites")
+        .delete()
+        .eq("id", inviteId)
+        .eq("site_id", siteId)
+        .is("accepted_at", null);
+
+      if(error){
+        console.log("Remove pending invite error:", error);
+        setInviteStatus(siteId, "Could not remove pending invite: " + error.message, "bad");
+        return;
+      }
+
+      setInviteStatus(siteId, `Pending invite removed for ${invite.email}.`, "good");
       await loadSites();
     }
 
