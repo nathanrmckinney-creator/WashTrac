@@ -518,57 +518,58 @@
 
     .control-status.show{display:block}
 
+
     .schedule-control-panel{
-      margin-top:18px;
+      margin-top:16px;
       padding:16px;
       border-radius:12px;
-      background:
-        linear-gradient(180deg,rgba(2,6,23,.50),rgba(2,6,23,.22)),
-        radial-gradient(circle at 50% 0%,rgba(56,189,248,.09),transparent 42%);
-      border:1px solid rgba(148,163,184,.16);
+      background:linear-gradient(145deg,#0b1220,#06101d);
+      border:1px solid rgba(37,99,235,.22);
+      box-shadow:inset 0 0 16px rgba(37,99,235,.045);
     }
 
-    .schedule-control-title{
-      font-weight:900;
+    .schedule-control-panel h4{
+      margin:0 0 8px 0;
+      font-size:17px;
       color:#eaf4ff;
-      margin-bottom:6px;
+      font-family:Arial Black,Arial,Helvetica,sans-serif;
       letter-spacing:.25px;
     }
 
-    .schedule-control-subtitle{
+    .schedule-control-panel p{
+      margin:0 0 14px 0;
       color:#94a3b8;
       font-size:14px;
-      line-height:1.45;
-      margin-bottom:12px;
+      line-height:1.5;
     }
 
-    .schedule-status-message{
-      display:block;
+    .schedule-status-box{
       margin-top:12px;
       padding:12px 14px;
       border-radius:8px;
+      font-weight:800;
+      line-height:1.45;
       background:#0b1220;
       border:1px solid #1f2937;
       color:#cbd5e1;
-      line-height:1.45;
     }
 
-    .schedule-status-message.enabled{
-      border-color:rgba(34,197,94,.35);
+    .schedule-status-box.on{
+      background:rgba(20,83,45,.24);
+      border-color:rgba(34,197,94,.38);
       color:#bbf7d0;
-      background:rgba(20,83,45,.18);
     }
 
-    .schedule-status-message.disabled{
-      border-color:rgba(239,68,68,.35);
+    .schedule-status-box.off{
+      background:rgba(51,65,85,.25);
+      border-color:rgba(148,163,184,.24);
+      color:#cbd5e1;
+    }
+
+    .schedule-status-box.blocking{
+      background:rgba(127,29,29,.28);
+      border-color:rgba(239,68,68,.40);
       color:#fecaca;
-      background:rgba(127,29,29,.18);
-    }
-
-    .schedule-status-message.blocking{
-      border-color:rgba(245,158,11,.40);
-      color:#fde68a;
-      background:rgba(120,53,15,.22);
     }
 
     .bay-editor-grid{
@@ -1495,18 +1496,18 @@
         </div>
 
         <div class="schedule-control-panel">
-          <div class="schedule-control-title">Automatic Schedule Control</div>
-          <div class="schedule-control-subtitle">
+          <h4>Automatic Schedule Control</h4>
+          <p>
             Use these buttons to turn the automatic after-hours schedule on or off. The status below confirms whether the schedule is enabled and whether it is blocking washes right now.
-          </div>
+          </p>
 
-          <div class="controls">
+          <div class="controls" style="margin-top:0;">
             <button id="enableScheduleBtn" class="success" type="button" onclick="setLockoutScheduleEnabled(true)">Enable Schedule</button>
             <button id="disableScheduleBtn" class="danger" type="button" onclick="setLockoutScheduleEnabled(false)">Disable Schedule</button>
           </div>
 
-          <div id="scheduleStatusMessage" class="schedule-status-message disabled">
-            Schedule Disabled — Not blocking right now.
+          <div id="scheduleControlStatus" class="schedule-status-box off">
+            Schedule status loading...
           </div>
         </div>
 
@@ -1577,7 +1578,7 @@
         </div>
 
         <div class="controls">
-          <button onclick="saveSchedule()">Save Schedule Times / Days</button>
+          <button onclick="saveSchedule()">Save Lockout Schedule</button>
         </div>
 
         <div id="controlStatus" class="control-status"></div>
@@ -1649,7 +1650,6 @@
     let currentCostPerCar = 0;
     let currentDepartmentCosts = {};
     let currentBillingDepartments = [];
-    let currentLockoutScheduleEnabled = false;
 
     const DASHBOARD_REFRESH_DELAY_MS = 1200;
     const DASHBOARD_POLL_MS = 25000;
@@ -2593,6 +2593,7 @@ async function deleteDepartment(){
     }
 
     function isFullDayLockoutActive(control){
+      if(!control || !control.lockout_enabled) return false;
       const fullDayDays = safeJsonArray(control.full_day_lockout_days);
       return fullDayDays.includes(dayKey());
     }
@@ -3278,71 +3279,46 @@ async function deleteDepartment(){
       });
     }
 
-    function renderLockoutScheduleStatus(control){
-      const enabledBtn = document.getElementById("enableScheduleBtn");
-      const disabledBtn = document.getElementById("disableScheduleBtn");
-      const statusBox = document.getElementById("scheduleStatusMessage");
 
-      const enabled = !!control?.lockout_enabled;
-      const blockingNow = enabled && (
-        isFullDayLockoutActive(control) ||
-        isLockoutActive(control)
-      );
+    function renderScheduleControlStatus(control){
+      const box = document.getElementById("scheduleControlStatus");
+      const enableBtn = document.getElementById("enableScheduleBtn");
+      const disableBtn = document.getElementById("disableScheduleBtn");
 
-      currentLockoutScheduleEnabled = enabled;
+      if(!box) return;
 
-      if(enabledBtn) enabledBtn.disabled = enabled;
-      if(disabledBtn) disabledBtn.disabled = !enabled;
-
-      if(!statusBox) return;
-
-      statusBox.className = "schedule-status-message";
-
-      if(blockingNow){
-        statusBox.classList.add("blocking");
-        statusBox.innerText = "Schedule Enabled — Blocking washes right now.";
-      }else if(enabled){
-        statusBox.classList.add("enabled");
-        statusBox.innerText = "Schedule Enabled — Not blocking right now.";
-      }else{
-        statusBox.classList.add("disabled");
-        statusBox.innerText = "Schedule Disabled — Not blocking right now.";
-      }
-    }
-
-    async function setLockoutScheduleEnabled(enabled){
-      const activeSiteId = getActiveSiteId();
-
-      if(!controlRowId || !activeSiteId){
-        setControlStatus("System control row not found.");
+      if(!control){
+        box.className = "schedule-status-box off";
+        box.innerText = "Schedule status unavailable.";
+        if(enableBtn) enableBtn.disabled = true;
+        if(disableBtn) disableBtn.disabled = true;
         return;
       }
 
-      const { error } = await client
-        .from("site_system_control")
-        .update({
-          lockout_enabled: enabled,
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", controlRowId)
-        .eq("site_id", activeSiteId);
+      const enabled = !!control.lockout_enabled;
+      const fullDayActive = isFullDayLockoutActive(control);
+      const timedActive = isLockoutActive(control);
+      const blocking = enabled && (fullDayActive || timedActive);
 
-      if(error){
-        console.log(error);
-        setControlStatus(enabled ? "Could not enable automatic schedule." : "Could not disable automatic schedule.");
+      if(enableBtn) enableBtn.disabled = false;
+      if(disableBtn) disableBtn.disabled = false;
+
+      if(blocking){
+        box.className = "schedule-status-box blocking";
+        box.innerText = fullDayActive
+          ? "Schedule Enabled — Full-day lockout is blocking washes right now."
+          : "Schedule Enabled — Timed lockout is blocking washes right now.";
         return;
       }
 
-      currentLockoutScheduleEnabled = enabled;
-
-      if(lastGoodSystemControl){
-        lastGoodSystemControl.lockout_enabled = enabled;
-        lastGoodSystemControl.updated_at = new Date().toISOString();
-        renderLockoutScheduleStatus(lastGoodSystemControl);
+      if(enabled){
+        box.className = "schedule-status-box on";
+        box.innerText = "Schedule Enabled — Not blocking right now.";
+        return;
       }
 
-      setControlStatus(enabled ? "Automatic lockout schedule enabled." : "Automatic lockout schedule disabled.");
-      scheduleDashboardRefresh();
+      box.className = "schedule-status-box off";
+      box.innerText = "Schedule Disabled — Not blocking right now.";
     }
 
     function renderSystemControl(control, pairedDevices = []){
@@ -3378,8 +3354,7 @@ async function deleteDepartment(){
       document.getElementById("lockoutPill").innerText = control.lockout_enabled ? "Schedule Enabled" : "No Schedule";
 
       document.getElementById("lockoutWindow").innerText = `${control.lockout_start || "--:--"} to ${control.lockout_end || "--:--"}`;
-      currentLockoutScheduleEnabled = !!control.lockout_enabled;
-      renderLockoutScheduleStatus(control);
+      renderScheduleControlStatus(control);
       document.getElementById("lockoutStart").value = control.lockout_start || "";
       document.getElementById("lockoutEnd").value = control.lockout_end || "";
 
@@ -3472,6 +3447,61 @@ async function deleteDepartment(){
       scheduleDashboardRefresh();
     }
 
+
+    async function setLockoutScheduleEnabled(enabled){
+      const activeSiteId = getActiveSiteId();
+
+      if(!controlRowId || !activeSiteId){
+        setControlStatus("System control row not found.");
+        return;
+      }
+
+      const lockout_start = document.getElementById("lockoutStart").value || null;
+      const lockout_end = document.getElementById("lockoutEnd").value || null;
+      const selectedTimedDays = getSelectedLockoutDays();
+      const selectedFullDayDays = getSelectedFullDayLockoutDays();
+
+      const payload = enabled
+        ? {
+            lockout_enabled: true,
+            lockout_start,
+            lockout_end,
+            lockout_days: selectedTimedDays,
+            full_day_lockout_days: selectedFullDayDays,
+            updated_at: new Date().toISOString()
+          }
+        : {
+            lockout_enabled: false,
+            /*
+              Clear the day arrays when disabling so the Keypad cannot keep enforcing
+              a stale full-day/timed lockout from a previous schedule save.
+            */
+            lockout_days: [],
+            full_day_lockout_days: [],
+            updated_at: new Date().toISOString()
+          };
+
+      const { error } = await client
+        .from("site_system_control")
+        .update(payload)
+        .eq("id", controlRowId)
+        .eq("site_id", activeSiteId);
+
+      if(error){
+        console.log(error);
+        setControlStatus(enabled ? "Could not enable lockout schedule." : "Could not disable lockout schedule.");
+        return;
+      }
+
+      if(!enabled){
+        setSelectedLockoutDays([]);
+        setSelectedFullDayLockoutDays([]);
+      }
+
+      setControlStatus(enabled ? "Automatic lockout schedule enabled." : "Automatic lockout schedule disabled.");
+      scheduleDashboardRefresh(500);
+    }
+
     async function saveSchedule(){
       const activeSiteId = getActiveSiteId();
 
@@ -3480,7 +3510,7 @@ async function deleteDepartment(){
         return;
       }
 
-      const lockout_enabled = currentLockoutScheduleEnabled;
+      const lockout_enabled = !!lastGoodSystemControl?.lockout_enabled;
       const lockout_start = document.getElementById("lockoutStart").value || null;
       const lockout_end = document.getElementById("lockoutEnd").value || null;
       const lockout_days = getSelectedLockoutDays();
@@ -3505,7 +3535,7 @@ async function deleteDepartment(){
         return;
       }
 
-      setControlStatus("Lockout schedule saved.");
+      setControlStatus(lockout_enabled ? "Lockout schedule saved and remains enabled." : "Lockout schedule saved. Schedule is still disabled until you press Enable Schedule.");
       scheduleDashboardRefresh();
     }
 
