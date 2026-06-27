@@ -5,229 +5,218 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
   <style>
-    * {
-      box-sizing: border-box;
+    *{box-sizing:border-box;}
+
+    body{
+      margin:0;
+      font-family:Arial,sans-serif;
+      background:
+        radial-gradient(
+          circle at 0% 0%,
+          rgba(37,99,235,.28) 0%,
+          rgba(37,99,235,.18) 15%,
+          rgba(37,99,235,.08) 28%,
+          transparent 42%
+        ),
+        linear-gradient(180deg,#000814 0%,#06142d 100%);
+      color:white;
+      min-height:100vh;
+      overflow:hidden;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+      padding-top:70px;
     }
 
- body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background:
-    radial-gradient(
-      circle at 0% 0%,
-      rgba(37, 99, 235, 0.28) 0%,
-      rgba(37, 99, 235, 0.18) 15%,
-      rgba(37, 99, 235, 0.08) 28%,
-      transparent 42%
-    ),
-    linear-gradient(180deg, #000814 0%, #06142d 100%);
-  color: white;
-  min-height: 100vh;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding-top: 70px;
-}
-
-    .page {
-      width: 450px;
-      text-align: center;
-      position: relative;
-      margin-top: -33px;
+    .page{
+      width:450px;
+      text-align:center;
+      position:relative;
+      margin-top:-33px;
     }
 
-    .logo-wrap {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 18px;
+    .logo-wrap{
+      display:flex;
+      justify-content:center;
+      margin-bottom:18px;
     }
 
-    .logo-image {
-      width: 300px;
-      height: auto;
-      display: block;
+    .logo-image{
+      width:300px;
+      height:auto;
+      display:block;
     }
 
-    .card {
-      background: rgba(15, 25, 42, 0.95);
-      border: 1px solid rgba(159, 179, 200, 0.14);
-      border-radius: 16px;
-      padding: 16px 30px 18px;
-      text-align: left;
-      box-shadow: 0 0 35px rgba(0,0,0,0.25);
+    .card{
+      background:rgba(15,25,42,.95);
+      border:1px solid rgba(159,179,200,.14);
+      border-radius:16px;
+      padding:16px 30px 18px;
+      text-align:left;
+      box-shadow:0 0 35px rgba(0,0,0,.25);
     }
 
-    h2 {
-      margin: 0 0 22px;
-      font-size: 30px;
-      line-height: 1;
-      font-weight: 800;
-      color: #ffffff;
+    h2{
+      margin:0 0 22px;
+      font-size:30px;
+      line-height:1;
+      font-weight:800;
+      color:#ffffff;
     }
 
-    .field {
-      margin-bottom: 14px;
+    .invite-banner{
+      display:none;
+      margin:0 0 18px;
+      padding:13px 14px;
+      border-radius:12px;
+      border:1px solid rgba(96,165,250,.35);
+      background:rgba(37,99,235,.16);
+      color:#dbeafe;
+      line-height:1.45;
+      font-size:14px;
     }
 
-    label {
-      display: block;
-      font-size: 15px;
-      font-weight: 700;
-      color: #ffffff;
-      margin-bottom: 8px;
+    .invite-banner strong{
+      color:#ffffff;
     }
 
-    input {
-      width: 100%;
-      height: 50px;
-      border-radius: 10px;
-      border: 1px solid rgba(159, 179, 200, 0.28);
-      background: #071226;
-      color: white;
-      font-size: 16px;
-      padding: 0 14px;
-      outline: none;
+    .field{
+      margin-bottom:14px;
     }
 
-    input::placeholder {
-      color: #7f93b0;
+    label{
+      display:block;
+      font-size:15px;
+      font-weight:700;
+      color:#ffffff;
+      margin-bottom:8px;
     }
 
-    input:focus {
-      border-color: #1ea7ff;
-      box-shadow: 0 0 0 2px rgba(30,167,255,0.12);
+    input{
+      width:100%;
+      height:50px;
+      border-radius:10px;
+      border:1px solid rgba(159,179,200,.28);
+      background:#071226;
+      color:white;
+      font-size:16px;
+      padding:0 14px;
+      outline:none;
     }
 
-    .login-btn {
-      width: 100%;
-      height: 50px;
-      border: none;
-      border-radius: 10px;
-      background: #3167e8;
-      color: white;
-      font-size: 16px;
-      font-weight: 800;
-      cursor: pointer;
-      margin-top: 2px;
+    input::placeholder{color:#7f93b0;}
+
+    input:focus{
+      border-color:#1ea7ff;
+      box-shadow:0 0 0 2px rgba(30,167,255,.12);
     }
 
-    .login-btn:hover {
-      opacity: 0.95;
+    .login-btn{
+      width:100%;
+      height:50px;
+      border:none;
+      border-radius:10px;
+      background:#3167e8;
+      color:white;
+      font-size:16px;
+      font-weight:800;
+      cursor:pointer;
+      margin-top:2px;
     }
 
-    .home-btn {
-      width: 100%;
-      height: 48px;
-      border: none;
-      border-radius: 10px;
-      background: #3b4b63;
-      color: white;
-      font-size: 16px;
-      font-weight: 800;
-      cursor: pointer;
-      margin-top: 14px;
+    .login-btn:hover{opacity:.95;}
+    .login-btn:disabled{opacity:.7;cursor:not-allowed;}
+
+    .home-btn{
+      width:100%;
+      height:48px;
+      border:none;
+      border-radius:10px;
+      background:#3b4b63;
+      color:white;
+      font-size:16px;
+      font-weight:800;
+      cursor:pointer;
+      margin-top:14px;
     }
 
-    .link {
-      text-align: center;
-      margin-top: 16px;
-      color: #9fb3c8;
-      font-size: 16px;
+    .link{
+      text-align:center;
+      margin-top:16px;
+      color:#9fb3c8;
+      font-size:16px;
     }
 
-    .link a {
-      color: #1ea7ff;
-      text-decoration: none;
-      margin-left: 4px;
+    .link a{
+      color:#1ea7ff;
+      text-decoration:none;
+      margin-left:4px;
     }
 
-    .status {
-      text-align: center;
-      margin-top: 12px;
-      min-height: 18px;
-      font-size: 14px;
-      color: #9fb3c8;
+    .status{
+      text-align:center;
+      margin-top:12px;
+      min-height:18px;
+      font-size:14px;
+      color:#9fb3c8;
+      line-height:1.4;
     }
 
-    .error {
-      color: #ef4444;
-    }
+    .error{color:#ef4444;}
+    .success{color:#22c55e;}
 
-    .success {
-      color: #22c55e;
-    }
+    @media (orientation:landscape) and (max-height:700px){
+      body{padding-top:28px;}
 
-@media (orientation: landscape) and (max-height: 700px) {
-  body {
-    padding-top: 28px;
-  }
-
-  .page {
-    margin-top: -75px;
-    transform: scale(0.85);  
-  }
-
-  .logo-wrap {
-    margin-bottom: 8px;
-  }
-
-  .logo-image {
-    width: 270px;
-  }
-
-  .card {
-    padding: 14px 28px 16px;
-  }
-}
-    
-    @media (max-width: 900px) {
-      body {
-        overflow: auto;
-        padding: 0px 8px 12px;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
+      .page{
+        margin-top:-75px;
+        transform:scale(.85);
       }
 
-      .logo-wrap {
-        position: static;
-        display: flex;
-        justify-content: center;
-        margin-bottom: 8px;
+      .logo-wrap{margin-bottom:8px;}
+      .logo-image{width:270px;}
+      .card{padding:14px 28px 16px;}
+    }
+
+    @media (max-width:900px){
+      body{
+        overflow:auto;
+        padding:0px 8px 12px;
+        flex-direction:column;
+        align-items:center;
+        justify-content:flex-start;
       }
 
-      .logo-image {
-        width: 240px;
+      .logo-wrap{
+        position:static;
+        display:flex;
+        justify-content:center;
+        margin-bottom:8px;
       }
 
-      .page {
-  width: 100%;
-  max-width: 450px;
-  margin: 0 auto;
-}
+      .logo-image{width:240px;}
 
-      .card {
-        padding: 20px 22px 22px;
+      .page{
+        width:100%;
+        max-width:450px;
+        margin:0 auto;
       }
+
+      .card{padding:20px 22px 22px;}
     }
   </style>
 </head>
 
 <body>
-
   <div class="page">
-
     <div class="logo-wrap">
-      <img
-        src="washtrac-logo.png"
-        alt="WashTrac"
-        class="logo-image"
-      >
+      <img src="washtrac-logo.png" alt="WashTrac" class="logo-image">
     </div>
 
     <div class="card">
-      <h2>Create Account</h2>
+      <h2 id="pageTitle">Create Account</h2>
+
+      <div id="inviteBanner" class="invite-banner"></div>
 
       <form onsubmit="signup(event)">
         <div class="field">
@@ -237,84 +226,263 @@
 
         <div class="field">
           <label>Password</label>
-          <input id="password" type="password" placeholder="Enter password" required>
+          <input id="password" type="password" placeholder="Create password" required>
         </div>
 
-        <div class="field">
+        <div class="field setup-field">
           <label>Company Name</label>
-          <input id="orgName" type="text" placeholder="Enter company name" required>
+          <input id="orgName" type="text" placeholder="Enter company name">
         </div>
 
-        <div class="field">
+        <div class="field setup-field">
           <label>Site Name</label>
-          <input id="siteName" type="text" placeholder="Example: Main Wash" required>
+          <input id="siteName" type="text" placeholder="Example: Main Wash">
         </div>
 
         <button id="signupBtn" type="submit" class="login-btn">Create Account</button>
       </form>
 
       <div class="link">
-        Already have an account? <a href="login.html">Login</a>
+        Already have an account? <a id="loginLink" href="login.html">Login</a>
       </div>
 
       <button class="home-btn" onclick="window.location.href='index.html'">Back to Homepage</button>
 
       <div class="status" id="statusBox"></div>
     </div>
-
   </div>
 
 <script>
 const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
 const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 
-const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth:{
+    persistSession:true,
+    autoRefreshToken:true,
+    detectSessionInUrl:true,
+    storage:window.localStorage
+  }
+});
 
-async function signup(event) {
+const params = new URLSearchParams(window.location.search);
+const inviteCode = params.get("invite") || "";
+const inviteEmail = params.get("email") || "";
+const isInviteSignup = !!inviteCode;
+
+function normalizeEmail(email){
+  return String(email || "").trim().toLowerCase();
+}
+
+function setStatus(message, type = ""){
+  const statusBox = document.getElementById("statusBox");
+  statusBox.className = "status" + (type ? " " + type : "");
+  statusBox.innerText = message;
+}
+
+function setupInviteMode(){
+  const emailInput = document.getElementById("email");
+  const orgInput = document.getElementById("orgName");
+  const siteInput = document.getElementById("siteName");
+  const banner = document.getElementById("inviteBanner");
+  const title = document.getElementById("pageTitle");
+  const signupBtn = document.getElementById("signupBtn");
+  const loginLink = document.getElementById("loginLink");
+
+  if(inviteEmail){
+    emailInput.value = normalizeEmail(inviteEmail);
+  }
+
+  if(isInviteSignup){
+    title.innerText = "Create Invited Account";
+    signupBtn.innerText = "Create Account & Accept Invite";
+
+    banner.style.display = "block";
+    banner.innerHTML = `
+      <strong>You have been invited to WashTrac.</strong><br>
+      Create a password below using the same email address this invite was sent to.
+      After your email is confirmed, log in and WashTrac will automatically link your site access.
+    `;
+
+    document.querySelectorAll(".setup-field").forEach(field => {
+      field.style.display = "none";
+    });
+
+    orgInput.required = false;
+    siteInput.required = false;
+
+    loginLink.href =
+      "login.html?invite=" +
+      encodeURIComponent(inviteCode) +
+      "&email=" +
+      encodeURIComponent(inviteEmail || "");
+  }else{
+    orgInput.required = true;
+    siteInput.required = true;
+  }
+}
+
+async function acceptInviteForUser(user){
+  if(!user || !inviteCode) return { ok:false, skipped:true };
+
+  const invitedEmail = normalizeEmail(inviteEmail || user.email);
+
+  const { data: invite, error: inviteError } = await client
+    .from("site_invites")
+    .select("*")
+    .eq("invite_code", inviteCode)
+    .eq("email", invitedEmail)
+    .is("accepted_at", null)
+    .maybeSingle();
+
+  if(inviteError){
+    return { ok:false, message:inviteError.message };
+  }
+
+  if(!invite){
+    return { ok:false, message:"Invite not found or already accepted." };
+  }
+
+  if(invite.expires_at && new Date(invite.expires_at) < new Date()){
+    return { ok:false, message:"This invite has expired." };
+  }
+
+  const { data: existingAccess, error: existingError } = await client
+    .from("user_site_access")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("site_id", invite.site_id)
+    .limit(1);
+
+  if(existingError){
+    return { ok:false, message:existingError.message };
+  }
+
+  if(!existingAccess || !existingAccess.length){
+    let accessResult = await client
+      .from("user_site_access")
+      .insert([{
+        user_id:user.id,
+        site_id:invite.site_id,
+        role:invite.role || "viewer",
+        email:invitedEmail
+      }]);
+
+    if(accessResult.error && String(accessResult.error.message || "").toLowerCase().includes("email")){
+      accessResult = await client
+        .from("user_site_access")
+        .insert([{
+          user_id:user.id,
+          site_id:invite.site_id,
+          role:invite.role || "viewer"
+        }]);
+    }
+
+    if(accessResult.error){
+      return { ok:false, message:accessResult.error.message };
+    }
+  }
+
+  const { error: acceptError } = await client
+    .from("site_invites")
+    .update({
+      accepted_at:new Date().toISOString(),
+      accepted_by:user.id
+    })
+    .eq("id", invite.id);
+
+  if(acceptError){
+    return { ok:false, message:acceptError.message };
+  }
+
+  localStorage.setItem("washtracLoggedIn", "yes");
+  localStorage.setItem("activeSiteId", invite.site_id);
+  localStorage.setItem("selectedSiteId", invite.site_id);
+
+  return { ok:true, site_id:invite.site_id };
+}
+
+async function signup(event){
   event.preventDefault();
 
   const btn = document.getElementById("signupBtn");
-  const email = document.getElementById("email").value.trim();
+  const email = normalizeEmail(document.getElementById("email").value);
   const password = document.getElementById("password").value.trim();
   const orgName = document.getElementById("orgName").value.trim();
   const siteName = document.getElementById("siteName").value.trim();
-  const statusBox = document.getElementById("statusBox");
 
   btn.disabled = true;
-  btn.innerText = "Creating...";
+  btn.innerText = isInviteSignup ? "Creating..." : "Creating...";
+  setStatus("Creating account...");
 
-  statusBox.className = "status";
-  statusBox.innerText = "Creating account...";
-
-  try {
-    if (!email || !password || !orgName || !siteName) {
-      statusBox.className = "status error";
-      statusBox.innerText = "Please fill out all fields.";
+  try{
+    if(!email || !password){
+      setStatus("Enter email and password.", "error");
       return;
     }
 
-    localStorage.setItem("pendingOrgName", orgName);
-    localStorage.setItem("pendingSiteName", siteName);
+    if(isInviteSignup && inviteEmail && email !== normalizeEmail(inviteEmail)){
+      setStatus("Use the same email address this invitation was sent to.", "error");
+      return;
+    }
 
-    const { error } = await client.auth.signUp({
-      email: email,
-      password: password
+    if(!isInviteSignup && (!orgName || !siteName)){
+      setStatus("Please fill out all fields.", "error");
+      return;
+    }
+
+    if(isInviteSignup){
+      localStorage.setItem("pendingInviteCode", inviteCode);
+      localStorage.setItem("pendingInviteEmail", email);
+    }else{
+      localStorage.setItem("pendingOrgName", orgName);
+      localStorage.setItem("pendingSiteName", siteName);
+    }
+
+    const redirectTo = isInviteSignup
+      ? `https://thewashtrac.com/login.html?invite=${encodeURIComponent(inviteCode)}&email=${encodeURIComponent(email)}`
+      : "https://thewashtrac.com/login.html";
+
+    const { data, error } = await client.auth.signUp({
+      email,
+      password,
+      options:{
+        emailRedirectTo:redirectTo
+      }
     });
 
-    if (error) {
-      statusBox.className = "status error";
-      statusBox.innerText = error.message;
+    if(error){
+      setStatus(error.message, "error");
       return;
     }
 
-    statusBox.className = "status success";
-    statusBox.innerText = "Account created. Check your email, confirm it, then login.";
+    if(data?.session && data?.user && isInviteSignup){
+      setStatus("Account created. Accepting invite...", "success");
 
-  } finally {
+      const accepted = await acceptInviteForUser(data.user);
+
+      if(!accepted.ok){
+        setStatus(accepted.message || "Account created, but invite could not be accepted yet. Please log in.", "error");
+        return;
+      }
+
+      window.location.replace("dashboard.html");
+      return;
+    }
+
+    if(isInviteSignup){
+      setStatus("Account created. Check your email to confirm it, then log in using this same invite link.", "success");
+    }else{
+      setStatus("Account created. Check your email, confirm it, then login.", "success");
+    }
+
+  }finally{
     btn.disabled = false;
-    btn.innerText = "Create Account";
+    btn.innerText = isInviteSignup ? "Create Account & Accept Invite" : "Create Account";
   }
 }
+
+setupInviteMode();
 </script>
 
 </body>
