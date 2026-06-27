@@ -946,7 +946,7 @@ document.addEventListener("DOMContentLoaded", function(){
     <div class="summary">
       <div class="summary-box"><strong id="totalCodes">0</strong><span>Total Codes</span></div>
       <div class="summary-box"><strong id="activeDepartments">0</strong><span>Departments</span></div>
-      <div class="summary-box"><strong id="topUsedCode">-</strong><span>Top Used Code</span></div>
+      <div class="summary-box"><strong id="topUsedCode">0</strong><span>Codes Entered Today</span></div>
       <div class="summary-box"><strong id="totalUses">0</strong><span>Total Uses</span></div>
     </div>
 
@@ -1915,8 +1915,19 @@ function renderSummary(){
   const totalUses = codeUsage.reduce((sum, item) => sum + Number(item.uses || 0), 0);
   document.getElementById("totalUses").innerText = totalUses;
 
-  const top = [...codeUsage].sort((a,b) => Number(b.uses || 0) - Number(a.uses || 0))[0];
-  document.getElementById("topUsedCode").innerText = top && top.uses > 0 ? "XXXX" : "-";
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const codesToday = allActivity.filter(row => {
+    if(!isGrantedActivity(row)) return false;
+
+    const dt = new Date(row.event_time);
+    if(isNaN(dt)) return false;
+
+    return dt >= today;
+  }).length;
+
+  document.getElementById("topUsedCode").innerText = codesToday;
 }
 
 function escapeText(value){
