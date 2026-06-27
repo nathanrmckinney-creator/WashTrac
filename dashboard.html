@@ -1579,6 +1579,7 @@
 
         <div class="controls">
           <button onclick="saveSchedule()">Save Lockout Schedule</button>
+          <button class="secondary" type="button" onclick="clearSchedule()">Clear Schedule</button>
         </div>
 
         <div id="controlStatus" class="control-status"></div>
@@ -3456,34 +3457,17 @@ async function deleteDepartment(){
         return;
       }
 
-      const lockout_start = document.getElementById("lockoutStart").value || null;
-      const lockout_end = document.getElementById("lockoutEnd").value || null;
-      const selectedTimedDays = getSelectedLockoutDays();
-      const selectedFullDayDays = getSelectedFullDayLockoutDays();
-
-      const payload = enabled
-        ? {
-            lockout_enabled: true,
-            lockout_start,
-            lockout_end,
-            lockout_days: selectedTimedDays,
-            full_day_lockout_days: selectedFullDayDays,
-            updated_at: new Date().toISOString()
-          }
-        : {
-            lockout_enabled: false,
-            /*
-              Clear the day arrays when disabling so the Keypad cannot keep enforcing
-              a stale full-day/timed lockout from a previous schedule save.
-            */
-            lockout_days: [],
-            full_day_lockout_days: [],
-            updated_at: new Date().toISOString()
-          };
-
+      /*
+        Enable/Disable only turns the saved schedule on or off.
+        It intentionally does NOT erase the saved time/day settings.
+        Use Clear Schedule when the schedule itself should be removed.
+      */
       const { error } = await client
         .from("site_system_control")
-        .update(payload)
+        .update({
+          lockout_enabled: !!enabled,
+          updated_at: new Date().toISOString()
+        })
         .eq("id", controlRowId)
         .eq("site_id", activeSiteId);
 
@@ -3493,12 +3477,7 @@ async function deleteDepartment(){
         return;
       }
 
-      if(!enabled){
-        setSelectedLockoutDays([]);
-        setSelectedFullDayLockoutDays([]);
-      }
-
-      setControlStatus(enabled ? "Automatic lockout schedule enabled." : "Automatic lockout schedule disabled.");
+      setControlStatus(enabled ? "Automatic lockout schedule enabled." : "Automatic lockout schedule disabled. Saved schedule kept.");
       scheduleDashboardRefresh(500);
     }
 
@@ -3537,6 +3516,45 @@ async function deleteDepartment(){
 
       setControlStatus(lockout_enabled ? "Lockout schedule saved and remains enabled." : "Lockout schedule saved. Schedule is still disabled until you press Enable Schedule.");
       scheduleDashboardRefresh();
+    }
+
+    async function clearSchedule(){
+      const activeSiteId = getActiveSiteId();
+
+      if(!controlRowId || !activeSiteId){
+        setControlStatus("System control row not found.");
+        return;
+      }
+
+      const confirmed = confirm("Clear the saved lockout schedule? This will turn the automatic schedule off and remove the saved times and selected days.");
+      if(!confirmed) return;
+
+      const { error } = await client
+        .from("site_system_control")
+        .update({
+          lockout_enabled: false,
+          lockout_start: null,
+          lockout_end: null,
+          lockout_days: [],
+          full_day_lockout_days: [],
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", controlRowId)
+        .eq("site_id", activeSiteId);
+
+      if(error){
+        console.log(error);
+        setControlStatus("Could not clear lockout schedule.");
+        return;
+      }
+
+      document.getElementById("lockoutStart").value = "";
+      document.getElementById("lockoutEnd").value = "";
+      setSelectedLockoutDays([]);
+      setSelectedFullDayLockoutDays([]);
+
+      setControlStatus("Lockout schedule cleared and disabled.");
+      scheduleDashboardRefresh(500);
     }
 
     async function updateBayStatus(id, status){
