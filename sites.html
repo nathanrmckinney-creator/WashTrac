@@ -2520,19 +2520,64 @@ if(!isClientLogin && !isAdminLogin){
 
       if(!confirmed) return;
 
-      const { error } = await client
+      setInviteStatus(siteId, `Removing pending invite for ${invite.email}...`);
+
+      let removed = false;
+      let lastError = null;
+
+      const deleteResult = await client
         .from("site_invites")
         .delete()
         .eq("id", inviteId)
         .eq("site_id", siteId)
-        .is("accepted_at", null);
+        .is("accepted_at", null)
+        .select("id");
 
-      if(error){
-        console.log("Remove pending invite error:", error);
-        setInviteStatus(siteId, "Could not remove pending invite: " + error.message, "bad");
+      if(deleteResult.error){
+        console.log("Remove pending invite delete error:", deleteResult.error);
+        lastError = deleteResult.error;
+      }else if(deleteResult.data && deleteResult.data.length){
+        removed = true;
+      }
+
+      // Some Supabase policies allow UPDATE but silently block DELETE.
+      // Marking accepted_at keeps the invite from showing as pending and prevents future auto-accept.
+      if(!removed){
+        const updatePayload = {
+          accepted_at: new Date().toISOString()
+        };
+
+        if(currentUser?.id && !currentUser.is_admin_session){
+          updatePayload.accepted_by = currentUser.id;
+        }
+
+        const updateResult = await client
+          .from("site_invites")
+          .update(updatePayload)
+          .eq("id", inviteId)
+          .eq("site_id", siteId)
+          .is("accepted_at", null)
+          .select("id");
+
+        if(updateResult.error){
+          console.log("Remove pending invite fallback update error:", updateResult.error);
+          lastError = updateResult.error;
+        }else if(updateResult.data && updateResult.data.length){
+          removed = true;
+        }
+      }
+
+      if(!removed){
+        setInviteStatus(
+          siteId,
+          "Could not remove pending invite" + (lastError?.message ? ": " + lastError.message : ". Check site_invites delete/update policy."),
+          "bad"
+        );
+        await loadSites();
         return;
       }
 
+      pendingInvites = pendingInvites.filter(row => !(row.id === inviteId && row.site_id === siteId));
       setInviteStatus(siteId, `Pending invite removed for ${invite.email}.`, "good");
       await loadSites();
     }
