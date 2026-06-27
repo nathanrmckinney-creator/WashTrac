@@ -522,7 +522,7 @@ document.addEventListener("DOMContentLoaded", function(){
     <div class="summary">
       <div class="summary-box"><strong id="totalUses">0</strong><span>Total Uses</span></div>
       <div class="summary-box"><strong id="totalCodes">0</strong><span>Total Codes</span></div>
-      <div class="summary-box"><strong id="topCode">-</strong><span>Top Code</span></div>
+      <div class="summary-box"><strong id="codesToday">0</strong><span>Codes Entered Today</span></div>
       <div class="summary-box"><strong id="topDept">-</strong><span>Top Department</span></div>
     </div>
 
@@ -1793,7 +1793,7 @@ async function loadUsage(){
 
       document.getElementById("totalUses").innerText = "0";
       document.getElementById("totalCodes").innerText = "0";
-      document.getElementById("topCode").innerText = "-";
+      document.getElementById("codesToday").innerText = "0";
       document.getElementById("topDept").innerText = "-";
 
       renderDepartmentChart([]);
@@ -1910,7 +1910,9 @@ const uses = rows
     cachedCodes = codeArray;
 
     document.getElementById("totalCodes").innerText = codeArray.length;
-    document.getElementById("topCode").innerText = codeArray.length ? codeArray[0].code : "-";
+    const todayStart=new Date(); todayStart.setHours(0,0,0,0);
+    const codesToday=uses.filter(u=>u.last_used && new Date(u.last_used)>=todayStart).length;
+    document.getElementById("codesToday").innerText=codesToday;
 
     const deptArray = getDepartmentDataFromUses(uses);
     cachedDepartmentData = deptArray;
