@@ -1685,16 +1685,29 @@ if(!isClientLogin && !isAdminLogin){
         }
 
         if(!existingAccess || !existingAccess.length){
-          const { error: accessError } = await client
+          let accessResult = await client
             .from("user_site_access")
             .insert([{
               user_id: currentUser.id,
               site_id: invite.site_id,
-              role: invite.role || "viewer"
+              role: invite.role || "viewer",
+              email: normalizeEmail(currentUser.email || invite.email)
             }]);
 
-          if(accessError){
-            console.log("Accept invite access insert error:", accessError);
+          // If the email column has not been added yet, retry without email so invite acceptance still works.
+          if(accessResult.error && String(accessResult.error.message || "").toLowerCase().includes("email")){
+            console.log("Accept invite email column missing, retrying without email:", accessResult.error);
+            accessResult = await client
+              .from("user_site_access")
+              .insert([{
+                user_id: currentUser.id,
+                site_id: invite.site_id,
+                role: invite.role || "viewer"
+              }]);
+          }
+
+          if(accessResult.error){
+            console.log("Accept invite access insert error:", accessResult.error);
             continue;
           }
         }
@@ -1801,16 +1814,28 @@ if(!isClientLogin && !isAdminLogin){
         pendingInvites = invites || [];
       }
 
-      const { data: members, error: memberError } = await client
+      let membersResult = await client
         .from("user_site_access")
-        .select("id, user_id, site_id, role, created_at")
+        .select("id, user_id, site_id, role, email, created_at")
         .in("site_id", siteIds)
         .order("created_at", { ascending:false });
 
-      if(memberError){
-        console.log("Site members load error:", memberError);
+      // If the email column has not been added yet, fall back gracefully.
+      // Run this SQL once for best results:
+      // alter table user_site_access add column if not exists email text;
+      if(membersResult.error && String(membersResult.error.message || "").toLowerCase().includes("email")){
+        console.log("Site members email column missing, falling back to user_id display:", membersResult.error);
+        membersResult = await client
+          .from("user_site_access")
+          .select("id, user_id, site_id, role, created_at")
+          .in("site_id", siteIds)
+          .order("created_at", { ascending:false });
+      }
+
+      if(membersResult.error){
+        console.log("Site members load error:", membersResult.error);
       }else{
-        acceptedMembers = dedupeMembersBySiteAndUser(members || []);
+        acceptedMembers = dedupeMembersBySiteAndUser(membersResult.data || []);
       }
 
       const { data: acceptedInviteRows, error: acceptedInviteError } = await client
@@ -1881,13 +1906,15 @@ if(!isClientLogin && !isAdminLogin){
 
     function getMemberDisplay(member){
       const userId = String(member?.user_id || "");
-      const email = userEmailLookup[userId] || "";
+      const rowEmail = normalizeEmail(member?.email);
+      const lookupEmail = userEmailLookup[userId] || "";
+      const email = rowEmail || lookupEmail || "";
       const isCurrentUser = currentUser?.id && userId === currentUser.id;
 
       if(isCurrentUser && currentUser?.email){
         return {
           label: normalizeEmail(currentUser.email),
-          meta: `User ID: ${shortUserId(userId)}`
+          meta: "Current login"
         };
       }
 
@@ -1899,7 +1926,7 @@ if(!isClientLogin && !isAdminLogin){
       }
 
       return {
-        label: `User ${shortUserId(userId)}`,
+        label: "Unknown email",
         meta: `User ID: ${shortUserId(userId)}`
       };
     }
@@ -2068,7 +2095,8 @@ if(!isClientLogin && !isAdminLogin){
         accessByUser.set(currentUser.id, {
           user_id: currentUser.id,
           site_id: siteData.id,
-          role: "owner"
+          role: "owner",
+          email: normalizeEmail(currentUser.email)
         });
       }
 
@@ -2135,13 +2163,27 @@ if(!isClientLogin && !isAdminLogin){
         return;
       }
 
-      const { error: accessError } = await client
+      let accessInsertResult = await client
         .from("user_site_access")
         .insert(newRows);
 
-      if(accessError){
-        console.log("New site access insert error:", accessError);
-        throw accessError;
+      // If the email column has not been added yet, retry without email so site creation still works.
+      if(accessInsertResult.error && String(accessInsertResult.error.message || "").toLowerCase().includes("email")){
+        console.log("New site access email column missing, retrying without email:", accessInsertResult.error);
+        const rowsWithoutEmail = newRows.map(row => {
+          const clean = { ...row };
+          delete clean.email;
+          return clean;
+        });
+
+        accessInsertResult = await client
+          .from("user_site_access")
+          .insert(rowsWithoutEmail);
+      }
+
+      if(accessInsertResult.error){
+        console.log("New site access insert error:", accessInsertResult.error);
+        throw accessInsertResult.error;
       }
     }
 
@@ -2332,8 +2374,10 @@ if(!isClientLogin && !isAdminLogin){
         return;
       }
 
+      const display = getMemberDisplay(member);
+
       const confirmed = confirm(
-        `Remove access to ${siteLabel(site)} for this user?\n\nUser ID: ${member.user_id}\nRole: ${member.role || "viewer"}\n\nThis does not delete their WashTrac login.`
+        `Remove access to ${siteLabel(site)} for this user?\n\nUser: ${display.label}\nUser ID: ${member.user_id}\nRole: ${member.role || "viewer"}\n\nThis does not delete their WashTrac login.`
       );
 
       if(!confirmed) return;
