@@ -1010,6 +1010,48 @@
   font-size:15px;
 }
 
+
+    .control-section{
+      margin-top:18px;
+      padding-top:18px;
+      border-top:1px solid rgba(148,163,184,.16);
+    }
+
+    .control-section:first-of-type{
+      margin-top:0;
+      padding-top:0;
+      border-top:none;
+    }
+
+    .control-section-title{
+      margin:0 0 8px 0;
+      font-family:Arial Black,Arial,Helvetica,sans-serif;
+      letter-spacing:.35px;
+      text-transform:uppercase;
+      color:#eaf4ff;
+      font-size:17px;
+    }
+
+    .control-section-copy{
+      margin:0 0 14px 0;
+      color:#94a3b8;
+      font-size:14px;
+      line-height:1.5;
+    }
+
+    .manual-control-panel{
+      background:linear-gradient(145deg,#0b1220,#06101d);
+      border:1px solid rgba(37,99,235,.22);
+      border-radius:12px;
+      padding:16px;
+      margin-top:12px;
+      box-shadow:inset 0 0 16px rgba(37,99,235,.045);
+    }
+
+    .manual-control-panel .controls{
+      margin-top:0;
+    }
+
 @media (max-width:1200px){
       .bay-editor-grid{
         grid-template-columns:1fr 1fr;
@@ -1403,126 +1445,153 @@
       </div>
 
       <div class="card">
-        <h3>Automatic After-Hours Lockout</h3>
+        <h3>Wash Control</h3>
 
         <div id="accessBanner" class="banner green">SYSTEM AVAILABLE</div>
 
-        <div class="control-grid">
-          <div class="control-box">
-            <strong id="washEnabledText">Enabled</strong>
-            <span>Wash Status</span>
-            <div><span id="washEnabledPill" class="status-pill status-on">Wash Enabled</span></div>
-          </div>
+        <div class="control-section">
+          <div class="control-section-title">Current System Status</div>
+          <p class="control-section-copy">
+            This shows the live wash availability, E-STOP input, and any active scheduled lockout for the selected site.
+          </p>
 
-          <div class="control-box">
-            <strong id="estopText">Clear</strong>
-            <span>E-STOP Status</span>
-            <div><span id="estopPill" class="status-pill status-on">No Active E-STOP</span></div>
-          </div>
+          <div class="control-grid">
+            <div class="control-box">
+              <strong id="washEnabledText">Enabled</strong>
+              <span>Wash Status</span>
+              <div><span id="washEnabledPill" class="status-pill status-on">Wash Enabled</span></div>
+            </div>
 
-          <div class="control-box">
-            <strong id="lockoutText">Off</strong>
-            <span>Scheduled Lockout</span>
-            <div><span id="lockoutPill" class="status-pill status-off">No Schedule</span></div>
-          </div>
+            <div class="control-box">
+              <strong id="estopText">Clear</strong>
+              <span>E-STOP Status</span>
+              <div><span id="estopPill" class="status-pill status-on">No Active E-STOP</span></div>
+            </div>
 
-          <div class="control-box">
-            <strong id="lockoutWindow">--:-- to --:--</strong>
-            <span>Lockout Window</span>
-          </div>
-        </div>
+            <div class="control-box">
+              <strong id="lockoutText">Off</strong>
+              <span>Scheduled Lockout</span>
+              <div><span id="lockoutPill" class="status-pill status-off">No Schedule</span></div>
+            </div>
 
-        <div class="controls">
-          <button id="enableWashBtn" class="success" onclick="setWashEnabled(true)">Enable Wash</button>
-          <button id="disableWashBtn" class="danger" onclick="setWashEnabled(false)">Disable Wash</button>
-        </div>
-
-        <div class="note">
-          E-STOP is monitor-only. Its status is read from the connected Keypad/ESP32 input and cannot be changed from the dashboard.
-        </div>
-
-        <div class="checkbox-row">
-          <input type="checkbox" id="lockoutEnabled">
-          <label for="lockoutEnabled">Enable automatic after-hours lockout</label>
-        </div>
-
-        <div class="field-grid">
-          <div class="field">
-            <label for="lockoutStart">Lockout Start</label>
-            <input type="time" id="lockoutStart">
-          </div>
-
-          <div class="field">
-            <label for="lockoutEnd">Lockout End</label>
-            <input type="time" id="lockoutEnd">
+            <div class="control-box">
+              <strong id="lockoutWindow">--:-- to --:--</strong>
+              <span>Lockout Window</span>
+            </div>
           </div>
         </div>
 
-        <div class="note">
-          Choose which days follow the time window, or lock a day out completely.
-        </div>
+        <div class="control-section">
+          <div class="control-section-title">Manual Wash Control</div>
+          <p class="control-section-copy">
+            Use these buttons when you need to immediately allow or stop wash activation. This is a manual override, separate from the automatic after-hours schedule below.
+          </p>
 
-        <div class="weekly-lockout-table" id="lockoutDaysGrid">
-          <div class="weekly-lockout-head">
-            <div>Day</div>
-            <div>Timed</div>
-            <div>Full Day</div>
+          <div class="manual-control-panel">
+            <div class="controls">
+              <button id="enableWashBtn" class="success" onclick="setWashEnabled(true)">Enable Wash Now</button>
+              <button id="disableWashBtn" class="danger" onclick="setWashEnabled(false)">Disable Wash Now</button>
+            </div>
+
+            <div class="note">
+              Enable Wash Now immediately allows valid codes and approved remote triggers. Disable Wash Now immediately blocks wash activation until you enable it again.
+            </div>
           </div>
 
-          <div class="weekly-lockout-row">
-            <div class="weekly-lockout-day">Monday</div>
-            <div><label class="compact-check"><input type="checkbox" class="timed-day" value="mon"> Follow</label></div>
-            <div><label class="compact-check full-day"><input type="checkbox" class="full-day" value="mon"> Lock</label></div>
-          </div>
-
-          <div class="weekly-lockout-row">
-            <div class="weekly-lockout-day">Tuesday</div>
-            <div><label class="compact-check"><input type="checkbox" class="timed-day" value="tue"> Follow</label></div>
-            <div><label class="compact-check full-day"><input type="checkbox" class="full-day" value="tue"> Lock</label></div>
-          </div>
-
-          <div class="weekly-lockout-row">
-            <div class="weekly-lockout-day">Wednesday</div>
-            <div><label class="compact-check"><input type="checkbox" class="timed-day" value="wed"> Follow</label></div>
-            <div><label class="compact-check full-day"><input type="checkbox" class="full-day" value="wed"> Lock</label></div>
-          </div>
-
-          <div class="weekly-lockout-row">
-            <div class="weekly-lockout-day">Thursday</div>
-            <div><label class="compact-check"><input type="checkbox" class="timed-day" value="thu"> Follow</label></div>
-            <div><label class="compact-check full-day"><input type="checkbox" class="full-day" value="thu"> Lock</label></div>
-          </div>
-
-          <div class="weekly-lockout-row">
-            <div class="weekly-lockout-day">Friday</div>
-            <div><label class="compact-check"><input type="checkbox" class="timed-day" value="fri"> Follow</label></div>
-            <div><label class="compact-check full-day"><input type="checkbox" class="full-day" value="fri"> Lock</label></div>
-          </div>
-
-          <div class="weekly-lockout-row">
-            <div class="weekly-lockout-day">Saturday</div>
-            <div><label class="compact-check"><input type="checkbox" class="timed-day" value="sat"> Follow</label></div>
-            <div><label class="compact-check full-day"><input type="checkbox" class="full-day" value="sat"> Lock</label></div>
-          </div>
-
-          <div class="weekly-lockout-row">
-            <div class="weekly-lockout-day">Sunday</div>
-            <div><label class="compact-check"><input type="checkbox" class="timed-day" value="sun"> Follow</label></div>
-            <div><label class="compact-check full-day"><input type="checkbox" class="full-day" value="sun"> Lock</label></div>
+          <div class="note">
+            E-STOP is monitor-only. Its status is read from the connected Keypad/ESP32 input and cannot be changed from the dashboard.
           </div>
         </div>
 
-        <div class="controls">
-          <button onclick="saveSchedule()">Save Lockout Schedule</button>
-        </div>
+        <div class="control-section">
+          <div class="control-section-title">Automatic After-Hours Schedule</div>
+          <p class="control-section-copy">
+            Use this schedule when WashTrac should automatically block wash activation during selected times or full days.
+          </p>
 
-        <div id="controlStatus" class="control-status"></div>
+          <div class="checkbox-row">
+            <input type="checkbox" id="lockoutEnabled">
+            <label for="lockoutEnabled">Enable automatic after-hours lockout schedule</label>
+          </div>
 
-        <div class="note">
-          When enabled, WashTrac can automatically block wash activation during the selected lockout window.
+          <div class="field-grid">
+            <div class="field">
+              <label for="lockoutStart">Lockout Start</label>
+              <input type="time" id="lockoutStart">
+            </div>
+
+            <div class="field">
+              <label for="lockoutEnd">Lockout End</label>
+              <input type="time" id="lockoutEnd">
+            </div>
+          </div>
+
+          <div class="note">
+            Choose which days follow the time window, or lock a day out completely.
+          </div>
+
+          <div class="weekly-lockout-table" id="lockoutDaysGrid">
+            <div class="weekly-lockout-head">
+              <div>Day</div>
+              <div>Timed</div>
+              <div>Full Day</div>
+            </div>
+
+            <div class="weekly-lockout-row">
+              <div class="weekly-lockout-day">Monday</div>
+              <div><label class="compact-check"><input type="checkbox" class="timed-day" value="mon"> Follow</label></div>
+              <div><label class="compact-check full-day"><input type="checkbox" class="full-day" value="mon"> Lock</label></div>
+            </div>
+
+            <div class="weekly-lockout-row">
+              <div class="weekly-lockout-day">Tuesday</div>
+              <div><label class="compact-check"><input type="checkbox" class="timed-day" value="tue"> Follow</label></div>
+              <div><label class="compact-check full-day"><input type="checkbox" class="full-day" value="tue"> Lock</label></div>
+            </div>
+
+            <div class="weekly-lockout-row">
+              <div class="weekly-lockout-day">Wednesday</div>
+              <div><label class="compact-check"><input type="checkbox" class="timed-day" value="wed"> Follow</label></div>
+              <div><label class="compact-check full-day"><input type="checkbox" class="full-day" value="wed"> Lock</label></div>
+            </div>
+
+            <div class="weekly-lockout-row">
+              <div class="weekly-lockout-day">Thursday</div>
+              <div><label class="compact-check"><input type="checkbox" class="timed-day" value="thu"> Follow</label></div>
+              <div><label class="compact-check full-day"><input type="checkbox" class="full-day" value="thu"> Lock</label></div>
+            </div>
+
+            <div class="weekly-lockout-row">
+              <div class="weekly-lockout-day">Friday</div>
+              <div><label class="compact-check"><input type="checkbox" class="timed-day" value="fri"> Follow</label></div>
+              <div><label class="compact-check full-day"><input type="checkbox" class="full-day" value="fri"> Lock</label></div>
+            </div>
+
+            <div class="weekly-lockout-row">
+              <div class="weekly-lockout-day">Saturday</div>
+              <div><label class="compact-check"><input type="checkbox" class="timed-day" value="sat"> Follow</label></div>
+              <div><label class="compact-check full-day"><input type="checkbox" class="full-day" value="sat"> Lock</label></div>
+            </div>
+
+            <div class="weekly-lockout-row">
+              <div class="weekly-lockout-day">Sunday</div>
+              <div><label class="compact-check"><input type="checkbox" class="timed-day" value="sun"> Follow</label></div>
+              <div><label class="compact-check full-day"><input type="checkbox" class="full-day" value="sun"> Lock</label></div>
+            </div>
+          </div>
+
+          <div class="controls">
+            <button onclick="saveSchedule()">Save Automatic Schedule</button>
+          </div>
+
+          <div id="controlStatus" class="control-status"></div>
+
+          <div class="note">
+            When enabled, WashTrac can automatically block wash activation during the selected lockout window. The manual Enable/Disable buttons above can still be used when you need immediate control.
+          </div>
         </div>
       </div>
-    </div>
+   </div>
   </div>
 
   <div id="deviceModal" class="device-modal">
