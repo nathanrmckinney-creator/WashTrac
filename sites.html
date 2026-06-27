@@ -2273,6 +2273,75 @@ if(!isClientLogin && !isAdminLogin){
       await loadSites();
     }
 
+    async function sendSiteInviteEmail({ email, site, inviteCode, role }){
+      const payload = {
+        email: normalizeEmail(email),
+        siteName: siteLabel(site),
+        inviteCode,
+        role: role || "viewer"
+      };
+
+      let authToken = SUPABASE_KEY;
+
+      try{
+        const { data: sessionData } = await client.auth.getSession();
+        authToken = sessionData?.session?.access_token || SUPABASE_KEY;
+      }catch(err){
+        console.log("Invite email session lookup error:", err);
+      }
+
+      let response;
+      let responseText = "";
+
+      try{
+        response = await fetch(`${SUPABASE_URL}/functions/v1/send-site-invite`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${authToken}`,
+            "apikey": SUPABASE_KEY
+          },
+          body: JSON.stringify(payload)
+        });
+
+        responseText = await response.text();
+      }catch(err){
+        console.log("Invite email network error:", err);
+        return {
+          ok:false,
+          message:"Invite was saved, but the email could not be sent. Check the send-site-invite Edge Function CORS/settings."
+        };
+      }
+
+      let data = null;
+      try{
+        data = responseText ? JSON.parse(responseText) : null;
+      }catch(err){
+        data = responseText;
+      }
+
+      if(!response.ok){
+        console.log("Invite email function error:", data);
+        return {
+          ok:false,
+          message:
+            "Invite was saved, but the email send failed: " +
+            (
+              data?.error ||
+              data?.message ||
+              data?.name ||
+              response.statusText ||
+              `HTTP ${response.status}`
+            )
+        };
+      }
+
+      return {
+        ok:true,
+        data
+      };
+    }
+
     async function inviteUser(siteId){
       clearStatus();
 
@@ -2313,12 +2382,28 @@ if(!isClientLogin && !isAdminLogin){
       );
 
       if(existingPending){
-        setStatus("That email already has a pending invite for this site.", "bad");
+        setStatus(`Invite already exists for ${email}. Resending email...`);
+
+        const resendResult = await sendSiteInviteEmail({
+          email,
+          site,
+          inviteCode: existingPending.invite_code || "",
+          role: existingPending.role || role
+        });
+
+        if(!resendResult.ok){
+          setStatus(resendResult.message || "Invite is pending, but the email could not be resent.", "bad");
+          return;
+        }
+
+        setStatus(`Invite email resent to ${email}.`, "good");
         return;
       }
 
       const inviteCode = generateInviteCode();
       const expiresAt = addDays(new Date(), 14).toISOString();
+
+      setStatus(`Saving invite for ${email}...`);
 
       const { error } = await client
         .from("site_invites")
@@ -2337,10 +2422,26 @@ if(!isClientLogin && !isAdminLogin){
         return;
       }
 
+      setStatus(`Invite saved. Sending email to ${email}...`);
+
+      const emailResult = await sendSiteInviteEmail({
+        email,
+        site,
+        inviteCode,
+        role
+      });
+
+      if(!emailResult.ok){
+        console.log("Invite saved but email failed:", emailResult);
+        setStatus(emailResult.message || `Invite saved for ${email}, but email failed.`, "bad");
+        await loadSites();
+        return;
+      }
+
       emailInput.value = "";
       roleSelect.value = "viewer";
 
-      setStatus(`Invite saved for ${email}.`, "good");
+      setStatus(`Invite sent to ${email}.`, "good");
       await loadSites();
     }
 
