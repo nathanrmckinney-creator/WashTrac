@@ -849,6 +849,60 @@ button.danger{
   }
 }
 
+
+/* WASHTRAC SITE MANAGEMENT CARD SEPARATION FIX
+   Keeps each physical site visually separated inside Site Management.
+   This intentionally comes at the end of the CSS so it overrides the
+   earlier premium/tablet .site-card margin rules. */
+#sitesList{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:36px !important;
+}
+
+#sitesList .site-card{
+  margin-bottom:0 !important;
+  position:relative !important;
+}
+
+#sitesList .site-card:not(:last-child)::after{
+  content:"";
+  position:absolute;
+  left:18px;
+  right:18px;
+  bottom:-19px;
+  height:1px;
+  background:linear-gradient(90deg, transparent, rgba(37,99,235,.48), transparent);
+}
+
+@media (min-width:768px) and (max-width:1400px) and (orientation:landscape){
+  #sitesList{
+    gap:34px !important;
+  }
+
+  #sitesList .site-card{
+    margin-bottom:0 !important;
+  }
+
+  #sitesList .site-card:not(:last-child)::after{
+    bottom:-18px;
+  }
+}
+
+@media (max-width:900px){
+  #sitesList{
+    gap:28px !important;
+  }
+
+  #sitesList .site-card{
+    margin-bottom:0 !important;
+  }
+
+  #sitesList .site-card:not(:last-child)::after{
+    bottom:-15px;
+  }
+}
+
 </style>
 </head>
 
