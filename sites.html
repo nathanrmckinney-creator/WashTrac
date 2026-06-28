@@ -416,45 +416,30 @@
     }
 
 
-    .bay-list{
-      overflow:visible;
-    }
-
-    .bay-row{
-      display:grid;
-      grid-template-columns:110px 1fr 150px auto;
-      gap:10px;
+    .link-code-box{
+      margin-top:12px;
       padding:12px;
-      border-bottom:1px solid #1f2937;
-      align-items:end;
+      border-radius:10px;
+      border:1px solid rgba(96,165,250,.22);
+      background:rgba(2,6,23,.42);
+      color:#dbeafe;
+      font-size:14px;
+      line-height:1.45;
+      display:none;
     }
 
-    .bay-row:last-child{border-bottom:none}
+    .link-code-box.show{display:block}
 
-    .bay-actions{
-      display:flex;
-      gap:8px;
-      align-items:center;
-      justify-content:flex-end;
-      flex-wrap:wrap;
+    .link-code-value{
+      font-size:24px;
+      font-weight:900;
+      letter-spacing:4px;
+      color:#ffffff;
+      margin:4px 0;
+      font-family:Arial Black,Arial,Helvetica,sans-serif;
     }
 
-    .bay-actions button{
-      padding:8px 10px;
-      font-size:12px;
-    }
 
-    .bay-display{
-      grid-column:1 / -2;
-    }
-
-    .bay-number-field{
-      min-width:100px;
-    }
-
-    .bay-status-field{
-      min-width:140px;
-    }
 
 /* PREMIUM WASHTRAC POLISH - Sites page */
 .sidebar > *,
@@ -663,9 +648,6 @@ button.danger{
       .field-grid{grid-template-columns:1fr}
       .site-card-top{grid-template-columns:1fr}
       .invite-grid{grid-template-columns:1fr}
-      .bay-row{grid-template-columns:1fr}
-      .bay-display{grid-column:auto}
-      .bay-actions{justify-content:flex-start}
     }
   
 /* WASHTRAC TABLET LANDSCAPE SITES FIX
@@ -860,21 +842,6 @@ button.danger{
     gap:8px !important;
     padding:8px 10px !important;
   }
-
-  .bay-row{
-    grid-template-columns:82px 1fr 118px auto !important;
-    gap:8px !important;
-    padding:9px 10px !important;
-  }
-
-  .bay-actions{
-    gap:6px !important;
-  }
-
-  .bay-actions button{
-    padding:7px 8px !important;
-    font-size:11px !important;
-  }
 }
 
 </style>
@@ -982,7 +949,7 @@ if(!isClientLogin && !isAdminLogin){
           <span class="live-pill">LOCATIONS</span>
         </h1>
         <p>
-          Add wash locations, pair physical keypads to the correct site, and manage user access for each location.
+          Add wash locations, link additional keypads to existing sites, and manage user access for each location.
         </p>
       </div>
 
@@ -1019,13 +986,18 @@ if(!isClientLogin && !isAdminLogin){
             </div>
 
             <div class="field">
-              <label for="siteBayCount">Starting Number of Bays</label>
-              <input id="siteBayCount" type="number" min="1" max="99" step="1" value="1" placeholder="Example: 2">
+              <label for="siteBayCount">Number of Bays</label>
+              <select id="siteBayCount">
+                <option value="1" selected>1 Bay</option>
+                <option value="2">2 Bays</option>
+                <option value="3">3 Bays</option>
+                <option value="4">4 Bays</option>
+              </select>
             </div>
 
             <div class="field full">
-              <label for="sitePairingCode">Keypad Pairing Code Or Device ID</label>
-              <input id="sitePairingCode" placeholder="Optional: 6-digit code, serial number, or device ID">
+              <label for="sitePairingCode">Link Site Pair Code or New Device ID</label>
+              <input id="sitePairingCode" placeholder="Optional: link code, serial number, or device ID">
             </div>
           </div>
 
@@ -1037,7 +1009,7 @@ if(!isClientLogin && !isAdminLogin){
           <div id="siteStatus" class="status"></div>
 
           <div class="note">
-            Add Site creates the physical wash location. Bays are managed under that site and can be named North, South, Touchless, Express, or anything that makes sense for the customer. Enter a keypad pairing code or device ID only when setting up new hardware.
+            Add Site creates a new physical location. To add another keypad to an existing location, use the Link Site Pair Code from that site. For a brand-new install, enter the new keypad Device ID or pair it later under Site Management.
           </div>
         </div>
 
@@ -1047,7 +1019,7 @@ if(!isClientLogin && !isAdminLogin){
           <div class="site-row">
             <div>
               <div class="site-name">Owner / Admin</div>
-              <div class="site-meta">Can add physical locations, manage bays, invite users, generate temporary pair codes, and control site access.</div>
+              <div class="site-meta">Can add locations and control which users have access to each site.</div>
             </div>
             <div class="pill green">Control</div>
           </div>
@@ -1055,21 +1027,21 @@ if(!isClientLogin && !isAdminLogin){
           <div class="site-row">
             <div>
               <div class="site-name">Email Invite</div>
-              <div class="site-meta">Invite employees or managers by email. Invited users only see the physical sites assigned to them.</div>
+              <div class="site-meta">Invite employees or managers to access existing sites. Invited users only see the locations assigned to them.</div>
             </div>
             <div class="pill">Users</div>
           </div>
 
           <div class="site-row">
             <div>
-              <div class="site-name">Pair Keypad</div>
-              <div class="site-meta">Existing sites do not expose pair codes to unauthorized users. A site owner/admin or WashTrac support must invite the user or generate a temporary access code after verification.</div>
+              <div class="site-name">Link Site Pair Code</div>
+              <div class="site-meta">Generate a temporary code from an existing site to link another keypad to that same location, such as Bay 2 - South.</div>
             </div>
             <div class="pill yellow">Device</div>
           </div>
 
           <div class="note">
-            Sites are physical wash locations. Bays are wash lanes under a site. Users are people invited by email. Keypads are physical devices and must be paired to the right site before they can report monitor status, validate wash codes, or log activity for that location.
+            Sites are physical wash locations. Bays are lanes under that site. Users are invited by email. Additional keypads should be linked to the existing site with a Link Site Pair Code so history and reporting stay under the same location.
           </div>
         </div>
       </div>
@@ -1093,9 +1065,9 @@ if(!isClientLogin && !isAdminLogin){
     let acceptedMembers = [];
     let userEmailLookup = {};
     let siteBayCounts = {};
-    let siteBaysBySite = {};
     let currentDevices = [];
     let inviteStatusBySite = {};
+    let linkCodeStatusBySite = {};
 
     function toggleMobileMenu(){
       const menu = document.getElementById("mobileMenu");
@@ -1199,6 +1171,150 @@ if(!isClientLogin && !isAdminLogin){
 
       return `<div id="inviteStatus-${escapeText(siteId)}" class="${escapeText(className)}">${escapeText(message)}</div>`;
     }
+
+
+    function setLinkCodeStatus(siteId, message, type = "", code = ""){
+      linkCodeStatusBySite[siteId] = { message, type, code };
+      const box = document.getElementById(`linkCodeStatus-${siteId}`);
+      if(!box) return;
+
+      box.className = "link-code-box show";
+      if(type === "bad") box.style.borderColor = "rgba(239,68,68,.35)";
+      else if(type === "good") box.style.borderColor = "rgba(34,197,94,.35)";
+      else box.style.borderColor = "rgba(96,165,250,.22)";
+
+      box.innerHTML = code
+        ? `<div>Link Site Pair Code</div><div class="link-code-value">${escapeText(code)}</div><div>${escapeText(message)}</div>`
+        : `<div>${escapeText(message)}</div>`;
+    }
+
+    function renderLinkCodeStatus(siteId){
+      const status = linkCodeStatusBySite[siteId];
+      const showClass = status?.message ? " show" : "";
+      const code = status?.code || "";
+      const message = status?.message || "";
+
+      return `
+        <div id="linkCodeStatus-${escapeText(siteId)}" class="link-code-box${showClass}">
+          ${code ? `<div>Link Site Pair Code</div><div class="link-code-value">${escapeText(code)}</div>` : ""}
+          ${message ? `<div>${escapeText(message)}</div>` : ""}
+        </div>
+      `;
+    }
+
+    function generateSixDigitCode(){
+      return String(Math.floor(100000 + Math.random() * 900000));
+    }
+
+    async function insertLinkSitePairCode(row){
+      const tableNames = ["site_link_pair_codes", "site_pairing_codes"];
+
+      for(const tableName of tableNames){
+        try{
+          const { data, error } = await client
+            .from(tableName)
+            .insert([row])
+            .select("*")
+            .maybeSingle();
+
+          if(!error){
+            return { data, tableName };
+          }
+
+          console.log(`Link Site Pair Code insert failed on ${tableName}:`, error);
+        }catch(err){
+          console.log(`Link Site Pair Code insert exception on ${tableName}:`, err);
+        }
+      }
+
+      throw new Error("Could not save Link Site Pair Code. Create the site_link_pair_codes table first.");
+    }
+
+    async function findLinkSitePairCode(rawCode){
+      const code = String(rawCode || "").trim().toUpperCase();
+      if(!code) return null;
+
+      const tableNames = ["site_link_pair_codes", "site_pairing_codes"];
+      const nowIso = new Date().toISOString();
+
+      for(const tableName of tableNames){
+        try{
+          let query = client
+            .from(tableName)
+            .select("*")
+            .eq("code", code)
+            .is("used_at", null)
+            .gt("expires_at", nowIso)
+            .limit(1);
+
+          const { data, error } = await query;
+
+          if(!error && data && data.length){
+            return { row:data[0], tableName };
+          }
+
+          if(error){
+            console.log(`Link Site Pair Code lookup failed on ${tableName}:`, error);
+          }
+        }catch(err){
+          console.log(`Link Site Pair Code lookup exception on ${tableName}:`, err);
+        }
+      }
+
+      return null;
+    }
+
+    async function markLinkSitePairCodeUsed(match){
+      if(!match?.row?.id || !match?.tableName) return;
+
+      try{
+        await client
+          .from(match.tableName)
+          .update({
+            used_at: new Date().toISOString(),
+            used_by: currentUser?.id || null,
+            is_active: false
+          })
+          .eq("id", match.row.id);
+      }catch(err){
+        console.log("Mark Link Site Pair Code used failed:", err);
+      }
+    }
+
+    async function generateLinkSitePairCode(siteId){
+      clearStatus();
+
+      const site = currentSites.find(item => item.id === siteId);
+      if(!site){
+        setStatus("Site not found.", "bad");
+        return;
+      }
+
+      if(!canManageSite(site)){
+        setStatus("Only owner/admin users can generate a Link Site Pair Code.", "bad");
+        return;
+      }
+
+      const code = generateSixDigitCode();
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
+      const row = {
+        site_id: siteId,
+        code,
+        created_by: currentUser?.id || null,
+        expires_at: expiresAt,
+        is_active: true
+      };
+
+      try{
+        await insertLinkSitePairCode(row);
+        setLinkCodeStatus(siteId, "Give this code to the installer or enter it on the new keypad setup screen. It expires in 15 minutes.", "good", code);
+      }catch(err){
+        console.log("Generate Link Site Pair Code error:", err);
+        setLinkCodeStatus(siteId, err.message || "Could not generate Link Site Pair Code.", "bad");
+      }
+    }
+
 
     function clearForm(){
       document.getElementById("siteName").value = "";
@@ -1304,49 +1420,6 @@ if(!isClientLogin && !isAdminLogin){
       return d;
     }
 
-    function generateSixDigitCode(){
-      return String(Math.floor(100000 + Math.random() * 900000));
-    }
-
-    async function generateSiteAccessCode(siteId){
-      clearStatus();
-
-      const site = currentSites.find(item => item.id === siteId);
-      if(!site){
-        setStatus("Site not found.", "bad");
-        return;
-      }
-
-      if(!canManageSite(site)){
-        setStatus("Only owner/admin users can generate a site access code.", "bad");
-        return;
-      }
-
-      const code = generateSixDigitCode();
-      const expiresAt = new Date(Date.now() + 15 * 60000).toISOString();
-
-      const payload = {
-        site_id: siteId,
-        code,
-        created_by: currentUser?.id || null,
-        expires_at: expiresAt,
-        is_active: true
-      };
-
-      const { error } = await client
-        .from("site_pairing_codes")
-        .insert([payload]);
-
-      if(error){
-        console.log("Site access code insert error:", error);
-        setStatus("Could not generate site access code. Make sure the site_pairing_codes table exists.", "bad");
-        return;
-      }
-
-      setStatus(`Temporary access code for ${siteLabel(site)}: ${code} — expires in 15 minutes.`, "good");
-    }
-
-
     function normalizeBayName(value){
       return String(value || "").trim().toUpperCase();
     }
@@ -1359,66 +1432,30 @@ if(!isClientLogin && !isAdminLogin){
     function clampBayCount(value){
       const count = parseInt(value, 10);
       if(Number.isNaN(count)) return 1;
-      return Math.min(99, Math.max(1, count));
+      return Math.min(4, Math.max(1, count));
     }
-
 
     async function loadBayCountsForSites(){
       siteBayCounts = {};
-      siteBaysBySite = {};
-
       const siteIds = currentSites.map(site => site.id).filter(Boolean);
+
       if(!siteIds.length) return;
 
       const { data, error } = await client
-        .from("site_bays")
-        .select("*")
-        .in("site_id", siteIds)
-        .order("bay_number", { ascending:true });
+        .from("site_bay_status")
+        .select("site_id,bay_name")
+        .in("site_id", siteIds);
 
       if(error){
-        console.log("site_bays load error:", error);
-
-        // Temporary fallback so the page can still open before the new site_bays table is created.
-        const fallback = await client
-          .from("site_bay_status")
-          .select("*")
-          .in("site_id", siteIds);
-
-        if(fallback.error){
-          console.log("Bay fallback load error:", fallback.error);
-          return;
-        }
-
-        (fallback.data || []).forEach(row => {
-          const bayNumber = getBayNumberFromName(row.bay_name);
-          if(!row.site_id || !bayNumber) return;
-
-          if(!siteBaysBySite[row.site_id]) siteBaysBySite[row.site_id] = [];
-          siteBaysBySite[row.site_id].push({
-            id: row.id,
-            site_id: row.site_id,
-            bay_number: bayNumber,
-            display_name: "",
-            is_enabled: true,
-            retired_at: null,
-            legacy_status_row: true
-          });
-        });
-      }else{
-        (data || []).forEach(row => {
-          if(!row.site_id) return;
-          if(!siteBaysBySite[row.site_id]) siteBaysBySite[row.site_id] = [];
-          siteBaysBySite[row.site_id].push(row);
-        });
+        console.log("Bay count load error:", error);
+        return;
       }
 
-      Object.keys(siteBaysBySite).forEach(siteId => {
-        siteBaysBySite[siteId].sort((a, b) => Number(a.bay_number || 0) - Number(b.bay_number || 0));
-        siteBayCounts[siteId] = siteBaysBySite[siteId].filter(bay => !bay.retired_at).length;
+      (data || []).forEach(row => {
+        if(!row.site_id) return;
+        siteBayCounts[row.site_id] = (siteBayCounts[row.site_id] || 0) + 1;
       });
     }
-
 
     async function loadDevicesForSites(){
       currentDevices = [];
@@ -1545,7 +1582,7 @@ if(!isClientLogin && !isAdminLogin){
         return {
           paired:false,
           skipped:false,
-          message:"Site was created, but no keypad was found for that pairing code or device ID."
+          message:"Site was created, but no keypad was found for that Link Site Pair Code or Device ID."
         };
       }
 
@@ -1589,7 +1626,7 @@ if(!isClientLogin && !isAdminLogin){
       }
 
       if(!canManageSite(site)){
-        setStatus("Only owner/admin users can pair a keypad to this site.", "bad");
+        setStatus("Only owner/admin users can link a keypad to this site.", "bad");
         return;
       }
 
@@ -1597,7 +1634,7 @@ if(!isClientLogin && !isAdminLogin){
       const pairValue = String(input?.value || "").trim();
 
       if(!pairValue){
-        setStatus("Enter the keypad pairing code or device ID.", "bad");
+        setStatus("Enter the Link Site Pair Code or Device ID.", "bad");
         return;
       }
 
@@ -1609,10 +1646,9 @@ if(!isClientLogin && !isAdminLogin){
       }
 
       if(input) input.value = "";
-      setStatus(`Keypad paired to ${siteLabel(site)}.`, "good");
+      setStatus(`Keypad linked to ${siteLabel(site)}.`, "good");
       await loadSites();
     }
-
 
 
     async function syncSiteBays(site, requestedCount){
@@ -1625,62 +1661,67 @@ if(!isClientLogin && !isAdminLogin){
       }
 
       const { data: existingRows, error: loadError } = await client
-        .from("site_bays")
+        .from("site_bay_status")
         .select("*")
-        .eq("site_id", siteId)
-        .order("bay_number", { ascending:true });
+        .eq("site_id", siteId);
 
       if(loadError){
-        console.log("site_bays sync load error:", loadError);
+        console.log("Bay sync load error:", loadError);
         throw loadError;
       }
 
       const existing = existingRows || [];
       const byBayNumber = {};
+
       existing.forEach(row => {
-        const bayNumber = parseInt(row.bay_number, 10);
+        const bayNumber = getBayNumberFromName(row.bay_name);
         if(bayNumber) byBayNumber[bayNumber] = row;
       });
 
       const rowsToInsert = [];
-      const nowIso = new Date().toISOString();
-
       for(let i = 1; i <= count; i++){
         if(!byBayNumber[i]){
           const row = {
             site_id: siteId,
-            bay_number: i,
-            display_name: "",
-            is_enabled: true,
-            retired_at: null,
-            retired_reason: null,
-            created_at: nowIso,
-            updated_at: nowIso
+            bay_name: `BAY ${i}`,
+            status: "Ready",
+            updated_at: new Date().toISOString()
           };
 
           if(organizationId) row.organization_id = organizationId;
           rowsToInsert.push(row);
-        }else if(byBayNumber[i].retired_at){
-          await client
-            .from("site_bays")
-            .update({
-              is_enabled: true,
-              retired_at: null,
-              retired_reason: null,
-              updated_at: nowIso
-            })
-            .eq("id", byBayNumber[i].id);
         }
       }
 
       if(rowsToInsert.length){
         const { error: insertError } = await client
-          .from("site_bays")
+          .from("site_bay_status")
           .insert(rowsToInsert);
 
         if(insertError){
-          console.log("site_bays insert error:", insertError);
+          console.log("Bay sync insert error:", insertError);
           throw insertError;
+        }
+      }
+
+      const rowsToDelete = existing.filter(row => {
+        const bayNumber = getBayNumberFromName(row.bay_name);
+        return bayNumber && bayNumber > count;
+      });
+
+      if(rowsToDelete.length){
+        const deleteIds = rowsToDelete.map(row => row.id).filter(Boolean);
+
+        if(deleteIds.length){
+          const { error: deleteError } = await client
+            .from("site_bay_status")
+            .delete()
+            .in("id", deleteIds);
+
+          if(deleteError){
+            console.log("Bay sync delete error:", deleteError);
+            throw deleteError;
+          }
         }
       }
 
@@ -1704,10 +1745,17 @@ if(!isClientLogin && !isAdminLogin){
       }
 
       const count = clampBayCount(countValue);
+      const confirmText = `Set ${siteLabel(site)} to ${count} bay${count === 1 ? "" : "s"}? This will remove extra BAY rows from this site.`;
+      const confirmed = confirm(confirmText);
+
+      if(!confirmed){
+        await loadSites();
+        return;
+      }
 
       try{
         await syncSiteBays(site, count);
-        setStatus(`Bay setup saved. This site now has bay records through Bay ${count}.`, "good");
+        setStatus(`Bay setup saved: ${count} bay${count === 1 ? "" : "s"}.`, "good");
         await loadSites();
       }catch(err){
         console.log("Update bay count error:", err);
@@ -1715,209 +1763,6 @@ if(!isClientLogin && !isAdminLogin){
         await loadSites();
       }
     }
-
-    async function addBayToSite(siteId){
-      clearStatus();
-
-      const site = currentSites.find(item => item.id === siteId);
-      if(!site){
-        setStatus("Site not found.", "bad");
-        return;
-      }
-
-      if(!canManageSite(site)){
-        setStatus("Only owner/admin users can add bays.", "bad");
-        return;
-      }
-
-      const activeBays = (siteBaysBySite[siteId] || []).filter(bay => !bay.retired_at);
-      const highestBayNumber = (siteBaysBySite[siteId] || []).reduce((max, bay) => {
-        return Math.max(max, parseInt(bay.bay_number, 10) || 0);
-      }, 0);
-
-      const nextBayNumber = highestBayNumber + 1;
-
-      try{
-        await syncSiteBays(site, nextBayNumber);
-        setStatus(`Bay ${nextBayNumber} added to ${siteLabel(site)}.`, "good");
-        await loadSites();
-      }catch(err){
-        console.log("Add bay error:", err);
-        setStatus("Could not add bay: " + (err.message || "Unknown error"), "bad");
-      }
-    }
-
-    async function saveBayDetails(siteId, bayId){
-      clearStatus();
-
-      const site = currentSites.find(item => item.id === siteId);
-      if(!site || !canManageSite(site)){
-        setStatus("Only owner/admin users can edit bays.", "bad");
-        return;
-      }
-
-      const bayNumberInput = document.getElementById(`bayNumber-${bayId}`);
-      const displayNameInput = document.getElementById(`bayDisplay-${bayId}`);
-      const enabledSelect = document.getElementById(`bayEnabled-${bayId}`);
-
-      const bayNumber = clampBayCount(bayNumberInput?.value);
-      const displayName = String(displayNameInput?.value || "").trim();
-      const isEnabled = String(enabledSelect?.value || "true") === "true";
-
-      const { error } = await client
-        .from("site_bays")
-        .update({
-          bay_number: bayNumber,
-          display_name: displayName || null,
-          is_enabled: isEnabled,
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", bayId)
-        .eq("site_id", siteId);
-
-      if(error){
-        console.log("Save bay error:", error);
-        setStatus("Could not save bay: " + error.message, "bad");
-        return;
-      }
-
-      setStatus("Bay saved.", "good");
-      await loadSites();
-    }
-
-    async function retireBay(siteId, bayId){
-      clearStatus();
-
-      const site = currentSites.find(item => item.id === siteId);
-      if(!site || !canManageSite(site)){
-        setStatus("Only owner/admin users can retire bays.", "bad");
-        return;
-      }
-
-      const bay = (siteBaysBySite[siteId] || []).find(item => item.id === bayId);
-      const label = bay ? formatBayLabel(bay) : "this bay";
-
-      const confirmed = confirm(`Disable/retire ${label}? Historical Activity and Reports will remain intact.`);
-      if(!confirmed) return;
-
-      const { error } = await client
-        .from("site_bays")
-        .update({
-          is_enabled: false,
-          retired_at: new Date().toISOString(),
-          retired_reason: "Retired from Sites page",
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", bayId)
-        .eq("site_id", siteId);
-
-      if(error){
-        console.log("Retire bay error:", error);
-        setStatus("Could not retire bay: " + error.message, "bad");
-        return;
-      }
-
-      setStatus(`${label} retired. Historical data remains intact.`, "good");
-      await loadSites();
-    }
-
-    async function restoreBay(siteId, bayId){
-      clearStatus();
-
-      const site = currentSites.find(item => item.id === siteId);
-      if(!site || !canManageSite(site)){
-        setStatus("Only owner/admin users can restore bays.", "bad");
-        return;
-      }
-
-      const { error } = await client
-        .from("site_bays")
-        .update({
-          is_enabled: true,
-          retired_at: null,
-          retired_reason: null,
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", bayId)
-        .eq("site_id", siteId);
-
-      if(error){
-        console.log("Restore bay error:", error);
-        setStatus("Could not restore bay: " + error.message, "bad");
-        return;
-      }
-
-      setStatus("Bay restored.", "good");
-      await loadSites();
-    }
-
-    function formatBayLabel(bay){
-      if(!bay) return "Bay";
-      const bayNumber = bay.bay_number || getBayNumberFromName(bay.bay_name) || "";
-      const base = bayNumber ? `Bay ${bayNumber}` : "Bay";
-      const displayName = String(bay.display_name || "").trim();
-      return displayName ? `${base} - ${displayName}` : base;
-    }
-
-    function renderSiteBays(site, manager){
-      const bays = siteBaysBySite[site.id] || [];
-
-      if(!bays.length){
-        return `<div class="mini-row"><div class="mini-main"><span class="mini-muted">No bays created yet.</span></div><div class="pill yellow">Setup</div></div>`;
-      }
-
-      return bays.map(bay => {
-        const isRetired = !!bay.retired_at;
-        const isEnabled = bay.is_enabled !== false && !isRetired;
-        const statusClass = isRetired ? "red" : (isEnabled ? "green" : "yellow");
-        const statusText = isRetired ? "Retired" : (isEnabled ? "Enabled" : "Disabled");
-        const bayId = bay.id || `${site.id}-${bay.bay_number}`;
-
-        if(bay.legacy_status_row){
-          return `
-            <div class="bay-row">
-              <div class="bay-display">
-                <strong>${escapeText(formatBayLabel(bay))}</strong>
-                <div class="mini-muted">Legacy status row. Create the site_bays table to edit display names and retire bays.</div>
-              </div>
-              <div class="pill yellow">Legacy</div>
-            </div>
-          `;
-        }
-
-        return `
-          <div class="bay-row">
-            <div class="field bay-number-field">
-              <label for="bayNumber-${escapeText(bayId)}">Bay Number</label>
-              <input id="bayNumber-${escapeText(bayId)}" type="number" min="1" max="99" step="1" value="${escapeText(bay.bay_number || "")}" ${manager && !isRetired ? "" : "disabled"}>
-            </div>
-
-            <div class="field">
-              <label for="bayDisplay-${escapeText(bayId)}">Custom Display Name</label>
-              <input id="bayDisplay-${escapeText(bayId)}" placeholder="North, South, Touchless, Express" value="${escapeText(bay.display_name || "")}" ${manager && !isRetired ? "" : "disabled"}>
-              <div class="mini-muted">${escapeText(formatBayLabel(bay))}</div>
-            </div>
-
-            <div class="field bay-status-field">
-              <label for="bayEnabled-${escapeText(bayId)}">Status</label>
-              <select id="bayEnabled-${escapeText(bayId)}" ${manager && !isRetired ? "" : "disabled"}>
-                <option value="true" ${isEnabled ? "selected" : ""}>Enabled</option>
-                <option value="false" ${!isEnabled && !isRetired ? "selected" : ""}>Disabled</option>
-              </select>
-              ${isRetired ? `<div class="mini-muted">Retired: ${escapeText(new Date(bay.retired_at).toLocaleDateString())}</div>` : ""}
-            </div>
-
-            <div class="bay-actions">
-              <div class="pill ${statusClass}">${statusText}</div>
-              ${manager && !isRetired ? `<button class="success" onclick="saveBayDetails('${escapeText(site.id)}','${escapeText(bay.id)}')">Save</button>` : ""}
-              ${manager && !isRetired ? `<button class="danger" onclick="retireBay('${escapeText(site.id)}','${escapeText(bay.id)}')">Retire</button>` : ""}
-              ${manager && isRetired ? `<button class="secondary" onclick="restoreBay('${escapeText(site.id)}','${escapeText(bay.id)}')">Restore</button>` : ""}
-            </div>
-          </div>
-        `;
-      }).join("");
-    }
-
 
     async function loadCurrentUser(){
       const isAdminLogin = hasAdminAccess();
@@ -2291,7 +2136,6 @@ if(!isClientLogin && !isAdminLogin){
       };
     }
 
-
     function renderSites(){
       const wrap = document.getElementById("sitesList");
       wrap.innerHTML = "";
@@ -2309,9 +2153,6 @@ if(!isClientLogin && !isAdminLogin){
         const siteInvites = pendingInvites.filter(invite => invite.site_id === site.id);
         const siteMembers = acceptedMembers.filter(member => member.site_id === site.id);
         const manager = canManageSite(site);
-        const bays = siteBaysBySite[site.id] || [];
-        const activeBayCount = bays.filter(bay => !bay.retired_at).length;
-        const enabledBayCount = bays.filter(bay => !bay.retired_at && bay.is_enabled !== false).length;
 
         const invitesHtml = siteInvites.length
           ? siteInvites.map(invite => {
@@ -2364,38 +2205,46 @@ if(!isClientLogin && !isAdminLogin){
                 <div class="site-meta">${metaParts.length ? escapeText(metaParts.join(" • ")) : "No location details"}</div>
                 <div class="site-meta">Site ID: ${escapeText(site.id)}</div>
               </div>
-              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
-                <div class="pill">${escapeText(site.member_role || "site")}</div>
-                <div class="pill green">${enabledBayCount} Enabled Bay${enabledBayCount === 1 ? "" : "s"}</div>
+              <div class="pill">${escapeText(site.member_role || "site")}</div>
+            </div>
+
+            <div class="invite-box" style="margin-top:0; padding-top:0; border-top:none; margin-bottom:16px;">
+              <h4>Bay Setup</h4>
+              <div class="invite-grid">
+                <div class="field full-mobile">
+                  <label for="bayCount-${escapeText(site.id)}">Number of Bays For This Site</label>
+                  <select id="bayCount-${escapeText(site.id)}" onchange="updateSiteBayCount('${escapeText(site.id)}', this.value)" ${manager ? "" : "disabled"}>
+                    <option value="1" ${clampBayCount(siteBayCounts[site.id] || 1) === 1 ? "selected" : ""}>1 Bay</option>
+                    <option value="2" ${clampBayCount(siteBayCounts[site.id] || 1) === 2 ? "selected" : ""}>2 Bays</option>
+                    <option value="3" ${clampBayCount(siteBayCounts[site.id] || 1) === 3 ? "selected" : ""}>3 Bays</option>
+                    <option value="4" ${clampBayCount(siteBayCounts[site.id] || 1) === 4 ? "selected" : ""}>4 Bays</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Current</label>
+                  <div class="pill green">${clampBayCount(siteBayCounts[site.id] || 1)} BAY${clampBayCount(siteBayCounts[site.id] || 1) === 1 ? "" : "S"}</div>
+                </div>
+              </div>
+              <div class="note">
+                ${manager ? "Changing this updates the bay rows used by Dashboard and Monitor." : "Only owner/admin users can change bay setup."}
               </div>
             </div>
 
             <div class="invite-box" style="margin-top:0; padding-top:0; border-top:none; margin-bottom:16px;">
-              <h4>Bays</h4>
-
-              <div class="mini-list bay-list">
-                ${renderSiteBays(site, manager)}
-              </div>
-
-              <div class="invite-grid" style="margin-top:12px;">
+              <h4>Link Site Pair Code</h4>
+              <div class="invite-grid">
                 <div class="field full-mobile">
-                  <label for="bayCount-${escapeText(site.id)}">Create Bays Through Bay Number</label>
-                  <input id="bayCount-${escapeText(site.id)}" type="number" min="1" max="99" step="1" value="${escapeText(Math.max(activeBayCount || 1, 1))}" ${manager ? "" : "disabled"}>
+                  <label>Temporary Site Link</label>
+                  <div class="site-meta">Use this to add another keypad to this same physical site, such as Bay 2 - South.</div>
                 </div>
-
                 <div class="field">
                   <label>&nbsp;</label>
-                  <button onclick="updateSiteBayCount('${escapeText(site.id)}', document.getElementById('bayCount-${escapeText(site.id)}').value)" ${manager ? "" : "disabled"}>Create Missing</button>
-                </div>
-
-                <div class="field">
-                  <label>&nbsp;</label>
-                  <button class="success" onclick="addBayToSite('${escapeText(site.id)}')" ${manager ? "" : "disabled"}>Add Next Bay</button>
+                  <button class="success" onclick="generateLinkSitePairCode('${escapeText(site.id)}')" ${manager ? "" : "disabled"}>Generate Link Code</button>
                 </div>
               </div>
-
+              ${renderLinkCodeStatus(site.id)}
               <div class="note">
-                ${manager ? "Bays belong under the physical site. Use the display name so Monitor, Activity, Reports, and Dashboard can show labels like Bay 1 - North instead of only Bay 1. Retire bays instead of deleting them so historical data remains intact." : "Only owner/admin users can change bay setup."}
+                ${manager ? "The code expires in 15 minutes and does not expose the permanent Site ID." : "Only owner/admin users can generate a Link Site Pair Code."}
               </div>
             </div>
 
@@ -2404,21 +2253,21 @@ if(!isClientLogin && !isAdminLogin){
               <div class="mini-list">${renderSiteDevices(site.id)}</div>
 
               <div class="invite-box" style="margin-top:12px;">
-                <h4>Pair Keypad To This Site</h4>
+                <h4>Link Keypad To This Site</h4>
                 <div class="invite-grid">
                   <div class="field full-mobile">
-                    <label for="pairCode-${escapeText(site.id)}">Keypad Pairing Code Or Device ID</label>
+                    <label for="pairCode-${escapeText(site.id)}">Link Site Pair Code or Device ID</label>
                     <input id="pairCode-${escapeText(site.id)}" placeholder="Example: 123456 or WT-000001" ${manager ? "" : "disabled"}>
                   </div>
 
                   <div class="field">
                     <label>&nbsp;</label>
-                    <button onclick="pairKeypadToExistingSite('${escapeText(site.id)}')" ${manager ? "" : "disabled"}>Pair</button>
+                    <button onclick="pairKeypadToExistingSite('${escapeText(site.id)}')" ${manager ? "" : "disabled"}>Link</button>
                   </div>
                 </div>
 
                 <div class="note">
-                  ${manager ? "This links the physical WashTrac Keypad/controller to this physical site. This is for hardware, not for adding another user." : "Only owner/admin users can pair a keypad to this site."}
+                  ${manager ? "This links an additional WashTrac Keypad/controller to this existing site. Use this when adding another keypad for another bay, such as South Bay." : "Only owner/admin users can link a keypad to this site."}
                 </div>
               </div>
             </div>
@@ -2427,17 +2276,7 @@ if(!isClientLogin && !isAdminLogin){
             <div class="mini-list">${membersHtml}</div>
 
             <div class="invite-box">
-              <h4>Add User Access</h4>
-
-              <div class="note" style="margin-top:0; margin-bottom:12px;">
-                Existing sites do not reveal access codes to new customers. A current owner/admin must invite the user, generate a temporary access code, or WashTrac support must verify ownership and add access.
-              </div>
-
-              <div class="controls" style="margin-top:0; margin-bottom:14px;">
-                <button class="secondary" onclick="generateSiteAccessCode('${escapeText(site.id)}')" ${manager ? "" : "disabled"}>Generate 15-Minute Access Code</button>
-              </div>
-
-              <h4>Invite User By Email</h4>
+              <h4>Invite User</h4>
               <div class="invite-grid">
                 <div class="field full-mobile">
                   <label for="inviteEmail-${escapeText(site.id)}">Email Address</label>
@@ -2476,7 +2315,6 @@ if(!isClientLogin && !isAdminLogin){
         `;
       });
     }
-
 
     async function linkOrganizationAdminsToNewSite(siteData, organizationId){
       if(!siteData?.id){
@@ -2592,18 +2430,76 @@ if(!isClientLogin && !isAdminLogin){
       const bayCount = clampBayCount(document.getElementById("siteBayCount").value);
       const pairingCode = String(document.getElementById("sitePairingCode")?.value || "").trim();
 
+      if(!currentUser){
+        setStatus("No logged-in user found.", "bad");
+        return;
+      }
+
+      const linkCodeMatch = pairingCode ? await findLinkSitePairCode(pairingCode) : null;
+
+      if(linkCodeMatch?.row?.site_id){
+        const existingSiteId = linkCodeMatch.row.site_id;
+
+        let existingAccess = null;
+        if(!currentUser.is_admin_session){
+          const { data: accessRows, error: accessError } = await client
+            .from("user_site_access")
+            .select("id")
+            .eq("user_id", currentUser.id)
+            .eq("site_id", existingSiteId)
+            .limit(1);
+
+          if(accessError){
+            console.log("Existing site access check error:", accessError);
+          }
+
+          existingAccess = accessRows && accessRows.length ? accessRows[0] : null;
+
+          if(!existingAccess){
+            let accessInsert = await client
+              .from("user_site_access")
+              .insert([{
+                user_id: currentUser.id,
+                site_id: existingSiteId,
+                role: "admin",
+                email: normalizeEmail(currentUser.email)
+              }]);
+
+            if(accessInsert.error && String(accessInsert.error.message || "").toLowerCase().includes("email")){
+              accessInsert = await client
+                .from("user_site_access")
+                .insert([{
+                  user_id: currentUser.id,
+                  site_id: existingSiteId,
+                  role: "admin"
+                }]);
+            }
+
+            if(accessInsert.error){
+              console.log("Link site pair code access insert error:", accessInsert.error);
+              setStatus("Link code found, but site access could not be added: " + accessInsert.error.message, "bad");
+              return;
+            }
+          }
+        }
+
+        localStorage.setItem("activeSiteId", existingSiteId);
+        if(organization_id) localStorage.setItem("activeOrganizationId", organization_id);
+
+        await markLinkSitePairCodeUsed(linkCodeMatch);
+        clearForm();
+        setStatus("Existing site linked to this account. You can now link the new keypad to the correct bay under Site Management.", "good");
+        await loadSites();
+        return;
+      }
+
       if(!organization_id){
         setStatus("Choose an organization first.", "bad");
         return;
       }
 
       if(!name){
-        setStatus("Enter a site name.", "bad");
-        return;
-      }
-
-      if(!currentUser){
-        setStatus("No logged-in user found.", "bad");
+        setStatus("Enter a site name, or enter a valid Link Site Pair Code for an existing site.", "bad");
         return;
       }
 
@@ -2657,11 +2553,11 @@ if(!isClientLogin && !isAdminLogin){
       clearForm();
 
       if(pairingCode && pairResult.paired){
-        setStatus(`Site added with ${bayCount} bay${bayCount === 1 ? "" : "s"} and keypad paired to this site.`, "good");
+        setStatus(`Site added with ${bayCount} bay${bayCount === 1 ? "" : "s"} and keypad linked to this site.`, "good");
       }else if(pairingCode && !pairResult.paired){
         setStatus(pairResult.message || `Site added with ${bayCount} bay${bayCount === 1 ? "" : "s"}, but keypad pairing failed.`, "bad");
       }else{
-        setStatus(`Site added with ${bayCount} bay${bayCount === 1 ? "" : "s"}. Pair a keypad under Site Management when ready.`, "good");
+        setStatus(`Site added with ${bayCount} bay${bayCount === 1 ? "" : "s"}. Link a keypad under Site Management when ready.`, "good");
       }
 
       await loadSites();
