@@ -1252,77 +1252,66 @@ if(!isClientLogin && !isAdminLogin){
     }
 
     async function insertLinkSitePairCode(row){
-      const tableNames = ["site_link_pair_codes"];
+      try{
+        const { data, error } = await client
+          .from("device_pairing_codes")
+          .insert([row])
+          .select("*")
+          .maybeSingle();
 
-      for(const tableName of tableNames){
-        try{
-          const { data, error } = await client
-            .from(tableName)
-            .insert([row])
-            .select("*")
-            .maybeSingle();
-
-          if(!error){
-            return { data, tableName };
-          }
-
-          console.log(`Link Site Pair Code insert failed on ${tableName}:`, error);
-        }catch(err){
-          console.log(`Link Site Pair Code insert exception on ${tableName}:`, err);
+        if(error){
+          console.log("Device pairing code insert failed:", error);
+          throw error;
         }
-      }
 
-      throw new Error("Could not save Link Site Pair Code. Check site_link_pair_codes permissions and columns.");
+        return { data, tableName:"device_pairing_codes" };
+      }catch(err){
+        console.log("Device pairing code insert exception:", err);
+        throw new Error("Could not save Link Site Pair Code. Check device_pairing_codes permissions and columns.");
+      }
     }
 
     async function findLinkSitePairCode(rawCode){
-      const code = String(rawCode || "").trim().toUpperCase();
+      const code = String(rawCode || "").trim();
       if(!code) return null;
 
-      const tableNames = ["site_link_pair_codes"];
-      const nowIso = new Date().toISOString();
+      try{
+        const { data, error } = await client
+          .from("device_pairing_codes")
+          .select("*")
+          .eq("code", code)
+          .eq("status", "pending")
+          .gt("expires_at", new Date().toISOString())
+          .limit(1);
 
-      for(const tableName of tableNames){
-        try{
-          let query = client
-            .from(tableName)
-            .select("*")
-            .eq("code", code)
-            .is("used_at", null)
-            .gt("expires_at", nowIso)
-            .limit(1);
-
-          const { data, error } = await query;
-
-          if(!error && data && data.length){
-            return { row:data[0], tableName };
-          }
-
-          if(error){
-            console.log(`Link Site Pair Code lookup failed on ${tableName}:`, error);
-          }
-        }catch(err){
-          console.log(`Link Site Pair Code lookup exception on ${tableName}:`, err);
+        if(error){
+          console.log("Device pairing code lookup failed:", error);
+          return null;
         }
+
+        if(data && data.length){
+          return { row:data[0], tableName:"device_pairing_codes" };
+        }
+      }catch(err){
+        console.log("Device pairing code lookup exception:", err);
       }
 
       return null;
     }
 
     async function markLinkSitePairCodeUsed(match){
-      if(!match?.row?.id || !match?.tableName) return;
+      if(!match?.row?.id) return;
 
       try{
         await client
-          .from(match.tableName)
+          .from("device_pairing_codes")
           .update({
             used_at: new Date().toISOString(),
-            used_by: getCurrentUserUuid(),
-            is_active: false
+            status: "paired"
           })
           .eq("id", match.row.id);
       }catch(err){
-        console.log("Mark Link Site Pair Code used failed:", err);
+        console.log("Mark device pairing code used failed:", err);
       }
     }
 
@@ -1340,24 +1329,31 @@ if(!isClientLogin && !isAdminLogin){
         return;
       }
 
-      const code = generateSixDigitCode();
-      const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+      let lastError = null;
 
-      const row = {
-        site_id: siteId,
-        code,
-        created_by: getCurrentUserUuid(),
-        expires_at: expiresAt,
-        is_active: true
-      };
+      for(let attempt = 0; attempt < 5; attempt++){
+        const code = generateSixDigitCode();
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
-      try{
-        await insertLinkSitePairCode(row);
-        setLinkCodeStatus(siteId, "Give this code to the installer or enter it on the new keypad setup screen. It expires in 15 minutes.", "good", code);
-      }catch(err){
-        console.log("Generate Link Site Pair Code error:", err);
-        setLinkCodeStatus(siteId, err.message || "Could not generate Link Site Pair Code.", "bad");
+        const row = {
+          code,
+          site_id: siteId,
+          status: "pending",
+          expires_at: expiresAt,
+          organization_id: site.organization_id || localStorage.getItem("activeOrganizationId") || null
+        };
+
+        try{
+          await insertLinkSitePairCode(row);
+          setLinkCodeStatus(siteId, "Give this code to the installer and type it into the new keypad. It expires in 15 minutes.", "good", code);
+          return;
+        }catch(err){
+          lastError = err;
+          console.log("Generate Link Site Pair Code attempt failed:", err);
+        }
       }
+
+      setLinkCodeStatus(siteId, lastError?.message || "Could not generate Link Site Pair Code.", "bad");
     }
 
 
