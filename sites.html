@@ -1245,8 +1245,14 @@ if(!isClientLogin && !isAdminLogin){
       return String(Math.floor(100000 + Math.random() * 900000));
     }
 
+    function getCurrentUserUuid(){
+      const id = String(currentUser?.id || "");
+      const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      return uuidPattern.test(id) ? id : null;
+    }
+
     async function insertLinkSitePairCode(row){
-      const tableNames = ["site_link_pair_codes", "site_pairing_codes"];
+      const tableNames = ["site_link_pair_codes"];
 
       for(const tableName of tableNames){
         try{
@@ -1266,14 +1272,14 @@ if(!isClientLogin && !isAdminLogin){
         }
       }
 
-      throw new Error("Could not save Link Site Pair Code. Create the site_link_pair_codes table first.");
+      throw new Error("Could not save Link Site Pair Code. Check site_link_pair_codes permissions and columns.");
     }
 
     async function findLinkSitePairCode(rawCode){
       const code = String(rawCode || "").trim().toUpperCase();
       if(!code) return null;
 
-      const tableNames = ["site_link_pair_codes", "site_pairing_codes"];
+      const tableNames = ["site_link_pair_codes"];
       const nowIso = new Date().toISOString();
 
       for(const tableName of tableNames){
@@ -1311,7 +1317,7 @@ if(!isClientLogin && !isAdminLogin){
           .from(match.tableName)
           .update({
             used_at: new Date().toISOString(),
-            used_by: currentUser?.id || null,
+            used_by: getCurrentUserUuid(),
             is_active: false
           })
           .eq("id", match.row.id);
@@ -1340,7 +1346,7 @@ if(!isClientLogin && !isAdminLogin){
       const row = {
         site_id: siteId,
         code,
-        created_by: currentUser?.id || null,
+        created_by: getCurrentUserUuid(),
         expires_at: expiresAt,
         is_active: true
       };
