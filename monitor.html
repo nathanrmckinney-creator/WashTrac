@@ -2415,6 +2415,8 @@ function renderLiveDepartmentBilling(rows, codes = []){
   currentDepartmentCosts = normalizeDepartmentCosts(currentDepartmentCosts, currentCostPerCar);
 
   const map = {};
+  let dailyWashCount = 0;
+  let monthlyWashCount = 0;
 
   currentBillingDepartments.forEach(department => {
     map[department] = {
@@ -2430,23 +2432,29 @@ function renderLiveDepartmentBilling(rows, codes = []){
     const eventDate = new Date(row.event_time || row.created_at || Date.now());
     if(Number.isNaN(eventDate.getTime()) || !sameLocalMonth(eventDate, today)) return;
 
+    monthlyWashCount += 1;
+
+    const isToday = sameLocalDay(eventDate, today);
+    if(isToday){
+      dailyWashCount += 1;
+    }
+
     const department = normalizeBillingDepartment(row.department || row.metadata?.department);
     if(!department) return;
 
     // If a custom department was deleted, do not count old historical activity for it.
     // This keeps Monitor synced with the active/current department list automatically.
+    // Wash Count totals are calculated separately above from all billable wash activity.
     if(!map[department]) return;
 
     map[department].carsMonth += 1;
 
-    if(sameLocalDay(eventDate, today)){
+    if(isToday){
       map[department].carsToday += 1;
     }
   });
 
   const items = sortBillingDepartments(Object.values(map));
-  const dailyWashCount = items.reduce((sum, item) => sum + Number(item.carsToday || 0), 0);
-  const monthlyWashCount = items.reduce((sum, item) => sum + Number(item.carsMonth || 0), 0);
   const topDepartment = items
     .filter(item => Number(item.carsMonth || 0) > 0)
     .sort((a,b) => Number(b.carsMonth || 0) - Number(a.carsMonth || 0))[0] || null;
