@@ -3299,7 +3299,7 @@ async function queueCommand(){
   }
 
   if(!targets.length){
-    setStatus("No target devices found.", "warn");
+    setStatus("No online target devices found. Select an individual device or wait for the Keypad heartbeat.", "warn");
     return;
   }
 
@@ -3313,15 +3313,23 @@ async function queueCommand(){
 }
 
 function getCommandTargetDevices(){
-  let targets = [...(visibleDevices || [])];
+  /*
+    Command safety:
+    "All visible devices" should target only currently online devices.
+    Old/offline device records can remain in Supabase and share the same display
+    name, which made one click queue the same command for several stale Keypad rows.
+  */
+  let targets = uniqueDevicesById(visibleDevices || []).filter(isDeviceOnline);
 
   if(targets.length) return targets;
 
   const siteId = selectedSite();
   if(siteId){
-    targets = (allDevices || []).filter(device => device.site_id === siteId);
+    targets = uniqueDevicesById(allDevices || [])
+      .filter(device => device.site_id === siteId)
+      .filter(isDeviceOnline);
   }else{
-    targets = [...(allDevices || [])];
+    targets = uniqueDevicesById(allDevices || []).filter(isDeviceOnline);
   }
 
   return targets;
@@ -3340,7 +3348,7 @@ async function queueCommandForVisible(command, askConfirm=true, extraPayload={})
   }
 
   if(!targets.length){
-    setStatus("No devices found for the selected site. Refresh the page or select a site first.", "warn");
+    setStatus("No online devices found for the selected site. Refresh the page or select an individual device first.", "warn");
     return;
   }
 
