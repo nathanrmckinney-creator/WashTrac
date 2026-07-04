@@ -2136,14 +2136,6 @@ async function deleteDepartment(){
       "custom...": "Custom"
     };
 
-    const NON_BILLING_DEPARTMENTS = new Set([
-      "wash",
-      "controls",
-      "maintenance",
-      "unassigned",
-      ""
-    ]);
-
     function titleCaseDepartment(value){
       return String(value || "")
         .trim()
@@ -2154,14 +2146,17 @@ async function deleteDepartment(){
     }
 
     function normalizeBillingDepartment(value){
-      const raw = String(value || "").trim().replace(/\s+/g, " ");
+      const raw = String(value || "").trim().replace(/\\s+/g, " ");
       const key = raw.toLowerCase();
 
-      if(NON_BILLING_DEPARTMENTS.has(key)) return null;
+      // Only ignore blank departments. Every named department can be billed,
+      // or intentionally set to $0.00 in Cost Allocation.
+      if(!key) return null;
+
       if(BILLING_DEPARTMENT_ALIASES[key]) return BILLING_DEPARTMENT_ALIASES[key];
 
       // Any user-created/custom department should remain its actual name.
-      // Example: Body Shop, Fleet, Sales, Wholesale, etc.
+      // Example: Wash, Maintenance, Body Shop, Fleet, Sales, Wholesale, etc.
       return titleCaseDepartment(raw);
     }
 
