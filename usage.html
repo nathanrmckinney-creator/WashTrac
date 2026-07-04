@@ -528,12 +528,12 @@ document.addEventListener("DOMContentLoaded", function(){
 
     <div class="grid-2">
       <div class="card">
-        <h3>Department Usage Chart</h3>
+        <h3>Department Usage Chart — This Month</h3>
         <div class="chart-wrap"><canvas id="departmentUsageChart"></canvas></div>
       </div>
 
       <div class="card">
-        <h3>Top 10 Codes Chart</h3>
+        <h3>Top 10 Codes Chart — This Month</h3>
         <div class="chart-wrap"><canvas id="topCodesChart"></canvas></div>
       </div>
     </div>
@@ -1574,6 +1574,18 @@ function filterUsesByRange(uses, rangeValue, startId, endId){
   };
 }
 
+function getThisMonthUses(uses){
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = endOfDay(now);
+
+  return (uses || []).filter(item => {
+    if(!item.last_used) return false;
+    const when = new Date(item.last_used);
+    return when >= start && when <= end;
+  });
+}
+
 function aggregateUses(uses){
   const codeMap = {};
 
@@ -1970,8 +1982,12 @@ const uses = rows
 
     document.getElementById("topDept").innerText = deptArray.length ? deptArray[0][0] : "-";
 
-    renderDepartmentChart(deptArray);
-    renderTopCodesChart(codeArray.slice(0,10));
+    const thisMonthUses = getThisMonthUses(uses);
+    const thisMonthDeptArray = getDepartmentDataFromUses(thisMonthUses);
+    const thisMonthCodeArray = aggregateUses(thisMonthUses);
+
+    renderDepartmentChart(thisMonthDeptArray);
+    renderTopCodesChart(thisMonthCodeArray.slice(0,10));
     renderTopCodesList(codeArray);
     renderDepartmentBillingSummary();
   }catch(err){
