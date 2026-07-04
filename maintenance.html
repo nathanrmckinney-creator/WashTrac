@@ -3126,6 +3126,7 @@ function renderTargetDeviceSelect(){
 
 async function deleteDeviceRecord(deviceId, serialText = ""){
   clearStatus();
+  console.log("Delete device clicked:", deviceId, serialText);
 
   if(!deviceId){
     setStatus("No device selected.", "warn");
@@ -3143,6 +3144,16 @@ async function deleteDeviceRecord(deviceId, serialText = ""){
     if(!confirmed) return;
   }
 
+  setStatus("Deleting device record...", "warn");
+
+  /*
+    Delete related maintenance records first. If your database has foreign keys
+    from device_commands/device_logs to devices, the device row cannot be removed
+    until those records are removed.
+  */
+  await client.from("device_commands").delete().eq("device_id", deviceId);
+  await client.from("device_logs").delete().eq("device_id", deviceId);
+
   const { error } = await client
     .from("devices")
     .delete()
@@ -3150,7 +3161,7 @@ async function deleteDeviceRecord(deviceId, serialText = ""){
 
   if(error){
     console.log("Delete device error:", error);
-    setStatus("Could not delete device record. Check devices delete permission/RLS.", "error");
+    setStatus("Could not delete device record. Most likely Supabase RLS is blocking deletes on devices. Check console for details.", "error");
     return;
   }
 
@@ -3205,8 +3216,8 @@ function renderDevices(){
         <td>${escapeText(formatDateTime(getDeviceLastSeen(device)))}</td>
         <td>
           <div class="mini-actions">
-            <button class="secondary small-btn" type="button" onclick="selectDevice('${deviceId}')">Select</button>
-            <button class="danger small-btn" type="button" onclick="deleteDeviceRecord('${deviceId}','${serial}')">Delete</button>
+            <button class="secondary small-btn" type="button" data-device-select="${deviceId}">Select</button>
+            <button class="danger small-btn" type="button" data-device-delete="${deviceId}" data-device-serial="${serial}">Delete</button>
           </div>
         </td>
       </tr>`;
@@ -3485,6 +3496,29 @@ function startQuietMaintenanceRefresh(){
 
 document.addEventListener("keydown",function(event){
   if(event.key==="Escape") closeMenus();
+});
+
+document.addEventListener("click", async function(event){
+  const selectBtn = event.target.closest("[data-device-select]");
+  if(selectBtn){
+    event.preventDefault();
+    selectDevice(selectBtn.dataset.deviceSelect || "");
+    return;
+  }
+
+  const deleteBtn = event.target.closest("[data-device-delete]");
+  if(deleteBtn){
+    event.preventDefault();
+    const deviceId = deleteBtn.dataset.deviceDelete || "";
+    const serial = deleteBtn.dataset.deviceSerial || "";
+
+    deleteBtn.disabled = true;
+    try{
+      await deleteDeviceRecord(deviceId, serial);
+    }finally{
+      deleteBtn.disabled = false;
+    }
+  }
 });
 
 document.addEventListener("click",function(event){
