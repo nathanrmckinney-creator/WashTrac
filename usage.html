@@ -535,6 +535,9 @@ document.addEventListener("DOMContentLoaded", function(){
       <div class="card">
         <h3>Top 10 Codes Chart — This Month</h3>
         <div class="chart-wrap"><canvas id="topCodesChart"></canvas></div>
+        <div class="actions" style="margin-top:12px;">
+          <button type="button" class="secondary" id="topCodesChartToggleBtn" onclick="toggleTopCodesChartCodes()">Show Codes</button>
+        </div>
       </div>
     </div>
 
@@ -544,14 +547,14 @@ document.addEventListener("DOMContentLoaded", function(){
       <div class="form-row" style="max-width:320px;margin-bottom:14px;">
         <label for="quickViewRange">Quick View Timeframe</label>
         <select id="quickViewRange" onchange="updateQuickViewRangeFields(); renderDepartmentBillingSummary()">
-          <option value="all">All Available Data</option>
+          <option value="this_month" selected>This Month</option>
           <option value="today">Today</option>
           <option value="yesterday">Yesterday</option>
           <option value="this_week">This Week</option>
           <option value="last_week">Last Week</option>
           <option value="last_14">Last 14 Days</option>
-          <option value="this_month">This Month</option>
           <option value="last_month">Last Month</option>
+          <option value="all">All Available Data</option>
           <option value="custom">Custom Start / End Date</option>
         </select>
       </div>
@@ -569,7 +572,7 @@ document.addEventListener("DOMContentLoaded", function(){
       </div>
 
       <div class="note" id="quickViewRangeSummary" style="margin-top:0;margin-bottom:14px;">
-        Quick view range: All Available Data.
+        Quick view range: This Month.
       </div>
 
       <div class="note" style="margin-top:0;margin-bottom:14px;">
@@ -783,6 +786,8 @@ let topCodesChartInstance = null;
 let cachedCodes = [];
 let cachedDepartmentData = [];
 let cachedRawUses = [];
+let cachedThisMonthTopCodes = [];
+let showTopCodesChartCodes = false;
 let cachedBillingSummary = [];
 let cachedCostPerCar = 0;
 let cachedDepartmentCosts = {};
@@ -1853,6 +1858,7 @@ async function loadUsage(){
       cachedRawUses = [];
       cachedCodes = [];
       cachedDepartmentData = [];
+      cachedThisMonthTopCodes = [];
 
       document.getElementById("totalUses").innerText = "0";
       document.getElementById("totalCodes").innerText = "0";
@@ -1986,8 +1992,10 @@ const uses = rows
     const thisMonthDeptArray = getDepartmentDataFromUses(thisMonthUses);
     const thisMonthCodeArray = aggregateUses(thisMonthUses);
 
+    cachedThisMonthTopCodes = thisMonthCodeArray.slice(0,10);
+
     renderDepartmentChart(thisMonthDeptArray);
-    renderTopCodesChart(thisMonthCodeArray.slice(0,10));
+    renderTopCodesChart(cachedThisMonthTopCodes);
     renderTopCodesList(codeArray);
     renderDepartmentBillingSummary();
   }catch(err){
@@ -2096,6 +2104,27 @@ function renderDepartmentChart(sorted){
   });
 }
 
+function maskReportCode(code){
+  const text = String(code || "").trim();
+  if(!text || text === "Unknown") return "XXXX";
+  return "XXXX";
+}
+
+function getTopCodesChartLabels(codes){
+  return (codes || []).map(c => showTopCodesChartCodes ? String(c.code || "Unknown") : maskReportCode(c.code));
+}
+
+function toggleTopCodesChartCodes(){
+  showTopCodesChartCodes = !showTopCodesChartCodes;
+
+  const btn = document.getElementById("topCodesChartToggleBtn");
+  if(btn){
+    btn.innerText = showTopCodesChartCodes ? "Hide Codes" : "Show Codes";
+  }
+
+  renderTopCodesChart(cachedThisMonthTopCodes || []);
+}
+
 function renderTopCodesChart(codes){
   const ctx = document.getElementById("topCodesChart");
   if(!ctx) return;
@@ -2115,7 +2144,7 @@ function renderTopCodesChart(codes){
   topCodesChartInstance = new Chart(ctx,{
     type:"line",
     data:{
-      labels: codes.map(c => c.code),
+      labels: getTopCodesChartLabels(codes),
       datasets:[{
         label:"Washes",
         data: codes.map(c => Number(c.uses || 0)),
