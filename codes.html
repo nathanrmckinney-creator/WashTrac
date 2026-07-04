@@ -972,6 +972,7 @@ document.addEventListener("DOMContentLoaded", function(){
             <option value="Pre Owned">Pre Owned</option>
             <option value="Service">Service</option>
             <option value="Detail">Detail</option>
+            <option value="Wash">Wash</option>
             <option value="Manager">Manager</option>
             <option value="Temporary">Temporary</option>
             <option value="Other">Other</option>
@@ -1376,6 +1377,101 @@ function handleDepartmentChange(){
     tempWrap.classList.add("hidden");
     document.getElementById("tempDays").value = "";
     document.getElementById("tempMaxUses").value = "";
+  }
+}
+
+const DEFAULT_CODE_DEPARTMENTS = [
+  "New Cars",
+  "Pre Owned",
+  "Service",
+  "Detail",
+  "Wash",
+  "Manager",
+  "Temporary",
+  "Other"
+];
+
+function cleanDepartmentName(value){
+  return String(value || "").trim().replace(/\s+/g, " ");
+}
+
+function titleCaseDepartment(value){
+  return cleanDepartmentName(value)
+    .split(" ")
+    .map(word => word ? word.charAt(0).toUpperCase() + word.slice(1) : "")
+    .join(" ");
+}
+
+function normalizeCodeDepartment(value){
+  const raw = cleanDepartmentName(value);
+  const key = raw.toLowerCase();
+
+  if(!key) return "";
+
+  const aliases = {
+    "new": "New Cars",
+    "new car": "New Cars",
+    "new cars": "New Cars",
+    "pre owned": "Pre Owned",
+    "pre-owned": "Pre Owned",
+    "preowned": "Pre Owned",
+    "used": "Pre Owned",
+    "service": "Service",
+    "detail": "Detail",
+    "wash": "Wash",
+    "manager": "Manager",
+    "management": "Manager",
+    "temporary": "Temporary",
+    "temp": "Temporary",
+    "other": "Other",
+    "custom": "Custom"
+  };
+
+  return aliases[key] || titleCaseDepartment(raw);
+}
+
+function sortCodeDepartments(departments){
+  return departments.sort((a,b) => {
+    const aIndex = DEFAULT_CODE_DEPARTMENTS.indexOf(a);
+    const bIndex = DEFAULT_CODE_DEPARTMENTS.indexOf(b);
+    const safeA = aIndex === -1 ? 999 : aIndex;
+    const safeB = bIndex === -1 ? 999 : bIndex;
+
+    if(safeA !== safeB) return safeA - safeB;
+    return String(a).localeCompare(String(b));
+  });
+}
+
+function refreshDepartmentDropdown(){
+  const select = document.getElementById("departmentSelect");
+  if(!select) return;
+
+  const previous = select.value;
+  const map = new Map();
+
+  DEFAULT_CODE_DEPARTMENTS.forEach(department => {
+    map.set(department.toLowerCase(), department);
+  });
+
+  (allCodes || []).forEach(item => {
+    const department = normalizeCodeDepartment(getCodeDepartment(item));
+    if(department){
+      map.set(department.toLowerCase(), department);
+    }
+  });
+
+  const departments = sortCodeDepartments(Array.from(map.values()));
+
+  select.innerHTML = `
+    <option value="">Select department</option>
+    ${departments.map(department => `<option value="${escapeText(department)}">${escapeText(department)}</option>`).join("")}
+    <option value="__custom__">Custom...</option>
+  `;
+
+  if(previous && departments.includes(previous)){
+    select.value = previous;
+  }else if(previous === "__custom__"){
+    select.value = "__custom__";
   }
 }
 
@@ -1876,6 +1972,7 @@ async function loadCodesPage(){
     allCodes = codes;
     allActivity = activity;
 
+    refreshDepartmentDropdown();
     renderSystemHeartbeat(devices);
     renderCodes(1);
     renderSummary();
