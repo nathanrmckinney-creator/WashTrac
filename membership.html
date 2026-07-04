@@ -119,7 +119,7 @@
 
     .summary{
       display:grid;
-      grid-template-columns:repeat(6,1fr);
+      grid-template-columns:repeat(5,1fr);
       gap:16px;
       margin-bottom:20px;
     }
@@ -904,8 +904,7 @@ document.addEventListener("DOMContentLoaded", function(){
     <div class="summary">
       <div class="summary-box"><strong id="currentMembersCount">0</strong><span>Current Members</span></div>
       <div class="summary-box"><strong id="membershipWashesMonth">0</strong><span>Membership Washes This Month</span></div>
-      <div class="summary-box"><strong id="monthlyMembershipRevenue">$0.00</strong><span>Monthly Membership Revenue</span></div>
-      <div class="summary-box"><strong id="avgWashesPerMember">0.0</strong><span>Average Washes Per Member</span></div>
+<div class="summary-box"><strong id="avgWashesPerMember">0.0</strong><span>Average Washes Per Member</span></div>
       <div class="summary-box"><strong id="expiringThisMonthCount">0</strong><span>Expiring This Month</span></div>
       <div class="summary-box"><strong id="expiredMembersCount">0</strong><span>Expired Members</span></div>
     </div>
@@ -1594,7 +1593,6 @@ function resetEmpty(){
   allMembershipActivity = [];
   document.getElementById("currentMembersCount").innerText = "0";
   document.getElementById("membershipWashesMonth").innerText = "0";
-  document.getElementById("monthlyMembershipRevenue").innerText = "$0.00";
   document.getElementById("avgWashesPerMember").innerText = "0.0";
   document.getElementById("expiringThisMonthCount").innerText = "0";
   document.getElementById("expiredMembersCount").innerText = "0";
@@ -1663,7 +1661,6 @@ function renderSummary(){
 
   document.getElementById("currentMembersCount").innerText = currentMembers.length;
   document.getElementById("membershipWashesMonth").innerText = allMembershipActivity.length;
-  document.getElementById("monthlyMembershipRevenue").innerText = formatMoney(monthlyRevenue);
   document.getElementById("avgWashesPerMember").innerText = avgWashesPerMember.toFixed(1);
   document.getElementById("expiringThisMonthCount").innerText = expiringThisMonth.length;
   document.getElementById("expiredMembersCount").innerText = expiredMembers.length;
