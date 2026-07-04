@@ -715,12 +715,13 @@ document.addEventListener("DOMContentLoaded", function(){
 
       <div class="date-filters">
         <select id="datePreset" onchange="applyDatePreset()">
+          <option value="this_month" selected>This Month</option>
           <option value="today">Today</option>
           <option value="yesterday">Yesterday</option>
-          <option value="7days" selected>Last 7 Days</option>
+          <option value="7days">Last 7 Days</option>
           <option value="14days">Last 14 Days</option>
           <option value="30days">Last 30 Days</option>
-          <option value="90days" selected>Last 90 Days</option>
+          <option value="90days">Last 90 Days</option>
           <option value="custom">Custom Range</option>
           <option value="all">Latest Loaded Only</option>
         </select>
@@ -1012,7 +1013,10 @@ function applyDatePreset(){
     return;
   }
 
-  if(preset === "today"){
+  if(preset === "this_month"){
+    start = new Date(now.getFullYear(), now.getMonth(), 1);
+    end = now;
+  }else if(preset === "today"){
     start = now;
     end = now;
   }else if(preset === "yesterday"){
@@ -1681,17 +1685,23 @@ function exportFilteredActivity(){
   setStatus(`Exported ${lastFilteredActivityRows.length} filtered row${lastFilteredActivityRows.length === 1 ? "" : "s"}.`, "success");
 }
 
-function clearFilters(){
+function resetActivityToDefaultMonth(){
   clearSavedActivitySearchSettings();
+
   document.getElementById("filterCode").value = "";
   document.getElementById("filterDepartment").value = "";
   document.getElementById("filterName").value = "";
   document.getElementById("filterBay").value = "";
   document.getElementById("filterEvent").value = "";
-  document.getElementById("datePreset").value = "90days";
+  document.getElementById("datePreset").value = "this_month";
   document.getElementById("rowLimit").value = "1000";
+
   applyDatePreset();
   saveActivitySearchSettings();
+}
+
+function clearFilters(){
+  resetActivityToDefaultMonth();
   loadActivity();
 }
 
@@ -1735,10 +1745,11 @@ window.addEventListener("beforeunload", function(){
 });
 
 window.onload = async function(){
-  const restored = restoreActivitySearchSettings();
-  if(!restored){
-    applyDatePreset();
-  }
+  /*
+    Always open Activity to a clean current-month view.
+    This prevents old text searches/date ranges from sticking when returning to the page.
+  */
+  resetActivityToDefaultMonth();
 
   const siteId = await loadSites();
   if(!siteId){
