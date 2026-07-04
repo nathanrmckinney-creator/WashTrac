@@ -1132,9 +1132,16 @@ if(!hasAdminSession){
 
     <div class="card">
       <h3>Recent Commands</h3>
+
+      <div class="actions" style="margin-top:0;margin-bottom:14px;">
+        <button class="secondary" type="button" onclick="loadRecentCommands().then(renderCommands).then(renderSummary)">Refresh Commands</button>
+        <button class="secondary" type="button" onclick="clearFinishedCommands()">Clear Completed / Failed</button>
+        <button class="danger" type="button" onclick="clearPendingCommands()">Delete Pending Commands</button>
+      </div>
+
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Status</th><th>Command</th><th>Device</th><th>Created</th><th>Completed</th><th>Message</th></tr></thead>
+          <thead><tr><th>Status</th><th>Command</th><th>Device</th><th>Created</th><th>Completed</th><th>Message</th><th>Action</th></tr></thead>
           <tbody id="commandsTableBody"></tbody>
         </table>
       </div>
@@ -1221,6 +1228,138 @@ function renderMaintenancePagination(containerId, totalRows, currentPage, onClic
   }
 
   box.innerHTML = html;
+}
+
+function uniqueDevicesById(devices){
+  const map = new Map();
+
+  (devices || []).forEach(device => {
+    const id = String(device?.id || "").trim();
+    if(!id) return;
+    if(!map.has(id)) map.set(id, device);
+  });
+
+  return Array.from(map.values());
+}
+
+function isOpenCommandStatus(status){
+  const key = String(status || "pending").trim().toLowerCase();
+  return ["pending", "queued", "running", "processing", "in_progress"].includes(key);
+}
+
+function isFinishedCommandStatus(status){
+  const key = String(status || "").trim().toLowerCase();
+  return ["complete", "completed", "done", "failed", "error", "cancelled", "canceled"].includes(key);
+}
+
+async function findOpenDuplicateCommands(command, devices){
+  const deviceIds = uniqueDevicesById(devices).map(device => device.id).filter(Boolean);
+  if(!deviceIds.length) return [];
+
+  const { data, error } = await client
+    .from("device_commands")
+    .select("*")
+    .in("device_id", deviceIds)
+    .eq("command", command)
+    .in("status", ["pending", "queued", "running", "processing", "in_progress"])
+    .order("created_at", { ascending:false })
+    .limit(100);
+
+  if(error){
+    console.log("Duplicate command check error:", error);
+    return [];
+  }
+
+  return data || [];
+}
+
+async function deleteCommand(commandId, askConfirm = true){
+  clearStatus();
+
+  if(!commandId){
+    setStatus("No command selected.", "warn");
+    return;
+  }
+
+  if(askConfirm && !confirm("Delete this command?")){
+    return;
+  }
+
+  const { error } = await client
+    .from("device_commands")
+    .delete()
+    .eq("id", commandId);
+
+  if(error){
+    console.log("Delete command error:", error);
+    setStatus("Could not delete command.", "error");
+    return;
+  }
+
+  setStatus("Command deleted.", "success");
+  await loadRecentCommands();
+  renderCommands();
+  renderSummary();
+}
+
+async function clearFinishedCommands(){
+  clearStatus();
+
+  const deviceIds = uniqueDevicesById(allDevices).map(device => device.id).filter(Boolean);
+  if(!deviceIds.length){
+    setStatus("No devices loaded.", "warn");
+    return;
+  }
+
+  const confirmed = confirm("Delete completed, failed, cancelled, and done commands for the loaded devices?");
+  if(!confirmed) return;
+
+  const { error } = await client
+    .from("device_commands")
+    .delete()
+    .in("device_id", deviceIds)
+    .in("status", ["complete", "completed", "done", "failed", "error", "cancelled", "canceled"]);
+
+  if(error){
+    console.log("Clear finished commands error:", error);
+    setStatus("Could not clear finished commands.", "error");
+    return;
+  }
+
+  setStatus("Finished commands cleared.", "success");
+  await loadRecentCommands();
+  renderCommands();
+  renderSummary();
+}
+
+async function clearPendingCommands(){
+  clearStatus();
+
+  const deviceIds = uniqueDevicesById(allDevices).map(device => device.id).filter(Boolean);
+  if(!deviceIds.length){
+    setStatus("No devices loaded.", "warn");
+    return;
+  }
+
+  const confirmed = confirm("Delete ALL pending/running commands for the loaded devices? Use this to clear stale commands before testing.");
+  if(!confirmed) return;
+
+  const { error } = await client
+    .from("device_commands")
+    .delete()
+    .in("device_id", deviceIds)
+    .in("status", ["pending", "queued", "running", "processing", "in_progress"]);
+
+  if(error){
+    console.log("Clear pending commands error:", error);
+    setStatus("Could not delete pending commands.", "error");
+    return;
+  }
+
+  setStatus("Pending commands deleted.", "success");
+  await loadRecentCommands();
+  renderCommands();
+  renderSummary();
 }
 
 function setCodesPage(page){
@@ -3019,7 +3158,7 @@ function renderCommands(){
   tbody.innerHTML="";
 
   if(!recentCommands.length){
-    tbody.innerHTML=`<tr><td colspan="6" class="muted">No recent commands found.</td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="7" class="muted">No recent commands found.</td></tr>`;
     renderMaintenancePagination("commandsPagination", 0, 1, "setCommandsPage");
     return;
   }
@@ -3037,6 +3176,7 @@ function renderCommands(){
     const device=allDevices.find(item=>item.id===cmd.device_id);
     const deviceText=device?getDeviceName(device):(cmd.device_id||"-");
     const message=cmd.result_message||cmd.message||cmd.error||"";
+    const commandId = escapeText(cmd.id || "");
 
     tbody.innerHTML+=`
       <tr>
@@ -3046,6 +3186,9 @@ function renderCommands(){
         <td>${escapeText(formatDateTime(cmd.created_at))}</td>
         <td>${escapeText(formatDateTime(cmd.completed_at))}</td>
         <td>${escapeText(message||"-")}</td>
+        <td>
+          <button class="danger small-btn" type="button" onclick="deleteCommand('${commandId}')">Delete</button>
+        </td>
       </tr>`;
   });
 
@@ -3086,14 +3229,28 @@ function buildPayload(command, extraPayload = {}){
 }
 
 async function queueCommandForDevices(command,devices,extraPayload={}){
-  if(!devices.length){
+  const uniqueDevices = uniqueDevicesById(devices);
+
+  if(!uniqueDevices.length){
     setStatus("No devices selected.", "warn");
+    return false;
+  }
+
+  const duplicates = await findOpenDuplicateCommands(command, uniqueDevices);
+  const duplicateDeviceIds = new Set((duplicates || []).map(cmd => String(cmd.device_id || "")));
+  const devicesToQueue = uniqueDevices.filter(device => !duplicateDeviceIds.has(String(device.id || "")));
+
+  if(!devicesToQueue.length){
+    setStatus(`A ${command} command is already pending/running for the selected device${uniqueDevices.length===1?"":"s"}. No duplicate command was queued.`, "warn");
+    await loadRecentCommands();
+    renderCommands();
+    renderSummary();
     return false;
   }
 
   const payload=buildPayload(command, extraPayload);
 
-  const rows=devices.map(device=>({
+  const rows=devicesToQueue.map(device=>({
     device_id:device.id,
     site_id:device.site_id||null,
     command,
@@ -3111,7 +3268,9 @@ async function queueCommandForDevices(command,devices,extraPayload={}){
     return false;
   }
 
-  setStatus(`Queued ${command} for ${rows.length} device${rows.length===1?"":"s"}.`, "success");
+  const skipped = uniqueDevices.length - devicesToQueue.length;
+  const skippedText = skipped ? ` Skipped ${skipped} duplicate pending/running command${skipped===1?"":"s"}.` : "";
+  setStatus(`Queued ${command} for ${rows.length} device${rows.length===1?"":"s"}.${skippedText}`, "success");
   await loadRecentCommands();
   renderCommands();
   renderSummary();
