@@ -2378,32 +2378,51 @@ async function fetchBillingActivity(){
   start.setDate(1);
   start.setHours(0,0,0,0);
 
-  let result = await client
+  /*
+    Monitor fix:
+    Recent Activity can still show rows when event_time is empty because it falls back
+    to created_at for display. The old Department Usage / Wash Count query filtered
+    only on event_time, so rows with a blank event_time were excluded before the
+    counters ever saw them.
+
+    Pull this month's activity by created_at first, then also try event_time and merge.
+    renderLiveDepartmentBilling() still does the final local month/today filtering.
+  */
+  const rowsById = new Map();
+
+  const createdResult = await client
+    .from("wash_activity")
+    .select("*")
+    .eq("site_id", activeSiteId)
+    .gte("created_at", start.toISOString())
+    .order("created_at", { ascending:false })
+    .limit(1000);
+
+  if(createdResult.error){
+    console.log("billing created_at error:", createdResult.error);
+  } else {
+    (createdResult.data || []).forEach(row => {
+      rowsById.set(row.id || `${row.created_at}-${row.event}-${row.code || ""}`, row);
+    });
+  }
+
+  const eventResult = await client
     .from("wash_activity")
     .select("*")
     .eq("site_id", activeSiteId)
     .gte("event_time", start.toISOString())
     .order("event_time", { ascending:false })
-    .limit(500);
+    .limit(1000);
 
-  if(result.error){
-    console.log("billing event_time error:", result.error);
-
-    result = await client
-      .from("wash_activity")
-      .select("*")
-      .eq("site_id", activeSiteId)
-      .gte("created_at", start.toISOString())
-      .order("created_at", { ascending:false })
-      .limit(500);
+  if(eventResult.error){
+    console.log("billing event_time error:", eventResult.error);
+  } else {
+    (eventResult.data || []).forEach(row => {
+      rowsById.set(row.id || `${row.event_time}-${row.event}-${row.code || ""}`, row);
+    });
   }
 
-  if(result.error){
-    console.log("billing activity error:", result.error);
-    return [];
-  }
-
-  return result.data || [];
+  return Array.from(rowsById.values());
 }
 
 function renderLiveDepartmentBilling(rows, codes = []){
