@@ -1058,7 +1058,7 @@ if(!hasAdminSession){
 
         <div class="field">
           <label for="targetDevice">Target Device</label>
-          <select id="targetDevice"><option value="">All visible devices</option></select>
+          <select id="targetDevice"><option value="">Online visible devices only</option></select>
         </div>
 
         <div class="field" style="margin-top:12px;">
@@ -1124,7 +1124,7 @@ if(!hasAdminSession){
       <h3>Devices</h3>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Status</th><th>Device</th><th>Site</th><th>Serial</th><th>Version</th><th>Last Seen</th><th>Command</th></tr></thead>
+          <thead><tr><th>Status</th><th>Device</th><th>Site</th><th>Serial</th><th>Version</th><th>Last Seen</th><th>Actions</th></tr></thead>
           <tbody id="devicesTableBody"></tbody>
         </table>
       </div>
@@ -3102,7 +3102,64 @@ function renderSummary(){
 
 function renderTargetDeviceSelect(){
   const select=document.getElementById("targetDevice");
-  select.innerHTML=`<option value="">All visible devices</option>`+visibleDevices.map(device=>`<option value="${escapeText(device.id)}">${escapeText(getDeviceName(device))} — ${escapeText(siteName(device.site_id))}</option>`).join("");
+  if(!select) return;
+
+  const onlineDevices = uniqueDevicesById(visibleDevices || []).filter(isDeviceOnline);
+  const offlineDevices = uniqueDevicesById(visibleDevices || []).filter(device => !isDeviceOnline(device));
+
+  let html = `<option value="">Online visible devices only</option>`;
+
+  onlineDevices.forEach(device => {
+    html += `<option value="${escapeText(device.id)}">ONLINE — ${escapeText(getDeviceName(device))} — ${escapeText(getDeviceSerial(device))}</option>`;
+  });
+
+  if(offlineDevices.length){
+    html += `<optgroup label="Offline / old device records">`;
+    offlineDevices.forEach(device => {
+      html += `<option value="${escapeText(device.id)}">OFFLINE — ${escapeText(getDeviceName(device))} — ${escapeText(getDeviceSerial(device))}</option>`;
+    });
+    html += `</optgroup>`;
+  }
+
+  select.innerHTML = html;
+}
+
+async function deleteDeviceRecord(deviceId, serialText = ""){
+  clearStatus();
+
+  if(!deviceId){
+    setStatus("No device selected.", "warn");
+    return;
+  }
+
+  const device = allDevices.find(item => String(item.id) === String(deviceId));
+  const online = device ? isDeviceOnline(device) : false;
+
+  if(online){
+    const stop = confirm("This device is currently ONLINE. Deleting an online device can break command routing. Are you absolutely sure?");
+    if(!stop) return;
+  }else{
+    const confirmed = confirm(`Delete old/offline device record ${serialText || deviceId}? This does not erase the physical Keypad; it only removes the stale cloud device row.`);
+    if(!confirmed) return;
+  }
+
+  const { error } = await client
+    .from("devices")
+    .delete()
+    .eq("id", deviceId);
+
+  if(error){
+    console.log("Delete device error:", error);
+    setStatus("Could not delete device record. Check devices delete permission/RLS.", "error");
+    return;
+  }
+
+  setStatus("Device record deleted.", "success");
+  await loadDevices();
+  await loadRecentCommands();
+  renderDevices();
+  renderCommands();
+  renderSummary();
 }
 
 function renderDevices(){
@@ -3110,7 +3167,7 @@ function renderDevices(){
   const search=document.getElementById("deviceSearch").value.trim().toLowerCase();
   const statusFilter=document.getElementById("statusFilter").value;
 
-  visibleDevices=allDevices.filter(device=>{
+  visibleDevices=uniqueDevicesById(allDevices).filter(device=>{
     const online=isDeviceOnline(device);
     const haystack=[getDeviceName(device),getDeviceSerial(device),getDeviceVersion(device),siteName(device.site_id),device.id].join(" ").toLowerCase();
 
@@ -3135,16 +3192,23 @@ function renderDevices(){
     const online=isDeviceOnline(device);
     const tagClass=online?"online":"offline";
     const statusText=online?"Online":"Offline";
+    const deviceId = escapeText(device.id || "");
+    const serial = escapeText(getDeviceSerial(device));
 
     tbody.innerHTML+=`
       <tr>
         <td><span class="tag ${tagClass}">${statusText}</span></td>
-        <td><strong>${escapeText(getDeviceName(device))}</strong><div class="muted">${escapeText(device.id||"")}</div></td>
+        <td><strong>${escapeText(getDeviceName(device))}</strong><div class="muted">${deviceId}</div></td>
         <td>${escapeText(siteName(device.site_id))}</td>
-        <td>${escapeText(getDeviceSerial(device))}</td>
+        <td>${serial}</td>
         <td>${escapeText(getDeviceVersion(device))}</td>
         <td>${escapeText(formatDateTime(getDeviceLastSeen(device)))}</td>
-        <td><button class="secondary" type="button" onclick="selectDevice('${escapeText(device.id)}')">Select</button></td>
+        <td>
+          <div class="mini-actions">
+            <button class="secondary small-btn" type="button" onclick="selectDevice('${deviceId}')">Select</button>
+            <button class="danger small-btn" type="button" onclick="deleteDeviceRecord('${deviceId}','${serial}')">Delete</button>
+          </div>
+        </td>
       </tr>`;
   });
 
