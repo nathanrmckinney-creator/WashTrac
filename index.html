@@ -1295,7 +1295,7 @@
   </section>
 
   <footer>
-    WASHTRAC © 2026<br />
+    © WashTrac™ | A CloudKey Innovations LLC Product. All Rights Reserved.<br />
     Control. Track. Manage.
   </footer>
 
@@ -1466,23 +1466,27 @@
       document.getElementById("adminModal").classList.remove("show");
     }
 
-    function adminLogin() {
-      const username = document.getElementById("adminUser").value.trim();
+    async function adminLogin() {
+      const email = document.getElementById("adminUser").value.trim();
       const password = document.getElementById("adminPass").value;
       const status = document.getElementById("adminStatus");
 
-      const ADMIN_USER = "admin";
-      const ADMIN_PASS = "WashTrac2026!";
+      status.innerText = "Signing in...";
 
-      if (username === ADMIN_USER && password === ADMIN_PASS) {
-        sessionStorage.setItem("washtracAdmin", "yes");
-        window.location.href = "maintenance.html";
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error || !data.user) {
+        status.innerText = "Invalid email or password.";
+        document.getElementById("adminPass").value = "";
+        document.getElementById("adminPass").focus();
         return;
       }
 
-      status.innerText = "Invalid username or password.";
-      document.getElementById("adminPass").value = "";
-      document.getElementById("adminPass").focus();
+      sessionStorage.setItem("washtracAdmin", "yes");
+      window.location.href = "maintenance.html";
     }
 
 
@@ -1525,8 +1529,8 @@
     <div class="admin-card" onclick="event.stopPropagation()">
       <h3>Admin Access</h3>
 
-      <label for="adminUser">Username</label>
-      <input id="adminUser" type="text" autocomplete="username">
+      <label for="adminUser">Email</label>
+      <input id="adminUser" type="email" autocomplete="username">
 
       <label for="adminPass">Password</label>
       <input id="adminPass" type="password" autocomplete="current-password">
