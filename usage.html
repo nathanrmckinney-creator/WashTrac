@@ -541,8 +541,39 @@ document.addEventListener("DOMContentLoaded", function(){
     <div class="card">
       <h3>Department Usage Summary</h3>
 
+      <div class="form-row" style="max-width:320px;margin-bottom:14px;">
+        <label for="quickViewRange">Quick View Timeframe</label>
+        <select id="quickViewRange" onchange="updateQuickViewRangeFields(); renderDepartmentBillingSummary()">
+          <option value="all">All Available Data</option>
+          <option value="today">Today</option>
+          <option value="yesterday">Yesterday</option>
+          <option value="this_week">This Week</option>
+          <option value="last_week">Last Week</option>
+          <option value="last_14">Last 14 Days</option>
+          <option value="this_month">This Month</option>
+          <option value="last_month">Last Month</option>
+          <option value="custom">Custom Start / End Date</option>
+        </select>
+      </div>
+
+      <div class="date-grid hidden" id="quickViewCustomRangeFields" style="max-width:520px;margin-bottom:14px;">
+        <div class="form-row">
+          <label for="quickViewStartDate">Start Date</label>
+          <input id="quickViewStartDate" type="date" onchange="renderDepartmentBillingSummary()">
+        </div>
+
+        <div class="form-row">
+          <label for="quickViewEndDate">End Date</label>
+          <input id="quickViewEndDate" type="date" onchange="renderDepartmentBillingSummary()">
+        </div>
+      </div>
+
+      <div class="note" id="quickViewRangeSummary" style="margin-top:0;margin-bottom:14px;">
+        Quick view range: All Available Data.
+      </div>
+
       <div class="note" style="margin-top:0;margin-bottom:14px;">
-        Department usage uses the selected report range, the same Current Site / All My Sites scope, and the department Cost Per Car values saved on the Dashboard.
+        Department usage uses the quick view timeframe above, the same Current Site / All My Sites scope, and the department Cost Per Car values saved on the Dashboard.
       </div>
 
       <div class="billing-head">
@@ -1436,9 +1467,32 @@ function updateReportRangeFields(){
   if(info){
     summary.innerText = `Current email range: ${info.label}.`;
   }
+}
 
-  if(cachedRawUses.length){
-    renderDepartmentBillingSummary();
+function getQuickViewRangeValue(){
+  const select = document.getElementById("quickViewRange");
+  return select ? select.value : "all";
+}
+
+function updateQuickViewRangeFields(){
+  const range = getQuickViewRangeValue();
+  const customFields = document.getElementById("quickViewCustomRangeFields");
+  const summary = document.getElementById("quickViewRangeSummary");
+
+  if(customFields){
+    customFields.classList.toggle("hidden", range !== "custom");
+  }
+
+  if(!summary) return;
+
+  if(range === "custom"){
+    summary.innerText = "Quick view range: Custom Start / End Date.";
+    return;
+  }
+
+  const info = getRangeDates(range, "quickViewStartDate", "quickViewEndDate");
+  if(info){
+    summary.innerText = `Quick view range: ${info.label}.`;
   }
 }
 
@@ -1632,10 +1686,12 @@ function getDepartmentBillingFromUses(uses){
 }
 
 function getBillingForSelectedRange(){
-  const rangeValue = document.getElementById("reportRange").value;
-  const filtered = filterUsesByRange(cachedRawUses, rangeValue, "customStartDate", "customEndDate");
+  const rangeValue = getQuickViewRangeValue();
+  const filtered = filterUsesByRange(cachedRawUses, rangeValue, "quickViewStartDate", "quickViewEndDate");
 
   if(!filtered) return null;
+
+  updateQuickViewRangeFields();
 
   return {
     label: filtered.label,
