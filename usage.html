@@ -804,14 +804,6 @@ const BILLING_DEPARTMENT_ALIASES = {
   "custom...": "Custom"
 };
 
-const NON_BILLING_DEPARTMENTS = new Set([
-  "wash",
-  "controls",
-  "maintenance",
-  "unassigned",
-  ""
-]);
-
 function parseCostPerCar(value){
   const number = Number(String(value ?? "0").replace(/[^0-9.]/g, ""));
   if(!Number.isFinite(number) || number < 0) return 0;
@@ -826,7 +818,10 @@ function normalizeBillingDepartment(value){
   const cleaned = cleanDepartmentName(value);
   const key = cleaned.toLowerCase();
 
-  if(NON_BILLING_DEPARTMENTS.has(key)) return "";
+  // Only ignore blank departments. Every named department can be billed,
+  // or intentionally set to $0.00 in Cost Allocation.
+  if(!key) return "";
+
   if(BILLING_DEPARTMENT_ALIASES[key]) return BILLING_DEPARTMENT_ALIASES[key];
 
   // Custom departments should remain visible by their real name.
