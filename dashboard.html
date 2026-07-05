@@ -1288,7 +1288,7 @@
       <div class="summary">
         <div class="summary-box">
           <strong id="todayWashes">0</strong>
-          <span>Total Activity Records</span>
+          <span>Total Uses</span>
         </div>
 
         <div class="summary-box">
@@ -2102,6 +2102,20 @@ async function deleteDepartment(){
       if(text.includes("add") || text.includes("delete") || text.includes("pair")){
         return false;
       }
+
+      return true;
+    }
+
+
+    function isUseEvent(row){
+      const event = String(row.event || row.status || "").toLowerCase();
+      const metaStatus = String(row.metadata?.status || "").toLowerCase();
+      const result = `${event} ${metaStatus}`;
+
+      if(result.includes("denied")) return false;
+      if(result.includes("invalid")) return false;
+      if(result.includes("failed")) return false;
+      if(result.includes("error")) return false;
 
       return true;
     }
@@ -3778,16 +3792,25 @@ async function deleteDepartment(){
         if(activeSiteId !== getActiveSiteId()) return;
 
         const activeCodes = activeOnlyCodes(codes);
-        const codeUsage = buildCodeUsageData(allActivity);
-        const departments = buildDepartmentData(allActivity);
-        const daily = buildDailyData(allActivity);
-        const usedBays = [...new Set(allActivity.map(row => row.bay).filter(Boolean))];
+
+        /*
+          Dashboard usage must match Reports:
+          count successful use events only, not every activity row.
+          This prevents add/delete/pair/denied/system activity from inflating
+          the Dashboard total.
+        */
+        const usageActivity = allActivity.filter(isUseEvent);
+
+        const codeUsage = buildCodeUsageData(usageActivity);
+        const departments = buildDepartmentData(usageActivity);
+        const daily = buildDailyData(usageActivity);
+        const usedBays = [...new Set(usageActivity.map(row => row.bay).filter(Boolean))];
 
         setTextIfExists("activeCodes", activeCodes.length);
-        setTextIfExists("todayWashes", allActivity.length);
+        setTextIfExists("todayWashes", usageActivity.length);
         setTextIfExists("currentMembers", membershipStats.currentMembers || 0);
         setTextIfExists("memberWashesMonth", membershipStats.memberWashesMonth || 0);
-        setTextIfExists("totalActivityRecords", allActivity.length);
+        setTextIfExists("totalActivityRecords", usageActivity.length);
         setTextIfExists("totalDepartments", departments.length);
         setTextIfExists("totalBays", usedBays.length || bays.length);
         const lastUpdatedEl = document.getElementById("lastUpdated"); if(lastUpdatedEl) lastUpdatedEl.innerText = new Date().toLocaleTimeString();
@@ -3797,7 +3820,7 @@ async function deleteDepartment(){
 
         renderRecentActivity(recentActivity);
         renderTopCodes(codeUsage);
-        renderCostAllocation(allActivity, activeCodes);
+        renderCostAllocation(usageActivity, activeCodes);
         renderDepartmentChart(departments);
         renderDailyChart(daily);
         const activePairedDevices = uniqueDashboardDevicesById((pairedDevices || []).filter(isActiveDashboardDevice));
