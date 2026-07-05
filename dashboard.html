@@ -2797,22 +2797,27 @@ async function deleteDepartment(){
     async function fetchAllActivity(siteId){
       if(!siteId) return [];
 
+      /*
+        Keep Dashboard usage aligned with Reports.
+        Reports loads the latest 500 wash_activity rows by created_at first,
+        then falls back to event_time only if created_at sorting fails.
+      */
       let result = await client
         .from("wash_activity")
         .select("*")
         .eq("site_id", siteId)
-        .order("event_time", { ascending:false })
-        .limit(1000);
+        .order("created_at", { ascending:false })
+        .limit(500);
 
       if(result.error){
-        console.log("All activity event_time error:", result.error);
+        console.log("All activity created_at error:", result.error);
 
         result = await client
           .from("wash_activity")
           .select("*")
           .eq("site_id", siteId)
-          .order("created_at", { ascending:false })
-          .limit(1000);
+          .order("event_time", { ascending:false })
+          .limit(500);
       }
 
       if(result.error){
