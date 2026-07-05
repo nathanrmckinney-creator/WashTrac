@@ -2844,6 +2844,41 @@ async function deleteDepartment(){
       return data || [];
     }
 
+    function getDashboardDeviceId(device){
+      return String(
+        device?.id ||
+        device?.device_id ||
+        device?.serial_number ||
+        device?.serial ||
+        device?.device_serial ||
+        ""
+      ).trim();
+    }
+
+    function uniqueDashboardDevicesById(devices){
+      const map = new Map();
+
+      (devices || []).forEach(device => {
+        const id = getDashboardDeviceId(device);
+        if(!id) return;
+        if(!map.has(id)) map.set(id, device);
+      });
+
+      return Array.from(map.values());
+    }
+
+    function isActiveDashboardDevice(device){
+      if(!device) return false;
+
+      const retired =
+        device.is_retired === true ||
+        device.is_retired === "true" ||
+        device.retired_at ||
+        String(device.status || "").toLowerCase() === "retired";
+
+      return !retired;
+    }
+
     async function fetchPairedDevices(siteId){
       if(!siteId) return [];
 
@@ -2851,6 +2886,7 @@ async function deleteDepartment(){
         .from("devices")
         .select("*")
         .eq("site_id", siteId)
+        .neq("is_retired", true)
         .order("created_at", { ascending:false });
 
       if(error){
@@ -2858,7 +2894,7 @@ async function deleteDepartment(){
         return [];
       }
 
-      return data || [];
+      return uniqueDashboardDevicesById((data || []).filter(isActiveDashboardDevice));
     }
 
     async function fetchActiveSiteSettings(siteId){
@@ -3090,6 +3126,7 @@ async function deleteDepartment(){
 }
 
     function renderPairedDevices(devices){
+      devices = uniqueDashboardDevicesById((devices || []).filter(isActiveDashboardDevice));
       const wrap = document.getElementById("pairedDevicesList");
       if(!wrap) return;
 
@@ -3763,10 +3800,12 @@ async function deleteDepartment(){
         renderCostAllocation(allActivity, activeCodes);
         renderDepartmentChart(departments);
         renderDailyChart(daily);
-        window.dashboardPairedDevices = pairedDevices || [];
-        renderPairedDevices(pairedDevices);
-        renderWifiSupport((pairedDevices || [])[0] || null);
-        renderSystemControl(control, pairedDevices);
+        const activePairedDevices = uniqueDashboardDevicesById((pairedDevices || []).filter(isActiveDashboardDevice));
+
+        window.dashboardPairedDevices = activePairedDevices;
+        renderPairedDevices(activePairedDevices);
+        renderWifiSupport(activePairedDevices[0] || null);
+        renderSystemControl(control, activePairedDevices);
         renderBayEditor(bays);
       }catch(err){
         console.log("Dashboard load error:", err);
