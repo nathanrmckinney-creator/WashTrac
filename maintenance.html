@@ -1280,7 +1280,7 @@ if(!hasAdminSession){
           </div>
 
           <div class="note">
-            Software updates queue <span class="inline-code">update_software</span> with the release URL, version, checksum, and release notes. The Keypad downloads, verifies, installs, reboots, and reports the result.
+            Software updates queue <span class="inline-code">update_software</span>. The Keypad securely checks the latest private GitHub Release using its local token, downloads, verifies, backs up, installs, restarts, and reports the result.
           </div>
         </div>
       </div>
@@ -3736,43 +3736,27 @@ async function loadSoftwareReleases(){
   clearSoftwareUpdateStatus();
 
   const select = document.getElementById("softwareReleaseSelect");
-  if(select) select.innerHTML = `<option value="">Loading releases...</option>`;
 
-  const { data, error } = await client
-    .from("software_releases")
-    .select("*")
-    .eq("is_active", true)
-    .order("created_at", { ascending:false })
-    .limit(50);
+  /*
+    Production OTA note:
+    Do NOT expose the private GitHub token in this website.
+    The Maintenance page only queues update_software.
+    The Keypad/Pi backend securely reads the latest private GitHub Release
+    using its local GITHUB_TOKEN environment variable.
+  */
+  softwareReleases = [{
+    id:"github_latest",
+    version:"Latest GitHub Release",
+    release_notes:"The Keypad will securely check GitHub, download the latest private release, verify SHA-256, back up the current install, install the update, restart services, and roll back on failure.",
+    source:"github_private_latest",
+    is_active:true
+  }];
 
-  if(error){
-    console.log("Software releases load error:", error);
-    softwareReleases = [];
-    selectedSoftwareRelease = null;
-
-    if(select) select.innerHTML = `<option value="">No releases available</option>`;
-    renderSoftwareUpdateDetails();
-    setSoftwareUpdateStatus("Could not load software releases. Make sure the software_releases table exists and has at least one active release.", "warn");
-    return [];
-  }
-
-  softwareReleases = data || [];
-  selectedSoftwareRelease = getLatestSoftwareRelease();
+  selectedSoftwareRelease = softwareReleases[0];
 
   if(select){
-    if(!softwareReleases.length){
-      select.innerHTML = `<option value="">No active releases</option>`;
-    }else{
-      select.innerHTML = softwareReleases.map(release => {
-        const version = getReleaseVersion(release);
-        const required = release.is_required === true ? " — Required" : "";
-        return `<option value="${escapeText(release.id || version)}">${escapeText(version || "Unnamed Release")}${required}</option>`;
-      }).join("");
-
-      if(selectedSoftwareRelease){
-        select.value = selectedSoftwareRelease.id || getReleaseVersion(selectedSoftwareRelease);
-      }
-    }
+    select.innerHTML = `<option value="github_latest">Latest GitHub Release</option>`;
+    select.value = "github_latest";
   }
 
   renderSoftwareUpdateDetails();
@@ -4040,9 +4024,9 @@ function renderSoftwareUpdateDetails(){
 
   if(details){
     details.innerHTML = `
-      <div><strong>Version:</strong> ${escapeText(version || "-")}</div>
-      <div><strong>URL:</strong> ${url ? `<span class="inline-code">${escapeText(url)}</span>` : `<span class="tag yellow">Missing URL</span>`}</div>
-      <div><strong>Checksum:</strong> ${checksum ? `<span class="inline-code">${escapeText(checksum)}</span>` : `<span class="muted">Not provided</span>`}</div>
+      <div><strong>Source:</strong> <span class="inline-code">Private GitHub Release</span></div>
+      <div><strong>Install Mode:</strong> Device pulls latest release securely using local GITHUB_TOKEN</div>
+      <div><strong>Checksum:</strong> Verified on the Keypad before install</div>
       <div class="software-release-notes"><strong>Release Notes</strong><br>${getReleaseNotesHtml(notes)}</div>
     `;
   }
@@ -4062,53 +4046,34 @@ async function installSoftwareUpdate(){
   clearSoftwareUpdateStatus();
   closeMenus();
 
-  const release = getSelectedSoftwareRelease();
+  const release = getSelectedSoftwareRelease() || {
+    id:"github_latest",
+    version:"Latest GitHub Release",
+    source:"github_private_latest"
+  };
 
-  if(!release){
-    setSoftwareUpdateStatus("Select an active software release first.", "warn");
-    return;
-  }
-
-  const version = getReleaseVersion(release);
-  const url = getReleaseUrl(release);
-  const checksum = getReleaseChecksum(release);
-  const notes = getReleaseNotes(release);
+  const version = getReleaseVersion(release) || "Latest GitHub Release";
   const targets = getSoftwareUpdateTargets();
-
-  if(!version){
-    setSoftwareUpdateStatus("Selected software release is missing a version.", "error");
-    return;
-  }
-
-  if(!url){
-    setSoftwareUpdateStatus("Selected software release is missing a package URL.", "error");
-    return;
-  }
 
   if(!targets.length){
     setSoftwareUpdateStatus("No online target devices found. Select one online device or choose an online deployment scope.", "warn");
     return;
   }
 
-  const confirmed = confirm(`Install ${version} on ${targets.length} online Keypad${targets.length===1?"":"s"}?`);
+  const confirmed = confirm(`Install the latest WashTrac Controller update on ${targets.length} online Keypad${targets.length===1?"":"s"}?`);
   if(!confirmed) return;
 
   const payload = {
     version,
-    url,
-    package_url:url,
-    checksum:checksum || null,
-    release_id:release.id || null,
-    release_notes:notes || null,
-    is_required:release.is_required === true,
+    source:"github_private_latest",
     requested_at:new Date().toISOString()
   };
 
-  setSoftwareUpdateStatus(`Queueing software update ${version} for ${targets.length} Keypad${targets.length===1?"":"s"}...`, "warn");
+  setSoftwareUpdateStatus(`Queueing software update for ${targets.length} Keypad${targets.length===1?"":"s"}...`, "warn");
   const queued = await queueCommandForDevices("update_software", targets, payload);
 
   if(queued){
-    setSoftwareUpdateStatus(`Software update ${version} queued for ${targets.length} Keypad${targets.length===1?"":"s"}. Watch Update Progress below for status.`, "success");
+    setSoftwareUpdateStatus(`Software update queued for ${targets.length} Keypad${targets.length===1?"":"s"}. Watch Update Progress below for status.`, "success");
   }
 
   await loadRecentCommands();
