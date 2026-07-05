@@ -181,6 +181,116 @@
     .network-card{background:#0b1220;border:1px solid #1f2937;border-radius:12px;padding:16px;}
     .network-card h4{display:flex;justify-content:space-between;gap:12px;align-items:center;}
     .network-meta{color:#94a3b8;font-size:13px;line-height:1.6;margin-top:8px;}
+
+    .software-release-notes{
+      margin-top:12px;
+      padding:12px;
+      border:1px solid rgba(37,99,235,.24);
+      border-radius:10px;
+      background:rgba(2,6,23,.38);
+      color:#dbe5fb;
+      line-height:1.45;
+      white-space:pre-wrap;
+    }
+
+    .software-release-notes strong{
+      color:#fff;
+    }
+
+    .software-changelog-wrap{
+      display:none;
+      margin-top:12px;
+      padding:12px;
+      border:1px solid rgba(148,163,184,.18);
+      border-radius:10px;
+      background:rgba(2,6,23,.42);
+      color:#cbd5e1;
+      line-height:1.45;
+      white-space:pre-wrap;
+    }
+
+    .software-changelog-wrap.show{
+      display:block;
+    }
+
+    .software-progress-wrap{
+      margin-top:16px;
+      padding:14px;
+      border:1px solid rgba(37,99,235,.26);
+      border-radius:12px;
+      background:linear-gradient(145deg,#0b1220,#06101d);
+    }
+
+    .software-progress-title{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:center;
+      margin-bottom:10px;
+      color:#eaf4ff;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.35px;
+    }
+
+    .software-progress-bar{
+      height:12px;
+      border-radius:999px;
+      overflow:hidden;
+      background:#020617;
+      border:1px solid rgba(148,163,184,.18);
+      margin:10px 0 12px;
+    }
+
+    .software-progress-fill{
+      height:100%;
+      width:0%;
+      border-radius:999px;
+      background:linear-gradient(90deg,#2563eb,#38bdf8);
+      transition:width .25s ease;
+    }
+
+    .software-progress-steps{
+      display:grid;
+      grid-template-columns:repeat(6,minmax(0,1fr));
+      gap:8px;
+      margin-top:10px;
+    }
+
+    .software-step{
+      padding:8px 7px;
+      border-radius:10px;
+      border:1px solid rgba(148,163,184,.16);
+      background:rgba(15,23,42,.78);
+      color:#94a3b8;
+      font-size:12px;
+      font-weight:900;
+      text-align:center;
+    }
+
+    .software-step.active{
+      border-color:rgba(56,189,248,.65);
+      color:#bfdbfe;
+      background:rgba(37,99,235,.18);
+    }
+
+    .software-step.done{
+      border-color:rgba(34,197,94,.28);
+      color:#86efac;
+      background:rgba(34,197,94,.12);
+    }
+
+    .software-step.failed{
+      border-color:rgba(239,68,68,.32);
+      color:#fca5a5;
+      background:rgba(239,68,68,.12);
+    }
+
+    @media (max-width:900px){
+      .software-progress-steps{
+        grid-template-columns:1fr 1fr;
+      }
+    }
     .wifi-network-list{display:grid;gap:10px;margin-top:14px;}
     .wifi-network-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid #1f2937;border-radius:10px;background:#020617;cursor:pointer;}
     .wifi-network-row:hover,.wifi-network-row.selected{border-color:#1ea7ff;box-shadow:0 0 12px rgba(30,167,255,.18);}
@@ -1141,6 +1251,12 @@ if(!hasAdminSession){
           </div>
 
           <div id="softwareReleaseDetails" class="network-meta">No software release selected.</div>
+
+          <div class="actions">
+            <button class="secondary" type="button" onclick="toggleSoftwareChangelog()">View Changelog</button>
+          </div>
+
+          <div id="softwareChangelog" class="software-changelog-wrap">No changelog loaded.</div>
         </div>
 
         <div class="network-card">
@@ -1152,9 +1268,9 @@ if(!hasAdminSession){
           <div class="field">
             <label for="softwareUpdateScope">Install To</label>
             <select id="softwareUpdateScope" onchange="renderSoftwareUpdateDetails()">
-              <option value="selected">Selected target device</option>
-              <option value="site_online">All online devices at this site</option>
-              <option value="visible_online">All visible online devices</option>
+              <option value="selected">Selected Keypad</option>
+              <option value="site_online">All online Keypads at this site</option>
+              <option value="visible_online">All visible online Keypads</option>
             </select>
           </div>
 
@@ -1164,9 +1280,21 @@ if(!hasAdminSession){
           </div>
 
           <div class="note">
-            Software updates queue <span class="inline-code">update_software</span> with the release URL, version, and checksum. The Keypad downloads, verifies, installs, reboots, and reports the result.
+            Software updates queue <span class="inline-code">update_software</span> with the release URL, version, checksum, and release notes. The Keypad downloads, verifies, installs, reboots, and reports the result.
           </div>
         </div>
+      </div>
+
+      <div class="software-progress-wrap">
+        <div class="software-progress-title">
+          <span>Update Progress</span>
+          <span id="softwareProgressTag" class="tag">Idle</span>
+        </div>
+        <div id="softwareProgressSummary" class="network-meta">No active software update.</div>
+        <div class="software-progress-bar">
+          <div id="softwareProgressFill" class="software-progress-fill"></div>
+        </div>
+        <div id="softwareProgressSteps" class="software-progress-steps"></div>
       </div>
 
       <div id="softwareUpdateStatus" class="status"></div>
@@ -3180,6 +3308,8 @@ function renderTargetDeviceSelect(){
   }else{
     select.value = "";
   }
+
+  renderSoftwareUpdateDetails();
 }
 
 function getOpenCommandsForDevice(deviceId){
@@ -3389,6 +3519,7 @@ function renderCommands(){
   });
 
   renderMaintenancePagination("commandsPagination", recentCommands.length, currentCommandsPage, "setCommandsPage");
+  renderSoftwareUpdateProgress();
 }
 
 function selectDevice(deviceId){
@@ -3683,12 +3814,176 @@ function getSoftwareUpdateTargets(){
   return getCommandTargetDevices();
 }
 
+function getReleaseNotesHtml(notes){
+  const clean = String(notes || "").trim();
+  if(!clean) return "No release notes provided.";
+
+  return clean
+    .split(/\r?\n/)
+    .map(line => escapeText(line))
+    .join("<br>");
+}
+
+function getReleaseChangelog(release){
+  return String(
+    release?.changelog ||
+    release?.change_log ||
+    release?.release_notes ||
+    release?.notes ||
+    release?.description ||
+    ""
+  ).trim();
+}
+
+function toggleSoftwareChangelog(){
+  const box = document.getElementById("softwareChangelog");
+  if(!box) return;
+  box.classList.toggle("show");
+}
+
+function getSoftwareCommandPayload(cmd){
+  const raw = cmd?.payload;
+  if(!raw) return {};
+  if(typeof raw === "object") return raw;
+  try{
+    return JSON.parse(raw);
+  }catch(err){
+    return {};
+  }
+}
+
+function getSoftwareUpdateCommandsForTargets(targets, release){
+  const targetIds = new Set((targets || []).map(device => String(device.id || "")));
+  const version = getReleaseVersion(release);
+
+  return (recentCommands || []).filter(cmd => {
+    if(String(cmd.command || "") !== "update_software") return false;
+    if(targetIds.size && !targetIds.has(String(cmd.device_id || ""))) return false;
+
+    const payload = getSoftwareCommandPayload(cmd);
+    const cmdVersion = normalizeVersionText(payload.version || payload.release_version || "");
+    if(version && cmdVersion && cmdVersion !== version) return false;
+
+    return true;
+  });
+}
+
+function getSoftwareProgressFromCommands(commands){
+  const updateCommands = commands || [];
+
+  if(!updateCommands.length){
+    return {
+      stageIndex:0,
+      tone:"",
+      label:"Idle",
+      summary:"No active software update.",
+      percent:0,
+      failed:false,
+      complete:false
+    };
+  }
+
+  const newest = [...updateCommands].sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))[0];
+  const status = String(newest.status || "pending").toLowerCase();
+  const message = String(newest.result_message || newest.message || newest.error || "").toLowerCase();
+
+  if(["failed","error"].includes(status) || message.includes("fail") || message.includes("error")){
+    return {
+      stageIndex:5,
+      tone:"red",
+      label:"Failed",
+      summary:newest.result_message || newest.message || newest.error || "Software update failed.",
+      percent:100,
+      failed:true,
+      complete:false
+    };
+  }
+
+  if(["complete","completed","done"].includes(status) || message.includes("complete") || message.includes("success")){
+    return {
+      stageIndex:5,
+      tone:"green",
+      label:"Complete",
+      summary:newest.result_message || newest.message || "Software update complete.",
+      percent:100,
+      failed:false,
+      complete:true
+    };
+  }
+
+  let stageIndex = 1;
+  let label = "Queued";
+
+  if(message.includes("download")){
+    stageIndex = 2;
+    label = "Downloading";
+  }else if(message.includes("install") || ["running","processing","in_progress"].includes(status)){
+    stageIndex = 3;
+    label = "Installing";
+  }else if(message.includes("reboot") || message.includes("restart")){
+    stageIndex = 4;
+    label = "Rebooting";
+  }else if(message.includes("wait") || message.includes("heartbeat") || message.includes("online")){
+    stageIndex = 5;
+    label = "Waiting for Keypad";
+  }
+
+  const percentByStage = [0,16,36,58,78,90];
+
+  return {
+    stageIndex,
+    tone:"yellow",
+    label,
+    summary:newest.result_message || newest.message || `${label} software update command.`,
+    percent:percentByStage[stageIndex] || 16,
+    failed:false,
+    complete:false
+  };
+}
+
+function renderSoftwareUpdateProgress(){
+  const tag = document.getElementById("softwareProgressTag");
+  const summary = document.getElementById("softwareProgressSummary");
+  const fill = document.getElementById("softwareProgressFill");
+  const stepsBox = document.getElementById("softwareProgressSteps");
+
+  if(!tag || !summary || !fill || !stepsBox) return;
+
+  const release = getSelectedSoftwareRelease();
+  const targets = getSoftwareUpdateTargets();
+  const commands = getSoftwareUpdateCommandsForTargets(targets, release);
+  const progress = getSoftwareProgressFromCommands(commands);
+  const steps = ["Queued","Downloading","Installing","Rebooting","Waiting","Complete"];
+
+  tag.className = `tag ${progress.tone || ""}`;
+  tag.innerText = progress.label;
+  summary.innerHTML = escapeText(progress.summary);
+  fill.style.width = `${progress.percent}%`;
+
+  stepsBox.innerHTML = steps.map((step, index) => {
+    let cls = "software-step";
+
+    if(progress.failed && index === steps.length - 1){
+      cls += " failed";
+    }else if(progress.complete){
+      cls += " done";
+    }else if(index < progress.stageIndex){
+      cls += " done";
+    }else if(index === progress.stageIndex){
+      cls += " active";
+    }
+
+    return `<div class="${cls}">${escapeText(step)}</div>`;
+  }).join("");
+}
+
 function renderSoftwareUpdateDetails(){
   const release = getSelectedSoftwareRelease();
   const versionBox = document.getElementById("softwareCurrentVersions");
   const versionTag = document.getElementById("softwareVersionTag");
   const releaseTag = document.getElementById("softwareReleaseTag");
   const details = document.getElementById("softwareReleaseDetails");
+  const changelog = document.getElementById("softwareChangelog");
   const scopeTag = document.getElementById("softwareScopeTag");
 
   const onlineDevices = uniqueDevicesById(allDevices || []).filter(isDeviceOnline);
@@ -3701,10 +3996,10 @@ function renderSoftwareUpdateDetails(){
 
   if(versionBox){
     if(!onlineDevices.length){
-      versionBox.innerHTML = `No online devices found.`;
+      versionBox.innerHTML = `No online Keypads found.`;
     }else{
       versionBox.innerHTML = Array.from(versionCounts.entries()).map(([version,count]) => {
-        return `<div><strong>${escapeText(version)}</strong> — ${count} online device${count===1?"":"s"}</div>`;
+        return `<div><strong>${escapeText(version)}</strong> — ${count} online Keypad${count===1?"":"s"}</div>`;
       }).join("");
     }
   }
@@ -3720,7 +4015,9 @@ function renderSoftwareUpdateDetails(){
       releaseTag.innerText = "No Release";
     }
     if(details) details.innerHTML = "No active software release is available.";
+    if(changelog) changelog.innerHTML = "No changelog loaded.";
     if(scopeTag) scopeTag.innerText = "Online Only";
+    renderSoftwareUpdateProgress();
     return;
   }
 
@@ -3728,6 +4025,7 @@ function renderSoftwareUpdateDetails(){
   const url = getReleaseUrl(release);
   const checksum = getReleaseChecksum(release);
   const notes = getReleaseNotes(release);
+  const changeLogText = getReleaseChangelog(release);
   const targets = getSoftwareUpdateTargets();
 
   if(releaseTag){
@@ -3745,10 +4043,18 @@ function renderSoftwareUpdateDetails(){
       <div><strong>Version:</strong> ${escapeText(version || "-")}</div>
       <div><strong>URL:</strong> ${url ? `<span class="inline-code">${escapeText(url)}</span>` : `<span class="tag yellow">Missing URL</span>`}</div>
       <div><strong>Checksum:</strong> ${checksum ? `<span class="inline-code">${escapeText(checksum)}</span>` : `<span class="muted">Not provided</span>`}</div>
-      <div style="margin-top:8px;"><strong>Release Notes:</strong></div>
-      <div>${escapeText(notes || "No release notes provided.")}</div>
+      <div class="software-release-notes"><strong>Release Notes</strong><br>${getReleaseNotesHtml(notes)}</div>
     `;
   }
+
+  if(changelog){
+    changelog.innerHTML = `
+      <strong>${escapeText(version || "Selected Release")}</strong>
+      <br><br>${getReleaseNotesHtml(changeLogText)}
+    `;
+  }
+
+  renderSoftwareUpdateProgress();
 }
 
 async function installSoftwareUpdate(){
@@ -3784,7 +4090,7 @@ async function installSoftwareUpdate(){
     return;
   }
 
-  const confirmed = confirm(`Install ${version} on ${targets.length} online device${targets.length===1?"":"s"}?`);
+  const confirmed = confirm(`Install ${version} on ${targets.length} online Keypad${targets.length===1?"":"s"}?`);
   if(!confirmed) return;
 
   const payload = {
@@ -3798,13 +4104,15 @@ async function installSoftwareUpdate(){
     requested_at:new Date().toISOString()
   };
 
-  setSoftwareUpdateStatus(`Queueing software update ${version} for ${targets.length} device${targets.length===1?"":"s"}...`, "warn");
+  setSoftwareUpdateStatus(`Queueing software update ${version} for ${targets.length} Keypad${targets.length===1?"":"s"}...`, "warn");
   const queued = await queueCommandForDevices("update_software", targets, payload);
 
   if(queued){
-    setSoftwareUpdateStatus(`Software update ${version} queued for ${targets.length} device${targets.length===1?"":"s"}.`, "success");
+    setSoftwareUpdateStatus(`Software update ${version} queued for ${targets.length} Keypad${targets.length===1?"":"s"}. Watch Update Progress below for status.`, "success");
   }
 
+  await loadRecentCommands();
+  renderCommands();
   renderSoftwareUpdateDetails();
 }
 
