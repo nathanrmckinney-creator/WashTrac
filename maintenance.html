@@ -1058,7 +1058,7 @@ if(!hasAdminSession){
 
         <div class="field">
           <label for="targetDevice">Target Device</label>
-          <select id="targetDevice"><option value="">Online visible devices only</option></select>
+          <select id="targetDevice" onchange="renderSoftwareUpdateDetails()"><option value="">Online visible devices only</option></select>
         </div>
 
         <div class="field" style="margin-top:12px;">
@@ -1076,14 +1076,9 @@ if(!hasAdminSession){
             <option value="register_lte">Re-Register SIM</option>
             <option value="enter_maintenance">Enter Maintenance Mode</option>
             <option value="exit_maintenance">Exit Maintenance Mode</option>
-            <option value="update_software">Software Update</option>
           </select>
         </div>
 
-        <div class="field" id="versionWrap" style="margin-top:12px; display:none;">
-          <label for="updateVersion">Update Version / Package</label>
-          <input id="updateVersion" placeholder="Example: v1.0.7">
-        </div>
 
         <div class="field" style="margin-top:12px;">
           <label for="commandNote">Command Note</label>
@@ -1099,7 +1094,7 @@ if(!hasAdminSession){
       <div class="card danger-zone">
         <h3>Support Lifeline Commands</h3>
         <p class="note">
-          These affect the selected site’s visible devices. Reboot and software update should only be used when you are actively supporting that customer.
+          These affect the selected site’s visible devices. Reboot should only be used when you are actively supporting that customer.
         </p>
 
         <div class="actions">
@@ -1118,6 +1113,63 @@ if(!hasAdminSession){
           Needed backend/agent support on Keypad: the Pi/Keypad must poll <span class="inline-code">device_commands</span>, execute allowed commands, then update command status.
         </div>
       </div>
+    </div>
+
+    <div class="card">
+      <h3>Software Updates</h3>
+
+      <div class="grid-3">
+        <div class="network-card">
+          <h4>
+            Current Device Versions
+            <span id="softwareVersionTag" class="tag">Unknown</span>
+          </h4>
+          <div id="softwareCurrentVersions" class="network-meta">Load devices to view current versions.</div>
+        </div>
+
+        <div class="network-card">
+          <h4>
+            Available Release
+            <span id="softwareReleaseTag" class="tag">Not Loaded</span>
+          </h4>
+
+          <div class="field">
+            <label for="softwareReleaseSelect">Release Version</label>
+            <select id="softwareReleaseSelect" onchange="renderSoftwareUpdateDetails()">
+              <option value="">Loading releases...</option>
+            </select>
+          </div>
+
+          <div id="softwareReleaseDetails" class="network-meta">No software release selected.</div>
+        </div>
+
+        <div class="network-card">
+          <h4>
+            Deployment Scope
+            <span id="softwareScopeTag" class="tag">Online Only</span>
+          </h4>
+
+          <div class="field">
+            <label for="softwareUpdateScope">Install To</label>
+            <select id="softwareUpdateScope" onchange="renderSoftwareUpdateDetails()">
+              <option value="selected">Selected target device</option>
+              <option value="site_online">All online devices at this site</option>
+              <option value="visible_online">All visible online devices</option>
+            </select>
+          </div>
+
+          <div class="actions">
+            <button class="success" type="button" onclick="installSoftwareUpdate()">Install Update</button>
+            <button class="secondary" type="button" onclick="loadSoftwareReleases()">Refresh Releases</button>
+          </div>
+
+          <div class="note">
+            Software updates queue <span class="inline-code">update_software</span> with the release URL, version, and checksum. The Keypad downloads, verifies, installs, reboots, and reports the result.
+          </div>
+        </div>
+      </div>
+
+      <div id="softwareUpdateStatus" class="status"></div>
     </div>
 
     <div class="card">
@@ -1188,6 +1240,8 @@ let quietRefreshTimer = null;
 let quietRefreshInProgress = false;
 let ownershipCandidateUsers = [];
 let userEmailById = {};
+let softwareReleases = [];
+let selectedSoftwareRelease = null;
 
 const MAINTENANCE_PAGE_SIZE = 20;
 let currentCodesPage = 1;
@@ -3185,6 +3239,7 @@ async function deleteDeviceRecord(deviceId, serialText = ""){
     setStatus(`Cannot remove device: ${removalState.reason}.`, "warn");
     renderDevices();
     renderCommands();
+    renderSoftwareUpdateDetails();
     renderSummary();
     return;
   }
@@ -3338,33 +3393,27 @@ function renderCommands(){
 
 function selectDevice(deviceId){
   document.getElementById("targetDevice").value=deviceId;
+  renderSoftwareUpdateDetails();
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
 function handleCommandChange(){
-  const command=document.getElementById("commandSelect").value;
-  document.getElementById("versionWrap").style.display=command==="update_software"?"flex":"none";
+  return;
 }
 
 function clearCommandForm(){
   document.getElementById("targetDevice").value="";
   document.getElementById("commandSelect").value="sync_codes";
-  document.getElementById("updateVersion").value="";
   document.getElementById("commandNote").value="";
   handleCommandChange();
   clearStatus();
 }
 
 function buildPayload(command, extraPayload = {}){
-  const note=document.getElementById("commandNote").value.trim();
+  const note=document.getElementById("commandNote")?.value.trim() || "";
   const payload={...extraPayload};
 
   if(note) payload.note=note;
-
-  if(command==="update_software"){
-    const version=document.getElementById("updateVersion").value.trim();
-    if(version) payload.version=version;
-  }
 
   return payload;
 }
@@ -3425,10 +3474,6 @@ async function queueCommand(){
   const command=document.getElementById("commandSelect").value;
   const targetDeviceId=document.getElementById("targetDevice").value;
 
-  if(command==="update_software"&&!document.getElementById("updateVersion").value.trim()){
-    setStatus("Enter an update version/package before queuing a software update.", "warn");
-    return;
-  }
 
   let targets=[];
 
@@ -3444,7 +3489,7 @@ async function queueCommand(){
     return;
   }
 
-  const highImpact=["restart_device","restart_app","restart_network","register_lte","update_software","enter_maintenance"];
+  const highImpact=["restart_device","restart_app","restart_network","register_lte","enter_maintenance"];
   if(highImpact.includes(command)){
     const confirmed=confirm(`Queue ${command} for ${targets.length} device${targets.length===1?"":"s"}?`);
     if(!confirmed) return;
@@ -3508,6 +3553,261 @@ async function queueCommandForVisible(command, askConfirm=true, extraPayload={})
   await queueCommandForDevices(command,targets,extraPayload);
 }
 
+
+function setSoftwareUpdateStatus(message,tone=""){
+  const box=document.getElementById("softwareUpdateStatus");
+  if(!box) return;
+  box.innerText=message;
+  box.className="status show";
+  if(tone) box.classList.add(tone);
+}
+
+function clearSoftwareUpdateStatus(){
+  const box=document.getElementById("softwareUpdateStatus");
+  if(!box) return;
+  box.innerText="";
+  box.className="status";
+}
+
+function normalizeVersionText(value){
+  return String(value || "").trim();
+}
+
+function compareReleaseVersions(a,b){
+  const va = normalizeVersionText(a?.version || a?.release_version || "");
+  const vb = normalizeVersionText(b?.version || b?.release_version || "");
+  return vb.localeCompare(va, undefined, { numeric:true, sensitivity:"base" });
+}
+
+function getReleaseVersion(release){
+  return normalizeVersionText(release?.version || release?.release_version || release?.name || "");
+}
+
+function getReleaseUrl(release){
+  return normalizeVersionText(release?.package_url || release?.download_url || release?.url || release?.file_url || "");
+}
+
+function getReleaseChecksum(release){
+  return normalizeVersionText(release?.checksum || release?.sha256 || release?.sha256_checksum || "");
+}
+
+function getReleaseNotes(release){
+  return String(release?.release_notes || release?.notes || release?.description || "").trim();
+}
+
+function getLatestSoftwareRelease(){
+  const active = (softwareReleases || []).filter(release => release.is_active !== false);
+  if(!active.length) return null;
+  return [...active].sort(compareReleaseVersions)[0];
+}
+
+async function loadSoftwareReleases(){
+  clearSoftwareUpdateStatus();
+
+  const select = document.getElementById("softwareReleaseSelect");
+  if(select) select.innerHTML = `<option value="">Loading releases...</option>`;
+
+  const { data, error } = await client
+    .from("software_releases")
+    .select("*")
+    .eq("is_active", true)
+    .order("created_at", { ascending:false })
+    .limit(50);
+
+  if(error){
+    console.log("Software releases load error:", error);
+    softwareReleases = [];
+    selectedSoftwareRelease = null;
+
+    if(select) select.innerHTML = `<option value="">No releases available</option>`;
+    renderSoftwareUpdateDetails();
+    setSoftwareUpdateStatus("Could not load software releases. Make sure the software_releases table exists and has at least one active release.", "warn");
+    return [];
+  }
+
+  softwareReleases = data || [];
+  selectedSoftwareRelease = getLatestSoftwareRelease();
+
+  if(select){
+    if(!softwareReleases.length){
+      select.innerHTML = `<option value="">No active releases</option>`;
+    }else{
+      select.innerHTML = softwareReleases.map(release => {
+        const version = getReleaseVersion(release);
+        const required = release.is_required === true ? " — Required" : "";
+        return `<option value="${escapeText(release.id || version)}">${escapeText(version || "Unnamed Release")}${required}</option>`;
+      }).join("");
+
+      if(selectedSoftwareRelease){
+        select.value = selectedSoftwareRelease.id || getReleaseVersion(selectedSoftwareRelease);
+      }
+    }
+  }
+
+  renderSoftwareUpdateDetails();
+  return softwareReleases;
+}
+
+function getSelectedSoftwareRelease(){
+  const select = document.getElementById("softwareReleaseSelect");
+  const selectedValue = String(select?.value || "");
+  return (softwareReleases || []).find(release => {
+    return String(release.id || "") === selectedValue || getReleaseVersion(release) === selectedValue;
+  }) || selectedSoftwareRelease || null;
+}
+
+function getSoftwareUpdateTargets(){
+  const scope = document.getElementById("softwareUpdateScope")?.value || "selected";
+
+  if(scope === "selected"){
+    const targetDeviceId = document.getElementById("targetDevice")?.value || "";
+    if(targetDeviceId){
+      const device = allDevices.find(item => String(item.id || "") === String(targetDeviceId));
+      return device && isDeviceOnline(device) ? [device] : [];
+    }
+
+    const onlineDevices = uniqueDevicesById(visibleDevices || []).filter(isDeviceOnline);
+    if(onlineDevices.length === 1) return onlineDevices;
+
+    return [];
+  }
+
+  if(scope === "site_online"){
+    const siteId = selectedSite();
+    if(!siteId) return [];
+    return uniqueDevicesById(allDevices || [])
+      .filter(device => String(device.site_id || "") === String(siteId))
+      .filter(isDeviceOnline);
+  }
+
+  return getCommandTargetDevices();
+}
+
+function renderSoftwareUpdateDetails(){
+  const release = getSelectedSoftwareRelease();
+  const versionBox = document.getElementById("softwareCurrentVersions");
+  const versionTag = document.getElementById("softwareVersionTag");
+  const releaseTag = document.getElementById("softwareReleaseTag");
+  const details = document.getElementById("softwareReleaseDetails");
+  const scopeTag = document.getElementById("softwareScopeTag");
+
+  const onlineDevices = uniqueDevicesById(allDevices || []).filter(isDeviceOnline);
+  const versionCounts = new Map();
+
+  onlineDevices.forEach(device => {
+    const version = normalizeVersionText(getDeviceVersion(device)) || "Unknown";
+    versionCounts.set(version, (versionCounts.get(version) || 0) + 1);
+  });
+
+  if(versionBox){
+    if(!onlineDevices.length){
+      versionBox.innerHTML = `No online devices found.`;
+    }else{
+      versionBox.innerHTML = Array.from(versionCounts.entries()).map(([version,count]) => {
+        return `<div><strong>${escapeText(version)}</strong> — ${count} online device${count===1?"":"s"}</div>`;
+      }).join("");
+    }
+  }
+
+  if(versionTag){
+    versionTag.className = `tag ${onlineDevices.length ? "green" : "yellow"}`;
+    versionTag.innerText = onlineDevices.length ? `${onlineDevices.length} Online` : "No Online";
+  }
+
+  if(!release){
+    if(releaseTag){
+      releaseTag.className = "tag yellow";
+      releaseTag.innerText = "No Release";
+    }
+    if(details) details.innerHTML = "No active software release is available.";
+    if(scopeTag) scopeTag.innerText = "Online Only";
+    return;
+  }
+
+  const version = getReleaseVersion(release);
+  const url = getReleaseUrl(release);
+  const checksum = getReleaseChecksum(release);
+  const notes = getReleaseNotes(release);
+  const targets = getSoftwareUpdateTargets();
+
+  if(releaseTag){
+    releaseTag.className = `tag ${url ? "green" : "yellow"}`;
+    releaseTag.innerText = version || "Release";
+  }
+
+  if(scopeTag){
+    scopeTag.className = `tag ${targets.length ? "green" : "yellow"}`;
+    scopeTag.innerText = `${targets.length} Target${targets.length===1?"":"s"}`;
+  }
+
+  if(details){
+    details.innerHTML = `
+      <div><strong>Version:</strong> ${escapeText(version || "-")}</div>
+      <div><strong>URL:</strong> ${url ? `<span class="inline-code">${escapeText(url)}</span>` : `<span class="tag yellow">Missing URL</span>`}</div>
+      <div><strong>Checksum:</strong> ${checksum ? `<span class="inline-code">${escapeText(checksum)}</span>` : `<span class="muted">Not provided</span>`}</div>
+      <div style="margin-top:8px;"><strong>Release Notes:</strong></div>
+      <div>${escapeText(notes || "No release notes provided.")}</div>
+    `;
+  }
+}
+
+async function installSoftwareUpdate(){
+  clearStatus();
+  clearSoftwareUpdateStatus();
+  closeMenus();
+
+  const release = getSelectedSoftwareRelease();
+
+  if(!release){
+    setSoftwareUpdateStatus("Select an active software release first.", "warn");
+    return;
+  }
+
+  const version = getReleaseVersion(release);
+  const url = getReleaseUrl(release);
+  const checksum = getReleaseChecksum(release);
+  const notes = getReleaseNotes(release);
+  const targets = getSoftwareUpdateTargets();
+
+  if(!version){
+    setSoftwareUpdateStatus("Selected software release is missing a version.", "error");
+    return;
+  }
+
+  if(!url){
+    setSoftwareUpdateStatus("Selected software release is missing a package URL.", "error");
+    return;
+  }
+
+  if(!targets.length){
+    setSoftwareUpdateStatus("No online target devices found. Select one online device or choose an online deployment scope.", "warn");
+    return;
+  }
+
+  const confirmed = confirm(`Install ${version} on ${targets.length} online device${targets.length===1?"":"s"}?`);
+  if(!confirmed) return;
+
+  const payload = {
+    version,
+    url,
+    package_url:url,
+    checksum:checksum || null,
+    release_id:release.id || null,
+    release_notes:notes || null,
+    is_required:release.is_required === true,
+    requested_at:new Date().toISOString()
+  };
+
+  setSoftwareUpdateStatus(`Queueing software update ${version} for ${targets.length} device${targets.length===1?"":"s"}...`, "warn");
+  const queued = await queueCommandForDevices("update_software", targets, payload);
+
+  if(queued){
+    setSoftwareUpdateStatus(`Software update ${version} queued for ${targets.length} device${targets.length===1?"":"s"}.`, "success");
+  }
+
+  renderSoftwareUpdateDetails();
+}
+
 function openCustomerView(page){
   const siteId = selectedSite();
   if(siteId){
@@ -3528,10 +3828,12 @@ async function loadMaintenancePage(showLoading=true){
   await loadPairingCodes();
   await loadDeviceLogs();
   await loadRelayOutputAssignments();
+  await loadSoftwareReleases();
   await loadOrganizationOwnerTool();
 
   renderDevices();
   renderCommands();
+  renderSoftwareUpdateDetails();
 
   if(showLoading) clearStatus();
 }
@@ -3548,6 +3850,7 @@ async function quietRefreshMaintenance(){
     await loadDeviceLogs();
     renderDevices();
     renderCommands();
+    renderSoftwareUpdateDetails();
   }catch(err){
     console.log("Quiet maintenance refresh error:", err);
   }finally{
