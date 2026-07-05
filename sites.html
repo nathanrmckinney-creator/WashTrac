@@ -1498,24 +1498,61 @@ if(!isClientLogin && !isAdminLogin){
       });
     }
 
+    function getDeviceLastSeen(device){
+      return device?.last_seen || device?.last_heartbeat || device?.heartbeat_at || device?.updated_at || "";
+    }
+
+    function isRetiredDevice(device){
+      return device?.is_retired === true || !!device?.retired_at;
+    }
+
+    function uniqueDevicesById(devices){
+      const map = new Map();
+
+      (devices || []).forEach(device => {
+        const id = String(device?.id || "").trim();
+        if(!id) return;
+
+        const existing = map.get(id);
+        if(!existing){
+          map.set(id, device);
+          return;
+        }
+
+        const existingSeen = new Date(getDeviceLastSeen(existing) || 0).getTime() || 0;
+        const nextSeen = new Date(getDeviceLastSeen(device) || 0).getTime() || 0;
+
+        if(nextSeen > existingSeen){
+          map.set(id, device);
+        }
+      });
+
+      return Array.from(map.values());
+    }
+
     async function loadDevicesForSites(){
       currentDevices = [];
       const siteIds = currentSites.map(site => site.id).filter(Boolean);
 
       if(!siteIds.length) return [];
 
-      const { data, error } = await client
+      let query = client
         .from("devices")
         .select("*")
         .in("site_id", siteIds)
         .order("last_seen", { ascending:false });
+
+      const { data, error } = await query;
 
       if(error){
         console.log("Devices load error:", error);
         return [];
       }
 
-      currentDevices = data || [];
+      currentDevices = uniqueDevicesById(data || [])
+        .filter(device => !isRetiredDevice(device))
+        .filter(device => siteIds.includes(device.site_id));
+
       return currentDevices;
     }
 
@@ -1536,9 +1573,10 @@ if(!isClientLogin && !isAdminLogin){
     }
 
     function deviceStatusText(device){
-      if(!device.last_seen) return "NOT SEEN";
+      const heartbeat = getDeviceLastSeen(device);
+      if(!heartbeat) return "NOT SEEN";
 
-      const lastSeen = new Date(device.last_seen);
+      const lastSeen = new Date(heartbeat);
       if(Number.isNaN(lastSeen.getTime())) return "UNKNOWN";
 
       const diffMinutes = (Date.now() - lastSeen.getTime()) / 60000;
@@ -1550,16 +1588,19 @@ if(!isClientLogin && !isAdminLogin){
     }
 
     function formatDeviceLastSeen(device){
-      if(!device.last_seen) return "Never seen";
+      const heartbeat = getDeviceLastSeen(device);
+      if(!heartbeat) return "Never seen";
 
-      const lastSeen = new Date(device.last_seen);
+      const lastSeen = new Date(heartbeat);
       if(Number.isNaN(lastSeen.getTime())) return "Unknown";
 
       return lastSeen.toLocaleString();
     }
 
     function renderSiteDevices(siteId){
-      const devices = currentDevices.filter(device => device.site_id === siteId);
+      const devices = uniqueDevicesById(currentDevices)
+        .filter(device => String(device.site_id || "") === String(siteId || ""))
+        .filter(device => !isRetiredDevice(device));
 
       if(!devices.length){
         return `<div class="mini-row"><div class="mini-main"><span class="mini-muted">No keypad paired to this site yet.</span></div><div class="pill yellow">Unpaired</div></div>`;
