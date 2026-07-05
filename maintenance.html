@@ -3095,7 +3095,7 @@ function downloadLogText(logId){
 
 function renderSummary(){
   const online=allDevices.filter(isDeviceOnline);
-  const pending=recentCommands.filter(cmd=>String(cmd.status||"").toLowerCase()==="pending");
+  const pending=recentCommands.filter(cmd=>isOpenCommandStatus(cmd.status));
   const activeCodes = siteCodes.filter(code => code.is_active !== false);
 
   document.getElementById("totalDevices").innerText=allDevices.length;
@@ -3108,8 +3108,8 @@ function renderTargetDeviceSelect(){
   const select=document.getElementById("targetDevice");
   if(!select) return;
 
+  const previousValue = select.value || "";
   const onlineDevices = uniqueDevicesById(visibleDevices || []).filter(isDeviceOnline);
-  const offlineDevices = uniqueDevicesById(visibleDevices || []).filter(device => !isDeviceOnline(device));
 
   let html = `<option value="">Online visible devices only</option>`;
 
@@ -3117,20 +3117,55 @@ function renderTargetDeviceSelect(){
     html += `<option value="${escapeText(device.id)}">ONLINE — ${escapeText(getDeviceName(device))} — ${escapeText(getDeviceSerial(device))}</option>`;
   });
 
-  if(offlineDevices.length){
-    html += `<optgroup label="Offline / old device records">`;
-    offlineDevices.forEach(device => {
-      html += `<option value="${escapeText(device.id)}">OFFLINE — ${escapeText(getDeviceName(device))} — ${escapeText(getDeviceSerial(device))}</option>`;
-    });
-    html += `</optgroup>`;
+  select.innerHTML = html;
+
+  if(onlineDevices.length === 1){
+    select.value = onlineDevices[0].id;
+  }else if(previousValue && onlineDevices.some(device => String(device.id || "") === String(previousValue))){
+    select.value = previousValue;
+  }else{
+    select.value = "";
+  }
+}
+
+function getOpenCommandsForDevice(deviceId){
+  const id = String(deviceId || "");
+  if(!id) return [];
+
+  return (recentCommands || []).filter(command => {
+    return String(command.device_id || "") === id && isOpenCommandStatus(command.status);
+  });
+}
+
+function getDeviceRemovalState(device){
+  const online = isDeviceOnline(device);
+  const lastSeen = getDeviceLastSeen(device);
+  const seen = lastSeen ? new Date(lastSeen) : null;
+  const hasValidHeartbeat = seen && !Number.isNaN(seen.getTime());
+  const pendingCount = getOpenCommandsForDevice(device?.id).length;
+
+  if(online){
+    return { canRemove:false, reason:"Online" };
   }
 
-  select.innerHTML = html;
+  if(pendingCount > 0){
+    return { canRemove:false, reason:"Pending Commands" };
+  }
+
+  if(hasValidHeartbeat){
+    const hoursSinceHeartbeat = (new Date() - seen) / 3600000;
+    if(hoursSinceHeartbeat <= 24){
+      const hoursWaiting = Math.max(1, Math.ceil(24 - hoursSinceHeartbeat));
+      return { canRemove:false, reason:`Waiting ${hoursWaiting} hour${hoursWaiting===1?"":"s"}` };
+    }
+  }
+
+  return { canRemove:true, reason:"Remove Device" };
 }
 
 async function deleteDeviceRecord(deviceId, serialText = ""){
   clearStatus();
-  console.log("Retire device clicked:", deviceId, serialText);
+  console.log("Remove device clicked:", deviceId, serialText);
 
   if(!deviceId){
     setStatus("No device selected.", "warn");
@@ -3138,39 +3173,64 @@ async function deleteDeviceRecord(deviceId, serialText = ""){
   }
 
   const device = allDevices.find(item => String(item.id) === String(deviceId));
-  const online = device ? isDeviceOnline(device) : false;
-
-  if(online){
-    const stop = confirm("This device is currently ONLINE. Do not retire the live keypad unless you are replacing it. Continue?");
-    if(!stop) return;
-  }else{
-    const confirmed = confirm(`Retire old/offline device record ${serialText || deviceId}? This keeps history but removes it from active Maintenance and command targeting.`);
-    if(!confirmed) return;
+  if(!device){
+    setStatus("Device is not loaded or has already been removed.", "warn");
+    return;
   }
 
-  setStatus("Retiring device record...", "warn");
+  await loadRecentCommands();
+
+  const removalState = getDeviceRemovalState(device);
+  if(!removalState.canRemove){
+    setStatus(`Cannot remove device: ${removalState.reason}.`, "warn");
+    renderDevices();
+    renderCommands();
+    renderSummary();
+    return;
+  }
+
+  const confirmed = confirm(`Remove Device ${serialText || getDeviceSerial(device) || deviceId}? It will disappear from active Maintenance now. The cleanup job will permanently delete it after 48 hours.`);
+  if(!confirmed) return;
+
+  setStatus("Removing device record...", "warn");
+
+  const openStatuses = ["pending", "queued", "running", "processing", "in_progress"];
+
+  const deleteResult = await client
+    .from("device_commands")
+    .delete()
+    .eq("device_id", deviceId)
+    .in("status", openStatuses);
+
+  if(deleteResult.error){
+    console.log("Delete pending commands before remove error:", deleteResult.error);
+    setStatus("Could not clear pending commands for this device. Device was not removed.", "error");
+    return;
+  }
+
+  const updatePayload = {
+    is_retired:true,
+    retired_at:new Date().toISOString(),
+    retired_by:currentUser?.id || currentUser?.email || null,
+    updated_at:new Date().toISOString()
+  };
 
   const { error } = await client
     .from("devices")
-    .update({
-      is_retired:true,
-      retired_at:new Date().toISOString(),
-      updated_at:new Date().toISOString()
-    })
+    .update(updatePayload)
     .eq("id", deviceId);
 
   if(error){
-    console.log("Retire device error:", error);
-    setStatus("Could not retire device record. Add the Supabase is_retired columns and admin update policy first.", "error");
+    console.log("Remove device error:", error);
+    setStatus("Could not remove device record. Confirm the devices table has is_retired, retired_at, retired_by, and admin update policy enabled.", "error");
     return;
   }
 
   allDevices = (allDevices || []).filter(device => String(device.id || "") !== String(deviceId));
   visibleDevices = (visibleDevices || []).filter(device => String(device.id || "") !== String(deviceId));
+  recentCommands = (recentCommands || []).filter(command => String(command.device_id || "") !== String(deviceId));
 
-  setStatus("Device retired. It is removed from active Maintenance and will not receive commands.", "success");
-  await loadDevices();
-  await loadRecentCommands();
+  setStatus("Device removed from active Maintenance. It is retired and will be permanently deleted by the 48-hour cleanup job.", "success");
   renderDevices();
   renderCommands();
   renderSummary();
@@ -3220,7 +3280,10 @@ function renderDevices(){
         <td>
           <div class="mini-actions">
             <button class="secondary small-btn" type="button" onclick="selectDevice('${deviceId}')">Select</button>
-            <button class="danger small-btn" type="button" onclick="deleteDeviceRecord('${deviceId}','${serial}')">Retire</button>
+            ${(() => {
+              const removalState = getDeviceRemovalState(device);
+              return `<button class="danger small-btn" type="button" onclick="deleteDeviceRecord('${deviceId}','${serial}')" ${removalState.canRemove ? "" : "disabled"}>${escapeText(removalState.reason)}</button>`;
+            })()}
           </div>
         </td>
       </tr>`;
@@ -3371,13 +3434,13 @@ async function queueCommand(){
 
   if(targetDeviceId){
     const device=allDevices.find(item=>item.id===targetDeviceId);
-    if(device) targets=[device];
+    if(device && isDeviceOnline(device)) targets=[device];
   }else{
     targets=getCommandTargetDevices();
   }
 
   if(!targets.length){
-    setStatus("No online target devices found. Select an individual device or wait for the Keypad heartbeat.", "warn");
+    setStatus("No active online target devices found. Select an online device or wait for the Keypad heartbeat.", "warn");
     return;
   }
 
@@ -3426,7 +3489,7 @@ async function queueCommandForVisible(command, askConfirm=true, extraPayload={})
   }
 
   if(!targets.length){
-    setStatus("No online devices found for the selected site. Refresh the page or select an individual device first.", "warn");
+    setStatus("No active online devices found for the selected site. Refresh the page or wait for the Keypad heartbeat.", "warn");
     return;
   }
 
