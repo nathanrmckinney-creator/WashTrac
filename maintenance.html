@@ -1274,13 +1274,20 @@ if(!hasAdminSession){
             </select>
           </div>
 
+          <div class="field" style="margin-top:12px;">
+            <label for="softwareTargetDevice">Update This Keypad</label>
+            <select id="softwareTargetDevice" onchange="syncSoftwareTargetToCommandTarget(); renderSoftwareUpdateDetails();">
+              <option value="">Select one online Keypad...</option>
+            </select>
+          </div>
+
           <div class="actions">
             <button class="success" type="button" onclick="installSoftwareUpdate()">Install Update</button>
             <button class="secondary" type="button" onclick="loadSoftwareReleases()">Refresh Releases</button>
           </div>
 
           <div class="note">
-            Software updates queue <span class="inline-code">update_software</span>. The Keypad securely checks the latest private GitHub Release using its local token, downloads, verifies, backs up, installs, restarts, and reports the result.
+            Software updates queue <span class="inline-code">update_software</span>. The Keypad uses its secure GitHub token locally, downloads the latest private release, verifies it, installs it, restarts, and reports the result.
           </div>
         </div>
       </div>
@@ -3309,7 +3316,42 @@ function renderTargetDeviceSelect(){
     select.value = "";
   }
 
+  renderSoftwareTargetDeviceSelect(onlineDevices);
   renderSoftwareUpdateDetails();
+}
+
+function renderSoftwareTargetDeviceSelect(onlineDevices = null){
+  const select = document.getElementById("softwareTargetDevice");
+  if(!select) return;
+
+  const previousValue = select.value || document.getElementById("targetDevice")?.value || "";
+  const devices = onlineDevices || uniqueDevicesById(visibleDevices || []).filter(isDeviceOnline);
+
+  let html = `<option value="">Select one online Keypad...</option>`;
+
+  devices.forEach(device => {
+    const version = getDeviceVersion(device);
+    html += `<option value="${escapeText(device.id)}">${escapeText(getDeviceName(device))} — ${escapeText(getDeviceSerial(device))} — v${escapeText(version)}</option>`;
+  });
+
+  select.innerHTML = html;
+
+  if(devices.length === 1){
+    select.value = devices[0].id;
+  }else if(previousValue && devices.some(device => String(device.id || "") === String(previousValue))){
+    select.value = previousValue;
+  }else{
+    select.value = "";
+  }
+}
+
+function syncSoftwareTargetToCommandTarget(){
+  const softwareTarget = document.getElementById("softwareTargetDevice");
+  const commandTarget = document.getElementById("targetDevice");
+
+  if(softwareTarget && commandTarget){
+    commandTarget.value = softwareTarget.value || "";
+  }
 }
 
 function getOpenCommandsForDevice(deviceId){
@@ -3524,6 +3566,10 @@ function renderCommands(){
 
 function selectDevice(deviceId){
   document.getElementById("targetDevice").value=deviceId;
+  const softwareTarget = document.getElementById("softwareTargetDevice");
+  if(softwareTarget) softwareTarget.value = deviceId;
+  const softwareScope = document.getElementById("softwareUpdateScope");
+  if(softwareScope) softwareScope.value = "selected";
   renderSoftwareUpdateDetails();
   window.scrollTo({top:0,behavior:"smooth"});
 }
@@ -3736,27 +3782,43 @@ async function loadSoftwareReleases(){
   clearSoftwareUpdateStatus();
 
   const select = document.getElementById("softwareReleaseSelect");
+  if(select) select.innerHTML = `<option value="">Loading releases...</option>`;
 
-  /*
-    Production OTA note:
-    Do NOT expose the private GitHub token in this website.
-    The Maintenance page only queues update_software.
-    The Keypad/Pi backend securely reads the latest private GitHub Release
-    using its local GITHUB_TOKEN environment variable.
-  */
-  softwareReleases = [{
-    id:"github_latest",
-    version:"Latest GitHub Release",
-    release_notes:"The Keypad will securely check GitHub, download the latest private release, verify SHA-256, back up the current install, install the update, restart services, and roll back on failure.",
-    source:"github_private_latest",
-    is_active:true
-  }];
+  const { data, error } = await client
+    .from("software_releases")
+    .select("*")
+    .eq("is_active", true)
+    .order("created_at", { ascending:false })
+    .limit(50);
 
-  selectedSoftwareRelease = softwareReleases[0];
+  if(error){
+    console.log("Software releases load error:", error);
+    softwareReleases = [];
+    selectedSoftwareRelease = null;
+
+    if(select) select.innerHTML = `<option value="">No releases available</option>`;
+    renderSoftwareUpdateDetails();
+    setSoftwareUpdateStatus("Could not load software releases. Make sure the software_releases table exists and has at least one active release.", "warn");
+    return [];
+  }
+
+  softwareReleases = data || [];
+  selectedSoftwareRelease = getLatestSoftwareRelease();
 
   if(select){
-    select.innerHTML = `<option value="github_latest">Latest GitHub Release</option>`;
-    select.value = "github_latest";
+    if(!softwareReleases.length){
+      select.innerHTML = `<option value="">No active releases</option>`;
+    }else{
+      select.innerHTML = softwareReleases.map(release => {
+        const version = getReleaseVersion(release);
+        const required = release.is_required === true ? " — Required" : "";
+        return `<option value="${escapeText(release.id || version)}">${escapeText(version || "Unnamed Release")}${required}</option>`;
+      }).join("");
+
+      if(selectedSoftwareRelease){
+        select.value = selectedSoftwareRelease.id || getReleaseVersion(selectedSoftwareRelease);
+      }
+    }
   }
 
   renderSoftwareUpdateDetails();
@@ -3775,7 +3837,11 @@ function getSoftwareUpdateTargets(){
   const scope = document.getElementById("softwareUpdateScope")?.value || "selected";
 
   if(scope === "selected"){
-    const targetDeviceId = document.getElementById("targetDevice")?.value || "";
+    const targetDeviceId =
+      document.getElementById("softwareTargetDevice")?.value ||
+      document.getElementById("targetDevice")?.value ||
+      "";
+
     if(targetDeviceId){
       const device = allDevices.find(item => String(item.id || "") === String(targetDeviceId));
       return device && isDeviceOnline(device) ? [device] : [];
@@ -4011,6 +4077,12 @@ function renderSoftwareUpdateDetails(){
   const notes = getReleaseNotes(release);
   const changeLogText = getReleaseChangelog(release);
   const targets = getSoftwareUpdateTargets();
+  const softwareTargetSelect = document.getElementById("softwareTargetDevice");
+  const softwareScopeValue = document.getElementById("softwareUpdateScope")?.value || "selected";
+
+  if(softwareTargetSelect){
+    softwareTargetSelect.disabled = softwareScopeValue !== "selected";
+  }
 
   if(releaseTag){
     releaseTag.className = `tag ${url ? "green" : "yellow"}`;
@@ -4024,9 +4096,9 @@ function renderSoftwareUpdateDetails(){
 
   if(details){
     details.innerHTML = `
-      <div><strong>Source:</strong> <span class="inline-code">Private GitHub Release</span></div>
-      <div><strong>Install Mode:</strong> Device pulls latest release securely using local GITHUB_TOKEN</div>
-      <div><strong>Checksum:</strong> Verified on the Keypad before install</div>
+      <div><strong>Version:</strong> ${escapeText(version || "-")}</div>
+      <div><strong>URL:</strong> ${url ? `<span class="inline-code">${escapeText(url)}</span>` : `<span class="tag yellow">Missing URL</span>`}</div>
+      <div><strong>Checksum:</strong> ${checksum ? `<span class="inline-code">${escapeText(checksum)}</span>` : `<span class="muted">Not provided</span>`}</div>
       <div class="software-release-notes"><strong>Release Notes</strong><br>${getReleaseNotesHtml(notes)}</div>
     `;
   }
@@ -4046,34 +4118,54 @@ async function installSoftwareUpdate(){
   clearSoftwareUpdateStatus();
   closeMenus();
 
-  const release = getSelectedSoftwareRelease() || {
-    id:"github_latest",
-    version:"Latest GitHub Release",
-    source:"github_private_latest"
-  };
+  const release = getSelectedSoftwareRelease();
 
-  const version = getReleaseVersion(release) || "Latest GitHub Release";
+  if(!release){
+    setSoftwareUpdateStatus("Select an active software release first.", "warn");
+    return;
+  }
+
+  const version = getReleaseVersion(release);
+  const url = getReleaseUrl(release);
+  const checksum = getReleaseChecksum(release);
+  const notes = getReleaseNotes(release);
   const targets = getSoftwareUpdateTargets();
+
+  if(!version){
+    setSoftwareUpdateStatus("Selected software release is missing a version.", "error");
+    return;
+  }
+
+  if(!url){
+    setSoftwareUpdateStatus("Selected software release is missing a package URL.", "error");
+    return;
+  }
 
   if(!targets.length){
     setSoftwareUpdateStatus("No online target devices found. Select one online device or choose an online deployment scope.", "warn");
     return;
   }
 
-  const confirmed = confirm(`Install the latest WashTrac Controller update on ${targets.length} online Keypad${targets.length===1?"":"s"}?`);
+  const targetNames = targets.map(device => `${getDeviceName(device)} (${getDeviceSerial(device)})`).join(", ");
+  const confirmed = confirm(`Install ${version} on ${targets.length} online Keypad${targets.length===1?"":"s"}?\n\n${targetNames}`);
   if(!confirmed) return;
 
   const payload = {
     version,
-    source:"github_private_latest",
+    url,
+    package_url:url,
+    checksum:checksum || null,
+    release_id:release.id || null,
+    release_notes:notes || null,
+    is_required:release.is_required === true,
     requested_at:new Date().toISOString()
   };
 
-  setSoftwareUpdateStatus(`Queueing software update for ${targets.length} Keypad${targets.length===1?"":"s"}...`, "warn");
+  setSoftwareUpdateStatus(`Queueing software update ${version} for ${targets.length} Keypad${targets.length===1?"":"s"}...`, "warn");
   const queued = await queueCommandForDevices("update_software", targets, payload);
 
   if(queued){
-    setSoftwareUpdateStatus(`Software update queued for ${targets.length} Keypad${targets.length===1?"":"s"}. Watch Update Progress below for status.`, "success");
+    setSoftwareUpdateStatus(`Software update ${version} queued for ${targets.length} Keypad${targets.length===1?"":"s"}. Watch Update Progress below for status.`, "success");
   }
 
   await loadRecentCommands();
