@@ -355,7 +355,101 @@
     .relay-output-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
 
 
-    @media (max-width:1200px){.grid-3{grid-template-columns:1fr 1fr;}.relay-output-row{grid-template-columns:1fr 1fr;}}
+    .input-config-wrap{display:grid;gap:12px;margin-top:14px;}
+    .input-config-row{
+      display:grid;
+      grid-template-columns:130px 1.4fr 120px 140px 130px;
+      gap:12px;
+      align-items:end;
+      padding:14px;
+      background:#0b1220;
+      border:1px solid #1f2937;
+      border-radius:12px;
+    }
+    .input-config-label{
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      text-align:center;
+      font-weight:900;
+      color:#fff;
+      font-size:15px;
+      line-height:1.2;
+    }
+    .input-config-label span{
+      display:block;
+      color:#94a3b8;
+      font-size:12px;
+      font-weight:700;
+      margin-top:4px;
+    }
+    .input-config-row .field{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      text-align:center;
+      gap:6px;
+    }
+    .input-config-row .field label{
+      width:100%;
+      text-align:center;
+      white-space:nowrap;
+      font-size:12px;
+    }
+    .input-config-row input{
+      padding:10px;
+      font-size:14px;
+    }
+    .input-checkbox-wrap{
+      min-height:40px;
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      padding:10px;
+      border-radius:8px;
+      border:1px solid rgba(51,65,85,.95);
+      background:linear-gradient(180deg,#0b1220,#07101d);
+      color:#fff;
+      font-weight:800;
+    }
+    .input-checkbox-wrap input{
+      width:auto !important;
+      margin:0;
+      transform:scale(1.2);
+    }
+    .input-live-state{
+      min-height:40px;
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:10px;
+      border-radius:8px;
+      border:1px solid rgba(51,65,85,.95);
+      background:linear-gradient(180deg,#0b1220,#07101d);
+      font-weight:900;
+      letter-spacing:.4px;
+    }
+    .input-live-state.active{
+      color:#86efac;
+      border-color:rgba(34,197,94,.45);
+      background:rgba(20,83,45,.28);
+    }
+    .input-live-state.inactive{
+      color:#cbd5e1;
+    }
+    .input-live-state.unknown{
+      color:#fcd34d;
+      border-color:rgba(245,158,11,.34);
+      background:rgba(120,53,15,.18);
+    }
+    .input-config-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+
+
+    @media (max-width:1200px){.grid-3{grid-template-columns:1fr 1fr;}.relay-output-row,.input-config-row{grid-template-columns:1fr 1fr;}}
     @media (max-width:1100px){.summary{grid-template-columns:1fr 1fr;}.field-grid{grid-template-columns:1fr 1fr;}.grid-2,.grid-3{grid-template-columns:1fr;}}
     @media (max-width:900px){
   .app{
@@ -395,7 +489,8 @@
     grid-template-columns:1fr;
   }
 
-  .relay-output-row{
+  .relay-output-row,
+  .input-config-row{
     grid-template-columns:1fr;
   }
 
@@ -750,6 +845,13 @@ tbody tr:hover{background:rgba(37,99,235,.08);}
   }
 
   .relay-output-row{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:10px !important;
+    padding:12px !important;
+    border-radius:12px !important;
+  }
+
+  .input-config-row{
     grid-template-columns:repeat(2,minmax(0,1fr)) !important;
     gap:10px !important;
     padding:12px !important;
@@ -1162,6 +1264,32 @@ if(!hasAdminSession){
       <div id="relayOutputStatus" class="status"></div>
     </div>
 
+    <div class="card">
+      <h3>Input Configuration</h3>
+
+      <div class="note">
+        Configure all six ESP32 inputs. Input 1 remains assigned to
+        <span class="inline-code">Wash Busy</span> and Input 2 remains assigned to
+        <span class="inline-code">E-Stop</span>. Both remain enabled, but their electrical logic may be inverted.
+        Factory-default E-Stop behavior is fail-safe: voltage present is healthy and loss of voltage activates E-Stop.
+      </div>
+
+      <div id="inputConfigWrap" class="input-config-wrap"></div>
+
+      <div class="input-config-actions">
+        <button class="success" type="button" onclick="saveAllInputConfigurations()">Save All Inputs</button>
+        <button class="secondary" type="button" onclick="loadInputConfigurations()">Reload Input Settings</button>
+        <button class="test" type="button" onclick="refreshInputLiveStatus()">Refresh Live Input Status</button>
+      </div>
+
+      <div id="inputConfigStatus" class="status"></div>
+
+      <div class="note">
+        For bench testing with no E-Stop voltage present, enable
+        <span class="inline-code">Invert Logic</span> on Input 2. Restore the production fail-safe setting before deployment unless the site wiring specifically requires reversed logic.
+      </div>
+    </div>
+
     <div class="grid-2">
       <div class="card">
         <h3>Send Device Command</h3>
@@ -1371,6 +1499,9 @@ let siteCodes = [];
 let deviceLogs = [];
 let selectedSiteId = "";
 let relayOutputRows = [];
+let inputConfigurationRows = [];
+let inputLiveStates = [null, null, null, null, null, null];
+let inputStatusRefreshTimer = null;
 let quietRefreshTimer = null;
 let quietRefreshInProgress = false;
 let ownershipCandidateUsers = [];
@@ -3183,6 +3314,376 @@ async function saveAllRelayOutputs(){
   setRelayOutputStatus(`Saved ${saved} relay output assignment${saved === 1 ? "" : "s"}.`, saved ? "success" : "error");
 }
 
+
+const INPUT_CONFIGURATION_DEFAULTS = [
+  { input_number:1, fixed_name:"Wash Busy", default_name:"Wash Busy", enabled:true, inverted:false, role:"Wash Running Signal", locked:true },
+  { input_number:2, fixed_name:"E-Stop", default_name:"E-Stop", enabled:true, inverted:true, role:"Safety Circuit", locked:true },
+  { input_number:3, fixed_name:"", default_name:"Input 3", enabled:false, inverted:false, role:"Spare Input", locked:false },
+  { input_number:4, fixed_name:"", default_name:"Input 4", enabled:false, inverted:false, role:"Spare Input", locked:false },
+  { input_number:5, fixed_name:"", default_name:"Input 5", enabled:false, inverted:false, role:"Spare Input", locked:false },
+  { input_number:6, fixed_name:"", default_name:"Input 6", enabled:false, inverted:false, role:"Spare Input", locked:false }
+];
+
+function setInputConfigStatus(message, tone=""){
+  const box = document.getElementById("inputConfigStatus");
+  if(!box) return;
+
+  box.innerText = message || "";
+  box.className = "status show";
+  if(tone) box.classList.add(tone);
+}
+
+function selectedInputDevice(){
+  const selectedId = document.getElementById("targetDevice")?.value || "";
+  if(selectedId){
+    const selected = allDevices.find(device => device.id === selectedId);
+    if(selected) return selected;
+  }
+
+  return visibleDevices[0] ||
+    allDevices.find(device => device.site_id === selectedSite()) ||
+    null;
+}
+
+function normalizeInputConfiguration(value){
+  let source = value;
+
+  if(typeof source === "string"){
+    try{ source = JSON.parse(source); }catch(_err){ source = null; }
+  }
+
+  if(source && !Array.isArray(source) && Array.isArray(source.inputs)){
+    source = source.inputs;
+  }
+
+  if(!Array.isArray(source)) return [];
+
+  return source.map((item, index) => {
+    if(Array.isArray(item)){
+      return {
+        input_number:Number(item[0] || index + 1),
+        enabled:item[1] !== false,
+        inverted:item[2] === true,
+        name:String(item[3] || "")
+      };
+    }
+
+    return {
+      input_number:Number(item?.input_number || item?.input || index + 1),
+      enabled:item?.enabled !== false,
+      inverted:item?.inverted === true,
+      name:String(item?.name || "")
+    };
+  }).filter(item => item.input_number >= 1 && item.input_number <= 6);
+}
+
+function extractDeviceInputConfiguration(device){
+  if(!device) return [];
+
+  const candidates = [
+    device.input_config,
+    device.input_configuration,
+    device.inputs_config,
+    device.esp32_config,
+    device.controller_config
+  ];
+
+  for(const candidate of candidates){
+    const parsed = normalizeInputConfiguration(candidate);
+    if(parsed.length) return parsed;
+  }
+
+  return [];
+}
+
+function extractDeviceInputStates(device){
+  if(!device) return [null, null, null, null, null, null];
+
+  const candidates = [
+    device.input_states,
+    device.inputs,
+    device.esp32_input_states,
+    device.controller_inputs
+  ];
+
+  for(let candidate of candidates){
+    if(typeof candidate === "string"){
+      try{ candidate = JSON.parse(candidate); }catch(_err){ candidate = null; }
+    }
+
+    if(Array.isArray(candidate)){
+      const states = [null, null, null, null, null, null];
+
+      candidate.slice(0, 6).forEach((value, index) => {
+        if(typeof value === "boolean"){
+          states[index] = value;
+        }else if(value && typeof value === "object"){
+          states[index] = value.active === true || value.state === true || value.value === true;
+        }
+      });
+
+      return states;
+    }
+  }
+
+  return [null, null, null, null, null, null];
+}
+
+function getInputStoredRow(inputNumber){
+  return inputConfigurationRows.find(
+    row => Number(row.input_number) === Number(inputNumber)
+  ) || null;
+}
+
+function getInputDisplayValue(defaults, field){
+  const row = getInputStoredRow(defaults.input_number);
+
+  if(row && row[field] !== undefined && row[field] !== null && row[field] !== ""){
+    return row[field];
+  }
+
+  return defaults[field];
+}
+
+function renderInputConfigurations(){
+  const wrap = document.getElementById("inputConfigWrap");
+  if(!wrap) return;
+
+  wrap.innerHTML = INPUT_CONFIGURATION_DEFAULTS.map(defaults => {
+    const number = defaults.input_number;
+    const configuredName = defaults.locked
+      ? defaults.fixed_name
+      : String(getInputDisplayValue(defaults, "name") || defaults.default_name);
+
+    const enabled = defaults.locked
+      ? true
+      : getInputDisplayValue(defaults, "enabled") === true;
+
+    const inverted = getInputDisplayValue(defaults, "inverted") === true;
+    const liveState = inputLiveStates[number - 1];
+
+    const liveClass =
+      liveState === true ? "active" :
+      liveState === false ? "inactive" :
+      "unknown";
+
+    const liveLabel =
+      liveState === true ? "ACTIVE" :
+      liveState === false ? "INACTIVE" :
+      "UNKNOWN";
+
+    return `
+      <div class="input-config-row">
+        <div class="input-config-label">
+          Input ${number}
+          <span>${escapeText(defaults.role)}</span>
+        </div>
+
+        <div class="field">
+          <label for="input-${number}-name">Name / Assignment</label>
+          <input
+            id="input-${number}-name"
+            value="${escapeText(configuredName)}"
+            ${defaults.locked ? "disabled" : ""}
+            placeholder="Input assignment">
+        </div>
+
+        <div class="field">
+          <label>Enabled</label>
+          <label class="input-checkbox-wrap">
+            <input
+              id="input-${number}-enabled"
+              type="checkbox"
+              ${enabled ? "checked" : ""}
+              ${defaults.locked ? "disabled" : ""}>
+            ${defaults.locked ? "Required" : "Enabled"}
+          </label>
+        </div>
+
+        <div class="field">
+          <label>Electrical Logic</label>
+          <label class="input-checkbox-wrap">
+            <input
+              id="input-${number}-inverted"
+              type="checkbox"
+              ${inverted ? "checked" : ""}>
+            Invert Logic
+          </label>
+        </div>
+
+        <div class="field">
+          <label>Live Logical State</label>
+          <div id="input-${number}-live" class="input-live-state ${liveClass}">
+            ${liveLabel}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+async function loadInputConfigurations(){
+  const siteId = selectedSite();
+
+  if(!siteId){
+    inputConfigurationRows = [];
+    inputLiveStates = [null, null, null, null, null, null];
+    renderInputConfigurations();
+    setInputConfigStatus("Select a site to load input settings.", "warn");
+    return [];
+  }
+
+  const device = selectedInputDevice();
+
+  if(!device){
+    inputConfigurationRows = [];
+    inputLiveStates = [null, null, null, null, null, null];
+    renderInputConfigurations();
+    setInputConfigStatus("No Keypad is assigned to the selected site.", "warn");
+    return [];
+  }
+
+  inputConfigurationRows = extractDeviceInputConfiguration(device);
+  inputLiveStates = extractDeviceInputStates(device);
+
+  renderInputConfigurations();
+
+  if(!inputConfigurationRows.length){
+    setInputConfigStatus(
+      "Using production defaults. The Keypad has not reported saved ESP32 input configuration yet.",
+      "warn"
+    );
+  }else{
+    setInputConfigStatus(
+      `Loaded input settings from ${getDeviceName(device)}.`,
+      "success"
+    );
+  }
+
+  return inputConfigurationRows;
+}
+
+function buildInputConfigurationPayload(){
+  const inputs = INPUT_CONFIGURATION_DEFAULTS.map(defaults => {
+    const number = defaults.input_number;
+
+    const name = defaults.locked
+      ? defaults.fixed_name
+      : (
+          document.getElementById(`input-${number}-name`)?.value.trim() ||
+          defaults.default_name
+        );
+
+    const enabled = defaults.locked
+      ? true
+      : document.getElementById(`input-${number}-enabled`)?.checked === true;
+
+    const inverted =
+      document.getElementById(`input-${number}-inverted`)?.checked === true;
+
+    return {
+      input:number,
+      input_number:number,
+      name,
+      enabled,
+      inverted
+    };
+  });
+
+  return {
+    inputs,
+    save:true,
+    requested_at:new Date().toISOString()
+  };
+}
+
+async function saveAllInputConfigurations(){
+  clearStatus();
+
+  const siteId = selectedSite();
+  if(!siteId){
+    setInputConfigStatus("Select a site first.", "warn");
+    return;
+  }
+
+  const device = selectedInputDevice();
+  if(!device){
+    setInputConfigStatus("No Keypad is assigned to this site.", "warn");
+    return;
+  }
+
+  const payload = buildInputConfigurationPayload();
+
+  const confirmed = confirm(
+    `Save all six input settings to ${getDeviceName(device)}?\n\n` +
+    `Input 1 and Input 2 will remain enabled. Changing E-Stop inversion changes the safety-input interpretation.`
+  );
+
+  if(!confirmed) return;
+
+  const queued = await queueCommandForDevices(
+    "set_input_config",
+    [device],
+    payload
+  );
+
+  if(!queued){
+    setInputConfigStatus("Could not queue the input configuration command.", "error");
+    return;
+  }
+
+  inputConfigurationRows = payload.inputs;
+  renderInputConfigurations();
+
+  setInputConfigStatus(
+    "Input configuration queued. The Keypad will apply all six inputs, save them to ESP32 NVS, then report the stored configuration.",
+    "success"
+  );
+}
+
+async function refreshInputLiveStatus(){
+  const device = selectedInputDevice();
+
+  if(!device){
+    setInputConfigStatus("No Keypad is assigned to this site.", "warn");
+    return;
+  }
+
+  const queued = await queueCommandForDevices(
+    "refresh_input_status",
+    [device],
+    { requested_at:new Date().toISOString() }
+  );
+
+  if(queued){
+    setInputConfigStatus(
+      "Live input refresh queued. Status will update after the Keypad reports the ESP32 input states.",
+      "success"
+    );
+  }
+}
+
+function updateInputStatusFromLoadedDevices(){
+  const device = selectedInputDevice();
+  if(!device) return;
+
+  inputLiveStates = extractDeviceInputStates(device);
+
+  for(let index = 0; index < 6; index++){
+    const element = document.getElementById(`input-${index + 1}-live`);
+    if(!element) continue;
+
+    const state = inputLiveStates[index];
+
+    element.className =
+      "input-live-state " +
+      (state === true ? "active" : state === false ? "inactive" : "unknown");
+
+    element.textContent =
+      state === true ? "ACTIVE" : state === false ? "INACTIVE" : "UNKNOWN";
+  }
+}
+
 async function loadDeviceLogs(){
   const siteId = selectedSite();
   const tbody = document.getElementById("logsTableBody");
@@ -3412,6 +3913,7 @@ async function deleteDeviceRecord(deviceId, serialText = ""){
     renderDevices();
     renderCommands();
     renderSoftwareUpdateDetails();
+    updateInputStatusFromLoadedDevices();
     renderSummary();
     return;
   }
@@ -4193,6 +4695,7 @@ async function loadMaintenancePage(showLoading=true){
   await loadPairingCodes();
   await loadDeviceLogs();
   await loadRelayOutputAssignments();
+  await loadInputConfigurations();
   await loadSoftwareReleases();
   await loadOrganizationOwnerTool();
 
