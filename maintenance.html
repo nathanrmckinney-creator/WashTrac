@@ -3377,10 +3377,54 @@ function normalizeInputConfiguration(value){
   }).filter(item => item.input_number >= 1 && item.input_number <= 6);
 }
 
+
+function latestCompletedInputCommand(deviceId){
+  return (recentCommands || [])
+    .filter(command =>
+      String(command.device_id || "") === String(deviceId || "") &&
+      ["set_input_config", "refresh_input_status"].includes(command.command) &&
+      ["complete", "completed", "done"].includes(
+        String(command.status || "").toLowerCase()
+      )
+    )
+    .sort(
+      (a, b) =>
+        new Date(b.completed_at || b.created_at || 0) -
+        new Date(a.completed_at || a.created_at || 0)
+    )[0] || null;
+}
+
+function extractInputResultFromCommand(device){
+  if(!device) return null;
+
+  const command = latestCompletedInputCommand(device.id);
+  if(!command) return null;
+
+  let payload = command.payload;
+
+  if(typeof payload === "string"){
+    try{
+      payload = JSON.parse(payload);
+    }catch(_err){
+      payload = null;
+    }
+  }
+
+  return payload?.result || null;
+}
+
 function extractDeviceInputConfiguration(device){
   if(!device) return [];
 
+  const commandResult = extractInputResultFromCommand(device);
+
+  const commandConfig =
+    commandResult?.config?.inputs ||
+    commandResult?.requested_inputs ||
+    null;
+
   const candidates = [
+    commandConfig,
     device.input_config,
     device.input_configuration,
     device.inputs_config,
@@ -3399,7 +3443,10 @@ function extractDeviceInputConfiguration(device){
 function extractDeviceInputStates(device){
   if(!device) return [null, null, null, null, null, null];
 
+  const commandResult = extractInputResultFromCommand(device);
+
   const candidates = [
+    commandResult?.input_states,
     device.input_states,
     device.inputs,
     device.esp32_input_states,
