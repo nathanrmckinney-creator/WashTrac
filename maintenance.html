@@ -1278,7 +1278,7 @@ if(!hasAdminSession){
     <div class="card">
       <h3>Production Diagnostics & Hardware Test</h3>
       <div class="note">
-        Select one online Keypad in <span class="inline-code">Target Device</span>, then read ESP32 production data, run the non-destructive manufacturing self-test, or pulse one relay using its configured timing.
+        Select one online Keypad in <span class="inline-code">Target Device</span>, then read ESP32 production data or run the non-destructive manufacturing self-test. Use the existing Test button in Relay Output Assignments to pulse a relay.
       </div>
       <div class="actions">
         <button type="button" onclick="runProductionCommand('get_version')">Refresh Firmware Info</button>
@@ -1289,19 +1289,6 @@ if(!hasAdminSession){
         <div class="production-panel"><h4>Firmware Information</h4><div id="productionVersionResult" class="production-empty">No firmware information loaded.</div></div>
         <div class="production-panel"><h4>Live Diagnostics</h4><div id="productionDiagnosticsResult" class="production-empty">No diagnostics loaded.</div></div>
         <div class="production-panel"><h4>Manufacturing Self-Test</h4><div id="productionSelfTestResult" class="production-empty">Self-test has not been run.</div></div>
-        <div class="production-panel">
-          <h4>Relay Output Test</h4>
-          <div class="note" style="margin-top:0;">Each button starts that relay through the ESP32 Relay Scheduler. Relay 1 is the wash-start SSR.</div>
-          <div class="relay-test-grid">
-            <button class="warn" type="button" onclick="runRelayProductionTest(1)">Relay 1</button>
-            <button class="test" type="button" onclick="runRelayProductionTest(2)">Relay 2</button>
-            <button class="test" type="button" onclick="runRelayProductionTest(3)">Relay 3</button>
-            <button class="test" type="button" onclick="runRelayProductionTest(4)">Relay 4</button>
-            <button class="test" type="button" onclick="runRelayProductionTest(5)">Relay 5</button>
-            <button class="test" type="button" onclick="runRelayProductionTest(6)">Relay 6</button>
-          </div>
-          <div id="productionRelayResult" class="status"></div>
-        </div>
       </div>
       <div id="productionConsoleStatus" class="status"></div>
     </div>
@@ -3311,33 +3298,82 @@ async function saveRelayOutput(outputKey){
 async function testRelayOutput(outputKey){
   clearStatus();
 
-  const siteId = selectedSite();
-  if(!siteId){
-    setRelayOutputStatus("Select a site first.", "warn");
+  const outputIndex = RELAY_OUTPUT_DEFAULTS.findIndex(
+    item => item.output_key === outputKey
+  );
+
+  if(outputIndex < 0){
+    setRelayOutputStatus("Unknown relay output.", "error");
     return;
   }
 
-  if(!visibleDevices.length){
-    setRelayOutputStatus("No visible Keypad found for this site.", "warn");
-    return;
-  }
-
+  const relayNumber = outputIndex + 1;
   const payload = buildRelayOutputPayload(outputKey);
 
+  const target = getSelectedProductionDevice();
+  if(!target){
+    setRelayOutputStatus(
+      "Select one specific online Keypad in Target Device before testing a relay.",
+      "warn"
+    );
+    return;
+  }
+
   const confirmed = confirm(
-    `Test ${payload.output_label} (${payload.output_name}) now?\n\n` +
-    `${payload.contact_type === "nc" ? "N/C" : "N/O"} • ` +
-    `${payload.timer_type === "off_delay" ? "Off Delay" : "On Delay"} • ` +
-    `${payload.duration_value} ${payload.duration_unit}`
+    `Test ${payload.output_label} (${payload.output_name}) now?
+
+` +
+    `The ESP32 will pulse Relay ${relayNumber} using its saved relay timing.`
   );
 
   if(!confirmed) return;
 
-  await queueCommandForVisible("test_relay_output", false, payload);
+  setRelayOutputStatus(
+    `Queueing ${payload.output_label} test...`,
+    "warn"
+  );
+
+  const queued = await queueProductionCommand(
+    "relay_test",
+    { relay: relayNumber }
+  );
+
+  if(!queued){
+    setRelayOutputStatus(
+      `Could not queue ${payload.output_label} test.`,
+      "error"
+    );
+    return;
+  }
+
+  const completed = await waitForProductionCommand(
+    queued.id,
+    20000
+  );
+
+  await loadRecentCommands();
+  renderCommands();
+  renderSummary();
+
+  if(!completed){
+    setRelayOutputStatus(
+      `${payload.output_label} test is still pending. Check Recent Commands.`,
+      "warn"
+    );
+    return;
+  }
+
+  const status = String(completed.status || "").toLowerCase();
+  const ok = ["completed", "complete", "done"].includes(status);
+  const result = productionResultPayload(completed);
+  const duration = result?.duration_seconds;
 
   setRelayOutputStatus(
-    `Test command queued for ${payload.output_label}: ${payload.output_name}.`,
-    "success"
+    completed.result_message ||
+      `${payload.output_label} test ${ok ? "started" : "failed"}${
+        duration !== undefined ? ` for ${duration} seconds` : ""
+      }.`,
+    ok ? "success" : "error"
   );
 }
 
