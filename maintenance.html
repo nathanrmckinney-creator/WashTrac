@@ -448,6 +448,17 @@
     }
     .input-config-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
 
+    .production-console-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px;}
+    .production-panel{padding:16px;border:1px solid rgba(37,99,235,.28);border-radius:12px;background:linear-gradient(145deg,#0b1220,#06101d);}
+    .production-panel h4{margin:0 0 12px 0;color:#eaf4ff;}
+    .production-kv{display:grid;grid-template-columns:160px 1fr;gap:8px 12px;font-size:13px;line-height:1.4;}
+    .production-kv strong{color:#93c5fd;}
+    .production-result-list{display:grid;gap:8px;margin-top:12px;}
+    .production-result-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:10px;border:1px solid #1f2937;border-radius:9px;background:#020617;}
+    .relay-test-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:12px;}
+    .relay-test-grid button{width:100%;}
+    .production-empty{color:#94a3b8;font-size:13px;}
+
 
     @media (max-width:1200px){.grid-3{grid-template-columns:1fr 1fr;}.relay-output-row,.input-config-row{grid-template-columns:1fr 1fr;}}
     @media (max-width:1100px){.summary{grid-template-columns:1fr 1fr;}.field-grid{grid-template-columns:1fr 1fr;}.grid-2,.grid-3{grid-template-columns:1fr;}}
@@ -1265,6 +1276,37 @@ if(!hasAdminSession){
     </div>
 
     <div class="card">
+      <h3>Production Diagnostics & Hardware Test</h3>
+      <div class="note">
+        Select one online Keypad in <span class="inline-code">Target Device</span>, then read ESP32 production data, run the non-destructive manufacturing self-test, or pulse one relay using its configured timing.
+      </div>
+      <div class="actions">
+        <button type="button" onclick="runProductionCommand('get_version')">Refresh Firmware Info</button>
+        <button class="test" type="button" onclick="runProductionCommand('self_test')">Run Manufacturing Self-Test</button>
+        <button class="secondary" type="button" onclick="runProductionCommand('diagnostics')">Refresh Production Diagnostics</button>
+      </div>
+      <div class="production-console-grid">
+        <div class="production-panel"><h4>Firmware Information</h4><div id="productionVersionResult" class="production-empty">No firmware information loaded.</div></div>
+        <div class="production-panel"><h4>Live Diagnostics</h4><div id="productionDiagnosticsResult" class="production-empty">No diagnostics loaded.</div></div>
+        <div class="production-panel"><h4>Manufacturing Self-Test</h4><div id="productionSelfTestResult" class="production-empty">Self-test has not been run.</div></div>
+        <div class="production-panel">
+          <h4>Relay Output Test</h4>
+          <div class="note" style="margin-top:0;">Each button starts that relay through the ESP32 Relay Scheduler. Relay 1 is the wash-start SSR.</div>
+          <div class="relay-test-grid">
+            <button class="warn" type="button" onclick="runRelayProductionTest(1)">Relay 1</button>
+            <button class="test" type="button" onclick="runRelayProductionTest(2)">Relay 2</button>
+            <button class="test" type="button" onclick="runRelayProductionTest(3)">Relay 3</button>
+            <button class="test" type="button" onclick="runRelayProductionTest(4)">Relay 4</button>
+            <button class="test" type="button" onclick="runRelayProductionTest(5)">Relay 5</button>
+            <button class="test" type="button" onclick="runRelayProductionTest(6)">Relay 6</button>
+          </div>
+          <div id="productionRelayResult" class="status"></div>
+        </div>
+      </div>
+      <div id="productionConsoleStatus" class="status"></div>
+    </div>
+
+    <div class="card">
       <h3>Input Configuration</h3>
 
       <div class="note">
@@ -1314,6 +1356,9 @@ if(!hasAdminSession){
             <option value="register_lte">Re-Register SIM</option>
             <option value="enter_maintenance">Enter Maintenance Mode</option>
             <option value="exit_maintenance">Exit Maintenance Mode</option>
+            <option value="get_version">Read ESP32 Firmware Info</option>
+            <option value="self_test">Run ESP32 Manufacturing Self-Test</option>
+            <option value="diagnostics">Read ESP32 Production Diagnostics</option>
           </select>
         </div>
 
@@ -4248,6 +4293,89 @@ function getCommandTargetDevices(){
   return targets;
 }
 
+
+function setProductionConsoleStatus(message, tone=""){
+  const box=document.getElementById("productionConsoleStatus");
+  if(!box) return;
+  box.innerText=message;
+  box.className="status show";
+  if(tone) box.classList.add(tone);
+}
+
+function getSingleProductionTarget(){
+  const selectedId=document.getElementById("targetDevice")?.value||"";
+  let target=selectedId?allDevices.find(device=>device.id===selectedId):null;
+  if(!target){const onlineTargets=getCommandTargetDevices();if(onlineTargets.length===1) target=onlineTargets[0];}
+  if(!target){setProductionConsoleStatus("Select one specific online Keypad in Target Device.","warn");return null;}
+  if(!isDeviceOnline(target)){setProductionConsoleStatus("The selected Keypad is offline.","warn");return null;}
+  return target;
+}
+
+async function queueProductionCommand(command,extraPayload={}){
+  const target=getSingleProductionTarget();
+  if(!target) return null;
+  const duplicates=await findOpenDuplicateCommands(command,[target]);
+  if(duplicates.length){setProductionConsoleStatus(`${command} is already pending for ${getDeviceName(target)}.`,"warn");return null;}
+  const row={device_id:target.id,site_id:target.site_id||null,command,payload:buildPayload(command,extraPayload),status:"pending",created_by:currentUser?.id||null,created_at:new Date().toISOString()};
+  const {data,error}=await client.from("device_commands").insert(row).select("*").single();
+  if(error){console.log("Production command queue error:",error);setProductionConsoleStatus(`Could not queue ${command}.`,"error");return null;}
+  return data;
+}
+
+async function waitForProductionCommand(commandId,timeoutMs=20000){
+  const deadline=Date.now()+timeoutMs;
+  while(Date.now()<deadline){
+    const {data,error}=await client.from("device_commands").select("*").eq("id",commandId).single();
+    if(!error&&data){const status=String(data.status||"").toLowerCase();if(["completed","complete","done","failed","error"].includes(status)) return data;}
+    await new Promise(resolve=>setTimeout(resolve,1000));
+  }
+  return null;
+}
+
+function productionResultPayload(commandRow){return commandRow?.payload?.result||null;}
+
+function renderProductionVersion(result){
+  const box=document.getElementById("productionVersionResult");if(!box)return;
+  if(!result){box.className="production-empty";box.innerText="No firmware information returned.";return;}
+  box.className="production-kv";
+  box.innerHTML=`<strong>Project</strong><span>${escapeText(result.project_name||"-")}</span><strong>Firmware</strong><span>${escapeText(result.firmware_version||result.firmware||"-")}</span><strong>Config Version</strong><span>${escapeText(result.config_version??"-")}</span><strong>Hardware Revision</strong><span>${escapeText(result.hardware_revision??"-")}</span><strong>Build Date</strong><span>${escapeText(result.build_date||"-")}</span><strong>Build Time</strong><span>${escapeText(result.build_time||"-")}</span>`;
+}
+
+function renderProductionDiagnostics(result){
+  const box=document.getElementById("productionDiagnosticsResult");if(!box)return;
+  if(!result){box.className="production-empty";box.innerText="No diagnostics returned.";return;}
+  const inputs=Array.isArray(result.inputs)?result.inputs:[];const relays=Array.isArray(result.relay_states)?result.relay_states:[];
+  box.className="production-kv";
+  box.innerHTML=`<strong>State</strong><span>${escapeText(result.state??"-")}</span><strong>Fault</strong><span>${result.fault_active?"ACTIVE":"Clear"} (${escapeText(result.fault_code??0)})</span><strong>Queue</strong><span>${escapeText(result.queue_count??0)}</span><strong>Retry Count</strong><span>${escapeText(result.retry_count??0)}</span><strong>Free Heap</strong><span>${escapeText(result.free_heap??"-")} bytes</span><strong>Minimum Heap</strong><span>${escapeText(result.min_free_heap??"-")} bytes</span><strong>Max Loop</strong><span>${escapeText(result.max_loop_us??"-")} µs</span><strong>Loop Overruns</strong><span>${escapeText(result.overruns??0)}</span><strong>Inputs</strong><span>${escapeText(inputs.map(input=>`${input.number}:${input.state?"ON":"OFF"}`).join(" · ")||"-")}</span><strong>Relays</strong><span>${escapeText(relays.map((state,index)=>`${index+1}:${state}`).join(" · ")||"-")}</span>`;
+}
+
+function renderProductionSelfTest(result){
+  const box=document.getElementById("productionSelfTestResult");if(!box)return;
+  if(!result){box.className="production-empty";box.innerText="No self-test report returned.";return;}
+  const checks=Array.isArray(result.checks)?result.checks:[];box.className="";
+  box.innerHTML=`<div class="tag ${result.passed?"green":"red"}">${result.passed?"PASSED":"FAILED"}</div><span class="mini-muted" style="margin-left:8px;">Run ${escapeText(result.run_count??"-")}</span><div class="production-result-list">${checks.map(check=>`<div class="production-result-row"><strong>${escapeText(check.name||"Check")}</strong><span class="tag ${check.passed?"green":"red"}">${escapeText(check.status||(check.passed?"PASS":"FAIL"))}</span><span class="mini-muted">${escapeText(check.detail??0)}</span></div>`).join("")}</div>`;
+}
+
+async function runProductionCommand(command){
+  setProductionConsoleStatus(`Queueing ${command}...`,"warn");const queued=await queueProductionCommand(command);if(!queued)return;
+  setProductionConsoleStatus(`${command} queued. Waiting for controller response...`,"warn");
+  const completed=await waitForProductionCommand(queued.id,command==="self_test"?30000:20000);
+  await loadRecentCommands();renderCommands();renderSummary();
+  if(!completed){setProductionConsoleStatus(`${command} is still pending or timed out. Check Recent Commands.`,"warn");return;}
+  const status=String(completed.status||"").toLowerCase();const result=productionResultPayload(completed);
+  if(command==="get_version")renderProductionVersion(result);if(command==="diagnostics")renderProductionDiagnostics(result);if(command==="self_test")renderProductionSelfTest(result);
+  const ok=["completed","complete","done"].includes(status);setProductionConsoleStatus(completed.result_message||`${command} ${ok?"completed":"failed"}.`,ok?"success":"error");
+}
+
+async function runRelayProductionTest(relayNumber){
+  if(!confirm(`Pulse Relay ${relayNumber} using its configured ESP32 timing?`))return;
+  const relayBox=document.getElementById("productionRelayResult");if(relayBox){relayBox.innerText=`Queueing Relay ${relayNumber} test...`;relayBox.className="status show warn";}
+  const queued=await queueProductionCommand("relay_test",{relay:relayNumber});if(!queued)return;
+  const completed=await waitForProductionCommand(queued.id,20000);await loadRecentCommands();renderCommands();renderSummary();
+  if(!completed){if(relayBox){relayBox.innerText=`Relay ${relayNumber} test is still pending. Check Recent Commands.`;relayBox.className="status show warn";}return;}
+  const status=String(completed.status||"").toLowerCase();const ok=["completed","complete","done"].includes(status);const result=productionResultPayload(completed);const timing=result?` Duration: ${result.duration_seconds??"-"} sec.`:"";
+  if(relayBox){relayBox.innerText=(completed.result_message||`Relay ${relayNumber} test ${ok?"started":"failed"}.`)+timing;relayBox.className=`status show ${ok?"success":"error"}`;}
+}
 
 async function factoryResetSelectedDevice(){
   clearStatus();
