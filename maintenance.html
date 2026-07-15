@@ -1345,6 +1345,7 @@ if(!hasAdminSession){
           <button class="danger" type="button" onclick="queueCommandForVisible('restart_app')">Restart App</button>
           <button class="danger" type="button" onclick="queueCommandForVisible('restart_device')">Reboot Device</button>
           <button class="danger" type="button" onclick="queueCommandForVisible('shutdown_device')">Shutdown Device</button>
+          <button class="danger" type="button" onclick="factoryResetSelectedDevice()">Factory Reset Controller</button>
         </div>
 
         <div class="note">
@@ -4245,6 +4246,92 @@ function getCommandTargetDevices(){
   }
 
   return targets;
+}
+
+
+async function factoryResetSelectedDevice(){
+  clearStatus();
+  closeMenus();
+
+  const targetSelect = document.getElementById("targetDevice");
+  const selectedDeviceId = targetSelect?.value || "";
+
+  let target = selectedDeviceId
+    ? allDevices.find(device => device.id === selectedDeviceId)
+    : null;
+
+  if(!target){
+    const onlineTargets = getCommandTargetDevices();
+
+    if(onlineTargets.length === 1){
+      target = onlineTargets[0];
+    }else{
+      setStatus(
+        "Select one specific online Keypad in Target Device before factory reset.",
+        "warn"
+      );
+      return;
+    }
+  }
+
+  if(!isDeviceOnline(target)){
+    setStatus(
+      "Factory reset requires the selected Keypad to be online.",
+      "warn"
+    );
+    return;
+  }
+
+  const deviceName = getDeviceName(target);
+  const confirmation = prompt(
+    `FACTORY RESET ${deviceName}\n\n` +
+    "This permanently removes local pairing, codes, cached control data, " +
+    "pending local queues, wash state, and restores ESP32 factory defaults.\n\n" +
+    "Type RESET exactly to continue."
+  );
+
+  if(confirmation === null){
+    return;
+  }
+
+  if(confirmation.trim() !== "RESET"){
+    setStatus(
+      "Factory reset cancelled. You must type RESET exactly.",
+      "warn"
+    );
+    return;
+  }
+
+  const finalConfirmation = confirm(
+    `Factory reset ${deviceName} now?\n\n` +
+    "The controller will return to its factory-unpaired state."
+  );
+
+  if(!finalConfirmation){
+    setStatus("Factory reset cancelled.", "warn");
+    return;
+  }
+
+  setStatus(
+    `Queueing factory reset for ${deviceName}...`,
+    "warn"
+  );
+
+  const queued = await queueCommandForDevices(
+    "factory_reset",
+    [target],
+    {
+      confirmation: "RESET",
+      requested_from: "maintenance"
+    }
+  );
+
+  if(queued){
+    setStatus(
+      `Factory reset queued for ${deviceName}. The controller will reset, unpair, and restart.`,
+      "success"
+    );
+  }
 }
 
 async function queueCommandForVisible(command, askConfirm=true, extraPayload={}){
