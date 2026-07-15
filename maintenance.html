@@ -4403,16 +4403,6 @@ async function runProductionCommand(command){
   const ok=["completed","complete","done"].includes(status);setProductionConsoleStatus(completed.result_message||`${command} ${ok?"completed":"failed"}.`,ok?"success":"error");
 }
 
-async function runRelayProductionTest(relayNumber){
-  if(!confirm(`Pulse Relay ${relayNumber} using its configured ESP32 timing?`))return;
-  const relayBox=document.getElementById("productionRelayResult");if(relayBox){relayBox.innerText=`Queueing Relay ${relayNumber} test...`;relayBox.className="status show warn";}
-  const queued=await queueProductionCommand("relay_test",{relay:relayNumber});if(!queued)return;
-  const completed=await waitForProductionCommand(queued.id,20000);await loadRecentCommands();renderCommands();renderSummary();
-  if(!completed){if(relayBox){relayBox.innerText=`Relay ${relayNumber} test is still pending. Check Recent Commands.`;relayBox.className="status show warn";}return;}
-  const status=String(completed.status||"").toLowerCase();const ok=["completed","complete","done"].includes(status);const result=productionResultPayload(completed);const timing=result?` Duration: ${result.duration_seconds??"-"} sec.`:"";
-  if(relayBox){relayBox.innerText=(completed.result_message||`Relay ${relayNumber} test ${ok?"started":"failed"}.`)+timing;relayBox.className=`status show ${ok?"success":"error"}`;}
-}
-
 async function factoryResetSelectedDevice(){
   clearStatus();
   closeMenus();
