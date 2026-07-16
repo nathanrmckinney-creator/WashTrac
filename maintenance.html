@@ -447,6 +447,18 @@
       background:rgba(120,53,15,.18);
     }
     .input-config-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+    .live-input-test-bar{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+      padding:12px;
+      border:1px solid rgba(124,58,237,.32);
+      border-radius:10px;
+      background:rgba(76,29,149,.12);
+    }
+    .live-input-test-bar .tag{margin-left:auto;}
 
     .production-console-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px;}
     .production-panel{padding:16px;border:1px solid rgba(37,99,235,.28);border-radius:12px;background:linear-gradient(145deg,#0b1220,#06101d);}
@@ -1311,6 +1323,13 @@ if(!hasAdminSession){
         <button class="test" type="button" onclick="refreshInputLiveStatus()">Refresh Live Input Status</button>
       </div>
 
+      <div class="live-input-test-bar">
+        <button id="startLiveInputTestButton" class="test" type="button" onclick="startLiveInputTest()">Start Live Input Test</button>
+        <button id="stopLiveInputTestButton" class="danger" type="button" onclick="stopLiveInputTest()" disabled>Stop Live Input Test</button>
+        <span class="mini-muted">Continuously refreshes all six ESP32 inputs for wiring and optocoupler validation.</span>
+        <span id="liveInputTestTag" class="tag">Stopped</span>
+      </div>
+
       <div id="inputConfigStatus" class="status"></div>
 
       <div class="note">
@@ -1535,6 +1554,9 @@ let relayOutputRows = [];
 let inputConfigurationRows = [];
 let inputLiveStates = [null, null, null, null, null, null];
 let inputStatusRefreshTimer = null;
+let liveInputTestRunning = false;
+let liveInputTestTimer = null;
+let liveInputTestCycleActive = false;
 let quietRefreshTimer = null;
 let quietRefreshInProgress = false;
 let ownershipCandidateUsers = [];
@@ -3770,6 +3792,168 @@ async function saveAllInputConfigurations(){
   );
 }
 
+
+function setLiveInputTestState(running, message=""){
+  liveInputTestRunning = Boolean(running);
+
+  const startButton = document.getElementById("startLiveInputTestButton");
+  const stopButton = document.getElementById("stopLiveInputTestButton");
+  const tag = document.getElementById("liveInputTestTag");
+
+  if(startButton) startButton.disabled = liveInputTestRunning;
+  if(stopButton) stopButton.disabled = !liveInputTestRunning;
+
+  if(tag){
+    tag.textContent = liveInputTestRunning ? "Running" : "Stopped";
+    tag.className = `tag ${liveInputTestRunning ? "green" : ""}`;
+  }
+
+  if(message){
+    setInputConfigStatus(
+      message,
+      liveInputTestRunning ? "success" : "warn"
+    );
+  }
+}
+
+function applyLiveDiagnosticsToInputs(result){
+  const inputs = Array.isArray(result?.inputs) ? result.inputs : [];
+
+  if(inputs.length < 6){
+    return false;
+  }
+
+  inputLiveStates = inputs.slice(0, 6).map(input => Boolean(input?.state));
+
+  inputs.slice(0, 6).forEach((input, index) => {
+    const element = document.getElementById(`input-${index + 1}-live`);
+    if(!element) return;
+
+    const active = Boolean(input?.state);
+    element.className = `input-live-state ${active ? "active" : "inactive"}`;
+    element.textContent = active ? "ACTIVE" : "INACTIVE";
+  });
+
+  renderProductionDiagnostics(result);
+  return true;
+}
+
+async function runLiveInputTestCycle(){
+  if(!liveInputTestRunning || liveInputTestCycleActive){
+    return;
+  }
+
+  liveInputTestCycleActive = true;
+
+  try{
+    const queued = await queueProductionCommand(
+      "diagnostics",
+      {
+        requested_from: "live_input_test",
+        requested_at: new Date().toISOString()
+      }
+    );
+
+    if(!queued){
+      setInputConfigStatus(
+        "Live input test could not queue diagnostics. Check the selected online Keypad.",
+        "error"
+      );
+      stopLiveInputTest(false);
+      return;
+    }
+
+    const completed = await waitForProductionCommand(queued.id, 20000);
+
+    if(!liveInputTestRunning){
+      return;
+    }
+
+    if(!completed){
+      setInputConfigStatus(
+        "Live input test timed out waiting for the controller.",
+        "error"
+      );
+      stopLiveInputTest(false);
+      return;
+    }
+
+    const status = String(completed.status || "").toLowerCase();
+    const ok = ["completed", "complete", "done"].includes(status);
+    const result = productionResultPayload(completed);
+
+    if(!ok || !applyLiveDiagnosticsToInputs(result)){
+      setInputConfigStatus(
+        completed.result_message ||
+          "Live input test did not receive all six input states.",
+        "error"
+      );
+      stopLiveInputTest(false);
+      return;
+    }
+
+    const activeCount = result.inputs.filter(input => Boolean(input?.state)).length;
+
+    setInputConfigStatus(
+      `Live input test running — ${activeCount} of 6 inputs active. Last update: ${new Date().toLocaleTimeString()}`,
+      "success"
+    );
+
+    await loadRecentCommands();
+    renderCommands();
+    renderSummary();
+
+  }finally{
+    liveInputTestCycleActive = false;
+
+    if(liveInputTestRunning){
+      liveInputTestTimer = window.setTimeout(runLiveInputTestCycle, 1000);
+    }
+  }
+}
+
+function startLiveInputTest(){
+  if(liveInputTestRunning){
+    return;
+  }
+
+  const target = getSingleProductionTarget();
+
+  if(!target){
+    setInputConfigStatus(
+      "Select one specific online Keypad in Target Device before starting the live input test.",
+      "warn"
+    );
+    return;
+  }
+
+  if(liveInputTestTimer){
+    clearTimeout(liveInputTestTimer);
+    liveInputTestTimer = null;
+  }
+
+  setLiveInputTestState(
+    true,
+    `Live input test started for ${getDeviceName(target)}.`
+  );
+
+  runLiveInputTestCycle();
+}
+
+function stopLiveInputTest(showMessage=true){
+  liveInputTestRunning = false;
+
+  if(liveInputTestTimer){
+    clearTimeout(liveInputTestTimer);
+    liveInputTestTimer = null;
+  }
+
+  setLiveInputTestState(
+    false,
+    showMessage ? "Live input test stopped." : ""
+  );
+}
+
 async function refreshInputLiveStatus(){
   const device = selectedInputDevice();
 
@@ -5055,6 +5239,10 @@ window.addEventListener("beforeunload", function(){
 //setInterval(function(){
 //  loadMaintenancePage(false);
 //},30000);
+window.addEventListener("beforeunload", () => {
+  stopLiveInputTest(false);
+});
+
 </script>
 </body>
 </html>
