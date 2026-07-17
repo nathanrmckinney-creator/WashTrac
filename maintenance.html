@@ -471,6 +471,88 @@
     .relay-test-grid button{width:100%;}
     .production-empty{color:#94a3b8;font-size:13px;}
 
+    .lte-control-grid{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:12px;
+      margin-top:14px;
+    }
+    .lte-status-grid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:10px;
+      margin-top:14px;
+    }
+    .lte-status-item{
+      padding:12px;
+      border:1px solid #1f2937;
+      border-radius:10px;
+      background:#020617;
+      min-width:0;
+    }
+    .lte-status-item strong{
+      display:block;
+      color:#93c5fd;
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.45px;
+      margin-bottom:5px;
+    }
+    .lte-status-item span{
+      display:block;
+      color:#fff;
+      font-weight:800;
+      overflow-wrap:anywhere;
+    }
+    .lte-section-title{
+      margin-top:16px;
+      color:#eaf4ff;
+      font-weight:900;
+      font-size:13px;
+      text-transform:uppercase;
+      letter-spacing:.4px;
+    }
+    .lte-diagnostics{
+      margin-top:12px;
+      padding:12px;
+      border:1px solid rgba(148,163,184,.18);
+      border-radius:10px;
+      background:rgba(2,6,23,.42);
+    }
+    .lte-diagnostics-grid{
+      display:grid;
+      grid-template-columns:170px 1fr;
+      gap:7px 12px;
+      font-size:13px;
+      line-height:1.4;
+    }
+    .lte-diagnostics-grid strong{color:#93c5fd;}
+    .lte-live-bar{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:14px;
+      padding:12px;
+      border:1px solid rgba(37,99,235,.32);
+      border-radius:10px;
+      background:rgba(30,64,175,.12);
+    }
+    .lte-live-bar .tag{margin-left:auto;}
+    .lte-readonly{
+      opacity:.9;
+      cursor:default;
+    }
+
+    @media (max-width:1200px){
+      .lte-control-grid{grid-template-columns:1fr 1fr;}
+      .lte-status-grid{grid-template-columns:1fr 1fr;}
+    }
+    @media (max-width:700px){
+      .lte-control-grid,.lte-status-grid{grid-template-columns:1fr;}
+      .lte-diagnostics-grid{grid-template-columns:1fr;}
+    }
+
 
     @media (max-width:1200px){.grid-3{grid-template-columns:1fr 1fr;}.relay-output-row,.input-config-row{grid-template-columns:1fr 1fr;}}
     @media (max-width:1100px){.summary{grid-template-columns:1fr 1fr;}.field-grid{grid-template-columns:1fr 1fr;}.grid-2,.grid-3{grid-template-columns:1fr;}}
@@ -1228,39 +1310,97 @@ if(!hasAdminSession){
             <span id="lteStatusTag" class="tag">Unknown</span>
           </h4>
 
-          <div class="field-grid" style="grid-template-columns:1fr 1fr;">
+          <div class="lte-control-grid">
             <div class="field">
               <label for="lteApn">APN</label>
-              <input id="lteApn" placeholder="carrier APN">
+              <input id="lteApn" maxlength="63" placeholder="carrier APN">
             </div>
             <div class="field">
-              <label for="lteSim">SIM ICCID / SIM ID</label>
-              <input id="lteSim" placeholder="SIM card number">
+              <label for="lteAutoReconnect">Automatic Reconnect</label>
+              <select id="lteAutoReconnect">
+                <option value="true">Enabled</option>
+                <option value="false">Disabled</option>
+              </select>
             </div>
-          </div>
-
-          <div class="field-grid" style="grid-template-columns:1fr 1fr;">
             <div class="field">
-              <label for="lteCarrier">Carrier</label>
-              <input id="lteCarrier" placeholder="AT&T, Verizon, T-Mobile...">
+              <label for="lteReconnectInitial">Initial Reconnect Delay</label>
+              <input id="lteReconnectInitial" type="number" min="1" max="3600" step="1" value="5">
+            </div>
+            <div class="field">
+              <label for="lteReconnectMaximum">Maximum Reconnect Delay</label>
+              <input id="lteReconnectMaximum" type="number" min="1" max="86400" step="1" value="300">
+            </div>
+            <div class="field">
+              <label for="lteSim">SIM ICCID</label>
+              <input id="lteSim" class="lte-readonly" placeholder="Not reported" readonly>
             </div>
             <div class="field">
               <label for="lteImei">Modem IMEI</label>
-              <input id="lteImei" placeholder="IMEI">
+              <input id="lteImei" class="lte-readonly" placeholder="Not reported" readonly>
+            </div>
+            <div class="field">
+              <label for="lteImsi">Subscriber IMSI</label>
+              <input id="lteImsi" class="lte-readonly" placeholder="Not reported" readonly>
+            </div>
+            <div class="field">
+              <label for="lteFirmware">Modem Firmware</label>
+              <input id="lteFirmware" class="lte-readonly" placeholder="Not reported" readonly>
             </div>
           </div>
 
+          <div class="lte-section-title">Connection & Registration</div>
+          <div class="lte-status-grid">
+            <div class="lte-status-item"><strong>Modem State</strong><span id="lteModemState">Unknown</span></div>
+            <div class="lte-status-item"><strong>Data Session</strong><span id="lteDataSessionState">Unknown</span></div>
+            <div class="lte-status-item"><strong>Registration</strong><span id="lteRegistrationState">Unknown</span></div>
+            <div class="lte-status-item"><strong>Carrier</strong><span id="lteCarrierValue">Unknown</span></div>
+            <div class="lte-status-item"><strong>Packet Attached</strong><span id="ltePacketAttached">Unknown</span></div>
+            <div class="lte-status-item"><strong>Roaming</strong><span id="lteRoaming">Unknown</span></div>
+            <div class="lte-status-item"><strong>IP Address</strong><span id="lteIpAddress">Unknown</span></div>
+            <div class="lte-status-item"><strong>MCC / MNC</strong><span id="lteMccMnc">Unknown</span></div>
+            <div class="lte-status-item"><strong>TAC</strong><span id="lteTac">Unknown</span></div>
+            <div class="lte-status-item"><strong>Cell ID</strong><span id="lteCellId">Unknown</span></div>
+            <div class="lte-status-item"><strong>Access Technology</strong><span id="lteAccessTechnology">Unknown</span></div>
+            <div class="lte-status-item"><strong>Modem Uptime</strong><span id="lteModemUptime">Unknown</span></div>
+          </div>
+
+          <div class="lte-section-title">Signal</div>
           <div class="signal-wrap" id="lteSignalBars">
             <div class="signal-bar"></div><div class="signal-bar"></div><div class="signal-bar"></div><div class="signal-bar"></div>
           </div>
+          <div id="lteSignalMeta" class="network-meta">RSSI: Unknown • RSRP: Unknown • RSRQ: Unknown • SINR: Unknown</div>
 
-          <div id="lteMeta" class="network-meta">No LTE/SIM data loaded yet.</div>
+          <div class="lte-section-title">Diagnostics</div>
+          <div class="lte-diagnostics">
+            <div id="lteDiagnosticsGrid" class="lte-diagnostics-grid">
+              <strong>Last Disconnect</strong><span>Unknown</span>
+              <strong>Last Command</strong><span>Unknown</span>
+              <strong>Last Error</strong><span>None reported</span>
+              <strong>Reconnects</strong><span>0</span>
+              <strong>Modem Restarts</strong><span>0</span>
+              <strong>Registration Failures</strong><span>0</span>
+              <strong>Data Session Failures</strong><span>0</span>
+              <strong>Command Timeouts / Errors</strong><span>0 / 0</span>
+            </div>
+          </div>
 
           <div class="actions">
-            <button type="button" onclick="saveLteConfig()">Save LTE/SIM Config</button>
-            <button class="secondary" type="button" onclick="queueCommandForVisible('refresh_lte')">Refresh LTE</button>
-            <button class="warn" type="button" onclick="queueCommandForVisible('register_lte')">Re-Register SIM</button>
+            <button class="success" type="button" onclick="saveLteConfig()">Save LTE Configuration</button>
+            <button type="button" onclick="refreshLteProductionData()">Refresh All LTE Data</button>
+            <button class="success" type="button" onclick="runLteControlCommand('lte_connect')">Connect Data Session</button>
+            <button class="secondary" type="button" onclick="runLteControlCommand('lte_disconnect')">Disconnect Data Session</button>
+            <button class="warn" type="button" onclick="runLteControlCommand('lte_restart')">Restart Modem</button>
           </div>
+
+          <div class="lte-live-bar">
+            <button id="startLteLiveButton" class="test" type="button" onclick="startLteLiveRefresh()">Start Live LTE Monitor</button>
+            <button id="stopLteLiveButton" class="danger" type="button" onclick="stopLteLiveRefresh()" disabled>Stop Live LTE Monitor</button>
+            <span class="mini-muted">Refreshes LTE status, signal, identity, configuration, and diagnostics.</span>
+            <span id="lteLiveTag" class="tag">Stopped</span>
+          </div>
+
+          <div id="lteMeta" class="network-meta" style="margin-top:12px;">No LTE/SIM data loaded yet.</div>
+          <div id="lteSupportStatus" class="status"></div>
         </div>
       </div>
 
@@ -1557,6 +1697,9 @@ let inputStatusRefreshTimer = null;
 let liveInputTestRunning = false;
 let liveInputTestTimer = null;
 let liveInputTestCycleActive = false;
+let lteLiveRefreshTimer = null;
+let lteLiveRefreshRunning = false;
+let lteLiveRefreshCycleActive = false;
 let quietRefreshTimer = null;
 let quietRefreshInProgress = false;
 let ownershipCandidateUsers = [];
@@ -3061,9 +3204,12 @@ function renderNetworkSupport(){
 
   renderWirelessNetworks(parsedNetworks);
 
-  document.getElementById("lteMeta").innerText = device
-    ? `Carrier: ${carrier || "Unknown"} • SIM: ${sim || "Unknown"} • IMEI: ${imei || "Unknown"} • Strength: ${lteStrength || 0}/4`
-    : "No device selected or visible.";
+  const lteMeta = document.getElementById("lteMeta");
+  if(lteMeta){
+    lteMeta.innerText = device
+      ? `Cached device record — Carrier: ${carrier || "Unknown"} • SIM: ${sim || "Unknown"} • IMEI: ${imei || "Unknown"} • Strength: ${lteStrength || 0}/4`
+      : "No device selected or visible.";
+  }
 }
 
 async function saveWifiConfig(){
@@ -3088,24 +3234,367 @@ async function saveWifiConfig(){
   document.getElementById("wifiPassword").value = "";
 }
 
+function setLteSupportStatus(message,tone=""){
+  const box=document.getElementById("lteSupportStatus");
+  if(!box) return;
+  box.innerText=message||"";
+  box.className=message?"status show":"status";
+  if(tone) box.classList.add(tone);
+}
+
+function setLteText(id,value,fallback="Unknown"){
+  const element=document.getElementById(id);
+  if(element) element.innerText=(value===undefined||value===null||value==="")?fallback:String(value);
+}
+
+function setLteInput(id,value){
+  const element=document.getElementById(id);
+  if(element) element.value=(value===undefined||value===null)?"":String(value);
+}
+
+function formatLteSeconds(value){
+  const seconds=Number(value);
+  if(!Number.isFinite(seconds)||seconds<0) return "Unknown";
+  if(seconds<60) return `${Math.floor(seconds)} sec`;
+  if(seconds<3600) return `${Math.floor(seconds/60)} min ${Math.floor(seconds%60)} sec`;
+  const hours=Math.floor(seconds/3600);
+  const minutes=Math.floor((seconds%3600)/60);
+  return `${hours} hr ${minutes} min`;
+}
+
+function lteSignalBarsFromRssi(rssi){
+  const value=Number(rssi);
+  if(!Number.isFinite(value)||value<0||value===99) return 0;
+  if(value>=24) return 4;
+  if(value>=16) return 3;
+  if(value>=8) return 2;
+  return 1;
+}
+
+function renderLteStatusResult(result){
+  if(!result) return;
+
+  const online=Boolean(result.online);
+  const registered=Boolean(result.registered);
+  const tag=document.getElementById("lteStatusTag");
+
+  if(tag){
+    tag.className=`tag ${online?"green":registered?"yellow":"red"}`;
+    tag.innerText=online?"Online":registered?"Registered":"Offline";
+  }
+
+  setLteText("lteModemState",result.state);
+  setLteText("lteDataSessionState",result.data_session_state);
+  setLteText("lteRegistrationState",result.registration_state);
+  setLteText("lteCarrierValue",result.carrier);
+  setLteText("ltePacketAttached",result.packet_attached===true?"Yes":result.packet_attached===false?"No":"Unknown");
+  setLteText("lteRoaming",result.roaming===true?"Yes":result.roaming===false?"No":"Unknown");
+  setLteText("lteIpAddress",result.ip_address);
+  setLteText("lteMccMnc",
+    (result.mcc||result.mnc)?`${result.mcc??"-"} / ${result.mnc??"-"}`:"Unknown");
+  setLteText("lteTac",result.tac);
+  setLteText("lteCellId",result.cell_id);
+  setLteText("lteAccessTechnology",result.access_technology);
+  setLteText("lteModemUptime",formatLteSeconds(result.modem_uptime_seconds));
+
+  const meta=document.getElementById("lteMeta");
+  if(meta){
+    meta.innerText=`Modem: ${result.modem_present?"Present":"Not detected"} • SIM: ${result.sim_present?"Present":"Not detected"} • Packet: ${result.packet_attached?"Attached":"Detached"} • Data: ${result.data_session_active?"Active":"Inactive"}`;
+  }
+}
+
+function renderLteSignalResult(result){
+  if(!result) return;
+
+  setSignalBars("lteSignalBars",lteSignalBarsFromRssi(result.rssi));
+
+  const meta=document.getElementById("lteSignalMeta");
+  if(meta){
+    meta.innerText=
+      `RSSI: ${result.rssi??"Unknown"} • BER: ${result.ber??"Unknown"} • `+
+      `RSRP: ${result.rsrp??"Unknown"} dBm • RSRQ: ${result.rsrq??"Unknown"} dB • `+
+      `SINR: ${result.sinr??"Unknown"} dB`;
+  }
+}
+
+function renderLteInfoResult(result){
+  if(!result) return;
+
+  setLteInput("lteSim",result.iccid);
+  setLteInput("lteImei",result.imei);
+  setLteInput("lteImsi",result.imsi);
+  setLteInput("lteFirmware",result.firmware_version);
+
+  setLteText("lteCarrierValue",result.carrier);
+  setLteText("lteRegistrationState",result.registration_state);
+  setLteText("lteRoaming",result.roaming===true?"Yes":result.roaming===false?"No":"Unknown");
+  setLteText("lteIpAddress",result.ip_address);
+  setLteText("lteMccMnc",
+    (result.mcc||result.mnc)?`${result.mcc??"-"} / ${result.mnc??"-"}`:"Unknown");
+  setLteText("lteTac",result.tac);
+  setLteText("lteCellId",result.cell_id);
+  setLteText("lteAccessTechnology",result.access_technology);
+}
+
+function renderLteConfigResult(result){
+  if(!result) return;
+
+  setLteInput("lteApn",result.apn||"");
+
+  const autoReconnect=document.getElementById("lteAutoReconnect");
+  if(autoReconnect){
+    autoReconnect.value=result.automatic_reconnect===false?"false":"true";
+  }
+
+  setLteInput("lteReconnectInitial",result.reconnect_initial_delay??5);
+  setLteInput("lteReconnectMaximum",result.reconnect_maximum_delay??300);
+}
+
+function renderLteDiagnosticsResult(result){
+  const box=document.getElementById("lteDiagnosticsGrid");
+  if(!box||!result) return;
+
+  box.innerHTML=`
+    <strong>Last Disconnect</strong><span>${escapeText(result.last_disconnect_reason||"None")}</span>
+    <strong>Last Command</strong><span>${escapeText(result.last_command||"None")}</span>
+    <strong>Last Error</strong><span>${escapeText(result.last_error||"None reported")}</span>
+    <strong>Last CME / CMS Error</strong><span>${escapeText(result.last_cme_error??"-")} / ${escapeText(result.last_cms_error??"-")}</span>
+    <strong>Last Successful Command</strong><span>${escapeText(formatLteSeconds(result.last_successful_command_age_seconds))} ago</span>
+    <strong>Last Registration</strong><span>${escapeText(formatLteSeconds(result.last_registration_age_seconds))} ago</span>
+    <strong>Last Data Session</strong><span>${escapeText(formatLteSeconds(result.last_data_session_age_seconds))} ago</span>
+    <strong>Reconnects</strong><span>${escapeText(result.reconnect_count??0)}</span>
+    <strong>Modem Restarts</strong><span>${escapeText(result.modem_restart_count??0)}</span>
+    <strong>Registration Failures</strong><span>${escapeText(result.registration_failure_count??0)}</span>
+    <strong>Data Session Failures</strong><span>${escapeText(result.data_session_failure_count??0)}</span>
+    <strong>Command Timeouts / Errors</strong><span>${escapeText(result.command_timeout_count??0)} / ${escapeText(result.command_error_count??0)}</span>
+  `;
+}
+
+async function executeLteProductionCommand(command,payload={},timeoutMs=25000){
+  const queued=await queueProductionCommand(command,payload);
+  if(!queued) return null;
+
+  const completed=await waitForProductionCommand(queued.id,timeoutMs);
+  await loadRecentCommands();
+  renderCommands();
+  renderSummary();
+
+  if(!completed){
+    setLteSupportStatus(`${command} is still pending or timed out. Check Recent Commands.`,"warn");
+    return null;
+  }
+
+  const status=String(completed.status||"").toLowerCase();
+  const ok=["completed","complete","done"].includes(status);
+  const result=productionResultPayload(completed);
+
+  if(!ok){
+    setLteSupportStatus(completed.result_message||`${command} failed.`,"error");
+    return null;
+  }
+
+  return result||{};
+}
+
+async function refreshLteProductionData(showStatus=true){
+  const target=getSingleProductionTarget();
+  if(!target) return false;
+
+  if(showStatus){
+    setLteSupportStatus(`Refreshing LTE data from ${getDeviceName(target)}...`,"warn");
+  }
+
+  const status=await executeLteProductionCommand("lte_status");
+  if(status) renderLteStatusResult(status);
+
+  const signal=await executeLteProductionCommand("lte_signal");
+  if(signal) renderLteSignalResult(signal);
+
+  const info=await executeLteProductionCommand("lte_info");
+  if(info) renderLteInfoResult(info);
+
+  const config=await executeLteProductionCommand("lte_get_config");
+  if(config) renderLteConfigResult(config);
+
+  const diagnostics=await executeLteProductionCommand("lte_diagnostics");
+  if(diagnostics) renderLteDiagnosticsResult(diagnostics);
+
+  const successful=Boolean(status||signal||info||config||diagnostics);
+
+  if(showStatus){
+    setLteSupportStatus(
+      successful
+        ? `LTE data refreshed from ${getDeviceName(target)}.`
+        : "No LTE data was returned.",
+      successful?"success":"warn"
+    );
+  }
+
+  return successful;
+}
+
 async function saveLteConfig(){
   clearStatus();
 
-  const siteId = selectedSite();
-  if(!siteId){ setStatus("Select a site first.", "warn"); return; }
+  const target=getSingleProductionTarget();
+  if(!target) return;
 
-  const apn = document.getElementById("lteApn").value.trim();
-  const sim_iccid = document.getElementById("lteSim").value.trim();
-  const carrier = document.getElementById("lteCarrier").value.trim();
-  const imei = document.getElementById("lteImei").value.trim();
+  const apn=document.getElementById("lteApn")?.value.trim()||"";
+  const automaticReconnect=
+    document.getElementById("lteAutoReconnect")?.value!=="false";
+  const reconnectInitial=
+    Number(document.getElementById("lteReconnectInitial")?.value);
+  const reconnectMaximum=
+    Number(document.getElementById("lteReconnectMaximum")?.value);
 
-  await queueCommandForVisible("set_lte_config", false, {
+  if(apn.length>=64){
+    setLteSupportStatus("APN must be fewer than 64 characters.","warn");
+    return;
+  }
+
+  if(!Number.isInteger(reconnectInitial)||reconnectInitial<1){
+    setLteSupportStatus("Initial reconnect delay must be a whole number of at least 1 second.","warn");
+    return;
+  }
+
+  if(!Number.isInteger(reconnectMaximum)||reconnectMaximum<reconnectInitial){
+    setLteSupportStatus("Maximum reconnect delay must be a whole number greater than or equal to the initial delay.","warn");
+    return;
+  }
+
+  setLteSupportStatus(`Saving LTE configuration to ${getDeviceName(target)}...`,"warn");
+
+  const result=await executeLteProductionCommand("lte_set_config",{
     apn,
-    sim_iccid,
-    carrier,
-    imei
+    automatic_reconnect:automaticReconnect,
+    reconnect_initial_delay:reconnectInitial,
+    reconnect_maximum_delay:reconnectMaximum
   });
+
+  if(!result) return;
+
+  renderLteConfigResult(result);
+
+  setLteSupportStatus(
+    `LTE configuration saved to ${getDeviceName(target)}.`,
+    "success"
+  );
 }
+
+async function runLteControlCommand(command){
+  const target=getSingleProductionTarget();
+  if(!target) return;
+
+  const labels={
+    lte_connect:"connect the LTE data session",
+    lte_disconnect:"disconnect the LTE data session",
+    lte_restart:"restart the LTE modem"
+  };
+
+  if(command==="lte_restart"){
+    const confirmed=confirm(`Restart the LTE modem on ${getDeviceName(target)}?`);
+    if(!confirmed) return;
+  }
+
+  setLteSupportStatus(`Requesting ${labels[command]||command}...`,"warn");
+  const result=await executeLteProductionCommand(
+    command,
+    {},
+    command==="lte_restart"?45000:30000
+  );
+
+  if(result===null) return;
+
+  setLteSupportStatus(
+    `${labels[command]||command} command completed.`,
+    "success"
+  );
+
+  window.setTimeout(()=>refreshLteProductionData(false),command==="lte_restart"?8000:1500);
+}
+
+function setLteLiveRefreshState(running,message=""){
+  lteLiveRefreshRunning=running;
+
+  const startButton=document.getElementById("startLteLiveButton");
+  const stopButton=document.getElementById("stopLteLiveButton");
+  const tag=document.getElementById("lteLiveTag");
+
+  if(startButton) startButton.disabled=running;
+  if(stopButton) stopButton.disabled=!running;
+
+  if(tag){
+    tag.className=`tag ${running?"green":""}`;
+    tag.innerText=running?"Running":"Stopped";
+  }
+
+  if(message){
+    setLteSupportStatus(message,running?"success":"warn");
+  }
+}
+
+async function runLteLiveRefreshCycle(){
+  if(!lteLiveRefreshRunning||lteLiveRefreshCycleActive) return;
+
+  lteLiveRefreshCycleActive=true;
+
+  try{
+    const success=await refreshLteProductionData(false);
+
+    if(!success&&lteLiveRefreshRunning){
+      setLteSupportStatus("Live LTE monitor did not receive data. Monitoring stopped.","error");
+      stopLteLiveRefresh(false);
+      return;
+    }
+
+    if(lteLiveRefreshRunning){
+      setLteSupportStatus(
+        `Live LTE monitor running. Last update: ${new Date().toLocaleTimeString()}`,
+        "success"
+      );
+    }
+  }finally{
+    lteLiveRefreshCycleActive=false;
+
+    if(lteLiveRefreshRunning){
+      lteLiveRefreshTimer=window.setTimeout(runLteLiveRefreshCycle,10000);
+    }
+  }
+}
+
+function startLteLiveRefresh(){
+  if(lteLiveRefreshRunning) return;
+
+  const target=getSingleProductionTarget();
+  if(!target) return;
+
+  if(lteLiveRefreshTimer){
+    clearTimeout(lteLiveRefreshTimer);
+    lteLiveRefreshTimer=null;
+  }
+
+  setLteLiveRefreshState(
+    true,
+    `Live LTE monitor started for ${getDeviceName(target)}.`
+  );
+
+  runLteLiveRefreshCycle();
+}
+
+function stopLteLiveRefresh(showMessage=true){
+  lteLiveRefreshRunning=false;
+
+  if(lteLiveRefreshTimer){
+    clearTimeout(lteLiveRefreshTimer);
+    lteLiveRefreshTimer=null;
+  }
+
+  setLteLiveRefreshState(
+    false,
+    showMessage?"Live LTE monitor stopped.":""
+  );
+}
+
 
 const RELAY_OUTPUT_DEFAULTS = [
   { output_key:"ss", output_label:"Relay 1", default_name:"Wash Trigger", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:true },
@@ -4380,6 +4869,7 @@ function renderCommands(){
 }
 
 function selectDevice(deviceId){
+  stopLteLiveRefresh(false);
   document.getElementById("targetDevice").value=deviceId;
   const softwareTarget = document.getElementById("softwareTargetDevice");
   if(softwareTarget) softwareTarget.value = deviceId;
@@ -5174,6 +5664,7 @@ async function loadMaintenancePage(showLoading=true){
   renderDevices();
   renderCommands();
   renderSoftwareUpdateDetails();
+  renderNetworkSupport();
 
   if(showLoading) clearStatus();
 }
