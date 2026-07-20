@@ -302,10 +302,11 @@
     0 18px 46px rgba(0, 0, 0, 0.68),
     0 0 18px rgba(37, 99, 235, 0.18);
   transition:
-    transform 220ms ease,
-    filter 220ms ease,
-    opacity 220ms ease,
-    box-shadow 220ms ease;
+    transform 360ms cubic-bezier(.22,.8,.24,1),
+    filter 320ms ease,
+    opacity 320ms ease,
+    box-shadow 360ms ease,
+    border-color 320ms ease;
   pointer-events: auto;
   cursor: pointer;
 }
@@ -393,25 +394,49 @@
 }
 
 .software-shot-monitor {
-  width: 62%;
-  left: 19%;
-  top: 17%;
+  width: 66%;
+  left: 17%;
+  top: 15%;
   z-index: 12;
   border: 2px solid rgba(37, 99, 235, 0.98);
   opacity: 1;
+  filter: none;
   box-shadow:
-    0 30px 78px rgba(0, 0, 0, 0.82),
-    0 0 40px rgba(37, 99, 235, 0.5),
+    0 34px 86px rgba(0, 0, 0, 0.84),
+    0 0 44px rgba(37, 99, 235, 0.52),
     inset 0 0 0 1px rgba(255,255,255,0.05);
+  animation: featuredGlow 5.5s ease-in-out infinite;
 }
 
 .software-shot-monitor:hover {
-  transform: translateY(-7px) scale(1.018);
+  transform: translateY(-7px) scale(1.012);
 }
 
-.software-shot.is-swapping {
-  opacity: 0.35;
-  transform: scale(0.985);
+.software-shot.is-swapping-out {
+  opacity: 0.18;
+  filter: saturate(0.72) brightness(0.72);
+  transform: translateY(8px) scale(0.955);
+}
+
+.software-shot.is-swapping-in {
+  opacity: 1;
+  filter: none;
+  transform: translateY(-4px) scale(1.018);
+}
+
+@keyframes featuredGlow {
+  0%, 72%, 100% {
+    box-shadow:
+      0 34px 86px rgba(0, 0, 0, 0.84),
+      0 0 38px rgba(37, 99, 235, 0.44),
+      inset 0 0 0 1px rgba(255,255,255,0.05);
+  }
+  84% {
+    box-shadow:
+      0 38px 92px rgba(0, 0, 0, 0.86),
+      0 0 56px rgba(37, 99, 235, 0.66),
+      inset 0 0 0 1px rgba(255,255,255,0.08);
+  }
 }
 
 .software-collage-label {
@@ -420,17 +445,58 @@
   bottom: 0;
   transform: translateX(-50%);
   z-index: 40;
-  padding: 10px 17px;
-  border: 1px solid rgba(59, 130, 246, 0.55);
+  min-width: 250px;
+  padding: 10px 18px 11px;
+  border: 1px solid rgba(59, 130, 246, 0.58);
   border-radius: 999px;
-  background: rgba(2, 6, 23, 0.92);
-  box-shadow: 0 8px 22px rgba(0,0,0,.4);
-  color: #bfdbfe;
+  background: rgba(2, 6, 23, 0.94);
+  box-shadow:
+    0 10px 26px rgba(0,0,0,.46),
+    0 0 18px rgba(37,99,235,.13);
+  text-align: center;
+  backdrop-filter: blur(9px);
+  pointer-events: none;
+}
+
+.software-collage-title {
+  display: block;
+  color: #dbeafe;
   font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 1.3px;
+  font-weight: 900;
+  letter-spacing: 1.35px;
   text-transform: uppercase;
-  backdrop-filter: blur(8px);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.software-collage-hint {
+  display: block;
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .75px;
+  text-transform: uppercase;
+}
+
+.software-collage-label.is-changing .software-collage-title {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.software-collage-wrap.is-paused .software-collage-hint::after {
+  content: " · Paused";
+  color: #93c5fd;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .software-shot,
+  .software-collage-title {
+    transition: none !important;
+  }
+
+  .software-shot-monitor {
+    animation: none !important;
+  }
 }
 
 .device {
@@ -1070,9 +1136,9 @@
   }
 
   .software-shot-monitor {
-    width: 72%;
-    left: 14%;
-    top: 20%;
+    width: 76%;
+    left: 12%;
+    top: 18%;
   }
 
   .software-collage-label {
@@ -1251,35 +1317,38 @@
 </div>
 
       <div class="software-collage-wrap" aria-label="WashTrac management platform screens">
-        <div class="software-shot software-shot-dashboard">
+        <div class="software-shot software-shot-dashboard" data-title="Dashboard">
           <img src="washtrac-dashboard.png" alt="WashTrac dashboard with wash totals and department billing">
         </div>
 
-        <div class="software-shot software-shot-reports">
+        <div class="software-shot software-shot-reports" data-title="Reports & Analytics">
           <img src="washtrac-reports.png" alt="WashTrac reports with usage charts and billing analytics">
         </div>
 
-        <div class="software-shot software-shot-codes">
+        <div class="software-shot software-shot-codes" data-title="Code Manager">
           <img src="washtrac-codes.png" alt="WashTrac code management page">
         </div>
 
-        <div class="software-shot software-shot-activity">
+        <div class="software-shot software-shot-activity" data-title="Activity History">
           <img src="washtrac-activity.png" alt="WashTrac activity history and search page">
         </div>
 
-        <div class="software-shot software-shot-sites">
+        <div class="software-shot software-shot-sites" data-title="Multi-Site Management">
           <img src="washtrac-sites.png" alt="WashTrac site and multi-location management page">
         </div>
 
-        <div class="software-shot software-shot-memberships">
+        <div class="software-shot software-shot-memberships" data-title="Membership Management">
           <img src="washtrac-memberships.png" alt="WashTrac membership management page">
         </div>
 
-        <div class="software-shot software-shot-monitor">
+        <div class="software-shot software-shot-monitor" data-title="System Monitor">
           <img src="washtrac-monitor.png" alt="WashTrac real-time system monitor">
         </div>
 
-        <div class="software-collage-label">Complete Management Platform</div>
+        <div class="software-collage-label" aria-live="polite">
+          <span class="software-collage-title">System Monitor</span>
+          <span class="software-collage-hint">Click any screen to explore</span>
+        </div>
       </div>
 
 </div>
@@ -1765,77 +1834,190 @@
       if (!collage) return;
 
       const featuredShot = collage.querySelector(".software-shot-monitor");
-      const shots = collage.querySelectorAll(".software-shot");
+      const shots = Array.from(collage.querySelectorAll(".software-shot"));
+      const titleBadge = collage.querySelector(".software-collage-label");
+      const titleText = collage.querySelector(".software-collage-title");
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      if (!featuredShot) return;
+      if (!featuredShot || shots.length < 2) return;
 
-      shots.forEach((shot) => {
-        shot.setAttribute("role", "button");
-        shot.setAttribute("tabindex", "0");
+      const AUTO_ADVANCE_MS = 6500;
+      const USER_PAUSE_MS = 25000;
+      const SWAP_MS = prefersReducedMotion ? 0 : 260;
 
-        const image = shot.querySelector("img");
-        if (image) {
+      let autoTimer = null;
+      let resumeTimer = null;
+      let isSwapping = false;
+
+      const getTitle = (shot) =>
+        shot.dataset.title ||
+        shot.querySelector("img")?.alt ||
+        "WashTrac Platform";
+
+      const updateAccessibility = () => {
+        shots.forEach((shot) => {
+          const image = shot.querySelector("img");
+          const title = getTitle(shot);
+
+          shot.setAttribute("role", "button");
+          shot.setAttribute("tabindex", "0");
           shot.setAttribute(
             "aria-label",
             shot === featuredShot
-              ? `${image.alt}. Currently featured.`
-              : `Feature ${image.alt}`
+              ? `${title}. Currently featured.`
+              : `Feature ${title}`
           );
+
           shot.title = shot === featuredShot
-            ? "Currently featured"
-            : "Click to feature this screen";
+            ? `${title} — currently featured`
+            : `Click to feature ${title}`;
+
+          if (image) {
+            image.setAttribute("draggable", "false");
+          }
+        });
+      };
+
+      const updateTitle = (title) => {
+        if (!titleText) return;
+
+        if (titleBadge && !prefersReducedMotion) {
+          titleBadge.classList.add("is-changing");
+          window.setTimeout(() => {
+            titleText.textContent = title;
+            titleBadge.classList.remove("is-changing");
+          }, 140);
+        } else {
+          titleText.textContent = title;
+        }
+      };
+
+      const clearAutoTimer = () => {
+        if (autoTimer) {
+          window.clearTimeout(autoTimer);
+          autoTimer = null;
+        }
+      };
+
+      const scheduleAutoAdvance = () => {
+        clearAutoTimer();
+
+        if (prefersReducedMotion || document.hidden) return;
+
+        autoTimer = window.setTimeout(() => {
+          const currentSrc = featuredShot.querySelector("img")?.getAttribute("src");
+          const currentIndex = shots.findIndex(
+            (shot) => shot.querySelector("img")?.getAttribute("src") === currentSrc
+          );
+          const nextIndex = currentIndex >= 0
+            ? (currentIndex + 1) % shots.length
+            : 0;
+
+          const nextShot = shots[nextIndex] === featuredShot
+            ? shots[(nextIndex + 1) % shots.length]
+            : shots[nextIndex];
+
+          featureShot(nextShot, false);
+        }, AUTO_ADVANCE_MS);
+      };
+
+      const pauseAutoAdvance = () => {
+        clearAutoTimer();
+
+        if (resumeTimer) {
+          window.clearTimeout(resumeTimer);
         }
 
-        const featureShot = () => {
-          if (shot === featuredShot) return;
+        collage.classList.add("is-paused");
 
-          const clickedImage = shot.querySelector("img");
-          const featuredImage = featuredShot.querySelector("img");
-          if (!clickedImage || !featuredImage) return;
+        resumeTimer = window.setTimeout(() => {
+          collage.classList.remove("is-paused");
+          scheduleAutoAdvance();
+        }, USER_PAUSE_MS);
+      };
 
-          shot.classList.add("is-swapping");
-          featuredShot.classList.add("is-swapping");
+      const featureShot = (shot, userInitiated = true) => {
+        if (!shot || shot === featuredShot || isSwapping) {
+          if (userInitiated) pauseAutoAdvance();
+          return;
+        }
+
+        const clickedImage = shot.querySelector("img");
+        const featuredImage = featuredShot.querySelector("img");
+        if (!clickedImage || !featuredImage) return;
+
+        isSwapping = true;
+        clearAutoTimer();
+
+        shot.classList.add("is-swapping-out");
+        featuredShot.classList.add("is-swapping-out");
+
+        window.setTimeout(() => {
+          const clickedSrc = clickedImage.getAttribute("src");
+          const clickedAlt = clickedImage.getAttribute("alt");
+          const clickedTitle = shot.dataset.title;
+
+          clickedImage.setAttribute("src", featuredImage.getAttribute("src"));
+          clickedImage.setAttribute("alt", featuredImage.getAttribute("alt"));
+          shot.dataset.title = featuredShot.dataset.title;
+
+          featuredImage.setAttribute("src", clickedSrc);
+          featuredImage.setAttribute("alt", clickedAlt);
+          featuredShot.dataset.title = clickedTitle;
+
+          shot.classList.remove("is-swapping-out");
+          featuredShot.classList.remove("is-swapping-out");
+          featuredShot.classList.add("is-swapping-in");
+
+          updateTitle(getTitle(featuredShot));
+          updateAccessibility();
 
           window.setTimeout(() => {
-            const clickedSrc = clickedImage.getAttribute("src");
-            const clickedAlt = clickedImage.getAttribute("alt");
+            featuredShot.classList.remove("is-swapping-in");
+            isSwapping = false;
 
-            clickedImage.setAttribute("src", featuredImage.getAttribute("src"));
-            clickedImage.setAttribute("alt", featuredImage.getAttribute("alt"));
+            if (userInitiated) {
+              pauseAutoAdvance();
+            } else {
+              scheduleAutoAdvance();
+            }
+          }, SWAP_MS);
+        }, SWAP_MS);
+      };
 
-            featuredImage.setAttribute("src", clickedSrc);
-            featuredImage.setAttribute("alt", clickedAlt);
-
-            shots.forEach((item) => {
-              const itemImage = item.querySelector("img");
-              if (!itemImage) return;
-
-              item.setAttribute(
-                "aria-label",
-                item === featuredShot
-                  ? `${itemImage.alt}. Currently featured.`
-                  : `Feature ${itemImage.alt}`
-              );
-
-              item.title = item === featuredShot
-                ? "Currently featured"
-                : "Click to feature this screen";
-            });
-
-            shot.classList.remove("is-swapping");
-            featuredShot.classList.remove("is-swapping");
-          }, 130);
-        };
-
-        shot.addEventListener("click", featureShot);
+      shots.forEach((shot) => {
+        shot.addEventListener("click", () => featureShot(shot, true));
 
         shot.addEventListener("keydown", (event) => {
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
-            featureShot();
+            featureShot(shot, true);
           }
         });
       });
+
+      collage.addEventListener("mouseenter", clearAutoTimer);
+      collage.addEventListener("mouseleave", scheduleAutoAdvance);
+      collage.addEventListener("focusin", clearAutoTimer);
+      collage.addEventListener("focusout", () => {
+        window.setTimeout(() => {
+          if (!collage.contains(document.activeElement)) {
+            scheduleAutoAdvance();
+          }
+        }, 0);
+      });
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          clearAutoTimer();
+        } else {
+          scheduleAutoAdvance();
+        }
+      });
+
+      updateTitle(getTitle(featuredShot));
+      updateAccessibility();
+      scheduleAutoAdvance();
     }
 
 
