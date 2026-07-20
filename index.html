@@ -307,6 +307,16 @@
     opacity 220ms ease,
     box-shadow 220ms ease;
   pointer-events: auto;
+  cursor: pointer;
+}
+
+.software-shot:focus-visible {
+  outline: 3px solid #60a5fa;
+  outline-offset: 5px;
+}
+
+.software-shot:active {
+  transform: translateY(-3px) rotate(0deg) scale(1.01);
 }
 
 .software-shot img {
@@ -397,6 +407,11 @@
 
 .software-shot-monitor:hover {
   transform: translateY(-7px) scale(1.018);
+}
+
+.software-shot.is-swapping {
+  opacity: 0.35;
+  transform: scale(0.985);
 }
 
 .software-collage-label {
@@ -1745,7 +1760,88 @@
     }
 
 
+    function initializeSoftwareCollage() {
+      const collage = document.querySelector(".software-collage-wrap");
+      if (!collage) return;
+
+      const featuredShot = collage.querySelector(".software-shot-monitor");
+      const shots = collage.querySelectorAll(".software-shot");
+
+      if (!featuredShot) return;
+
+      shots.forEach((shot) => {
+        shot.setAttribute("role", "button");
+        shot.setAttribute("tabindex", "0");
+
+        const image = shot.querySelector("img");
+        if (image) {
+          shot.setAttribute(
+            "aria-label",
+            shot === featuredShot
+              ? `${image.alt}. Currently featured.`
+              : `Feature ${image.alt}`
+          );
+          shot.title = shot === featuredShot
+            ? "Currently featured"
+            : "Click to feature this screen";
+        }
+
+        const featureShot = () => {
+          if (shot === featuredShot) return;
+
+          const clickedImage = shot.querySelector("img");
+          const featuredImage = featuredShot.querySelector("img");
+          if (!clickedImage || !featuredImage) return;
+
+          shot.classList.add("is-swapping");
+          featuredShot.classList.add("is-swapping");
+
+          window.setTimeout(() => {
+            const clickedSrc = clickedImage.getAttribute("src");
+            const clickedAlt = clickedImage.getAttribute("alt");
+
+            clickedImage.setAttribute("src", featuredImage.getAttribute("src"));
+            clickedImage.setAttribute("alt", featuredImage.getAttribute("alt"));
+
+            featuredImage.setAttribute("src", clickedSrc);
+            featuredImage.setAttribute("alt", clickedAlt);
+
+            shots.forEach((item) => {
+              const itemImage = item.querySelector("img");
+              if (!itemImage) return;
+
+              item.setAttribute(
+                "aria-label",
+                item === featuredShot
+                  ? `${itemImage.alt}. Currently featured.`
+                  : `Feature ${itemImage.alt}`
+              );
+
+              item.title = item === featuredShot
+                ? "Currently featured"
+                : "Click to feature this screen";
+            });
+
+            shot.classList.remove("is-swapping");
+            featuredShot.classList.remove("is-swapping");
+          }, 130);
+        };
+
+        shot.addEventListener("click", featureShot);
+
+        shot.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            featureShot();
+          }
+        });
+      });
+    }
+
+
     document.addEventListener("DOMContentLoaded", function () {
+      initializeSoftwareCollage();
+
       const contactForm = document.getElementById("contactForm");
 
       if (contactForm) {
