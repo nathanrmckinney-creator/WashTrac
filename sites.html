@@ -2325,7 +2325,7 @@ if(!isClientLogin && !isAdminLogin){
               </div>
               <div class="site-card-actions">
                 <div class="pill">${escapeText(site.member_role || "site")}</div>
-                ${manager ? `<button class="danger" style="padding:8px 11px; font-size:12px;" onclick="deleteSite('${escapeText(site.id)}')">Delete Site</button>` : ""}
+                <button class="danger" style="padding:8px 11px; font-size:12px;" onclick="deleteSite('${escapeText(site.id)}')">Delete Site</button>
               </div>
             </div>
 
@@ -2955,11 +2955,6 @@ if(!isClientLogin && !isAdminLogin){
       const site = currentSites.find(item => item.id === siteId);
       if(!site){
         setStatus("Site not found. Reload the page and try again.", "bad");
-        return;
-      }
-
-      if(!canManageSite(site)){
-        setStatus("Only owner/admin users can delete a site.", "bad");
         return;
       }
 
