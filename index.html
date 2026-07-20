@@ -269,7 +269,7 @@
   align-self: start;
   justify-self: center;
   width: min(96vw, 1420px);
-  min-height: 760px;
+  min-height: 650px;
   position: relative;
   margin: 30px auto 0;
   pointer-events: none;
@@ -296,6 +296,7 @@
   border-radius: 12px;
   border: 1px solid rgba(59, 130, 246, 0.68);
   background: #050b18;
+  aspect-ratio: 16 / 9;
   box-shadow:
     0 18px 45px rgba(0, 0, 0, 0.62),
     0 0 18px rgba(37, 99, 235, 0.16);
@@ -333,54 +334,48 @@
 
 .software-shot-dashboard {
   width: 39%;
-  height: 330px;
   left: 1%;
-  top: 72px;
+  top: 48px;
   z-index: 2;
   transform: rotate(-2.5deg);
 }
 
 .software-shot-reports {
   width: 39%;
-  height: 330px;
   right: 1%;
-  top: 72px;
+  top: 48px;
   z-index: 3;
   transform: rotate(2.5deg);
 }
 
 .software-shot-codes {
   width: 34%;
-  height: 290px;
   left: 5%;
-  bottom: 28px;
+  bottom: 18px;
   z-index: 4;
   transform: rotate(-2deg);
 }
 
 .software-shot-activity {
   width: 34%;
-  height: 290px;
   right: 5%;
-  bottom: 28px;
+  bottom: 18px;
   z-index: 5;
   transform: rotate(2deg);
 }
 
 .software-shot-memberships {
   width: 31%;
-  height: 265px;
   right: 7%;
-  top: 286px;
+  top: 250px;
   z-index: 6;
   transform: rotate(3deg);
 }
 
 .software-shot-monitor {
   width: 61%;
-  height: 515px;
   left: 19.5%;
-  top: 112px;
+  top: 96px;
   z-index: 10;
   border: 2px solid rgba(37, 99, 235, 0.95);
   opacity: 1;
@@ -397,7 +392,7 @@
 .software-collage-label {
   position: absolute;
   left: 50%;
-  bottom: 0;
+  bottom: 4px;
   transform: translateX(-50%);
   z-index: 30;
   padding: 10px 16px;
@@ -941,22 +936,14 @@
   }
 
   .software-shot-dashboard,
-  .software-shot-reports {
-    height: 255px;
-  }
+  .software-shot-reports {}
 
   .software-shot-codes,
-  .software-shot-activity {
-    height: 225px;
-  }
+  .software-shot-activity {}
 
-  .software-shot-memberships {
-    height: 205px;
-  }
+  .software-shot-memberships {}
 
-  .software-shot-monitor {
-    height: 405px;
-  }
+  .software-shot-monitor {}
 
   .hero h1 {
     font-size: 58px;
