@@ -861,6 +861,34 @@ button.danger{
   position:relative !important;
 }
 
+/* Bright blue divider between physical site cards */
+#sitesList .site-card:not(:last-child)::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:-19px;
+  height:2px;
+  border-radius:999px;
+  background:linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(30,167,255,.72) 8%,
+    #1ea7ff 50%,
+    rgba(30,167,255,.72) 92%,
+    transparent 100%
+  );
+  box-shadow:0 0 12px rgba(30,167,255,.55);
+}
+
+.site-card-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
 @media (min-width:768px) and (max-width:1400px) and (orientation:landscape){
   #sitesList{
     gap:34px !important;
@@ -879,6 +907,14 @@ button.danger{
 
   #sitesList .site-card{
     margin-bottom:0 !important;
+  }
+
+  #sitesList .site-card:not(:last-child)::after{
+    bottom:-15px;
+  }
+
+  .site-card-actions{
+    justify-content:flex-start;
   }
 
 }
@@ -2287,7 +2323,10 @@ if(!isClientLogin && !isAdminLogin){
                 <div class="site-meta">${metaParts.length ? escapeText(metaParts.join(" • ")) : "No location details"}</div>
                 <div class="site-meta">Site ID: ${escapeText(site.id)}</div>
               </div>
-              <div class="pill">${escapeText(site.member_role || "site")}</div>
+              <div class="site-card-actions">
+                <div class="pill">${escapeText(site.member_role || "site")}</div>
+                ${manager ? `<button class="danger" style="padding:8px 11px; font-size:12px;" onclick="deleteSite('${escapeText(site.id)}')">Delete Site</button>` : ""}
+              </div>
             </div>
 
             <div class="invite-box" style="margin-top:0; padding-top:0; border-top:none; margin-bottom:16px;">
@@ -2909,6 +2948,157 @@ if(!isClientLogin && !isAdminLogin){
       setInviteStatus(siteId, `Pending invite removed for ${invite.email}.`, "good");
       await loadSites();
     }
+
+    async function deleteSite(siteId){
+      clearStatus();
+
+      const site = currentSites.find(item => item.id === siteId);
+      if(!site){
+        setStatus("Site not found. Reload the page and try again.", "bad");
+        return;
+      }
+
+      if(!canManageSite(site)){
+        setStatus("Only owner/admin users can delete a site.", "bad");
+        return;
+      }
+
+      const siteName = siteLabel(site);
+
+      const assignedDevices = currentDevices.filter(device =>
+        String(device?.site_id || "") === String(siteId) &&
+        !isRetiredDevice(device)
+      );
+
+      if(assignedDevices.length){
+        setStatus(
+          `Cannot delete ${siteName} while ${assignedDevices.length} keypad${assignedDevices.length === 1 ? " is" : "s are"} assigned to it. Move or remove the keypad first.`,
+          "bad"
+        );
+        return;
+      }
+
+      const typedName = prompt(
+        `Delete site "${siteName}"?\n\nThis removes the site, bay setup, pending invites, and user access for this location. It does not delete a WashTrac login.\n\nType the exact site name to confirm:`
+      );
+
+      if(typedName === null) return;
+
+      if(String(typedName).trim() !== siteName){
+        setStatus("Site name did not match. Nothing was deleted.", "bad");
+        return;
+      }
+
+      setStatus(`Deleting ${siteName}...`);
+
+      let accessRows = [];
+
+      try{
+        let accessResult = await client
+          .from("user_site_access")
+          .select("user_id,site_id,role,email")
+          .eq("site_id", siteId);
+
+        if(accessResult.error && String(accessResult.error.message || "").toLowerCase().includes("email")){
+          accessResult = await client
+            .from("user_site_access")
+            .select("user_id,site_id,role")
+            .eq("site_id", siteId);
+        }
+
+        if(accessResult.error){
+          throw accessResult.error;
+        }
+
+        accessRows = accessResult.data || [];
+
+        const cleanupTables = [
+          "device_pairing_codes",
+          "site_invites",
+          "site_bay_status",
+          "site_system_control"
+        ];
+
+        for(const tableName of cleanupTables){
+          const cleanupResult = await client
+            .from(tableName)
+            .delete()
+            .eq("site_id", siteId);
+
+          if(cleanupResult.error){
+            throw new Error(`${tableName}: ${cleanupResult.error.message}`);
+          }
+        }
+
+        const accessDelete = await client
+          .from("user_site_access")
+          .delete()
+          .eq("site_id", siteId);
+
+        if(accessDelete.error){
+          throw accessDelete.error;
+        }
+
+        const siteDelete = await client
+          .from("sites")
+          .delete()
+          .eq("id", siteId)
+          .select("id");
+
+        if(siteDelete.error){
+          if(accessRows.length){
+            const restoreRows = accessRows.map(row => {
+              const restored = {
+                user_id: row.user_id,
+                site_id: row.site_id,
+                role: row.role || "viewer"
+              };
+
+              if(row.email) restored.email = row.email;
+              return restored;
+            });
+
+            const restoreResult = await client
+              .from("user_site_access")
+              .insert(restoreRows);
+
+            if(restoreResult.error){
+              console.log("Site access rollback failed:", restoreResult.error);
+            }
+          }
+
+          throw siteDelete.error;
+        }
+
+        if(!siteDelete.data || !siteDelete.data.length){
+          throw new Error("Delete was blocked by database permissions.");
+        }
+
+        delete inviteStatusBySite[siteId];
+        delete linkCodeStatusBySite[siteId];
+
+        if(localStorage.getItem("activeSiteId") === siteId){
+          localStorage.removeItem("activeSiteId");
+        }
+
+        setStatus(`${siteName} was deleted from the account.`, "good");
+        await loadSites();
+
+        if(!localStorage.getItem("activeSiteId") && currentSites[0]?.id){
+          localStorage.setItem("activeSiteId", currentSites[0].id);
+        }
+      }catch(err){
+        console.log("Delete site error:", err);
+        setStatus(
+          "Could not delete the site: " +
+          (err?.message || "Unknown database error") +
+          ". Confirm the delete policies allow owner/admin users to remove sites and related setup rows.",
+          "bad"
+        );
+        await loadSites();
+      }
+    }
+
 
     async function removeSiteAccess(siteId, accessId){
       clearStatus();
