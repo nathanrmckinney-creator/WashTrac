@@ -1139,10 +1139,31 @@
     display:none !important;
   }
 }
-  </style>
+  
+  .demo-mode-banner{
+    display:none;
+    position:sticky;
+    top:0;
+    z-index:9999;
+    width:100%;
+    box-sizing:border-box;
+    padding:10px 16px;
+    text-align:center;
+    font-weight:800;
+    letter-spacing:.04em;
+    background:#f59e0b;
+    color:#111827;
+    border-bottom:1px solid rgba(255,255,255,.18);
+  }
+  .demo-mode-banner.show{display:block;}
+</style>
 </head>
 
 <body>
+  <div id="demoModeBanner" class="demo-mode-banner">
+    LIVE DEMO MODE — This is a protected demonstration facility. Hardware commands are simulated.
+  </div>
+
   <script>
     function hasAdminAccess(){
       return sessionStorage.getItem("washtracAdmin") === "yes" ||
@@ -1623,6 +1644,30 @@
     const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    const DEMO_USER_ID = "a3a83bdd-3578-4740-ae73-89ee044f53a3";
+    let demoMode = false;
+
+    async function initializeDemoMode(){
+      try{
+        const { data, error } = await client.auth.getUser();
+        if(error) throw error;
+        demoMode = data?.user?.id === DEMO_USER_ID;
+      }catch(err){
+        console.log("Demo mode identity check error:", err);
+        demoMode = false;
+      }
+
+      const banner = document.getElementById("demoModeBanner");
+      if(banner) banner.classList.toggle("show", demoMode);
+      return demoMode;
+    }
+
+    function demoBlocked(message){
+      if(!demoMode) return false;
+      alert(message || "Demo Mode — This infrastructure action is disabled in the public demonstration account.");
+      return true;
+    }
+
     document.addEventListener("DOMContentLoaded", applyAdminMenuVisibility);
     window.addEventListener("load", applyAdminMenuVisibility);
 
@@ -1730,6 +1775,7 @@
     function openAddDevice(event){
       if(event) event.preventDefault();
       closeMenus();
+      if(demoBlocked("Demo Mode — Device pairing is disabled in the public demonstration account.")) return;
       document.getElementById("deviceModal").classList.add("show");
       loadOrCreatePairingCode();
     }
@@ -1948,6 +1994,14 @@
     async function triggerWashFromDashboard(){
       const activeSiteId = getActiveSiteId();
       const device = getPrimaryDevice();
+
+      if(demoMode){
+        const confirmed = confirm("Trigger one demo wash now? No physical equipment will operate.");
+        if(!confirmed) return;
+        setBayStatusMessage("Demo wash triggered successfully — no physical equipment was operated.");
+        showTriggerWashFeedback("DEMO WASH TRIGGERED");
+        return;
+      }
 
       if(!activeSiteId){
         setBayStatusMessage("No active site selected.", "error");
@@ -2463,6 +2517,10 @@ async function deleteDepartment(){
     }
 
     async function queueWifiCommand(command, extraPayload = {}){
+      if(demoMode){
+        setWifiMessage("Demo Mode — Wi-Fi and network commands are disabled in the public demonstration account.");
+        return false;
+      }
       const device = getPrimaryDevice();
       const activeSiteId = getActiveSiteId();
 
@@ -3476,6 +3534,7 @@ async function deleteDepartment(){
     }
 
     async function setWashEnabled(enabled){
+      if(demoBlocked("Demo Mode — Wash enable/disable is simulated and cannot control physical equipment from the public demo.")) return;
       const activeSiteId = getActiveSiteId();
 
       if(!controlRowId || !activeSiteId){
@@ -3501,6 +3560,7 @@ async function deleteDepartment(){
 
 
     async function setLockoutScheduleEnabled(enabled){
+      if(demoBlocked("Demo Mode — Lockout control is disabled in the public demo.")) return;
       const activeSiteId = getActiveSiteId();
 
       if(!controlRowId || !activeSiteId){
@@ -3533,6 +3593,7 @@ async function deleteDepartment(){
     }
 
     async function saveSchedule(){
+      if(demoBlocked("Demo Mode — Lockout schedule changes are disabled in the public demo.")) return;
       const activeSiteId = getActiveSiteId();
 
       if(!controlRowId || !activeSiteId){
@@ -3570,6 +3631,7 @@ async function deleteDepartment(){
     }
 
     async function clearSchedule(){
+      if(demoBlocked("Demo Mode — Lockout schedule changes are disabled in the public demo.")) return;
       const activeSiteId = getActiveSiteId();
 
       if(!controlRowId || !activeSiteId){
@@ -3948,6 +4010,7 @@ async function deleteDepartment(){
 
     window.onload = async function(){
       applyAdminMenuVisibility();
+      await initializeDemoMode();
       const siteId = await loadSites();
 
       if(!siteId){
