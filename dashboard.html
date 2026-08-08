@@ -1142,28 +1142,23 @@
   
   .demo-mode-banner{
     display:none;
-    position:sticky;
-    top:0;
-    z-index:9999;
-    width:100%;
     box-sizing:border-box;
-    padding:10px 16px;
+    width:100%;
+    margin:0 0 18px 0;
+    padding:9px 14px;
     text-align:center;
     font-weight:800;
-    letter-spacing:.04em;
+    letter-spacing:.035em;
     background:#f59e0b;
     color:#111827;
-    border-bottom:1px solid rgba(255,255,255,.18);
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:10px;
   }
   .demo-mode-banner.show{display:block;}
 </style>
 </head>
 
 <body>
-  <div id="demoModeBanner" class="demo-mode-banner">
-    LIVE DEMO MODE — This is a protected demonstration facility. Hardware commands are simulated.
-  </div>
-
   <script>
     function hasAdminAccess(){
       return sessionStorage.getItem("washtracAdmin") === "yes" ||
@@ -1279,6 +1274,10 @@
       <p>
         Overview of wash usage, reporting, activity, bay status, and remote wash control.
       </p>
+
+      <div id="demoModeBanner" class="demo-mode-banner">
+        LIVE DEMO MODE — This is a protected demonstration facility. Hardware commands are simulated.
+      </div>
 
       <div style="margin-top:14px; margin-bottom:24px; max-width:520px; display:flex; gap:10px;">
   
