@@ -1022,7 +1022,8 @@ if(!isClientLogin && !isAdminLogin){
         </p>
       </div>
 
-      <div class="grid-2">
+          <div id="demoModeNotice" style="display:none;max-width:760px;margin:12px 0 4px;padding:9px 14px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);color:#fbbf24;font-weight:700;text-align:center;">LIVE DEMO MODE — Changes on this page are limited to the demonstration facility.</div>
+<div class="grid-2">
         <div class="card">
           <h3>Add Site</h3>
 
@@ -1126,6 +1127,20 @@ if(!isClientLogin && !isAdminLogin){
     const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
     const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const DEMO_USER_ID = "a3a83bdd-3578-4740-ae73-89ee044f53a3";
+    const DEMO_SITE_ID = "09ec332c-f734-4f9b-80dd-9fd99668a50e";
+    let isDemoUser = false;
+
+    function blockDemoInfrastructureAction(message = "Site configuration is disabled in the public demo."){
+      setStatus(`Demo Mode — ${message}`, "bad");
+      return true;
+    }
+
+    function blockDemoInviteAction(siteId, message = "User invitations and access changes are disabled in the public demo."){
+      setInviteStatus(siteId, `Demo Mode — ${message}`, "bad");
+      return true;
+    }
 
     let organizations = [];
     let currentUser = null;
@@ -1346,6 +1361,11 @@ if(!isClientLogin && !isAdminLogin){
     }
 
     async function generateLinkSitePairCode(siteId){
+      if(isDemoUser){
+        blockDemoInfrastructureAction("Link Site Pair Codes are disabled in the public demo.");
+        return;
+      }
+
       clearStatus();
 
       const site = currentSites.find(item => item.id === siteId);
@@ -1729,6 +1749,11 @@ if(!isClientLogin && !isAdminLogin){
     }
 
     async function pairKeypadToExistingSite(siteId){
+      if(isDemoUser){
+        blockDemoInfrastructureAction("Keypad linking is disabled in the public demo.");
+        return;
+      }
+
       clearStatus();
 
       const site = currentSites.find(item => item.id === siteId);
@@ -1842,6 +1867,12 @@ if(!isClientLogin && !isAdminLogin){
     }
 
     async function updateSiteBayCount(siteId, countValue){
+      if(isDemoUser){
+        blockDemoInfrastructureAction("Bay configuration is disabled in the public demo.");
+        await loadSites();
+        return;
+      }
+
       clearStatus();
 
       const site = currentSites.find(item => item.id === siteId);
@@ -1886,6 +1917,15 @@ if(!isClientLogin && !isAdminLogin){
       }
 
       currentUser = data?.user || null;
+      isDemoUser = !!currentUser && currentUser.id === DEMO_USER_ID;
+
+      const demoNotice = document.getElementById("demoModeNotice");
+      if(demoNotice) demoNotice.style.display = isDemoUser ? "block" : "none";
+
+      if(isDemoUser){
+        localStorage.setItem("activeSiteId", DEMO_SITE_ID);
+        localStorage.setItem("activeOrganizationId", "fa0dd58e-c164-48b8-8e82-f9abd2d0c6b2");
+      }
 
       if(!currentUser && isAdminLogin){
         currentUser = {
@@ -2535,6 +2575,11 @@ if(!isClientLogin && !isAdminLogin){
     }
 
     async function addSite(){
+      if(isDemoUser){
+        blockDemoInfrastructureAction("Adding or linking sites is disabled in the public demo.");
+        return;
+      }
+
       clearStatus();
 
       const organization_id = document.getElementById("organizationSelect").value;
@@ -2748,6 +2793,11 @@ if(!isClientLogin && !isAdminLogin){
     }
 
     async function inviteUser(siteId){
+      if(isDemoUser){
+        blockDemoInviteAction(siteId);
+        return;
+      }
+
       clearInviteStatus(siteId);
 
       const site = currentSites.find(item => item.id === siteId);
@@ -2851,6 +2901,11 @@ if(!isClientLogin && !isAdminLogin){
     }
 
     async function removePendingInvite(siteId, inviteId){
+      if(isDemoUser){
+        blockDemoInviteAction(siteId, "Pending invite changes are disabled in the public demo.");
+        return;
+      }
+
       clearInviteStatus(siteId);
 
       const site = currentSites.find(item => item.id === siteId);
@@ -2944,6 +2999,11 @@ if(!isClientLogin && !isAdminLogin){
     }
 
     async function deleteSite(siteId){
+      if(isDemoUser){
+        blockDemoInfrastructureAction("Deleting sites is disabled in the public demo.");
+        return;
+      }
+
       clearStatus();
 
       const site = currentSites.find(item => item.id === siteId);
@@ -3090,6 +3150,11 @@ if(!isClientLogin && !isAdminLogin){
 
 
     async function removeSiteAccess(siteId, accessId){
+      if(isDemoUser){
+        blockDemoInfrastructureAction("User access changes are disabled in the public demo.");
+        return;
+      }
+
       clearStatus();
 
       const site = currentSites.find(item => item.id === siteId);
