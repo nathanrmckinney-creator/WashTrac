@@ -139,11 +139,10 @@ body{
 .backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1100;}
 
 .monitor-shell{
-  position:relative;
   height:calc(100vh - 18px);
   min-height:calc(100vh - 18px);
   display:grid;
-  grid-template-rows:38px 64px 46px 128px 1fr 56px;
+  grid-template-rows:64px 46px 128px 1fr 56px;
   gap:12px;
   overflow:hidden;
 }
@@ -1450,8 +1449,8 @@ document.addEventListener("DOMContentLoaded", function(){
 
   <div class="main">
     <div class="monitor-shell">
-      <div id="demoModeNotice" style="display:none;position:absolute;top:0;left:50%;transform:translateX(-50%);width:max-content;max-width:62%;padding:6px 16px;border:1px solid #f59e0b;border-radius:10px;background:rgba(245,158,11,.12);color:#fbbf24;font-weight:800;font-size:13px;line-height:1.15;letter-spacing:.02em;text-align:center;z-index:5;white-space:nowrap;">LIVE DEMO MODE — Controller status and heartbeat are simulated for this demonstration facility.</div>
       <div class="monitor-top">
+        <div id="demoModeNotice" style="display:none;position:absolute;top:2px;left:50%;transform:translateX(-50%);width:max-content;max-width:50%;padding:6px 14px;border:1px solid #f59e0b;border-radius:10px;background:rgba(245,158,11,.12);color:#fbbf24;font-weight:800;font-size:12px;line-height:1.15;letter-spacing:.02em;text-align:center;z-index:5;white-space:nowrap;">LIVE DEMO MODE — Controller status and heartbeat are simulated.</div>
         <div class="page-header">
           <h1>System Monitor</h1>
           <p>Live wall-display view for wash status, E-STOP state, lockout window, bay status, devices, billing, and recent wash activity.</p>
