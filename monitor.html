@@ -1453,6 +1453,7 @@ document.addEventListener("DOMContentLoaded", function(){
         <div class="page-header">
           <h1>System Monitor</h1>
           <p>Live wall-display view for wash status, E-STOP state, lockout window, bay status, devices, billing, and recent wash activity.</p>
+          <div id="demoModeNotice" style="display:none;margin-top:12px;padding:10px 14px;border:1px solid #f59e0b;border-radius:10px;background:rgba(245,158,11,.12);color:#fbbf24;font-weight:800;font-size:14px;letter-spacing:.02em;">LIVE DEMO MODE — Controller status and heartbeat are simulated for this demonstration facility.</div>
         </div>
 
         <img src="washtrac-logo.png" alt="WashTrac" class="monitor-brand-logo">
@@ -1537,6 +1538,9 @@ let monitorReloadQueued = false;
 let currentCostPerCar = 0;
 let currentDepartmentCosts = {};
 let currentBillingDepartments = [];
+
+const DEMO_USER_ID = "a3a83bdd-3578-4740-ae73-89ee044f53a3";
+let isDemoUser = false;
 
 const MONITOR_REFRESH_DELAY_MS = 100;
 const MONITOR_HEARTBEAT_REFRESH_MS = 60000;
@@ -2255,6 +2259,9 @@ async function loadAssignedSites(){
   }
 
   const user = userData.user;
+  isDemoUser = user.id === DEMO_USER_ID;
+  const demoNotice = document.getElementById("demoModeNotice");
+  if(demoNotice) demoNotice.style.display = isDemoUser ? "block" : "none";
   let membershipRows = [];
   let result = await client
     .from("site_members")
@@ -2527,6 +2534,16 @@ async function fetchControl(){
     return null;
   }
 
+  if(isDemoUser){
+    return {
+      wash_enabled: true,
+      estop_active: false,
+      lockout_enabled: false,
+      lockout_start: "22:00",
+      lockout_end: "06:00"
+    };
+  }
+
   const { data, error } = await client
     .from("site_system_control")
     .select("*")
@@ -2570,6 +2587,18 @@ async function fetchDevices(){
 
   if(!activeSiteId || !hasAccessToActiveSite()){
     return [];
+  }
+
+  if(isDemoUser){
+    return [{
+      id: "demo-keypad",
+      device_id: "WT-DEMO-001",
+      device_name: "WashTrac Demo Keypad",
+      serial_number: "WT-DEMO-001",
+      last_seen: new Date().toISOString(),
+      wash_status: "ready",
+      wash_queue_count: 0
+    }];
   }
 
   const { data, error } = await client
