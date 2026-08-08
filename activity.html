@@ -695,6 +695,8 @@ document.addEventListener("DOMContentLoaded", function(){
       <p>Search wash activity by code, department, name, bay, event, and date range without heavy live refresh.</p>
     </div>
 
+    <div id="demoModeNotice" style="display:none;max-width:760px;margin:12px 0 4px;padding:9px 14px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);color:#fbbf24;font-weight:700;text-align:center;">LIVE DEMO MODE — Activity shown is isolated demonstration data.</div>
+
     <div class="site-switcher-row">
       <select id="siteSwitcher" onchange="switchSite(this.value)">
         <option>Loading sites...</option>
@@ -799,20 +801,6 @@ const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const DEMO_USER_ID = "a3a83bdd-3578-4740-ae73-89ee044f53a3";
 const DEMO_SITE_ID = "09ec332c-f734-4f9b-80dd-9fd99668a50e";
 let isDemoUser = false;
-
-function showDemoNotice(){
-  if(!isDemoUser || document.getElementById("demoModeNotice")) return;
-  const main = document.querySelector("main") || document.querySelector(".main") || document.body;
-  const notice = document.createElement("div");
-  notice.id = "demoModeNotice";
-  notice.textContent = "LIVE DEMO MODE — Activity shown is isolated demonstration data.";
-  notice.style.cssText = "margin:0 auto 14px;max-width:760px;padding:8px 16px;border:1px solid #ffc107;border-radius:8px;background:rgba(255,193,7,.10);color:#ffc107;font-weight:700;font-size:14px;text-align:center;";
-  const heading = main.querySelector("h1");
-  if(heading && heading.parentNode){
-    const target = heading.parentNode.querySelector("p");
-    if(target) target.insertAdjacentElement("afterend", notice); else heading.insertAdjacentElement("afterend", notice);
-  } else main.prepend(notice);
-}
 
 
 window.addEventListener("pageshow", function(event){
@@ -1203,7 +1191,8 @@ async function loadSites(){
     select.innerHTML = `<option value="${DEMO_SITE_ID}">WashTrac Demo Facility</option>`;
     select.value = DEMO_SITE_ID;
     select.disabled = true;
-    showDemoNotice();
+    const demoNotice = document.getElementById("demoModeNotice");
+    if(demoNotice) demoNotice.style.display = isDemoUser ? "block" : "none";
     return DEMO_SITE_ID;
   }
 
