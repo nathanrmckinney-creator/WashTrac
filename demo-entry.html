@@ -121,9 +121,26 @@
 
         if (error) throw error;
 
+        localStorage.setItem("washtracLoggedIn", "yes");
+        localStorage.setItem("selectedSiteId", DEMO_SITE_ID);
+        localStorage.setItem("selectedOrgId", DEMO_ORG_ID);
         localStorage.setItem("activeSiteId", DEMO_SITE_ID);
         localStorage.setItem("washtracActiveSiteId", DEMO_SITE_ID);
         localStorage.setItem("activeOrganizationId", DEMO_ORG_ID);
+        localStorage.setItem("canViewAllSites", "false");
+        localStorage.setItem("availableSites", JSON.stringify([
+          {
+            site_id: DEMO_SITE_ID,
+            organization_id: DEMO_ORG_ID,
+            role: "admin",
+            can_view_all_sites: false,
+            sites: {
+              id: DEMO_SITE_ID,
+              name: "WashTrac Demo Facility",
+              organization_id: DEMO_ORG_ID
+            }
+          }
+        ]));
 
         window.location.replace("dashboard.html");
       } catch (error) {
