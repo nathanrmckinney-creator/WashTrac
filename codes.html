@@ -924,6 +924,8 @@ document.addEventListener("DOMContentLoaded", function(){
       <p>Create, organize, and remove access codes with a cleaner WashTrac admin layout.</p>
     </div>
 
+    <div id="demoModeNotice" style="display:none;max-width:760px;margin:12px 0 4px;padding:9px 14px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);color:#fbbf24;font-weight:700;text-align:center;">LIVE DEMO MODE — Changes on this page are limited to the demonstration facility.</div>
+
     <div style="margin-top:14px; margin-bottom:24px; max-width:520px; display:flex; gap:10px;">
       <select id="siteSwitcher" onchange="switchSite(this.value)" style="
         flex:1;
@@ -1197,6 +1199,9 @@ const revealedCodeRows = new Set();
 const revealedActivityRows = new Set();
 let systemOnline = false;
 let systemOnlineReason = "No recent Keypad heartbeat detected.";
+const DEMO_USER_ID = "a3a83bdd-3578-4740-ae73-89ee044f53a3";
+const DEMO_SITE_ID = "09ec332c-f734-4f9b-80dd-9fd99668a50e";
+let isDemoUser = false;
 const HEARTBEAT_ONLINE_MINUTES = 5;
 
 function getActiveSiteId(){
@@ -1774,6 +1779,9 @@ if(orgId){
   }
 
   const userId = userData.user.id;
+  isDemoUser = userId === DEMO_USER_ID;
+  const demoNotice = document.getElementById("demoModeNotice");
+  if(demoNotice) demoNotice.style.display = isDemoUser ? "block" : "none";
 
   let result = await client
     .from("site_members")
@@ -1798,7 +1806,10 @@ if(orgId){
     return "";
   }
 
-  const siteIds = [...new Set(membershipRows.map(row => row.site_id).filter(Boolean))];
+  let siteIds = [...new Set(membershipRows.map(row => row.site_id).filter(Boolean))];
+  if(isDemoUser){
+    siteIds = siteIds.filter(id => id === DEMO_SITE_ID);
+  }
 
   if(!siteIds.length){
     select.innerHTML = `<option value="">No sites assigned</option>`;
@@ -1855,6 +1866,10 @@ if(currentOrganizationId){
 
 async function switchSite(siteId){
   if(!siteId) return;
+  if(isDemoUser && siteId !== DEMO_SITE_ID){
+    setStatus("Demo Mode: only the WashTrac Demo Facility is available.", "warn");
+    return;
+  }
   currentSiteId = siteId;
   localStorage.setItem("activeSiteId", siteId);
 
