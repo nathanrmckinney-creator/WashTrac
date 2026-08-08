@@ -795,6 +795,26 @@ const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
 const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// WashTrac protected public demo account
+const DEMO_USER_ID = "a3a83bdd-3578-4740-ae73-89ee044f53a3";
+const DEMO_SITE_ID = "09ec332c-f734-4f9b-80dd-9fd99668a50e";
+let isDemoUser = false;
+
+function showDemoNotice(){
+  if(!isDemoUser || document.getElementById("demoModeNotice")) return;
+  const main = document.querySelector("main") || document.querySelector(".main") || document.body;
+  const notice = document.createElement("div");
+  notice.id = "demoModeNotice";
+  notice.textContent = "LIVE DEMO MODE — Activity shown is isolated demonstration data.";
+  notice.style.cssText = "margin:0 auto 14px;max-width:760px;padding:8px 16px;border:1px solid #ffc107;border-radius:8px;background:rgba(255,193,7,.10);color:#ffc107;font-weight:700;font-size:14px;text-align:center;";
+  const heading = main.querySelector("h1");
+  if(heading && heading.parentNode){
+    const target = heading.parentNode.querySelector("p");
+    if(target) target.insertAdjacentElement("afterend", notice); else heading.insertAdjacentElement("afterend", notice);
+  } else main.prepend(notice);
+}
+
+
 window.addEventListener("pageshow", function(event){
   const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
   const isAdminLogin = hasAdminAccess();
@@ -1175,6 +1195,18 @@ async function loadSites(){
 
   select.innerHTML = `<option>Loading sites...</option>`;
 
+  const { data: demoAuthData } = await client.auth.getUser();
+  isDemoUser = demoAuthData?.user?.id === DEMO_USER_ID;
+  if(isDemoUser){
+    currentSiteId = DEMO_SITE_ID;
+    localStorage.setItem("activeSiteId", DEMO_SITE_ID);
+    select.innerHTML = `<option value="${DEMO_SITE_ID}">WashTrac Demo Facility</option>`;
+    select.value = DEMO_SITE_ID;
+    select.disabled = true;
+    showDemoNotice();
+    return DEMO_SITE_ID;
+  }
+
   const isAdminLogin = hasAdminAccess();
 
   // ADMIN MODE: load every site in the system
@@ -1301,6 +1333,7 @@ async function loadSites(){
 }
 
 async function switchSite(siteId){
+  if(isDemoUser) siteId = DEMO_SITE_ID;
   if(!siteId) return;
   currentSiteId = siteId;
   localStorage.setItem("activeSiteId", siteId);
