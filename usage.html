@@ -505,7 +505,8 @@ document.addEventListener("DOMContentLoaded", function(){
       <p>Usage analytics and reporting.</p>
     </div>
 
-    <div class="report-site-row">
+        <div id="demoModeNotice" style="display:none;max-width:760px;margin:12px 0 4px;padding:9px 14px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);color:#fbbf24;font-weight:700;text-align:center;">LIVE DEMO MODE — Changes on this page are limited to the demonstration facility.</div>
+<div class="report-site-row">
       <select id="topSiteSwitcher" onchange="switchReportSite(this.value)">
         <option>Loading sites...</option>
       </select>
@@ -772,6 +773,10 @@ document.addEventListener("DOMContentLoaded", function(){
 const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
 const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const DEMO_USER_ID = "a3a83bdd-3578-4740-ae73-89ee044f53a3";
+const DEMO_SITE_ID = "09ec332c-f734-4f9b-80dd-9fd99668a50e";
+let isDemoUser = false;
 
 window.addEventListener("pageshow", function(event){
   const isClientLogin = localStorage.getItem("washtracLoggedIn") === "yes";
@@ -2614,6 +2619,11 @@ async function emailReport(){
     return;
   }
 
+  if(isDemoUser){
+    setManualEmailStatus("Demo Mode — Report preview completed. Live email delivery is disabled in the public demo.", "success");
+    return;
+  }
+
   const html = buildReportHtml([], report.codes, report.departments, report.billing || [], report.label, report.scopeLabel);
 
   await sendReportToEmail(email, "WashTrac Report", html);
@@ -2686,6 +2696,25 @@ async function saveReportSchedule(){
       alert("Schedule start date cannot be after schedule end date.");
       return;
     }
+  }
+
+  if(isDemoUser){
+    const demoSchedule = {
+      email,
+      frequency,
+      reportSiteScope,
+      scheduleRange,
+      scheduleStartDate: document.getElementById("scheduleStartDate").value,
+      scheduleEndDate: document.getElementById("scheduleEndDate").value,
+      weeklyDay,
+      monthDay,
+      customDays,
+      time
+    };
+    localStorage.setItem("washtracReportSchedule", JSON.stringify(demoSchedule));
+    renderScheduleSummary();
+    setStatus("Demo Mode — Schedule preview saved locally. No automated email will be sent.", "success");
+    return;
   }
 
   setStatus("Saving live report schedule...", "warn");
@@ -2936,6 +2965,16 @@ document.querySelectorAll(".schedule-day").forEach(day => {
 
 
 async function initializeReportsPage(){
+  const initialUser = await getCurrentUser();
+  isDemoUser = !!initialUser && initialUser.id === DEMO_USER_ID;
+
+  const demoNotice = document.getElementById("demoModeNotice");
+  if(demoNotice) demoNotice.style.display = isDemoUser ? "block" : "none";
+
+  if(isDemoUser){
+    localStorage.setItem("activeSiteId", DEMO_SITE_ID);
+    localStorage.setItem("activeOrganizationId", "fa0dd58e-c164-48b8-8e82-f9abd2d0c6b2");
+  }
 
   populateMonthDays();
   updateReportRangeFields();
