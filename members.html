@@ -890,7 +890,8 @@ document.addEventListener("DOMContentLoaded", function(){
       <p>Search, edit, reactivate, and manage all membership accounts across the dealership account.</p>
     </div>
 
-    <div class="top-row">
+        <div id="demoModeNotice" style="display:none;max-width:760px;margin:12px 0 4px;padding:9px 14px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);color:#fbbf24;font-weight:700;text-align:center;">LIVE DEMO MODE — Changes on this page are limited to the demonstration facility.</div>
+<div class="top-row">
       <div class="site-row">
         <select id="siteSwitcher" onchange="switchSite(this.value)">
           <option>Loading sites...</option>
@@ -1080,6 +1081,11 @@ document.addEventListener("DOMContentLoaded", function(){
 const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
 const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const DEMO_USER_ID = "a3a83bdd-3578-4740-ae73-89ee044f53a3";
+const DEMO_SITE_ID = "09ec332c-f734-4f9b-80dd-9fd99668a50e";
+const DEMO_ORG_ID = "fa0dd58e-c164-48b8-8e82-f9abd2d0c6b2";
+let isDemoUser = false;
 
 let currentSiteId = null;
 let currentOrganizationId = null;
@@ -1399,6 +1405,34 @@ async function loadSites(){
   }
 
   const userId = userData.user.id;
+  isDemoUser = userId === DEMO_USER_ID;
+
+  const demoNotice = document.getElementById("demoModeNotice");
+  if(demoNotice) demoNotice.style.display = isDemoUser ? "block" : "none";
+
+  if(isDemoUser){
+    const { data: demoSite, error: demoSiteError } = await client
+      .from("sites")
+      .select("*")
+      .eq("id", DEMO_SITE_ID)
+      .maybeSingle();
+
+    if(demoSiteError || !demoSite){
+      console.log("Demo site load error:", demoSiteError);
+      select.innerHTML = `<option value="">Demo site unavailable</option>`;
+      return "";
+    }
+
+    allSites = [demoSite];
+    currentSiteId = DEMO_SITE_ID;
+    currentOrganizationId = DEMO_ORG_ID;
+    localStorage.setItem("activeSiteId", DEMO_SITE_ID);
+    localStorage.setItem("activeOrganizationId", DEMO_ORG_ID);
+    select.innerHTML = `<option value="${DEMO_SITE_ID}">${escapeText(demoSite.name || "WashTrac Demo Facility")}</option>`;
+    select.value = DEMO_SITE_ID;
+    select.disabled = true;
+    return DEMO_SITE_ID;
+  }
 
   let result = await client
     .from("site_members")
