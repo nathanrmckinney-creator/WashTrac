@@ -3821,7 +3821,7 @@ async function testRelayOutput(outputKey){
   const relayNumber = outputIndex + 1;
   const payload = buildRelayOutputPayload(outputKey);
 
-  const target = getSelectedProductionDevice();
+  const target = getSingleProductionTarget();
   if(!target){
     setRelayOutputStatus(
       "Select one specific online Keypad in Target Device before testing a relay.",
