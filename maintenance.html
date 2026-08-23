@@ -302,7 +302,7 @@
     .relay-output-wrap{display:grid;gap:12px;margin-top:14px;}
     .relay-output-row{
       display:grid;
-      grid-template-columns:120px 1.4fr 110px 150px 110px 130px 96px 96px;
+      grid-template-columns:120px 1.4fr 110px 130px 110px 96px 96px;
       gap:12px;
       align-items:end;
       padding:14px;
@@ -3640,7 +3640,6 @@ function renderRelayOutputAssignments(){
     const key = output.output_key;
     const name = getRelayValue(key, "output_name");
     const contact = output.contact_type;
-    const timer = getRelayValue(key, "timer_type");
     const duration = getRelayValue(key, "duration_value");
     const unit = getRelayValue(key, "duration_unit");
     const enabled = getRelayValue(key, "is_enabled");
@@ -3666,15 +3665,7 @@ function renderRelayOutputAssignments(){
         </div>
 
         <div class="field">
-          <label for="relay-${key}-timer">Timer Type</label>
-          <select id="relay-${key}-timer">
-            <option value="on_delay" ${timer === "on_delay" ? "selected" : ""}>On Delay</option>
-            <option value="off_delay" ${timer === "off_delay" ? "selected" : ""}>Off Delay</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="relay-${key}-duration">Duration</label>
+          <label for="relay-${key}-duration">Relay On Time</label>
           <input id="relay-${key}-duration" type="number" min="1" step="1" value="${escapeText(duration || 1)}">
         </div>
 
@@ -3748,7 +3739,7 @@ function buildRelayOutputPayload(outputKey){
     output_label: defaults.output_label,
     output_name: (document.getElementById(`relay-${outputKey}-name`)?.value || defaults.default_name).trim() || defaults.default_name,
     contact_type: defaults.contact_type,
-    timer_type: document.getElementById(`relay-${outputKey}-timer`)?.value || defaults.timer_type,
+    timer_type: "off_delay",
     duration_value: durationValue,
     duration_unit: document.getElementById(`relay-${outputKey}-unit`)?.value || defaults.duration_unit,
     is_enabled: document.getElementById(`relay-${outputKey}-enabled`)?.checked !== false,
