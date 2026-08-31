@@ -1283,7 +1283,7 @@ if(!hasAdminSession){
             </div>
             <div class="field">
               <label for="wifiPassword">Wi‑Fi Password</label>
-              <input id="wifiPassword" type="password" placeholder="Leave blank to keep existing">
+              <input id="wifiPassword" type="password" placeholder="Wi‑Fi password">
             </div>
           </div>
 
@@ -1295,9 +1295,7 @@ if(!hasAdminSession){
 
           <div class="actions">
             <button type="button" onclick="searchWirelessNetworks()">Search Wireless Networks</button>
-            <button class="success" type="button" onclick="saveWifiConfig()">Save Wi‑Fi Config</button>
-            <button class="secondary" type="button" onclick="queueCommandForVisible('refresh_network')">Refresh Network</button>
-            <button class="warn" type="button" onclick="queueCommandForVisible('restart_network')">Restart Network</button>
+            <button class="success" type="button" onclick="connectWifi()">Connect to Wi‑Fi</button>
           </div>
 
           <div id="wifiScanStatus" class="wifi-scan-status"></div>
@@ -1405,7 +1403,7 @@ if(!hasAdminSession){
       </div>
 
       <div class="note">
-        The Keypad should report Wi‑Fi/LTE status into the <span class="inline-code">devices</span> row or a future <span class="inline-code">device_network_status</span> table. These controls queue safe commands; the device agent performs the actual network changes.
+        Wi‑Fi and LTE values shown here come from the selected Keypad. Network changes are performed by the controller and confirmed by its reported status.
       </div>
     </div>
 
@@ -1690,6 +1688,7 @@ let recentCommands = [];
 let siteCodes = [];
 let deviceLogs = [];
 let selectedSiteId = "";
+let selectedWifiNetwork = null;
 let relayOutputRows = [];
 let inputConfigurationRows = [];
 let inputLiveStates = [null, null, null, null, null, null];
@@ -3051,8 +3050,8 @@ function renderWirelessNetworks(networks){
     wrap.innerHTML = `
       <div class="wifi-network-row">
         <div>
-          <div class="wifi-network-name">No networks loaded yet</div>
-          <div class="wifi-network-meta">Click Search Wireless Networks to request a scan from the selected Keypad.</div>
+          <div class="wifi-network-name">No wireless networks found</div>
+          <div class="wifi-network-meta">Click Search Wireless Networks to scan again.</div>
         </div>
       </div>
     `;
@@ -3060,17 +3059,17 @@ function renderWirelessNetworks(networks){
   }
 
   networks.forEach(network => {
-    const ssid = network.ssid || network.name || "Unnamed Network";
-    const strength = network.strength ?? network.signal ?? network.quality ?? 0;
-    const secured = network.secured === false ? "Open" : "Secured";
+    const ssid = String(network.ssid || network.name || "Unnamed Network");
+    const strength = Number(network.strength ?? network.signal ?? network.quality ?? 0) || 0;
+    const secured = network.secured !== false;
     const safeSsid = escapeText(ssid);
-    const clickSsid = String(ssid).replaceAll("\\", "\\\\").replaceAll("'", "\\'").replaceAll("\n", " ");
+    const clickSsid = ssid.replaceAll("\\", "\\\\").replaceAll("'", "\\'").replaceAll("\n", " ");
 
     wrap.innerHTML += `
-      <div class="wifi-network-row" onclick="selectWirelessNetwork('${clickSsid}')">
+      <div class="wifi-network-row" onclick="selectWirelessNetwork('${clickSsid}',${secured})">
         <div>
           <div class="wifi-network-name">${safeSsid}</div>
-          <div class="wifi-network-meta">${secured} • Signal: ${escapeText(strength)}%</div>
+          <div class="wifi-network-meta">${secured ? "Secured" : "Open"} • Signal: ${escapeText(strength)}%</div>
         </div>
         <div class="signal-wrap" style="margin-top:0;">
           ${[1,2,3,4].map(i => `<div class="signal-bar ${i <= estimateWifiBarsFromPercent(strength) ? "on" : ""}"></div>`).join("")}
@@ -3080,16 +3079,25 @@ function renderWirelessNetworks(networks){
   });
 }
 
-function selectWirelessNetwork(ssid){
-  const input = document.getElementById("wifiSsid");
-  if(input) input.value = ssid || "";
+async function waitForWifiScanResults(timeoutMs=20000){
+  const started = Date.now();
+  let lastNetworks = [];
 
-  document.querySelectorAll(".wifi-network-row").forEach(row => {
-    const name = row.querySelector(".wifi-network-name")?.innerText || "";
-    row.classList.toggle("selected", name === ssid);
-  });
+  while(Date.now() - started < timeoutMs){
+    await loadDevices();
+    renderDevices();
 
-  setWifiScanStatus(`Selected ${ssid}. Enter the Wi‑Fi password, then click Save Wi‑Fi Config.`);
+    const device = visibleDevices[0] || allDevices[0] || null;
+    lastNetworks = getStoredWifiNetworks(device);
+
+    if(lastNetworks.length){
+      return lastNetworks;
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 1500));
+  }
+
+  return lastNetworks;
 }
 
 async function searchWirelessNetworks(){
@@ -3101,36 +3109,101 @@ async function searchWirelessNetworks(){
     return;
   }
 
-  if(!visibleDevices.length){
-    setStatus("No visible devices to scan from.", "warn");
-    setWifiScanStatus("No visible devices found for this site.");
+  if(!getCommandTargetDevices().length){
+    setStatus("No active online Keypad found for this site.", "warn");
+    setWifiScanStatus("No active online Keypad found for this site.");
     return;
   }
 
-  setWifiScanStatus("Wireless scan requested. Refresh network status after the Keypad reports results.");
+  selectedWifiNetwork = null;
+  setWifiScanStatus("Scanning for wireless networks…");
+  const queued = await queueCommandForVisible("scan_wifi_networks", false);
 
-  await queueCommandForVisible("scan_wifi_networks", false);
+  if(!queued){
+    setWifiScanStatus("Could not request a wireless scan.");
+    return;
+  }
 
-  const device = visibleDevices[0] || allDevices[0] || {};
-  const storedNetworks =
-    getNetworkField(device, ["wifi_networks","wifiNetworks","available_wifi_networks","availableNetworks"], null) ||
-    getNetworkField(device, ["scan_results","wifi_scan_results","wifiScanResults"], null);
+  const networks = await waitForWifiScanResults(20000);
+  renderWirelessNetworks(networks);
 
-  let parsedNetworks = [];
+  if(networks.length){
+    setWifiScanStatus(`Found ${networks.length} wireless network${networks.length === 1 ? "" : "s"}. Select one to connect.`);
+    setStatus(`Wireless scan complete — ${networks.length} network${networks.length === 1 ? "" : "s"} found.`, "success");
+  }else{
+    setWifiScanStatus("No wireless networks were reported. Make sure the Keypad is online and try again.");
+    setStatus("Wireless scan returned no networks.", "warn");
+  }
+}
 
-  if(Array.isArray(storedNetworks)){
-    parsedNetworks = storedNetworks;
-  }else if(typeof storedNetworks === "string" && storedNetworks.trim()){
-    try{
-      parsedNetworks = JSON.parse(storedNetworks);
-    }catch(err){
-      parsedNetworks = [];
+async function connectWifi(){
+  clearStatus();
+
+  const target = getCommandTargetDevices()[0] || null;
+  if(!target){
+    setStatus("No active online Keypad found for this site.", "warn");
+    return;
+  }
+
+  const ssid = document.getElementById("wifiSsid")?.value.trim() || "";
+  const password = document.getElementById("wifiPassword")?.value || "";
+  const network = selectedWifiNetwork && selectedWifiNetwork.ssid === ssid ? selectedWifiNetwork : null;
+
+  if(!ssid){
+    setStatus("Select a wireless network first.", "warn");
+    return;
+  }
+
+  if(network?.secured !== false && !password){
+    setStatus("Enter the Wi‑Fi password for the selected network.", "warn");
+    document.getElementById("wifiPassword")?.focus();
+    return;
+  }
+
+  setWifiScanStatus(`Connecting ${ssid}…`);
+  setStatus(`Connecting ${ssid} on ${getDeviceName(target)}…`, "warn");
+
+  const queued = await queueCommandForDevices("set_wifi_config", [target], {
+    ssid,
+    password: password || null
+  });
+
+  if(!queued){
+    setWifiScanStatus("Wi‑Fi connection request could not be queued.");
+    return;
+  }
+
+  const started = Date.now();
+  let connected = false;
+
+  while(Date.now() - started < 30000){
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    await loadDevices();
+    renderDevices();
+
+    const device = allDevices.find(item => item.id === target.id) || target;
+    const currentSsid = String(getNetworkField(device, ["wifi_ssid","wifiSsid","ssid"], "") || "");
+    const currentConnected = getBooleanNetworkField(device, ["wifi_connected","wifiConnected"], false);
+
+    if(currentConnected && currentSsid === ssid){
+      connected = true;
+      break;
     }
   }
 
-  renderWirelessNetworks(parsedNetworks);
-}
+  document.getElementById("wifiPassword").value = "";
+  selectedWifiNetwork = null;
 
+  if(connected){
+    renderNetworkSupport();
+    setWifiScanStatus(`Connected to ${ssid}.`);
+    setStatus(`Wi‑Fi connected to ${ssid}.`, "success");
+  }else{
+    renderNetworkSupport();
+    setWifiScanStatus(`The Keypad did not confirm a connection to ${ssid} within 30 seconds.`);
+    setStatus("Wi‑Fi connection was not confirmed. Check the password and signal, then try again.", "error");
+  }
+}
 
 function getNetworkField(device, names, fallback = ""){
   for(const name of names){
@@ -3149,23 +3222,30 @@ function getNetworkField(device, names, fallback = ""){
   return fallback;
 }
 
+function getBooleanNetworkField(device, names, fallback=false){
+  const value = getNetworkField(device, names, fallback);
+  if(typeof value === "boolean") return value;
+  if(typeof value === "number") return value !== 0;
+  const text = String(value ?? "").trim().toLowerCase();
+  if(["true","yes","1","connected","online","on"].includes(text)) return true;
+  if(["false","no","0","disconnected","offline","off",""].includes(text)) return false;
+  return fallback;
+}
+
 function renderNetworkSupport(){
   const device = visibleDevices[0] || allDevices[0] || null;
 
-  const wifiStrength = Number(getNetworkField(device, ["wifi_strength","wifiStrength","wifi_signal","signal_strength"], 0));
-  const lteStrength = Number(getNetworkField(device, ["lte_strength","lteStrength","lte_signal","cell_signal"], 0));
+  const wifiStrength = Number(getNetworkField(device, ["wifi_strength","wifiStrength","wifi_signal","signal_strength"], 0)) || 0;
+  const lteStrength = Number(getNetworkField(device, ["lte_strength","lteStrength","lte_signal","cell_signal"], 0)) || 0;
 
-  const wifiConnected = String(getNetworkField(device, ["wifi_status","wifiStatus","connection_type"], "")).toLowerCase().includes("wifi")
-    || getNetworkField(device, ["wifi_connected","wifiConnected"], false) === true;
-
-  const lteRegistered = String(getNetworkField(device, ["lte_status","lteStatus","sim_status","simStatus"], "")).toLowerCase().includes("registered")
-    || getNetworkField(device, ["lte_registered","lteRegistered"], false) === true;
+  const wifiConnected = getBooleanNetworkField(device, ["wifi_connected","wifiConnected"], false);
+  const lteRegistered = getBooleanNetworkField(device, ["lte_registered","lteRegistered"], false);
 
   document.getElementById("wifiStatusTag").className = "tag " + (wifiConnected ? "green" : "yellow");
-  document.getElementById("wifiStatusTag").innerText = wifiConnected ? "Connected" : "Needs Check";
+  document.getElementById("wifiStatusTag").innerText = wifiConnected ? "Connected" : "Not Connected";
 
   document.getElementById("lteStatusTag").className = "tag " + (lteRegistered ? "green" : "yellow");
-  document.getElementById("lteStatusTag").innerText = lteRegistered ? "Registered" : "Needs Check";
+  document.getElementById("lteStatusTag").innerText = lteRegistered ? "Registered" : "Not Registered";
 
   setSignalBars("wifiSignalBars", wifiStrength);
   setSignalBars("lteSignalBars", lteStrength);
@@ -3176,62 +3256,30 @@ function renderNetworkSupport(){
   const carrier = getNetworkField(device, ["carrier","lte_carrier","lteCarrier"], "");
   const imei = getNetworkField(device, ["imei","modem_imei","modemImei"], "");
 
-  if(wifiSsid && !document.getElementById("wifiSsid").value) document.getElementById("wifiSsid").value = wifiSsid;
-  if(lteApn && !document.getElementById("lteApn").value) document.getElementById("lteApn").value = lteApn;
-  if(sim && !document.getElementById("lteSim").value) document.getElementById("lteSim").value = sim;
-  if(carrier && !document.getElementById("lteCarrier").value) document.getElementById("lteCarrier").value = carrier;
-  if(imei && !document.getElementById("lteImei").value) document.getElementById("lteImei").value = imei;
+  const wifiInput = document.getElementById("wifiSsid");
+  const lteApnInput = document.getElementById("lteApn");
+  if(wifiInput && wifiSsid && document.activeElement !== wifiInput) wifiInput.value = wifiSsid;
+  if(lteApnInput && lteApn && document.activeElement !== lteApnInput) lteApnInput.value = lteApn;
+
+  setLteInput("lteSim", sim);
+  setLteInput("lteImei", imei);
 
   document.getElementById("wifiMeta").innerText = device
-    ? `SSID: ${wifiSsid || "Unknown"} • Strength: ${wifiStrength || 0}/4 • Device: ${getDeviceName(device)}`
+    ? `Current connection: ${wifiConnected ? (wifiSsid || "Connected") : "Not connected"} • Signal: ${wifiStrength || 0}/4 • Device: ${getDeviceName(device)}`
     : "No device selected or visible.";
 
-  const storedNetworks =
-    getNetworkField(device, ["wifi_networks","wifiNetworks","available_wifi_networks","availableNetworks"], null) ||
-    getNetworkField(device, ["scan_results","wifi_scan_results","wifiScanResults"], null);
-
-  let parsedNetworks = [];
-
-  if(Array.isArray(storedNetworks)){
-    parsedNetworks = storedNetworks;
-  }else if(typeof storedNetworks === "string" && storedNetworks.trim()){
-    try{
-      parsedNetworks = JSON.parse(storedNetworks);
-    }catch(err){
-      parsedNetworks = [];
-    }
-  }
-
-  renderWirelessNetworks(parsedNetworks);
+  renderWirelessNetworks(getStoredWifiNetworks(device));
 
   const lteMeta = document.getElementById("lteMeta");
   if(lteMeta){
     lteMeta.innerText = device
-      ? `Cached device record — Carrier: ${carrier || "Unknown"} • SIM: ${sim || "Unknown"} • IMEI: ${imei || "Unknown"} • Strength: ${lteStrength || 0}/4`
+      ? `SIM: ${sim || "Not reported"} • IMEI: ${imei || "Not reported"} • Carrier: ${carrier || "Not reported"}`
       : "No device selected or visible.";
   }
 }
 
 async function saveWifiConfig(){
-  clearStatus();
-
-  const siteId = selectedSite();
-  if(!siteId){ setStatus("Select a site first.", "warn"); return; }
-
-  const ssid = document.getElementById("wifiSsid").value.trim();
-  const password = document.getElementById("wifiPassword").value;
-
-  if(!ssid){
-    setStatus("Enter a Wi‑Fi SSID.", "warn");
-    return;
-  }
-
-  await queueCommandForVisible("set_wifi_config", false, {
-    ssid,
-    password: password || null
-  });
-
-  document.getElementById("wifiPassword").value = "";
+  return connectWifi();
 }
 
 function setLteSupportStatus(message,tone=""){
@@ -3274,8 +3322,8 @@ function lteSignalBarsFromRssi(rssi){
 function renderLteStatusResult(result){
   if(!result) return;
 
-  const online=Boolean(result.online);
-  const registered=Boolean(result.registered);
+  const online=getBooleanNetworkField(result,["online"],false);
+  const registered=getBooleanNetworkField(result,["registered"],false);
   const tag=document.getElementById("lteStatusTag");
 
   if(tag){
@@ -3299,7 +3347,7 @@ function renderLteStatusResult(result){
 
   const meta=document.getElementById("lteMeta");
   if(meta){
-    meta.innerText=`Modem: ${result.modem_present?"Present":"Not detected"} • SIM: ${result.sim_present?"Present":"Not detected"} • Packet: ${result.packet_attached?"Attached":"Detached"} • Data: ${result.data_session_active?"Active":"Inactive"}`;
+    meta.innerText=`Modem: ${result.modem_present?"Present":"Not detected"} • SIM: ${result.sim_present?"Present":"Not detected"} • Packet: ${result.packet_attached?"Attached":"Detached"} • Data: ${getBooleanNetworkField(result,["data_session_active"],false)?"Active":"Inactive"}`;
   }
 }
 
