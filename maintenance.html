@@ -3103,37 +3103,114 @@ async function waitForWifiScanResults(timeoutMs=20000){
 async function searchWirelessNetworks(){
   clearStatus();
 
+  const targets = getCommandTargetDevices();
   if(!selectedSite()){
     setStatus("Select a site first.", "warn");
     setWifiScanStatus("Select a site first.");
     return;
   }
 
-  if(!getCommandTargetDevices().length){
+  const target = targets[0] || null;
+  if(!target){
     setStatus("No active online Keypad found for this site.", "warn");
     setWifiScanStatus("No active online Keypad found for this site.");
     return;
   }
 
   selectedWifiNetwork = null;
-  setWifiScanStatus("Scanning for wireless networks…");
-  const queued = await queueCommandForVisible("scan_wifi_networks", false);
+  document.getElementById("wifiNetworkList").innerHTML = "";
+  setWifiScanStatus(`Scanning for wireless networks on ${getDeviceName(target)}…`);
+  setStatus("Requesting a wireless scan from the Keypad…", "warn");
 
-  if(!queued){
+  // Queue the scan directly so this button is not blocked by the generic
+  // maintenance-command renderer. The controller already implements the
+  // scan_wifi_networks command and writes the results to devices.wifi_networks.
+  const { data: commandRow, error: queueError } = await client
+    .from("device_commands")
+    .insert({
+      device_id: target.id,
+      site_id: target.site_id || selectedSite() || null,
+      command: "scan_wifi_networks",
+      payload: {},
+      status: "pending",
+      created_by: currentUser?.id || null,
+      created_at: new Date().toISOString()
+    })
+    .select("*")
+    .single();
+
+  if(queueError){
+    console.log("Wi-Fi scan queue error:", queueError);
     setWifiScanStatus("Could not request a wireless scan.");
+    setStatus("Could not queue the wireless scan command.", "error");
     return;
   }
 
-  const networks = await waitForWifiScanResults(20000);
-  renderWirelessNetworks(networks);
+  const commandId = commandRow?.id || "";
+  const started = Date.now();
+  let lastNetworks = [];
 
-  if(networks.length){
-    setWifiScanStatus(`Found ${networks.length} wireless network${networks.length === 1 ? "" : "s"}. Select one to connect.`);
-    setStatus(`Wireless scan complete — ${networks.length} network${networks.length === 1 ? "" : "s"} found.`, "success");
-  }else{
-    setWifiScanStatus("No wireless networks were reported. Make sure the Keypad is online and try again.");
-    setStatus("Wireless scan returned no networks.", "warn");
+  while(Date.now() - started < 30000){
+    await new Promise(resolve => setTimeout(resolve, 1200));
+
+    // Refresh the device record so we see the cloud-side scan results written
+    // by the Keypad service.
+    await loadDevices();
+    renderDevices();
+
+    const freshDevice = allDevices.find(item => String(item.id) === String(target.id)) || target;
+    lastNetworks = getStoredWifiNetworks(freshDevice);
+
+    if(lastNetworks.length){
+      renderWirelessNetworks(lastNetworks);
+      setWifiScanStatus(`Found ${lastNetworks.length} wireless network${lastNetworks.length === 1 ? "" : "s"}. Select one to connect.`);
+      setStatus(`Wireless scan complete — ${lastNetworks.length} network${lastNetworks.length === 1 ? "" : "s"} found.`, "success");
+      return;
+    }
+
+    if(commandId){
+      const { data: commandStatus } = await client
+        .from("device_commands")
+        .select("status,message,error")
+        .eq("id", commandId)
+        .maybeSingle();
+
+      const status = String(commandStatus?.status || "").toLowerCase();
+      if(["failed","error","cancelled","canceled"].includes(status)){
+        const message = commandStatus?.message || commandStatus?.error || "The Keypad reported that the wireless scan failed.";
+        setWifiScanStatus(message);
+        setStatus(message, "error");
+        return;
+      }
+    }
   }
+
+  renderWirelessNetworks(lastNetworks);
+  setWifiScanStatus("The Keypad did not return wireless networks within 30 seconds.");
+  setStatus("Wireless scan timed out. Confirm the Keypad is online and try again.", "error");
+}
+
+function getStoredWifiNetworks(device){
+  const stored = getNetworkField(device, [
+    "wifi_networks",
+    "wifiNetworks",
+    "available_wifi_networks",
+    "availableNetworks",
+    "scan_results",
+    "wifi_scan_results",
+    "wifiScanResults"
+  ], null);
+
+  if(Array.isArray(stored)) return stored;
+  if(typeof stored === "string" && stored.trim()){
+    try{
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) ? parsed : [];
+    }catch(err){
+      console.log("Wi-Fi scan result parse error:", err);
+    }
+  }
+  return [];
 }
 
 async function connectWifi(){
