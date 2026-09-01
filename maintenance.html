@@ -1384,17 +1384,13 @@ if(!hasAdminSession){
 
           <div class="actions">
             <button class="success" type="button" onclick="saveLteConfig()">Save LTE Configuration</button>
-            <button type="button" onclick="refreshLteProductionData()">Refresh All LTE Data</button>
-            <button class="success" type="button" onclick="runLteControlCommand('lte_connect')">Connect Data Session</button>
-            <button class="secondary" type="button" onclick="runLteControlCommand('lte_disconnect')">Disconnect Data Session</button>
+            <button type="button" onclick="refreshLteProductionData()">Refresh LTE Status</button>
             <button class="warn" type="button" onclick="runLteControlCommand('lte_restart')">Restart Modem</button>
           </div>
 
           <div class="lte-live-bar">
-            <button id="startLteLiveButton" class="test" type="button" onclick="startLteLiveRefresh()">Start Live LTE Monitor</button>
-            <button id="stopLteLiveButton" class="danger" type="button" onclick="stopLteLiveRefresh()" disabled>Stop Live LTE Monitor</button>
-            <span class="mini-muted">Refreshes LTE status, signal, identity, configuration, and diagnostics.</span>
-            <span id="lteLiveTag" class="tag">Stopped</span>
+            <span class="mini-muted">Reads the Air780E status, registration, signal, SIM identity, configuration, and diagnostics.</span>
+            <span id="lteLiveTag" class="tag">On Demand</span>
           </div>
 
           <div id="lteMeta" class="network-meta" style="margin-top:12px;">No LTE/SIM data loaded yet.</div>
@@ -1496,8 +1492,6 @@ if(!hasAdminSession){
             <option value="refresh_config">Refresh Config</option>
             <option value="refresh_network">Refresh Network</option>
             <option value="restart_network">Restart Network</option>
-            <option value="refresh_lte">Refresh LTE</option>
-            <option value="register_lte">Re-Register SIM</option>
             <option value="enter_maintenance">Enter Maintenance Mode</option>
             <option value="exit_maintenance">Exit Maintenance Mode</option>
             <option value="get_version">Read ESP32 Firmware Info</option>
@@ -1530,7 +1524,6 @@ if(!hasAdminSession){
           <button class="warn" type="button" onclick="queueCommandForVisible('pull_logs')">Pull Logs</button>
           <button class="secondary" type="button" onclick="queueCommandForVisible('refresh_config')">Refresh Config</button>
           <button class="secondary" type="button" onclick="queueCommandForVisible('refresh_network')">Refresh Network Status</button>
-          <button class="warn" type="button" onclick="queueCommandForVisible('register_lte')">Re-Register SIM</button>
           <button class="danger" type="button" onclick="queueCommandForVisible('restart_app')">Restart App</button>
           <button class="danger" type="button" onclick="queueCommandForVisible('restart_device')">Reboot Device</button>
           <button class="danger" type="button" onclick="queueCommandForVisible('shutdown_device')">Shutdown Device</button>
@@ -1698,6 +1691,7 @@ let liveInputTestTimer = null;
 let liveInputTestCycleActive = false;
 let lteLiveRefreshTimer = null;
 let lteLiveRefreshRunning = false;
+let currentLteReport = null;
 let lteLiveRefreshCycleActive = false;
 let quietRefreshTimer = null;
 let quietRefreshInProgress = false;
@@ -3043,87 +3037,174 @@ function estimateWifiBarsFromPercent(percent){
 function renderWirelessNetworks(networks){
   const wrap = document.getElementById("wifiNetworkList");
   if(!wrap) return;
+
   wrap.innerHTML = "";
-  if(!Array.isArray(networks) || !networks.length){
-    wrap.innerHTML = `<div class="wifi-network-row"><div><div class="wifi-network-name">No wireless networks found</div><div class="wifi-network-meta">Click Search Wireless Networks to scan again.</div></div></div>`;
+
+  if(!networks || !networks.length){
+    wrap.innerHTML = `
+      <div class="wifi-network-row">
+        <div>
+          <div class="wifi-network-name">No wireless networks found</div>
+          <div class="wifi-network-meta">Click Search Wireless Networks to scan again.</div>
+        </div>
+      </div>
+    `;
     return;
   }
-  const unique = new Map();
-  networks.forEach(raw => {
-    if(!raw) return;
-    const ssid = String(raw.ssid ?? raw.name ?? "").trim();
-    if(!ssid) return;
-    const strength = Math.max(0, Math.min(100, Number(raw.strength ?? raw.signal ?? raw.quality ?? 0) || 0));
-    const secured = raw.secured !== false && String(raw.security ?? "").trim() !== "";
-    const key = ssid.toLowerCase();
-    const old = unique.get(key);
-    if(!old || strength > old.strength) unique.set(key,{ssid,strength,secured});
+
+  networks.forEach(network => {
+    const ssid = String(network.ssid || network.name || "Unnamed Network");
+    const strength = Number(network.strength ?? network.signal ?? network.quality ?? 0) || 0;
+    const secured = network.secured !== false;
+    const safeSsid = escapeText(ssid);
+    const clickSsid = ssid.replaceAll("\\", "\\\\").replaceAll("'", "\\'").replaceAll("\n", " ");
+
+    wrap.innerHTML += `
+      <div class="wifi-network-row" onclick="selectWirelessNetwork('${clickSsid}',${secured})">
+        <div>
+          <div class="wifi-network-name">${safeSsid}</div>
+          <div class="wifi-network-meta">${secured ? "Secured" : "Open"} • Signal: ${escapeText(strength)}%</div>
+        </div>
+        <div class="signal-wrap" style="margin-top:0;">
+          ${[1,2,3,4].map(i => `<div class="signal-bar ${i <= estimateWifiBarsFromPercent(strength) ? "on" : ""}"></div>`).join("")}
+        </div>
+      </div>
+    `;
   });
-  Array.from(unique.values()).sort((a,b)=>b.strength-a.strength).forEach(network=>{
-    const safeSsid=escapeText(network.ssid);
-    const clickSsid=network.ssid.replaceAll("\\","\\\\").replaceAll("'","\\'").replaceAll("\n"," ");
-    wrap.innerHTML += `<div class="wifi-network-row" onclick="selectWirelessNetwork('${clickSsid}',${network.secured})"><div><div class="wifi-network-name">${safeSsid}</div><div class="wifi-network-meta">${network.secured ? "Secured" : "Open"} • Signal: ${escapeText(network.strength)}%</div></div><div class="signal-wrap" style="margin-top:0;">${[1,2,3,4].map(i=>`<div class="signal-bar ${i <= estimateWifiBarsFromPercent(network.strength) ? "on" : ""}"></div>`).join("")}</div></div>`;
-  });
 }
 
-function parseWifiNetworks(value){
-  if(Array.isArray(value)) return value;
-  if(typeof value === "string" && value.trim()){
-    try{ const parsed=JSON.parse(value); if(Array.isArray(parsed)) return parsed; if(parsed && Array.isArray(parsed.networks)) return parsed.networks; }
-    catch(err){ console.log("Wi-Fi network JSON parse error:",err); }
+async function waitForWifiScanResults(timeoutMs=20000){
+  const started = Date.now();
+  let lastNetworks = [];
+
+  while(Date.now() - started < timeoutMs){
+    await loadDevices();
+    renderDevices();
+
+    const device = visibleDevices[0] || allDevices[0] || null;
+    lastNetworks = getStoredWifiNetworks(device);
+
+    if(lastNetworks.length){
+      return lastNetworks;
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 1500));
   }
-  if(value && typeof value === "object" && Array.isArray(value.networks)) return value.networks;
-  return [];
-}
 
-function getStoredWifiNetworks(device){
-  const stored=getNetworkField(device,["wifi_networks","wifiNetworks","available_wifi_networks","availableNetworks","scan_results","wifi_scan_results","wifiScanResults"],null);
-  return parseWifiNetworks(stored);
-}
-
-async function fetchFreshWifiNetworks(deviceId){
-  if(!deviceId) return [];
-  const {data,error}=await client.from("devices").select("id,wifi_networks,wifi_ssid,wifi_strength,wifi_connected").eq("id",deviceId).maybeSingle();
-  if(error){ console.log("Fresh Wi-Fi device lookup error:",error); return []; }
-  if(data){
-    const i=allDevices.findIndex(item=>String(item.id)===String(deviceId));
-    if(i>=0) allDevices[i]={...allDevices[i],...data}; else allDevices.push(data);
-  }
-  return getStoredWifiNetworks(data);
+  return lastNetworks;
 }
 
 async function searchWirelessNetworks(){
   clearStatus();
-  const targets=getCommandTargetDevices();
-  if(!selectedSite()){setStatus("Select a site first.","warn");setWifiScanStatus("Select a site first.");return;}
-  const target=targets[0]||null;
-  if(!target){setStatus("No active online Keypad found for this site.","warn");setWifiScanStatus("No active online Keypad found for this site.");return;}
-  selectedWifiNetwork=null;
-  document.getElementById("wifiNetworkList").innerHTML="";
+
+  const targets = getCommandTargetDevices();
+  if(!selectedSite()){
+    setStatus("Select a site first.", "warn");
+    setWifiScanStatus("Select a site first.");
+    return;
+  }
+
+  const target = targets[0] || null;
+  if(!target){
+    setStatus("No active online Keypad found for this site.", "warn");
+    setWifiScanStatus("No active online Keypad found for this site.");
+    return;
+  }
+
+  selectedWifiNetwork = null;
+  document.getElementById("wifiNetworkList").innerHTML = "";
   setWifiScanStatus(`Scanning for wireless networks on ${getDeviceName(target)}…`);
-  setStatus("Requesting a wireless scan from the Keypad…","warn");
-  const {data:commandRow,error:queueError}=await client.from("device_commands").insert({device_id:target.id,site_id:target.site_id||selectedSite()||null,command:"scan_wifi_networks",payload:{},status:"pending",created_by:currentUser?.id||null,created_at:new Date().toISOString()}).select("*").single();
-  if(queueError){console.log("Wi-Fi scan queue error:",queueError);setWifiScanStatus("Could not request a wireless scan.");setStatus("Could not queue the wireless scan command.","error");return;}
-  const commandId=commandRow?.id||"";
-  const started=Date.now();
-  while(Date.now()-started<30000){
-    await new Promise(resolve=>setTimeout(resolve,1200));
-    const lastNetworks=await fetchFreshWifiNetworks(target.id);
+  setStatus("Requesting a wireless scan from the Keypad…", "warn");
+
+  // Queue the scan directly so this button is not blocked by the generic
+  // maintenance-command renderer. The controller already implements the
+  // scan_wifi_networks command and writes the results to devices.wifi_networks.
+  const { data: commandRow, error: queueError } = await client
+    .from("device_commands")
+    .insert({
+      device_id: target.id,
+      site_id: target.site_id || selectedSite() || null,
+      command: "scan_wifi_networks",
+      payload: {},
+      status: "pending",
+      created_by: currentUser?.id || null,
+      created_at: new Date().toISOString()
+    })
+    .select("*")
+    .single();
+
+  if(queueError){
+    console.log("Wi-Fi scan queue error:", queueError);
+    setWifiScanStatus("Could not request a wireless scan.");
+    setStatus("Could not queue the wireless scan command.", "error");
+    return;
+  }
+
+  const commandId = commandRow?.id || "";
+  const started = Date.now();
+  let lastNetworks = [];
+
+  while(Date.now() - started < 30000){
+    await new Promise(resolve => setTimeout(resolve, 1200));
+
+    // Refresh the device record so we see the cloud-side scan results written
+    // by the Keypad service.
+    await loadDevices();
+    renderDevices();
+
+    const freshDevice = allDevices.find(item => String(item.id) === String(target.id)) || target;
+    lastNetworks = getStoredWifiNetworks(freshDevice);
+
     if(lastNetworks.length){
       renderWirelessNetworks(lastNetworks);
-      setWifiScanStatus(`Found ${lastNetworks.length} wireless network${lastNetworks.length===1?"":"s"}. Select one to connect.`);
-      setStatus(`Wireless scan complete — ${lastNetworks.length} network${lastNetworks.length===1?"":"s"} found.`,"success");
+      setWifiScanStatus(`Found ${lastNetworks.length} wireless network${lastNetworks.length === 1 ? "" : "s"}. Select one to connect.`);
+      setStatus(`Wireless scan complete — ${lastNetworks.length} network${lastNetworks.length === 1 ? "" : "s"} found.`, "success");
       return;
     }
+
     if(commandId){
-      const {data:cs}=await client.from("device_commands").select("status,message,error").eq("id",commandId).maybeSingle();
-      const status=String(cs?.status||"").toLowerCase();
-      if(["failed","error","cancelled","canceled"].includes(status)){const message=cs?.message||cs?.error||"The Keypad reported that the wireless scan failed.";setWifiScanStatus(message);setStatus(message,"error");return;}
+      const { data: commandStatus } = await client
+        .from("device_commands")
+        .select("status,message,error")
+        .eq("id", commandId)
+        .maybeSingle();
+
+      const status = String(commandStatus?.status || "").toLowerCase();
+      if(["failed","error","cancelled","canceled"].includes(status)){
+        const message = commandStatus?.message || commandStatus?.error || "The Keypad reported that the wireless scan failed.";
+        setWifiScanStatus(message);
+        setStatus(message, "error");
+        return;
+      }
     }
   }
-  const finalNetworks=await fetchFreshWifiNetworks(target.id);
-  if(finalNetworks.length){renderWirelessNetworks(finalNetworks);setWifiScanStatus(`Found ${finalNetworks.length} wireless networks. Select one to connect.`);setStatus(`Wireless scan complete — ${finalNetworks.length} networks found.`,"success");return;}
-  renderWirelessNetworks([]);setWifiScanStatus("The Keypad did not return wireless networks within 30 seconds.");setStatus("Wireless scan timed out. Confirm the Keypad is online and try again.","error");
+
+  renderWirelessNetworks(lastNetworks);
+  setWifiScanStatus("The Keypad did not return wireless networks within 30 seconds.");
+  setStatus("Wireless scan timed out. Confirm the Keypad is online and try again.", "error");
+}
+
+function getStoredWifiNetworks(device){
+  const stored = getNetworkField(device, [
+    "wifi_networks",
+    "wifiNetworks",
+    "available_wifi_networks",
+    "availableNetworks",
+    "scan_results",
+    "wifi_scan_results",
+    "wifiScanResults"
+  ], null);
+
+  if(Array.isArray(stored)) return stored;
+  if(typeof stored === "string" && stored.trim()){
+    try{
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) ? parsed : [];
+    }catch(err){
+      console.log("Wi-Fi scan result parse error:", err);
+    }
+  }
+  return [];
 }
 
 async function connectWifi(){
@@ -3258,8 +3339,7 @@ function renderNetworkSupport(){
     ? `Current connection: ${wifiConnected ? (wifiSsid || "Connected") : "Not connected"} • Signal: ${wifiStrength || 0}/4 • Device: ${getDeviceName(device)}`
     : "No device selected or visible.";
 
-  const storedWifiNetworks=getStoredWifiNetworks(device);
-  if(storedWifiNetworks.length) renderWirelessNetworks(storedWifiNetworks);
+  renderWirelessNetworks(getStoredWifiNetworks(device));
 
   const lteMeta = document.getElementById("lteMeta");
   if(lteMeta){
@@ -3313,13 +3393,26 @@ function lteSignalBarsFromRssi(rssi){
 function renderLteStatusResult(result){
   if(!result) return;
 
-  const online=getBooleanNetworkField(result,["online"],false);
+  const dataActive=getBooleanNetworkField(result,["data_session_active"],false);
   const registered=getBooleanNetworkField(result,["registered"],false);
+  const modemPresent=getBooleanNetworkField(result,["modem_present"],false);
+  const simPresent=getBooleanNetworkField(result,["sim_present"],false);
   const tag=document.getElementById("lteStatusTag");
 
   if(tag){
-    tag.className=`tag ${online?"green":registered?"yellow":"red"}`;
-    tag.innerText=online?"Online":registered?"Registered":"Offline";
+    if(dataActive){
+      tag.className="tag green";
+      tag.innerText="Connected";
+    }else if(registered){
+      tag.className="tag yellow";
+      tag.innerText="Registered";
+    }else if(modemPresent && simPresent){
+      tag.className="tag yellow";
+      tag.innerText="Not Registered";
+    }else{
+      tag.className="tag red";
+      tag.innerText="Offline";
+    }
   }
 
   setLteText("lteModemState",result.state);
@@ -3338,10 +3431,11 @@ function renderLteStatusResult(result){
 
   const meta=document.getElementById("lteMeta");
   if(meta){
-    meta.innerText=`Modem: ${result.modem_present?"Present":"Not detected"} • SIM: ${result.sim_present?"Present":"Not detected"} • Packet: ${result.packet_attached?"Attached":"Detached"} • Data: ${getBooleanNetworkField(result,["data_session_active"],false)?"Active":"Inactive"}`;
+    const packet=result.packet_attached===true?"Attached":result.packet_attached===false?"Detached":"Unknown";
+    const data=dataActive?"Active":"Inactive";
+    meta.innerText=`Modem: ${modemPresent?"Present":"Not detected"} • SIM: ${simPresent?"Present":"Not detected"} • Packet: ${packet} • Data: ${data}`;
   }
 }
-
 function renderLteSignalResult(result){
   if(!result) return;
 
@@ -3364,17 +3458,19 @@ function renderLteInfoResult(result){
   setLteInput("lteImsi",result.imsi);
   setLteInput("lteFirmware",result.firmware_version);
 
-  setLteText("lteCarrierValue",result.carrier);
-  setLteText("lteRegistrationState",result.registration_state);
-  setLteText("lteRoaming",result.roaming===true?"Yes":result.roaming===false?"No":"Unknown");
-  setLteText("lteIpAddress",result.ip_address);
-  setLteText("lteMccMnc",
-    (result.mcc||result.mnc)?`${result.mcc??"-"} / ${result.mnc??"-"}`:"Unknown");
-  setLteText("lteTac",result.tac);
-  setLteText("lteCellId",result.cell_id);
-  setLteText("lteAccessTechnology",result.access_technology);
+  if(result.carrier) setLteText("lteCarrierValue",result.carrier);
+  if(result.registration_state) setLteText("lteRegistrationState",result.registration_state);
+  if(result.roaming!==undefined && result.roaming!==null){
+    setLteText("lteRoaming",result.roaming===true?"Yes":result.roaming===false?"No":"Unknown");
+  }
+  if(result.ip_address) setLteText("lteIpAddress",result.ip_address);
+  if(result.mcc || result.mnc){
+    setLteText("lteMccMnc",`${result.mcc??"-"} / ${result.mnc??"-"}`);
+  }
+  if(result.tac!==undefined && result.tac!==null) setLteText("lteTac",result.tac);
+  if(result.cell_id!==undefined && result.cell_id!==null) setLteText("lteCellId",result.cell_id);
+  if(result.access_technology!==undefined && result.access_technology!==null) setLteText("lteAccessTechnology",result.access_technology);
 }
-
 function renderLteConfigResult(result){
   if(!result) return;
 
@@ -3440,38 +3536,31 @@ async function refreshLteProductionData(showStatus=true){
   if(!target) return false;
 
   if(showStatus){
-    setLteSupportStatus(`Refreshing LTE data from ${getDeviceName(target)}...`,"warn");
+    setLteSupportStatus(`Reading LTE status from ${getDeviceName(target)}...`,"warn");
   }
 
-  const status=await executeLteProductionCommand("lte_status");
-  if(status) renderLteStatusResult(status);
+  // refresh_lte is the controller's single production read. It gathers
+  // status, signal, identity, configuration, and diagnostics together.
+  const report=await executeLteProductionCommand("refresh_lte",{},45000);
+  if(!report){
+    if(showStatus) setLteSupportStatus("The Keypad did not return an LTE report.","error");
+    return false;
+  }
 
-  const signal=await executeLteProductionCommand("lte_signal");
-  if(signal) renderLteSignalResult(signal);
+  currentLteReport=report;
 
-  const info=await executeLteProductionCommand("lte_info");
-  if(info) renderLteInfoResult(info);
-
-  const config=await executeLteProductionCommand("lte_get_config");
-  if(config) renderLteConfigResult(config);
-
-  const diagnostics=await executeLteProductionCommand("lte_diagnostics");
-  if(diagnostics) renderLteDiagnosticsResult(diagnostics);
-
-  const successful=Boolean(status||signal||info||config||diagnostics);
+  if(report.status) renderLteStatusResult(report.status);
+  if(report.signal) renderLteSignalResult(report.signal);
+  if(report.info) renderLteInfoResult(report.info);
+  if(report.config) renderLteConfigResult(report.config);
+  if(report.diagnostics) renderLteDiagnosticsResult(report.diagnostics);
 
   if(showStatus){
-    setLteSupportStatus(
-      successful
-        ? `LTE data refreshed from ${getDeviceName(target)}.`
-        : "No LTE data was returned.",
-      successful?"success":"warn"
-    );
+    setLteSupportStatus(`LTE status refreshed from ${getDeviceName(target)}.`,"success");
   }
 
-  return successful;
+  return true;
 }
-
 async function saveLteConfig(){
   clearStatus();
 
@@ -3553,97 +3642,16 @@ async function runLteControlCommand(command){
 }
 
 function setLteLiveRefreshState(running,message=""){
-  lteLiveRefreshRunning=running;
-
-  const startButton=document.getElementById("startLteLiveButton");
-  const stopButton=document.getElementById("stopLteLiveButton");
   const tag=document.getElementById("lteLiveTag");
-
-  if(startButton) startButton.disabled=running;
-  if(stopButton) stopButton.disabled=!running;
-
-  if(tag){
-    tag.className=`tag ${running?"green":""}`;
-    tag.innerText=running?"Running":"Stopped";
-  }
-
-  if(message){
-    setLteSupportStatus(message,running?"success":"warn");
-  }
+  if(tag){ tag.className=`tag ${running?"green":""}`; tag.innerText=running?"Refreshing":"On Demand"; }
+  if(message) setLteSupportStatus(message,running?"success":"warn");
 }
 
-async function runLteLiveRefreshCycle(){
-  if(!lteLiveRefreshRunning||lteLiveRefreshCycleActive) return;
-
-  lteLiveRefreshCycleActive=true;
-
-  try{
-    const success=await refreshLteProductionData(false);
-
-    if(!success&&lteLiveRefreshRunning){
-      setLteSupportStatus("Live LTE monitor did not receive data. Monitoring stopped.","error");
-      stopLteLiveRefresh(false);
-      return;
-    }
-
-    if(lteLiveRefreshRunning){
-      setLteSupportStatus(
-        `Live LTE monitor running. Last update: ${new Date().toLocaleTimeString()}`,
-        "success"
-      );
-    }
-  }finally{
-    lteLiveRefreshCycleActive=false;
-
-    if(lteLiveRefreshRunning){
-      lteLiveRefreshTimer=window.setTimeout(runLteLiveRefreshCycle,10000);
-    }
-  }
-}
-
-function startLteLiveRefresh(){
-  if(lteLiveRefreshRunning) return;
-
-  const target=getSingleProductionTarget();
-  if(!target) return;
-
-  if(lteLiveRefreshTimer){
-    clearTimeout(lteLiveRefreshTimer);
-    lteLiveRefreshTimer=null;
-  }
-
-  setLteLiveRefreshState(
-    true,
-    `Live LTE monitor started for ${getDeviceName(target)}.`
-  );
-
-  runLteLiveRefreshCycle();
-}
-
+function startLteLiveRefresh(){ refreshLteProductionData(); }
 function stopLteLiveRefresh(showMessage=true){
-  lteLiveRefreshRunning=false;
-
-  if(lteLiveRefreshTimer){
-    clearTimeout(lteLiveRefreshTimer);
-    lteLiveRefreshTimer=null;
-  }
-
-  setLteLiveRefreshState(
-    false,
-    showMessage?"Live LTE monitor stopped.":""
-  );
+  if(showMessage) setLteSupportStatus("LTE status uses on-demand production reads.","warn");
 }
 
-
-const RELAY_OUTPUT_DEFAULTS = [
-  { output_key:"ss", output_label:"Relay 1", default_name:"Wash Trigger", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:true },
-  { output_key:"relay1", output_label:"Relay 2", default_name:"Spare", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false },
-  { output_key:"relay2", output_label:"Relay 3", default_name:"Spare", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false },
-  { output_key:"relay3", output_label:"Relay 4", default_name:"Spare", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false },
-  { output_key:"relay4", output_label:"Relay 5", default_name:"Spare", contact_type:"nc", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false },
-  { output_key:"relay5", output_label:"Relay 6", default_name:"Spare", contact_type:"nc", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false }
-];
-  
 function setRelayOutputStatus(message, tone=""){
   const box = document.getElementById("relayOutputStatus");
   if(!box) return;
