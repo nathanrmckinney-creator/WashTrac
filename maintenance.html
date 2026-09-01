@@ -5230,7 +5230,7 @@ async function queueCommandForVisible(command, askConfirm=true, extraPayload={})
   }
 
   setStatus(`Queueing ${command} for ${targets.length} device${targets.length===1?"":"s"}...`, "warn");
-  await queueCommandForDevices(command,targets,extraPayload);
+  return await queueCommandForDevices(command,targets,extraPayload);
 }
 
 
