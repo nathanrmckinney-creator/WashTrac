@@ -2155,7 +2155,9 @@ function renderControl(control, hasOnlineDevice = false, hasPairedDevice = false
   }
 
   const washEnabled = control.wash_enabled !== false;
-  const estopActive = control.estop_active === true;
+  const onlineDevice = (window.latestMonitorDevices || []).find(device => deviceOnlineFromLastSeen(device.last_seen)) || {};
+  const physicalEstopActive = String(onlineDevice.wash_status || "").toLowerCase() === "e_stop";
+  const estopActive = control.estop_active === true || physicalEstopActive;
   const lockoutEnabled = control.lockout_enabled === true;
 
   const displayWashStatus = getDisplayWashStatus(control, hasOnlineDevice, hasPairedDevice, window.latestMonitorDevices || []);
