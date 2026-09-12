@@ -1962,7 +1962,7 @@ function deviceOnlineFromLastSeen(lastSeenValue){
   if(Number.isNaN(lastSeen.getTime())) return false;
 
   const diffMinutes = (Date.now() - lastSeen.getTime()) / 60000;
-  return diffMinutes < 5;
+  return diffMinutes < 15;
 }
 
 function formatLastSeen(lastSeenValue){
