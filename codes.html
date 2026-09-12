@@ -1261,6 +1261,7 @@ async function fetchPairedDevices(siteId){
     .from("devices")
     .select("*")
     .eq("site_id", siteId)
+    .eq("is_active", true)
     .order("created_at", { ascending:false });
 
   if(error){
