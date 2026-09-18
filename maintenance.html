@@ -3652,6 +3652,16 @@ function stopLteLiveRefresh(showMessage=true){
   if(showMessage) setLteSupportStatus("LTE status uses on-demand production reads.","warn");
 }
 
+
+const RELAY_OUTPUT_DEFAULTS = [
+  { output_key:"ss",     output_label:"Relay 1", default_name:"Wash Trigger", contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:true },
+  { output_key:"relay1", output_label:"Relay 2", default_name:"Spare",        contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false },
+  { output_key:"relay2", output_label:"Relay 3", default_name:"Spare",        contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false },
+  { output_key:"relay3", output_label:"Relay 4", default_name:"Spare",        contact_type:"no", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false },
+  { output_key:"relay4", output_label:"Relay 5", default_name:"Spare",        contact_type:"nc", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false },
+  { output_key:"relay5", output_label:"Relay 6", default_name:"Spare",        contact_type:"nc", timer_type:"off_delay", duration_value:1, duration_unit:"seconds", is_enabled:false }
+];
+
 function setRelayOutputStatus(message, tone=""){
   const box = document.getElementById("relayOutputStatus");
   if(!box) return;
@@ -3799,7 +3809,7 @@ function buildRelayOutputPayload(outputKey){
   return payload;
 }
 
-async function saveRelayOutput(outputKey){
+async function saveRelayOutput(outputKey, syncAfterSave=true){
   clearStatus();
 
   const siteId = selectedSite();
@@ -3834,8 +3844,8 @@ async function saveRelayOutput(outputKey){
   setRelayOutputStatus(`${payload.output_label} saved.`, "success");
   await loadRelayOutputAssignments();
 
-  // Future ESP32/Pi agent can use this to pull new relay settings.
-  if(visibleDevices.length){
+  // Apply the saved relay configuration to the CM5/ESP32 when requested.
+  if(syncAfterSave && visibleDevices.length){
     await queueCommandForVisible("refresh_config", false, {
       relay_outputs_updated: true
     });
@@ -3938,11 +3948,22 @@ async function saveAllRelayOutputs(){
   let saved = 0;
 
   for(const output of RELAY_OUTPUT_DEFAULTS){
-    const ok = await saveRelayOutput(output.output_key);
+    const ok = await saveRelayOutput(output.output_key, false);
     if(ok) saved += 1;
   }
 
-  setRelayOutputStatus(`Saved ${saved} relay output assignment${saved === 1 ? "" : "s"}.`, saved ? "success" : "error");
+  if(saved === RELAY_OUTPUT_DEFAULTS.length && visibleDevices.length){
+    await queueCommandForVisible("refresh_config", false, {
+      relay_outputs_updated: true
+    });
+  }
+
+  setRelayOutputStatus(
+    saved === RELAY_OUTPUT_DEFAULTS.length
+      ? "Saved all 6 relay outputs and queued the configuration for the Keypad/ESP32."
+      : `Saved ${saved} of ${RELAY_OUTPUT_DEFAULTS.length} relay outputs. Check the relay output status before applying.`,
+    saved === RELAY_OUTPUT_DEFAULTS.length ? "success" : "error"
+  );
 }
 
 
