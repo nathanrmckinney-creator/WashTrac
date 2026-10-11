@@ -1,8 +1,29 @@
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
 
+  // Allow the WashTrac website to call this Vercel API.
+  const allowedOrigins = [
+    "https://thewashtrac.com",
+    "https://www.thewashtrac.com"
+  ];
+
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+
+  res.setHeader("Vary", "Origin");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  // Browser CORS preflight request.
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
+
   if (req.method !== "POST") {
-    res.setHeader("Allow", "POST");
+    res.setHeader("Allow", "POST, OPTIONS");
     return res.status(405).json({ error: "Method not allowed." });
   }
 
