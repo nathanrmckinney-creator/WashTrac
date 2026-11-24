@@ -1308,6 +1308,15 @@ if(!hasAdminSession){
             <span id="lteStatusTag" class="tag">Unknown</span>
           </h4>
 
+          <div class="lte-live-bar">
+            <strong>LTE Enable / Disable</strong>
+            <span id="lteManualTag" class="tag">Refresh required</span>
+            <div class="actions" style="margin-top:0;">
+              <button id="lteOnBtn" class="success" type="button" disabled onclick="setRemoteLteEnabled(true)">Turn LTE ON</button>
+              <button id="lteOffBtn" class="danger" type="button" disabled onclick="setRemoteLteEnabled(false)">Turn LTE OFF</button>
+            </div>
+          </div>
+          <div class="note">Wi-Fi is primary. LTE is backup when enabled. Refresh LTE Status to read the keypad setting.</div>
           <div class="lte-control-grid">
             <div class="field">
               <label for="lteApn">APN</label>
@@ -1315,7 +1324,8 @@ if(!hasAdminSession){
             </div>
             <div class="field">
               <label for="lteAutoReconnect">Automatic Reconnect</label>
-              <select id="lteAutoReconnect">
+              <select id="lteAutoReconnect" disabled title="Controlled by LTE ON/OFF">
+                <option value="">Unknown</option>
                 <option value="true">Enabled</option>
                 <option value="false">Disabled</option>
               </select>
@@ -1385,7 +1395,7 @@ if(!hasAdminSession){
           <div class="actions">
             <button class="success" type="button" onclick="saveLteConfig()">Save LTE Configuration</button>
             <button type="button" onclick="refreshLteProductionData()">Refresh LTE Status</button>
-            <button class="warn" type="button" onclick="runLteControlCommand('lte_restart')">Restart Modem</button>
+            <button id="lteRestartBtn" class="warn" type="button" disabled onclick="runLteControlCommand('lte_restart')">Restart Modem</button>
           </div>
 
           <div class="lte-live-bar">
@@ -1478,7 +1488,7 @@ if(!hasAdminSession){
 
         <div class="field">
           <label for="targetDevice">Target Device</label>
-          <select id="targetDevice" onchange="renderSoftwareUpdateDetails()"><option value="">Online visible devices only</option></select>
+          <select id="targetDevice" onchange="renderSoftwareUpdateDetails(); renderManualLteControls()"><option value="">Online visible devices only</option></select>
         </div>
 
         <div class="field" style="margin-top:12px;">
@@ -1692,6 +1702,9 @@ let liveInputTestCycleActive = false;
 let lteLiveRefreshTimer = null;
 let lteLiveRefreshRunning = false;
 let currentLteReport = null;
+let lteManualDeviceId = null;
+let lteManualEnabled = null;
+let lteManualBusy = false;
 let lteLiveRefreshCycleActive = false;
 let quietRefreshTimer = null;
 let quietRefreshInProgress = false;
@@ -2066,6 +2079,9 @@ async function loadSites(){
 }
 
 async function handleSiteChange(){
+  lteManualEnabled=null;
+  lteManualDeviceId=null;
+  renderManualLteControls();
   selectedSiteId = selectedSite();
 
   if(selectedSiteId){
@@ -3304,6 +3320,7 @@ function getBooleanNetworkField(device, names, fallback=false){
 }
 
 function renderNetworkSupport(){
+  renderManualLteControls();
   const device = visibleDevices[0] || allDevices[0] || null;
 
   const wifiStrength = Number(getNetworkField(device, ["wifi_strength","wifiStrength","wifi_signal","signal_strength"], 0)) || 0;
@@ -3531,9 +3548,53 @@ async function executeLteProductionCommand(command,payload={},timeoutMs=25000){
   return result||{};
 }
 
+function manualLteTarget(){
+  const id=document.getElementById("targetDevice")?.value||"";
+  const targets=getCommandTargetDevices();
+  const target=id ? targets.find(d=>String(d.id)===String(id)) : (targets.length===1?targets[0]:null);
+  return target && selectedSite() && String(target.site_id)===String(selectedSite()) ? target : null;
+}
+
+function renderManualLteControls(){
+  const target=manualLteTarget();
+  const known=target && String(target.id)===lteManualDeviceId && typeof lteManualEnabled==="boolean";
+  const tag=document.getElementById("lteManualTag");
+  tag.innerText=known ? `${lteManualEnabled?"ON":"OFF"} (last read) — ${getDeviceName(target)}` : "Refresh required";
+  tag.className="tag "+(known?(lteManualEnabled?"green":"yellow"):"");
+  document.getElementById("lteOnBtn").disabled=lteManualBusy||!known||lteManualEnabled===true;
+  document.getElementById("lteOffBtn").disabled=lteManualBusy||!known||lteManualEnabled===false;
+  document.getElementById("lteRestartBtn").disabled=lteManualBusy||!known||lteManualEnabled!==true;
+}
+
+async function setRemoteLteEnabled(enabled){
+  const target=manualLteTarget();
+  if(!target||getSingleProductionTarget()?.id!==target.id||lteManualBusy||String(target.id)!==lteManualDeviceId||typeof lteManualEnabled!=="boolean") return;
+  if(!confirm(`${enabled?"Enable":"Disable"} LTE on ${getDeviceName(target)} (${getDeviceSerial(target)})?${enabled?"":"\n\nIf Wi-Fi has no internet access, remote connectivity may be lost until Wi-Fi returns or LTE is enabled at the keypad."}`)) return;
+  lteManualBusy=true;
+  renderManualLteControls();
+  try{
+    setLteSupportStatus("Requesting LTE setting change...","warn");
+    const result=await executeLteProductionCommand("set_lte_enabled",{enabled},45000);
+    lteManualDeviceId=String(target.id);
+    lteManualEnabled=result?.ok===true && result.enabled===enabled ? enabled : null;
+    if(lteManualEnabled!==null){
+      setLteSupportStatus(`LTE ${enabled?"ON":"OFF"} saved. Modem transition requested; refresh status to verify connectivity.`,"success");
+    }else if(result){
+      setLteSupportStatus("LTE setting not confirmed. Refresh LTE Status before retrying.","warn");
+    }
+  }catch(err){
+    lteManualEnabled=null;
+    setLteSupportStatus("LTE setting not confirmed. Check Recent Commands and refresh status.","error");
+  }finally{
+    lteManualBusy=false;
+    renderManualLteControls();
+  }
+}
+
 async function refreshLteProductionData(showStatus=true){
   const target=getSingleProductionTarget();
   if(!target) return false;
+  if(lteManualBusy) return false;
 
   if(showStatus){
     setLteSupportStatus(`Reading LTE status from ${getDeviceName(target)}...`,"warn");
@@ -3543,11 +3604,16 @@ async function refreshLteProductionData(showStatus=true){
   // status, signal, identity, configuration, and diagnostics together.
   const report=await executeLteProductionCommand("refresh_lte",{},45000);
   if(!report){
+    lteManualEnabled=null;
+    renderManualLteControls();
     if(showStatus) setLteSupportStatus("The Keypad did not return an LTE report.","error");
     return false;
   }
 
   currentLteReport=report;
+  lteManualDeviceId=String(target.id);
+  lteManualEnabled=typeof report.enabled==="boolean"?report.enabled:null;
+  renderManualLteControls();
 
   if(report.status) renderLteStatusResult(report.status);
   if(report.signal) renderLteSignalResult(report.signal);
@@ -3568,8 +3634,6 @@ async function saveLteConfig(){
   if(!target) return;
 
   const apn=document.getElementById("lteApn")?.value.trim()||"";
-  const automaticReconnect=
-    document.getElementById("lteAutoReconnect")?.value!=="false";
   const reconnectInitial=
     Number(document.getElementById("lteReconnectInitial")?.value);
   const reconnectMaximum=
@@ -3594,7 +3658,6 @@ async function saveLteConfig(){
 
   const result=await executeLteProductionCommand("lte_set_config",{
     apn,
-    automatic_reconnect:automaticReconnect,
     reconnect_initial_delay:reconnectInitial,
     reconnect_maximum_delay:reconnectMaximum
   });
