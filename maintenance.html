@@ -1681,7 +1681,7 @@ const SUPABASE_URL = "https://feqrsypiugwwdweiwvua.supabase.co";
 const SUPABASE_KEY = "sb_publishable_wWkZTvf6dLAlreLlLAOcXA_7jG3D8GS";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const HEARTBEAT_ONLINE_MINUTES = 5;
+const HEARTBEAT_ONLINE_MINUTES = 15;
 
 let currentUser = null;
 let allSites = [];
@@ -2081,6 +2081,7 @@ async function loadSites(){
 async function handleSiteChange(){
   lteManualEnabled=null;
   lteManualDeviceId=null;
+  currentLteReport=null;
   renderManualLteControls();
   selectedSiteId = selectedSite();
 
@@ -3358,6 +3359,13 @@ function renderNetworkSupport(){
 
   renderWirelessNetworks(getStoredWifiNetworks(device));
 
+  if(currentLteReport && String(manualLteTarget()?.id)===lteManualDeviceId){
+    if(currentLteReport.status) renderLteStatusResult(currentLteReport.status);
+    if(currentLteReport.signal) renderLteSignalResult(currentLteReport.signal);
+    if(currentLteReport.info) renderLteInfoResult(currentLteReport.info);
+    return;
+  }
+
   const lteMeta = document.getElementById("lteMeta");
   if(lteMeta){
     lteMeta.innerText = device
@@ -3550,7 +3558,7 @@ async function executeLteProductionCommand(command,payload={},timeoutMs=25000){
 
 function manualLteTarget(){
   const id=document.getElementById("targetDevice")?.value||"";
-  const targets=getCommandTargetDevices();
+  const targets=uniqueDevicesById(allDevices || []).filter(d=>selectedSite() && String(d.site_id)===String(selectedSite()) && d.is_retired!==true);
   const target=id ? targets.find(d=>String(d.id)===String(id)) : (targets.length===1?targets[0]:null);
   return target && selectedSite() && String(target.site_id)===String(selectedSite()) ? target : null;
 }
@@ -3568,13 +3576,14 @@ function renderManualLteControls(){
 
 async function setRemoteLteEnabled(enabled){
   const target=manualLteTarget();
-  if(!target||getSingleProductionTarget()?.id!==target.id||lteManualBusy||String(target.id)!==lteManualDeviceId||typeof lteManualEnabled!=="boolean") return;
+  if(!target||lteManualBusy||String(target.id)!==lteManualDeviceId||typeof lteManualEnabled!=="boolean"){setLteSupportStatus("Select a Keypad and refresh LTE status first, or wait for the current request.","warn");return;}
   if(!confirm(`${enabled?"Enable":"Disable"} LTE on ${getDeviceName(target)} (${getDeviceSerial(target)})?${enabled?"":"\n\nIf Wi-Fi has no internet access, remote connectivity may be lost until Wi-Fi returns or LTE is enabled at the keypad."}`)) return;
   lteManualBusy=true;
   renderManualLteControls();
   try{
     setLteSupportStatus("Requesting LTE setting change...","warn");
     const result=await executeLteProductionCommand("set_lte_enabled",{enabled},45000);
+    currentLteReport=null;
     lteManualDeviceId=String(target.id);
     lteManualEnabled=result?.ok===true && result.enabled===enabled ? enabled : null;
     if(lteManualEnabled!==null){
@@ -3592,9 +3601,12 @@ async function setRemoteLteEnabled(enabled){
 }
 
 async function refreshLteProductionData(showStatus=true){
-  const target=getSingleProductionTarget();
-  if(!target) return false;
-  if(lteManualBusy) return false;
+  const target=manualLteTarget();
+  if(!target){setLteSupportStatus("Select one Keypad in the selected site.","warn");return false;}
+  if(lteManualBusy){setLteSupportStatus("LTE request already in progress.","warn");return false;}
+  lteManualBusy=true;
+  renderManualLteControls();
+  try{
 
   if(showStatus){
     setLteSupportStatus(`Reading LTE status from ${getDeviceName(target)}...`,"warn");
@@ -3606,10 +3618,11 @@ async function refreshLteProductionData(showStatus=true){
   if(!report){
     lteManualEnabled=null;
     renderManualLteControls();
-    if(showStatus) setLteSupportStatus("The Keypad did not return an LTE report.","error");
+    // Preserve the specific submission or timeout error.
     return false;
   }
 
+  if(manualLteTarget()?.id!==target.id){setLteSupportStatus("Target changed; refresh the selected Keypad.","warn");return false;}
   currentLteReport=report;
   lteManualDeviceId=String(target.id);
   lteManualEnabled=typeof report.enabled==="boolean"?report.enabled:null;
@@ -3626,6 +3639,8 @@ async function refreshLteProductionData(showStatus=true){
   }
 
   return true;
+  }catch(err){setLteSupportStatus("LTE refresh failed: "+(err.message||err),"error");return false;}
+  finally{lteManualBusy=false;renderManualLteControls();}
 }
 async function saveLteConfig(){
   clearStatus();
@@ -3673,8 +3688,8 @@ async function saveLteConfig(){
 }
 
 async function runLteControlCommand(command){
-  const target=getSingleProductionTarget();
-  if(!target) return;
+  const target=command==="lte_restart"?manualLteTarget():getSingleProductionTarget();
+  if(!target){setLteSupportStatus("Select one Keypad first.","warn");return;}
 
   const labels={
     lte_connect:"connect the LTE data session",
@@ -4724,19 +4739,20 @@ function renderTargetDeviceSelect(){
 
   const previousValue = select.value || "";
   const onlineDevices = uniqueDevicesById(visibleDevices || []).filter(isDeviceOnline);
+  const selectable = uniqueDevicesById(allDevices || []).filter(d=>selectedSite() && String(d.site_id)===String(selectedSite()) && d.is_retired!==true);
 
-  let html = `<option value="">Online visible devices only</option>`;
+  let html = `<option value="">Select a Keypad (LTE on demand)</option>`;
 
-  onlineDevices.forEach(device => {
-    html += `<option value="${escapeText(device.id)}">ONLINE — ${escapeText(getDeviceName(device))} — ${escapeText(getDeviceSerial(device))}</option>`;
+  selectable.forEach(device => {
+    html += `<option value="${escapeText(device.id)}">${isDeviceOnline(device)?"ONLINE":"LAST SEEN STALE"} — ${escapeText(getDeviceName(device))} — ${escapeText(getDeviceSerial(device))}</option>`;
   });
 
   select.innerHTML = html;
 
-  if(onlineDevices.length === 1){
-    select.value = onlineDevices[0].id;
-  }else if(previousValue && onlineDevices.some(device => String(device.id || "") === String(previousValue))){
+  if(previousValue && selectable.some(device => String(device.id || "") === String(previousValue))){
     select.value = previousValue;
+  }else if(selectable.length === 1){
+    select.value = selectable[0].id;
   }else{
     select.value = "";
   }
@@ -5144,13 +5160,14 @@ function getSingleProductionTarget(){
 }
 
 async function queueProductionCommand(command,extraPayload={}){
-  const target=getSingleProductionTarget();
-  if(!target) return null;
+  const onDemandLte=["refresh_lte","set_lte_enabled","lte_restart"].includes(command);
+  const target=onDemandLte?manualLteTarget():getSingleProductionTarget();
+  if(!target){if(onDemandLte) setLteSupportStatus("Select one Keypad in the selected site.","warn"); return null;}
   const duplicates=await findOpenDuplicateCommands(command,[target]);
-  if(duplicates.length){setProductionConsoleStatus(`${command} is already pending for ${getDeviceName(target)}.`,"warn");return null;}
+  if(duplicates.length){const message=`${command} is already pending for ${getDeviceName(target)}.`;setProductionConsoleStatus(message,"warn");if(onDemandLte)setLteSupportStatus(message,"warn");return null;}
   const row={device_id:target.id,site_id:target.site_id||null,command,payload:buildPayload(command,extraPayload),status:"pending",created_by:currentUser?.id||null,created_at:new Date().toISOString()};
   const {data,error}=await client.from("device_commands").insert(row).select("*").single();
-  if(error){console.log("Production command queue error:",error);setProductionConsoleStatus(`Could not queue ${command}.`,"error");return null;}
+  if(error){console.log("Production command queue error:",error);setProductionConsoleStatus(`Could not queue ${command}.`,"error");if(onDemandLte)setLteSupportStatus(`Could not queue ${command}.`,"error");return null;}
   return data;
 }
 
