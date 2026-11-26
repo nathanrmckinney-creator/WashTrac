@@ -1455,7 +1455,7 @@ if(!hasAdminSession){
       <div class="note">
         Configure all six ESP32 inputs. Input 1 remains assigned to
         <span class="inline-code">Wash Busy</span> and Input 2 remains assigned to
-        <span class="inline-code">E-Stop</span>. Both remain enabled, but their electrical logic may be inverted.
+        <span class="inline-code">E-Stop</span>. Input 1 is required. Inputs 2–6 can be enabled or disabled. Input 3 is Wash Ready. Reload Input Settings reads the selected controller before editing.
         Factory-default E-Stop behavior is fail-safe: voltage present is healthy and loss of voltage activates E-Stop.
       </div>
 
@@ -1477,8 +1477,7 @@ if(!hasAdminSession){
       <div id="inputConfigStatus" class="status"></div>
 
       <div class="note">
-        For bench testing with no E-Stop voltage present, enable
-        <span class="inline-code">Invert Logic</span> on Input 2. Restore the production fail-safe setting before deployment unless the site wiring specifically requires reversed logic.
+        Isolate machinery before changing input settings. Verify polarity and permissives against site wiring. The software input does not replace the independent hardware emergency-stop circuit.
       </div>
     </div>
 
@@ -1488,7 +1487,7 @@ if(!hasAdminSession){
 
         <div class="field">
           <label for="targetDevice">Target Device</label>
-          <select id="targetDevice" onchange="renderSoftwareUpdateDetails(); renderManualLteControls()"><option value="">Online visible devices only</option></select>
+          <select id="targetDevice" onchange="renderSoftwareUpdateDetails(); renderManualLteControls(); loadInputConfigurations(true)"><option value="">Online visible devices only</option></select>
         </div>
 
         <div class="field" style="margin-top:12px;">
@@ -4047,8 +4046,8 @@ async function saveAllRelayOutputs(){
 
 const INPUT_CONFIGURATION_DEFAULTS = [
   { input_number:1, fixed_name:"Wash Busy", default_name:"Wash Busy", enabled:true, inverted:false, role:"Wash Running Signal", locked:true },
-  { input_number:2, fixed_name:"E-Stop", default_name:"E-Stop", enabled:true, inverted:true, role:"Safety Circuit", locked:true },
-  { input_number:3, fixed_name:"", default_name:"Input 3", enabled:false, inverted:false, role:"Spare Input", locked:false },
+  { input_number:2, fixed_name:"E-Stop", default_name:"E-Stop", enabled:true, inverted:true, role:"Safety Circuit", locked:false },
+  { input_number:3, fixed_name:"Wash Ready", default_name:"Wash Ready", enabled:false, inverted:false, role:"Wash Ready Signal", locked:false },
   { input_number:4, fixed_name:"", default_name:"Input 4", enabled:false, inverted:false, role:"Spare Input", locked:false },
   { input_number:5, fixed_name:"", default_name:"Input 5", enabled:false, inverted:false, role:"Spare Input", locked:false },
   { input_number:6, fixed_name:"", default_name:"Input 6", enabled:false, inverted:false, role:"Spare Input", locked:false }
@@ -4063,16 +4062,42 @@ function setInputConfigStatus(message, tone=""){
   if(tone) box.classList.add(tone);
 }
 
-function selectedInputDevice(){
-  const selectedId = document.getElementById("targetDevice")?.value || "";
-  if(selectedId){
-    const selected = allDevices.find(device => device.id === selectedId);
-    if(selected) return selected;
-  }
-
-  return visibleDevices[0] ||
-    allDevices.find(device => device.site_id === selectedSite()) ||
-    null;
+let inputVerifiedDevice = null;
+let inputVerifiedRows = null;
+let inputCommandBusy = false;
+function selectedInputDevice(){ return manualLteTarget(); }
+function updateInputSaveAvailability(){
+  const button = document.querySelector('button[onclick="saveAllInputConfigurations()"]');
+  if(button) button.disabled = inputCommandBusy || !inputVerifiedRows || inputVerifiedDevice !== selectedInputDevice()?.id;
+}
+function invalidateInputVerification(){
+  inputVerifiedDevice = null;
+  inputVerifiedRows = null;
+  updateInputSaveAvailability();
+}
+async function inputCommand(device, command, payload={}){
+  const {data:open,error:checkError} = await client.from("device_commands").select("id").eq("device_id",device.id).in("command",["set_input_config","refresh_input_status"]).in("status",["pending","queued","running","processing","in_progress"]);
+  if(checkError || open?.length) throw new Error("Cannot verify command availability; check pending input commands.");
+  const {data,error} = await client.from("device_commands").insert({device_id:device.id,site_id:device.site_id,command,payload:buildPayload(command,payload),status:"pending",created_by:currentUser?.id||null,created_at:new Date().toISOString()}).select("*").single();
+  if(error || !data) throw new Error("Could not queue input command.");
+  const completed = await waitForProductionCommand(data.id,45000);
+  if(!completed) throw new Error("Command not confirmed. It may still execute; check Recent Commands before retrying.");
+  if(!["completed","complete","done"].includes(String(completed.status).toLowerCase())) throw new Error(completed.result_message||"Controller rejected command.");
+  const result=productionResultPayload(completed);
+  const raw=result?.config?.inputs;
+  if(!Array.isArray(raw)||raw.length!==6||!raw.every((r,i)=>Array.isArray(r)&&r[0]===i+1&&typeof r[1]==="boolean"&&typeof r[2]==="boolean"&&typeof r[3]==="string")) throw new Error("No complete controller readback received.");
+  return result;
+}
+function showVerifiedInputs(device,result){
+  if(selectedInputDevice()?.id!==device.id) throw new Error("Target changed; reload the selected controller.");
+  inputConfigurationRows=normalizeInputConfiguration(result.config.inputs);
+  inputVerifiedRows=inputConfigurationRows.map(r=>({...r}));
+  inputVerifiedDevice=device.id;
+  inputLiveStates=Array.from({length:6},(_,i)=>typeof result.input_states?.[i]==="boolean"?result.input_states[i]:null);
+  renderInputConfigurations();
+}
+function sameInputSettings(a,b){
+  return a.length===6&&b.length===6&&a.every((r,i)=>r.input_number===b[i].input_number&&r.enabled===b[i].enabled&&r.inverted===b[i].inverted&&r.name===b[i].name);
 }
 
 function normalizeInputConfiguration(value){
@@ -4228,7 +4253,7 @@ function renderInputConfigurations(){
 
   wrap.innerHTML = INPUT_CONFIGURATION_DEFAULTS.map(defaults => {
     const number = defaults.input_number;
-    const configuredName = defaults.locked
+    const configuredName = defaults.fixed_name
       ? defaults.fixed_name
       : String(getInputDisplayValue(defaults, "name") || defaults.default_name);
 
@@ -4261,7 +4286,7 @@ function renderInputConfigurations(){
           <input
             id="input-${number}-name"
             value="${escapeText(configuredName)}"
-            ${defaults.locked ? "disabled" : ""}
+            ${defaults.fixed_name ? "disabled" : ""}
             placeholder="Input assignment">
         </div>
 
@@ -4299,7 +4324,9 @@ function renderInputConfigurations(){
   }).join("");
 }
 
-async function loadInputConfigurations(){
+async function loadInputConfigurations(cachedOnly=false){
+  invalidateInputVerification();
+  if(!cachedOnly) return refreshInputLiveStatus();
   const siteId = selectedSite();
 
   if(!siteId){
@@ -4332,8 +4359,8 @@ async function loadInputConfigurations(){
     );
   }else{
     setInputConfigStatus(
-      `Loaded input settings from ${getDeviceName(device)}.`,
-      "success"
+      `Last reported settings from ${getDeviceName(device)}. Reload before editing.`,
+      "warn"
     );
   }
 
@@ -4344,7 +4371,7 @@ function buildInputConfigurationPayload(){
   const inputs = INPUT_CONFIGURATION_DEFAULTS.map(defaults => {
     const number = defaults.input_number;
 
-    const name = defaults.locked
+    const name = defaults.fixed_name
       ? defaults.fixed_name
       : (
           document.getElementById(`input-${number}-name`)?.value.trim() ||
@@ -4375,49 +4402,27 @@ function buildInputConfigurationPayload(){
 }
 
 async function saveAllInputConfigurations(){
-  clearStatus();
-
-  const siteId = selectedSite();
-  if(!siteId){
-    setInputConfigStatus("Select a site first.", "warn");
-    return;
-  }
-
-  const device = selectedInputDevice();
-  if(!device){
-    setInputConfigStatus("No Keypad is assigned to this site.", "warn");
-    return;
-  }
-
-  const payload = buildInputConfigurationPayload();
-
-  const confirmed = confirm(
-    `Save all six input settings to ${getDeviceName(device)}?\n\n` +
-    `Input 1 and Input 2 will remain enabled. Changing E-Stop inversion changes the safety-input interpretation.`
-  );
-
-  if(!confirmed) return;
-
-  const queued = await queueCommandForDevices(
-    "set_input_config",
-    [device],
-    payload
-  );
-
-  if(!queued){
-    setInputConfigStatus("Could not queue the input configuration command.", "error");
-    return;
-  }
-
-  inputConfigurationRows = payload.inputs;
-  renderInputConfigurations();
-
-  setInputConfigStatus(
-    "Input configuration queued. The Keypad will apply all six inputs, save them to ESP32 NVS, then report the stored configuration.",
-    "success"
-  );
+  const device=selectedInputDevice();
+  if(inputCommandBusy || !device || inputVerifiedDevice!==device.id || !inputVerifiedRows){setInputConfigStatus("Reload the selected controller before saving.","warn");return;}
+  const payload=buildInputConfigurationPayload();
+  const baseline=inputVerifiedRows.map(r=>({...r}));
+  if(!confirm(`Save all six inputs to ${getDeviceName(device)}? Isolate machinery first. Input 1 remains required; E-Stop and Wash Ready settings affect wash permissives.`)) return;
+  stopLiveInputTest(false);
+  inputCommandBusy=true; updateInputSaveAvailability();
+  try{
+    setInputConfigStatus("Checking current controller settings...","warn");
+    const current=await inputCommand(device,"refresh_input_status");
+    if(selectedInputDevice()?.id!==device.id) throw new Error("Target changed. Reload before saving.");
+    if(!sameInputSettings(baseline,normalizeInputConfiguration(current.config.inputs))){showVerifiedInputs(device,current);throw new Error("Controller settings changed since reload. Current settings loaded; review and edit again.");}
+    setInputConfigStatus("Saving and verifying controller settings...","warn");
+    const result=await inputCommand(device,"set_input_config",payload);
+    const actual=normalizeInputConfiguration(result.config.inputs);
+    if(!sameInputSettings(payload.inputs,actual)) throw new Error("Controller readback differs from requested settings. Reload before retrying.");
+    showVerifiedInputs(device,result);
+    setInputConfigStatus("All six input settings saved and verified by controller readback.","success");
+  }catch(error){invalidateInputVerification();setInputConfigStatus(error.message,"error");}
+  finally{inputCommandBusy=false;updateInputSaveAvailability();}
 }
-
 
 function setLiveInputTestState(running, message=""){
   liveInputTestRunning = Boolean(running);
@@ -4581,25 +4586,19 @@ function stopLiveInputTest(showMessage=true){
 }
 
 async function refreshInputLiveStatus(){
-  const device = selectedInputDevice();
-
-  if(!device){
-    setInputConfigStatus("No Keypad is assigned to this site.", "warn");
-    return;
-  }
-
-  const queued = await queueCommandForDevices(
-    "refresh_input_status",
-    [device],
-    { requested_at:new Date().toISOString() }
-  );
-
-  if(queued){
-    setInputConfigStatus(
-      "Live input refresh queued. Status will update after the Keypad reports the ESP32 input states.",
-      "success"
-    );
-  }
+  if(inputCommandBusy) return;
+  const device=selectedInputDevice();
+  invalidateInputVerification();
+  if(!device){setInputConfigStatus("Select one specific Keypad in Target Device.","warn");return;}
+  stopLiveInputTest(false);
+  inputCommandBusy=true;updateInputSaveAvailability();
+  setInputConfigStatus("Reading current ESP32 configuration and logical states...","warn");
+  try{
+    const result=await inputCommand(device,"refresh_input_status");
+    showVerifiedInputs(device,result);
+    setInputConfigStatus(`Current settings read from ${getDeviceName(device)} at ${new Date().toLocaleTimeString()}.`,"success");
+  }catch(error){setInputConfigStatus(error.message,"error");}
+  finally{inputCommandBusy=false;updateInputSaveAvailability();}
 }
 
 function updateInputStatusFromLoadedDevices(){
@@ -5009,6 +5008,7 @@ function renderCommands(){
 function selectDevice(deviceId){
   stopLteLiveRefresh(false);
   document.getElementById("targetDevice").value=deviceId;
+  loadInputConfigurations(true);
   const softwareTarget = document.getElementById("softwareTargetDevice");
   if(softwareTarget) softwareTarget.value = deviceId;
   const softwareScope = document.getElementById("softwareUpdateScope");
@@ -5023,6 +5023,7 @@ function handleCommandChange(){
 
 function clearCommandForm(){
   document.getElementById("targetDevice").value="";
+  loadInputConfigurations(true);
   document.getElementById("commandSelect").value="sync_codes";
   document.getElementById("commandNote").value="";
   handleCommandChange();
@@ -5796,7 +5797,7 @@ async function loadMaintenancePage(showLoading=true){
   await loadPairingCodes();
   await loadDeviceLogs();
   await loadRelayOutputAssignments();
-  await loadInputConfigurations();
+  await loadInputConfigurations(true);
   await loadSoftwareReleases();
   await loadOrganizationOwnerTool();
 
