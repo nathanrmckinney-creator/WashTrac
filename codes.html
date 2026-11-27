@@ -1287,6 +1287,7 @@ async function sendCodeSyncCommand(siteId){
         .from("device_commands")
         .insert([{
           device_id: device.id,
+          site_id: siteId,
           command: "sync_codes",
           payload: {},
           status: "pending"
